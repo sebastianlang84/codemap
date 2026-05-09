@@ -81,10 +81,12 @@ export function registerCodeSearchTools(pi: ExtensionAPI): void {
   pi.registerTool({
     name: "codebase_status",
     label: "Codebase Status",
-    description: "Show approval and local SQLite index status for the current Git repository.",
-    parameters: Type.Object({}),
-    async execute(_id, _params) {
-      return textResult(status(process.cwd()));
+    description: "Show approval and local SQLite index status for the current Git repository. Uses cheap diagnostics unless full=true.",
+    parameters: Type.Object({
+      full: Type.Optional(Type.Boolean({ description: "Run a full repository scan to report stale index diagnostics." })),
+    }),
+    async execute(_id, params) {
+      return textResult(status(process.cwd(), { health: params.full === true ? "full" : "cheap" }));
     },
     renderCall: renderCodeSearchCall("codebase_status"),
     renderResult: renderCodeSearchResult,

@@ -70,17 +70,21 @@ export function indexRepo(options: { cwd?: string; approve?: boolean } = {}): In
   }
 }
 
-export function status(cwd = process.cwd()) {
+export function status(cwd = process.cwd(), options: { health?: "cheap" | "full" } = {}) {
+  const healthMode = options.health ?? "cheap";
   const info = getRepoInfo(cwd);
-  if (!info.approved) return { ...info, indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null };
+  if (!info.approved) {
+    return { ...info, indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, warnings: [] };
+  }
   const db = openRepoDb(info.dbPath);
   try {
     const files = (db.prepare("select count(*) as n from files").get() as { n: number }).n;
     const chunks = (db.prepare("select count(*) as n from chunks").get() as { n: number }).n;
     const symbols = (db.prepare("select count(*) as n from symbols").get() as { n: number }).n;
     const lastIndexedAt = (db.prepare("select value from meta where key='last_indexed_at'").get() as { value: string } | undefined)?.value ?? null;
-    const health = indexHealth(db, info.root);
-    return { ...info, indexed: files > 0, files, chunks, symbols, lastIndexedAt, ...health };
+    const base = { ...info, indexed: files > 0, files, chunks, symbols, lastIndexedAt, health: healthMode };
+    if (healthMode === "cheap") return { ...base, stale: false, changed: 0, missing: 0, deleted: 0, warnings: [] };
+    return { ...base, ...indexHealth(db, info.root) };
   } finally {
     db.close();
   }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test, { after, type TestContext } from "node:test";
@@ -10,7 +10,7 @@ process.env.HOME = storageHome;
 process.env.USERPROFILE = storageHome;
 after(() => rmSync(storageHome, { recursive: true, force: true }));
 
-const { indexRepo } = await import("../src/core/indexer.ts");
+const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodebase, searchCodebaseWithDiagnostics } = await import("../src/core/search.ts");
 const { codebaseContext } = await import("../src/core/context.ts");
 
@@ -137,4 +137,81 @@ export function contextAdded() {
   assert.equal(result.missing, 1);
   assert.match(result.warnings.join("\n"), /Index stale/);
   assert.deepEqual(result.readFirst, []);
+});
+
+test("safety skips secrets, generated files, heavy directories, binary files, large files, and symlinks", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-code-search-safety-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src"), { recursive: true });
+  mkdirSync(join(root, "node_modules", "dep"), { recursive: true });
+  mkdirSync(join(root, "dist"), { recursive: true });
+
+  writeFileSync(join(root, ".gitignore"), "ignored.txt\n");
+  writeFileSync(join(root, "src", "allowed.ts"), "export const allowedNeedle = true;\n");
+  writeFileSync(join(root, ".env"), "SUPER_SKIPPED_NEEDLE=1\n");
+  writeFileSync(join(root, "private-key.ts"), "export const superSkippedNeedle = true;\n");
+  writeFileSync(join(root, "package-lock.json"), JSON.stringify({ superSkippedNeedle: true }));
+  writeFileSync(join(root, "binary.txt"), Buffer.from("superSkippedNeedle\0"));
+  writeFileSync(join(root, "huge.txt"), `${"x".repeat(1_000_001)}superSkippedNeedle`);
+  writeFileSync(join(root, "ignored.txt"), "superSkippedNeedle\n");
+  writeFileSync(join(root, "node_modules", "dep", "index.ts"), "export const superSkippedNeedle = true;\n");
+  writeFileSync(join(root, "dist", "bundle.ts"), "export const superSkippedNeedle = true;\n");
+  try {
+    symlinkSync(join(root, "src", "allowed.ts"), join(root, "linked.ts"));
+  } catch {
+    // Some platforms disallow symlink creation; the rest of the safety policy is still testable.
+  }
+
+  const result = indexRepo({ cwd: root, approve: true });
+  assert.equal(searchCodebase({ cwd: root, query: "allowedNeedle", limit: 5 })[0]?.path, "src/allowed.ts");
+  assert.deepEqual(searchCodebase({ cwd: root, query: "superSkippedNeedle", limit: 5 }), []);
+  assert.ok((result.skippedReasons["secret-like file"] ?? 0) >= 2);
+  assert.ok((result.skippedReasons["binary/generated extension"] ?? 0) >= 1);
+  assert.ok((result.skippedReasons["ignored directory"] ?? 0) >= 2);
+  assert.ok((result.skippedReasons[".gitignore"] ?? 0) >= 1);
+  assert.ok((result.skippedReasons["binary content"] ?? 0) >= 1);
+  assert.ok((result.skippedReasons["too large"] ?? 0) >= 1);
+  if (existsSync(join(root, "linked.ts"))) assert.ok((result.skippedReasons.symlink ?? 0) >= 1);
+});
+
+test("index refreshes only changed files and removes deleted files", (t) => {
+  const root = fixtureRepo(t);
+  assert.equal(indexRepo({ cwd: root }).indexed, 0);
+
+  writeFileSync(join(root, "src", "core", "user-service.ts"), `
+export function changedUserFlow(id: string) {
+  return { id, status: "changed" };
+}
+`);
+  const changed = indexRepo({ cwd: root });
+  assert.equal(changed.indexed, 1);
+  assert.equal(searchCodebase({ cwd: root, query: "changedUserFlow", limit: 5 })[0]?.path, "src/core/user-service.ts");
+  assert.deepEqual(searchCodebase({ cwd: root, query: "approveUser", limit: 5 }), []);
+
+  unlinkSync(join(root, "src", "core", "numeric.ts"));
+  const removed = indexRepo({ cwd: root });
+  assert.equal(removed.removed, 1);
+  assert.deepEqual(searchCodebase({ cwd: root, query: "404", limit: 5 }), []);
+});
+
+test("cheap status avoids stale scan while full status reports drift", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "cheap-status-added.ts"), `
+export function cheapStatusAdded() {
+  return true;
+}
+`);
+
+  const cheap = status(root, { health: "cheap" });
+  assert.equal(cheap.health, "cheap");
+  assert.equal(cheap.stale, false);
+  assert.equal(cheap.missing, 0);
+  assert.deepEqual(cheap.warnings, []);
+
+  const full = status(root, { health: "full" });
+  assert.equal(full.health, "full");
+  assert.equal(full.stale, true);
+  assert.equal(full.missing, 1);
+  assert.match(full.warnings.join("\n"), /Index stale/);
 });

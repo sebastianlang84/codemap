@@ -10,7 +10,7 @@ export function codebaseContext(options: { target: string; cwd?: string; limit?:
   const db = openRepoDb(info.dbPath);
   try {
     const limit = Math.min(Math.max(options.limit ?? 8, 1), 25);
-    const diagnostics = status(options.cwd);
+    const diagnostics = status(options.cwd, { health: "full" });
     const warnings: string[] = [...((diagnostics as { warnings?: string[] }).warnings ?? [])];
     const target = options.target.trim();
 

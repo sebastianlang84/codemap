@@ -5,8 +5,8 @@ import { codebaseContext } from "../core/context.ts";
 
 export function registerCodeSearchCommands(pi: ExtensionAPI): void {
   pi.registerCommand("codebase-status", {
-    description: "Show code-search approval/index status",
-    handler: async (_args, ctx) => ctx.ui.notify(JSON.stringify(status(process.cwd()), null, 2), "info"),
+    description: "Show code-search approval/index status; pass --full for stale diagnostics",
+    handler: async (args, ctx) => ctx.ui.notify(JSON.stringify(status(process.cwd(), { health: args.includes("--full") ? "full" : "cheap" }), null, 2), "info"),
   });
 
   pi.registerCommand("codebase-index", {

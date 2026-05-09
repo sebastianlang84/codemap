@@ -39,5 +39,5 @@ export interface IndexStats {
   skipped: number;
   removed: number;
   warnings: string[];
-  skippedReasons?: Record<string, number>;
+  skippedReasons: Record<string, number>;
 }

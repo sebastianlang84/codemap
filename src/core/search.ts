@@ -51,7 +51,7 @@ export interface CodebaseSearchPackage {
 }
 
 export function searchCodebaseWithDiagnostics(options: { query: string; cwd?: string; limit?: number }): CodebaseSearchPackage {
-  const diagnostics = status(options.cwd) as SearchDiagnostics & { root: string };
+  const diagnostics = status(options.cwd, { health: "full" }) as SearchDiagnostics & { root: string };
   return {
     query: options.query,
     root: diagnostics.root,
