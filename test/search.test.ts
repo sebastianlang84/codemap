@@ -11,7 +11,8 @@ process.env.USERPROFILE = storageHome;
 after(() => rmSync(storageHome, { recursive: true, force: true }));
 
 const { indexRepo } = await import("../src/core/indexer.ts");
-const { searchCodebase } = await import("../src/core/search.ts");
+const { searchCodebase, searchCodebaseWithDiagnostics } = await import("../src/core/search.ts");
+const { codebaseContext } = await import("../src/core/context.ts");
 
 function fixtureRepo(t: TestContext): string {
   const root = mkdtempSync(join(tmpdir(), "pi-code-search-test-"));
@@ -101,4 +102,39 @@ test("numeric queries remain searchable", (t) => {
   const results = searchCodebase({ cwd: root, query: "404", limit: 5 });
   assert.equal(results[0]?.path, "src/core/numeric.ts");
   assert.match(results[0]?.snippet ?? "", /404/);
+});
+
+test("search diagnostics warn without auto-refreshing stale indexes", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "new-feature.ts"), `
+export function newFeatureFlag() {
+  return true;
+}
+`);
+
+  const result = searchCodebaseWithDiagnostics({ cwd: root, query: "newFeatureFlag", limit: 5 });
+  assert.equal(result.stale, true);
+  assert.equal(result.missing, 1);
+  assert.match(result.warnings.join("\n"), /Index stale/);
+  assert.equal(result.results.length, 0);
+
+  indexRepo({ cwd: root });
+  const refreshed = searchCodebaseWithDiagnostics({ cwd: root, query: "newFeatureFlag", limit: 5 });
+  assert.equal(refreshed.stale, false);
+  assert.equal(refreshed.results[0]?.path, "src/core/new-feature.ts");
+});
+
+test("context diagnostics warn without auto-refreshing stale indexes", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "context-added.ts"), `
+export function contextAdded() {
+  return true;
+}
+`);
+
+  const result = codebaseContext({ cwd: root, target: "contextAdded", limit: 5 });
+  assert.equal(result.stale, true);
+  assert.equal(result.missing, 1);
+  assert.match(result.warnings.join("\n"), /Index stale/);
+  assert.deepEqual(result.readFirst, []);
 });

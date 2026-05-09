@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { indexRepo, status } from "../core/indexer.ts";
-import { searchCodebase } from "../core/search.ts";
+import { searchCodebaseWithDiagnostics } from "../core/search.ts";
 import { codebaseContext } from "../core/context.ts";
 
 export function registerCodeSearchCommands(pi: ExtensionAPI): void {
@@ -20,8 +20,10 @@ export function registerCodeSearchCommands(pi: ExtensionAPI): void {
   pi.registerCommand("codebase-search", {
     description: "Search indexed repo: /codebase-search <query>",
     handler: async (args, ctx) => {
-      const results = searchCodebase({ query: args, cwd: process.cwd(), limit: 10 });
-      ctx.ui.notify(results.map((r) => `${r.path}:${r.startLine}-${r.endLine} ${r.kind}`).join("\n") || "No results", "info");
+      const result = searchCodebaseWithDiagnostics({ query: args, cwd: process.cwd(), limit: 10 });
+      const warnings = result.warnings.length > 0 ? `${result.warnings.map((w) => `⚠ ${w}`).join("\n")}\n` : "";
+      const rows = result.results.map((r) => `${r.path}:${r.startLine}-${r.endLine} ${r.kind}`).join("\n") || "No results";
+      ctx.ui.notify(`${warnings}${rows}`, result.stale ? "warning" : "info");
     },
   });
 

@@ -1,6 +1,7 @@
 import { openRepoDb } from "./db.ts";
 import { getRepoInfo } from "./repo.ts";
 import { snippet } from "./chunker.ts";
+import { status } from "./indexer.ts";
 import type { SearchResult } from "./types.ts";
 
 interface SearchRow {
@@ -26,6 +27,42 @@ interface QueryPlan {
   pathLike: boolean;
   pathNeedle: string;
   ftsQueries: FtsQuery[];
+}
+
+interface SearchDiagnostics {
+  stale?: boolean;
+  changed?: number;
+  missing?: number;
+  deleted?: number;
+  lastIndexedAt?: string | null;
+  warnings?: string[];
+}
+
+export interface CodebaseSearchPackage {
+  query: string;
+  root: string;
+  lastIndexedAt: string | null;
+  stale: boolean;
+  changed: number;
+  missing: number;
+  deleted: number;
+  warnings: string[];
+  results: SearchResult[];
+}
+
+export function searchCodebaseWithDiagnostics(options: { query: string; cwd?: string; limit?: number }): CodebaseSearchPackage {
+  const diagnostics = status(options.cwd) as SearchDiagnostics & { root: string };
+  return {
+    query: options.query,
+    root: diagnostics.root,
+    lastIndexedAt: diagnostics.lastIndexedAt ?? null,
+    stale: diagnostics.stale ?? false,
+    changed: diagnostics.changed ?? 0,
+    missing: diagnostics.missing ?? 0,
+    deleted: diagnostics.deleted ?? 0,
+    warnings: diagnostics.warnings ?? [],
+    results: searchCodebase(options),
+  };
 }
 
 export function searchCodebase(options: { query: string; cwd?: string; limit?: number }): SearchResult[] {
