@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const root = process.cwd();
@@ -35,16 +36,24 @@ function forbiddenLocalArtifact(file) {
   return /(^|\/)\.env($|\.)|\.sqlite(?:-wal|-shm)?$|private[-_]?key|secret/i.test(file);
 }
 
-check("no runtime dependencies", () => {
-  const pkg = JSON.parse(run("node", ["-e", "console.log(require('./package.json').dependencies ? JSON.stringify(require('./package.json').dependencies) : '{}')"]));
-  if (Object.keys(pkg).length > 0) throw new Error(`dependencies present: ${Object.keys(pkg).join(", ")}`);
+check("runtime dependencies stay explicit and minimal", () => {
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  const dependencies = Object.keys(pkg.dependencies ?? {}).sort();
+  const allowed = ["typebox"];
+  const unexpected = dependencies.filter((name) => !allowed.includes(name));
+  if (unexpected.length > 0) throw new Error(`unexpected dependencies: ${unexpected.join(", ")}`);
+  for (const name of allowed) {
+    if (!dependencies.includes(name)) throw new Error(`missing runtime dependency: ${name}`);
+  }
 });
 
-check("Pi extension entry exists", () => {
-  const pkg = JSON.parse(run("node", ["-e", "console.log(JSON.stringify(require('./package.json').pi?.extensions ?? []))"]));
-  for (const entry of pkg) {
+check("Pi extension entries exist and import", () => {
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  const entries = pkg.pi?.extensions ?? [];
+  for (const entry of entries) {
     const path = join(root, entry);
     if (!existsSync(path)) throw new Error(`missing extension entry ${entry}`);
+    run(process.execPath, ["--experimental-strip-types", "-e", `await import(${JSON.stringify(pathToFileURL(path).href)})`]);
   }
 });
 

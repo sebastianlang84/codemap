@@ -16,9 +16,10 @@ export function codemapContext(options: { target: string; cwd?: string; limit?: 
     const diagnostics = status(options.cwd, { health: "full", pathPrefix });
     const warnings: string[] = [...((diagnostics as { warnings?: string[] }).warnings ?? [])];
     const target = options.target.trim();
+    const targetLike = `%${escapeLike(target)}%`;
 
-    const file = db.prepare("select id, path, language from files where (path = ? or path like ?) and path like ? escape '\\' limit 1")
-      .get(target, `%${target}%`, pathFilter) as { id: number; path: string; language: string } | undefined;
+    const file = db.prepare("select id, path, language from files where (path = ? or path like ? escape '\\') and path like ? escape '\\' limit 1")
+      .get(target, targetLike, pathFilter) as { id: number; path: string; language: string } | undefined;
 
     let readFirst: unknown[];
     if (file) {
@@ -32,16 +33,18 @@ export function codemapContext(options: { target: string; cwd?: string; limit?: 
 
     const base = file?.path ?? target;
     const stem = base.split("/").pop()?.replace(/\.[^.]+$/, "") ?? base;
+    const stemLike = `%${escapeLike(stem)}%`;
+    const baseLike = `%${escapeLike(base)}%`;
     const relatedTests = db.prepare(`
       select path from files
-      where (path like '%test%' or path like '%spec%') and (path like ? or path like ?) and path like ? escape '\\'
+      where (path like '%test%' or path like '%spec%') and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
       order by path limit 8
-    `).all(`%${stem}%`, `%${base}%`, pathFilter) as Array<{ path: string }>;
+    `).all(stemLike, baseLike, pathFilter) as Array<{ path: string }>;
     const relatedDocs = db.prepare(`
       select path from files
-      where language = 'markdown' and (path like ? or path like ?) and path like ? escape '\\'
+      where language = 'markdown' and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
       order by path limit 8
-    `).all(`%${stem}%`, `%${base}%`, pathFilter) as Array<{ path: string }>;
+    `).all(stemLike, baseLike, pathFilter) as Array<{ path: string }>;
     const lastIndexedAt = (db.prepare("select value from meta where key='last_indexed_at'").get() as { value: string } | undefined)?.value ?? null;
 
     return {

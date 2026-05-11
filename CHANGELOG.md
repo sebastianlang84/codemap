@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2 - 2026-05-12
+
+- Fix the root Pi extension entrypoint so package discovery can import it with Node type stripping.
+- Include the entrypoint in TypeScript checks and make the lightweight audit import extension entries.
+- Declare `typebox` as an explicit runtime dependency.
+- Escape `LIKE` wildcards in CodeMap context path matching.
+
 ## 0.4.1 - 2026-05-11
 
 - Move CodeMap indexes under `~/.pi/agent/state/codemap/` and migrate existing `~/.pi/agent/codemap/` or `~/.pi/agent/code-search/` data non-destructively.

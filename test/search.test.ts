@@ -143,6 +143,12 @@ export function contextAdded() {
   assert.deepEqual(result.readFirst, []);
 });
 
+test("context path matching treats LIKE wildcards literally", (t) => {
+  const root = fixtureRepo(t);
+  const result = codemapContext({ cwd: root, target: "user_service.ts", limit: 5 });
+  assert.ok(result.warnings.includes("Target was not an indexed file path; falling back to search results."));
+});
+
 test("safety skips secrets, generated files, heavy directories, binary files, large files, and symlinks", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-safety-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
