@@ -1,21 +1,25 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import test, { after, type TestContext } from "node:test";
 
-const storageHome = mkdtempSync(join(tmpdir(), "pi-code-search-home-"));
+const storageHome = mkdtempSync(join(tmpdir(), "pi-codemap-home-"));
 process.env.HOME = storageHome;
 process.env.USERPROFILE = storageHome;
 after(() => rmSync(storageHome, { recursive: true, force: true }));
 
 const { indexRepo, status } = await import("../src/core/indexer.ts");
-const { searchCodebase, searchCodebaseWithDiagnostics } = await import("../src/core/search.ts");
-const { codebaseContext } = await import("../src/core/context.ts");
+const { searchCodeMap, searchCodeMapWithDiagnostics } = await import("../src/core/search.ts");
+const { codemapContext } = await import("../src/core/context.ts");
+const { getRepoInfo } = await import("../src/core/repo.ts");
+const { registerCodeMapTools } = await import("../src/pi-extension/tools.ts");
+const { registerCodeMapCommands } = await import("../src/pi-extension/commands.ts");
 
 function fixtureRepo(t: TestContext): string {
-  const root = mkdtempSync(join(tmpdir(), "pi-code-search-test-"));
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-test-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
   mkdirSync(join(root, "src", "core"), { recursive: true });
@@ -63,7 +67,7 @@ alpha alpha alpha alpha alpha alpha alpha alpha
 
 test("exact symbol matches rank above chunk matches", (t) => {
   const root = fixtureRepo(t);
-  const results = searchCodebase({ cwd: root, query: "approveUser", limit: 5 });
+  const results = searchCodeMap({ cwd: root, query: "approveUser", limit: 5 });
   assert.equal(results[0]?.path, "src/core/user-service.ts");
   assert.equal(results[0]?.kind, "function");
   assert.match(results[0]?.snippet ?? "", /approveUser/);
@@ -71,35 +75,35 @@ test("exact symbol matches rank above chunk matches", (t) => {
 
 test("prefix symbol queries prefer matching symbols", (t) => {
   const root = fixtureRepo(t);
-  const results = searchCodebase({ cwd: root, query: "approve", limit: 5 });
+  const results = searchCodeMap({ cwd: root, query: "approve", limit: 5 });
   assert.equal(results[0]?.path, "src/core/user-service.ts");
   assert.equal(results[0]?.kind, "function");
 });
 
 test("path-like queries return file matches first", (t) => {
   const root = fixtureRepo(t);
-  const results = searchCodebase({ cwd: root, query: "tools.ts", limit: 5 });
+  const results = searchCodeMap({ cwd: root, query: "tools.ts", limit: 5 });
   assert.equal(results[0]?.path, "src/pi-extension/tools.ts");
   assert.equal(results[0]?.kind, "file");
 });
 
 test("phrase queries find phrase-bearing docs without lockfile noise", (t) => {
   const root = fixtureRepo(t);
-  const results = searchCodebase({ cwd: root, query: "\"ignored directory\"", limit: 5 });
+  const results = searchCodeMap({ cwd: root, query: "\"ignored directory\"", limit: 5 });
   assert.equal(results[0]?.path, "docs/ops.md");
   assert.ok(results.every((result) => result.path !== "package-lock.json"));
 });
 
 test("multi-term queries prefer all-term matches over OR fallback", (t) => {
   const root = fixtureRepo(t);
-  const results = searchCodebase({ cwd: root, query: "alpha beta", limit: 5 });
+  const results = searchCodeMap({ cwd: root, query: "alpha beta", limit: 5 });
   assert.equal(results[0]?.path, "docs/alpha-beta.md");
   assert.match(results[0]?.snippet ?? "", /alpha beta/i);
 });
 
 test("numeric queries remain searchable", (t) => {
   const root = fixtureRepo(t);
-  const results = searchCodebase({ cwd: root, query: "404", limit: 5 });
+  const results = searchCodeMap({ cwd: root, query: "404", limit: 5 });
   assert.equal(results[0]?.path, "src/core/numeric.ts");
   assert.match(results[0]?.snippet ?? "", /404/);
 });
@@ -112,14 +116,14 @@ export function newFeatureFlag() {
 }
 `);
 
-  const result = searchCodebaseWithDiagnostics({ cwd: root, query: "newFeatureFlag", limit: 5 });
+  const result = searchCodeMapWithDiagnostics({ cwd: root, query: "newFeatureFlag", limit: 5 });
   assert.equal(result.stale, true);
   assert.equal(result.missing, 1);
   assert.match(result.warnings.join("\n"), /Index stale/);
   assert.equal(result.results.length, 0);
 
   indexRepo({ cwd: root });
-  const refreshed = searchCodebaseWithDiagnostics({ cwd: root, query: "newFeatureFlag", limit: 5 });
+  const refreshed = searchCodeMapWithDiagnostics({ cwd: root, query: "newFeatureFlag", limit: 5 });
   assert.equal(refreshed.stale, false);
   assert.equal(refreshed.results[0]?.path, "src/core/new-feature.ts");
 });
@@ -132,7 +136,7 @@ export function contextAdded() {
 }
 `);
 
-  const result = codebaseContext({ cwd: root, target: "contextAdded", limit: 5 });
+  const result = codemapContext({ cwd: root, target: "contextAdded", limit: 5 });
   assert.equal(result.stale, true);
   assert.equal(result.missing, 1);
   assert.match(result.warnings.join("\n"), /Index stale/);
@@ -140,7 +144,7 @@ export function contextAdded() {
 });
 
 test("safety skips secrets, generated files, heavy directories, binary files, large files, and symlinks", (t) => {
-  const root = mkdtempSync(join(tmpdir(), "pi-code-search-safety-"));
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-safety-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
   mkdirSync(join(root, "src"), { recursive: true });
@@ -164,8 +168,8 @@ test("safety skips secrets, generated files, heavy directories, binary files, la
   }
 
   const result = indexRepo({ cwd: root, approve: true });
-  assert.equal(searchCodebase({ cwd: root, query: "allowedNeedle", limit: 5 })[0]?.path, "src/allowed.ts");
-  assert.deepEqual(searchCodebase({ cwd: root, query: "superSkippedNeedle", limit: 5 }), []);
+  assert.equal(searchCodeMap({ cwd: root, query: "allowedNeedle", limit: 5 })[0]?.path, "src/allowed.ts");
+  assert.deepEqual(searchCodeMap({ cwd: root, query: "superSkippedNeedle", limit: 5 }), []);
   assert.ok((result.skippedReasons["secret-like file"] ?? 0) >= 2);
   assert.ok((result.skippedReasons["binary/generated extension"] ?? 0) >= 1);
   assert.ok((result.skippedReasons["ignored directory"] ?? 0) >= 2);
@@ -186,13 +190,13 @@ export function changedUserFlow(id: string) {
 `);
   const changed = indexRepo({ cwd: root });
   assert.equal(changed.indexed, 1);
-  assert.equal(searchCodebase({ cwd: root, query: "changedUserFlow", limit: 5 })[0]?.path, "src/core/user-service.ts");
-  assert.deepEqual(searchCodebase({ cwd: root, query: "approveUser", limit: 5 }), []);
+  assert.equal(searchCodeMap({ cwd: root, query: "changedUserFlow", limit: 5 })[0]?.path, "src/core/user-service.ts");
+  assert.deepEqual(searchCodeMap({ cwd: root, query: "approveUser", limit: 5 }), []);
 
   unlinkSync(join(root, "src", "core", "numeric.ts"));
   const removed = indexRepo({ cwd: root });
   assert.equal(removed.removed, 1);
-  assert.deepEqual(searchCodebase({ cwd: root, query: "404", limit: 5 }), []);
+  assert.deepEqual(searchCodeMap({ cwd: root, query: "404", limit: 5 }), []);
 });
 
 test("cheap status avoids stale scan while full status reports drift", (t) => {
@@ -214,4 +218,66 @@ export function cheapStatusAdded() {
   assert.equal(full.stale, true);
   assert.equal(full.missing, 1);
   assert.match(full.warnings.join("\n"), /Index stale/);
+});
+
+test("CodeMap uses codemap storage and migrates legacy code-search repo DBs", (t) => {
+  const root = fixtureRepo(t);
+  const info = getRepoInfo(root);
+  assert.match(info.dbPath, /\.pi\/agent\/codemap\/repos\//);
+  assert.ok(existsSync(info.dbPath));
+
+  const legacyHome = mkdtempSync(join(tmpdir(), "pi-codemap-legacy-home-"));
+  t.after(() => rmSync(legacyHome, { recursive: true, force: true }));
+  const legacyRegistry = join(legacyHome, ".pi", "agent", "code-search", "registry.sqlite");
+  const legacyDb = join(legacyHome, ".pi", "agent", "code-search", "repos", `${info.key}.sqlite`);
+  mkdirSync(join(legacyHome, ".pi", "agent", "code-search", "repos"), { recursive: true });
+  copyFileSync(join(storageHome, ".pi", "agent", "codemap", "registry.sqlite"), legacyRegistry);
+  copyFileSync(info.dbPath, legacyDb);
+
+  const repoModuleUrl = pathToFileURL(join(process.cwd(), "src", "core", "repo.ts")).href;
+  const script = `const { getRepoInfo } = await import(${JSON.stringify(repoModuleUrl)}); console.log(JSON.stringify(getRepoInfo(${JSON.stringify(root)})));`;
+  const output = execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+    encoding: "utf8",
+    env: { ...process.env, HOME: legacyHome, USERPROFILE: legacyHome },
+  });
+  const migrated = JSON.parse(output) as { dbPath: string };
+  assert.match(migrated.dbPath, /\.pi\/agent\/codemap\/repos\//);
+  assert.ok(existsSync(join(legacyHome, ".pi", "agent", "codemap", "registry.sqlite")));
+  assert.ok(existsSync(migrated.dbPath));
+});
+
+test("registers codemap tools and deprecated codebase aliases", () => {
+  const tools: Array<{ name: string; label?: string; description?: string }> = [];
+  registerCodeMapTools({ registerTool: (tool: { name: string; label?: string; description?: string }) => tools.push(tool) } as never);
+
+  const names = tools.map((tool) => tool.name).sort();
+  assert.deepEqual(names, [
+    "codebase_context",
+    "codebase_index",
+    "codebase_search",
+    "codebase_status",
+    "codemap_context",
+    "codemap_index",
+    "codemap_search",
+    "codemap_status",
+  ]);
+  assert.ok(tools.find((tool) => tool.name === "codebase_search")?.description?.includes("Deprecated alias for codemap_search"));
+});
+
+test("registers codemap commands and deprecated codebase aliases", () => {
+  const commands: Array<{ name: string; description?: string }> = [];
+  registerCodeMapCommands({ registerCommand: (name: string, command: { description?: string }) => commands.push({ name, description: command.description }) } as never);
+
+  const names = commands.map((command) => command.name).sort();
+  assert.deepEqual(names, [
+    "codebase-context",
+    "codebase-index",
+    "codebase-search",
+    "codebase-status",
+    "codemap-context",
+    "codemap-index",
+    "codemap-search",
+    "codemap-status",
+  ]);
+  assert.ok(commands.find((command) => command.name === "codebase-search")?.description?.includes("Deprecated alias for /codemap-search"));
 });

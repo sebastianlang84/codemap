@@ -11,7 +11,7 @@
 
 ## 0.2.0 - 2026-05-09
 
-- Surface stale-index diagnostics in code-search results instead of silently searching stale data.
+- Surface stale-index diagnostics in codemap results instead of silently searching stale data.
 - Improve tool rendering with compact path/line/snippet lists and warning badges.
 - Document explicit refresh flow for stale indexes.
 

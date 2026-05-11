@@ -1,9 +1,9 @@
-# pi-ext-code-search Brainstorming
+# pi-ext-codemap Brainstorming
 
 ## Ausgangsidee
 
-Ein separates, super-lightweight Codebase-Tool als Ergänzung zu `pi-memory`.
-Nicht in `pi-memory` einbauen, sondern als eigener Folder bzw. eigenes Pi Package/Extension: `pi-ext-code-search`.
+Ein separates, super-lightweight CodeMap-Tool als Ergänzung zu `pi-memory`.
+Nicht in `pi-memory` einbauen, sondern als eigener Folder bzw. eigenes Pi Package/Extension: `pi-ext-codemap`.
 
 Ziel ist kein GitNexus-Klon, sondern ein kleines lokales Repo-Navigations- und Kontextwerkzeug für Coding Agents.
 
@@ -25,7 +25,7 @@ Das Tool soll Agents schnell beantworten helfen:
 - Kein Neo4j oder separates Graph-System
 - Kein vollständiger, perfekter Callgraph
 - Kein Ersatz für ripgrep, Language Server oder GitNexus
-- Keine aggressiven AI-Summaries über die ganze Codebase in V1
+- Keine aggressiven AI-Summaries über die ganze CodeMap in V1
 
 ## V1-Kernfunktionen
 
@@ -140,24 +140,24 @@ Damit wären Fragen möglich wie:
 
 Minimal:
 
-- `codebase_index` — Repo indexieren oder aktualisieren
-- `codebase_search` — Hybrid-Suche über Pfade, Symbole und Chunks
-- `codebase_symbols` — Symbole nach Query/Datei listen
-- `codebase_context` — kompakten Kontext für Datei/Symbol/Subsystem liefern
+- `codemap_index` — Repo indexieren oder aktualisieren
+- `codemap_search` — Hybrid-Suche über Pfade, Symbole und Chunks
+- `codemap_symbols` — Symbole nach Query/Datei listen
+- `codemap_context` — kompakten Kontext für Datei/Symbol/Subsystem liefern
 
 Später:
 
-- `codebase_related` — verwandte Dateien/Symbole/Tests/Docs finden
-- `codebase_graph` — kleine Nachbarschaft im SQLite-Graph ausgeben
-- `codebase_ast_search` — ast-grep Pattern ausführen
-- `codebase_link_memory` — relevante `pi-memory` Artifact-Refs verknüpfen
+- `codemap_related` — verwandte Dateien/Symbole/Tests/Docs finden
+- `codemap_graph` — kleine Nachbarschaft im SQLite-Graph ausgeben
+- `codemap_ast_search` — ast-grep Pattern ausführen
+- `codemap_link_memory` — relevante `pi-memory` Artifact-Refs verknüpfen
 
 ## Mögliche Pi Commands
 
-- `/codebase-status`
-- `/codebase-index`
-- `/codebase-search <query>`
-- `/codebase-context <path-or-symbol>`
+- `/codemap-status`
+- `/codemap-index`
+- `/codemap-search <query>`
+- `/codemap-context <path-or-symbol>`
 
 ## Beziehung zu pi-memory
 
@@ -170,18 +170,18 @@ Später:
 - Präferenzen
 - Artifact-Refs
 
-`pi-ext-code-search` ist dagegen der lokale, aktualisierbare Repo-Index.
+`pi-ext-codemap` ist dagegen der lokale, aktualisierbare Repo-Index.
 
 Integration nur locker:
 
 - Suchergebnisse können auf `artifact_ref` Memories zeigen
 - wichtige Code-Stellen können in `pi-memory` gespeichert/verlinkt werden
-- Handoffs können relevante Dateien/Symbole aus `code-search` referenzieren
+- Handoffs können relevante Dateien/Symbole aus `codemap` referenzieren
 
 ## Grobe Modulstruktur
 
 ```text
-pi-ext-code-search/
+pi-ext-codemap/
   brainstorming.md
   package.json
   src/
@@ -226,7 +226,7 @@ FTS-Tabellen für:
 3. Datei-Scanner mit Ignore-Regeln
 4. Chunker für Text/Markdown/Code
 5. FTS5 Suche
-6. Pi Tool `codebase_search`
+6. Pi Tool `codemap_search`
 7. optional Embedding Adapter + Hybrid Ranking
 8. einfache Symbol-Extraktion
 9. optionale ast-grep Integration
@@ -239,4 +239,4 @@ FTS-Tabellen für:
 - Welche Sprachen zuerst gut unterstützen?
 - Wie stark sollen Git-Daten ins Ranking einfließen?
 - Wie eng soll die Integration mit `pi-memory` werden?
-- Brauchen wir vor V1 eine ADR zum Verhältnis `memory` vs. `code-search`?
+- Brauchen wir vor V1 eine ADR zum Verhältnis `memory` vs. `codemap`?

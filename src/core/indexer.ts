@@ -6,8 +6,8 @@ import { extractSymbols } from "./symbols.ts";
 import type { IndexStats } from "./types.ts";
 
 export function indexRepo(options: { cwd?: string; approve?: boolean } = {}): IndexStats & { dbPath: string; root: string } {
-  const info = options.approve ? approveRepo(options.cwd, "codebase_index") : getRepoInfo(options.cwd);
-  if (!info.approved) throw new Error("Repository is not approved. Run codebase_index with approveRepo: true first.");
+  const info = options.approve ? approveRepo(options.cwd, "codemap_index") : getRepoInfo(options.cwd);
+  if (!info.approved) throw new Error("Repository is not approved. Run codemap_index with approveRepo: true first.");
   const db = openRepoDb(info.dbPath);
   const scan = scanRepo(info.root);
   const seen = new Set<string>();

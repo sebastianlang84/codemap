@@ -1,12 +1,12 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { registerCodeSearchTools } from "./tools.ts";
-import { registerCodeSearchCommands } from "./commands.ts";
+import { registerCodeMapTools } from "./tools.ts";
+import { registerCodeMapCommands } from "./commands.ts";
 
-const STATUS_KEY = "code-search";
-const STATUS_OK_TEXT = "code-search ✓";
-const STATUS_ERROR_TEXT = "code-search ✗";
+const STATUS_KEY = "codemap";
+const STATUS_OK_TEXT = "CodeMap ✓";
+const STATUS_ERROR_TEXT = "CodeMap ✗";
 
-export default function codeSearchExtension(pi: ExtensionAPI): void {
+export default function codeMapExtension(pi: ExtensionAPI): void {
   pi.on("session_start", async (_event, ctx) => {
     if (!ctx.hasUI) return;
     try {
@@ -16,6 +16,6 @@ export default function codeSearchExtension(pi: ExtensionAPI): void {
     }
   });
 
-  registerCodeSearchTools(pi);
-  registerCodeSearchCommands(pi);
+  registerCodeMapTools(pi);
+  registerCodeMapCommands(pi);
 }

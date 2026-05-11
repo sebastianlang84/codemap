@@ -1,8 +1,8 @@
-# PRD: pi-ext-code-search
+# PRD: pi-ext-codemap
 
 ## 1. Summary
 
-`pi-ext-code-search` is a lightweight local codebase search and context extension for Pi/Coding Agents.
+`pi-ext-codemap` is a lightweight local codebase search and context extension for Pi/Coding Agents.
 
 It indexes the current repository state into a local SQLite/FTS5 database and provides agent-friendly tools for finding relevant files, line ranges, snippets, docs, tests, and entry points.
 
@@ -10,7 +10,7 @@ It complements `pi-memory` but is not part of it.
 
 ```text
 pi-memory stores durable decisions.
-pi-ext-code-search indexes current repo state.
+pi-ext-codemap indexes current repo state.
 ```
 
 ## 2. Problem
@@ -31,7 +31,7 @@ Current options are either too primitive, too broad, or too heavy:
 
 ## 3. Solution
 
-From the user's perspective, `pi-ext-code-search` provides a small set of Pi-native commands and tools that can approve, index, search, and explain a repository locally. The agent can ask for a query, file, or symbol and receive a compact read-first context package with paths, line ranges, snippets, related tests/docs, and index health warnings.
+From the user's perspective, `pi-ext-codemap` provides a small set of Pi-native commands and tools that can approve, index, search, and explain a repository locally. The agent can ask for a query, file, or symbol and receive a compact read-first context package with paths, line ranges, snippets, related tests/docs, and index health warnings.
 
 The V1 solution is intentionally lexical/local-first: SQLite + FTS5 + cheap symbol extraction + deterministic ranking. Embeddings, graph expansion, and ast-grep integrations remain later enhancements unless they can be added without making V1 heavier.
 
@@ -66,7 +66,7 @@ The V1 solution is intentionally lexical/local-first: SQLite + FTS5 + cheap symb
 - Hash/mtime-based incremental indexing.
 - Chunking for code, Markdown, and text.
 - Search results with paths, line ranges, snippets, and ranking metadata.
-- `codebase_context` tool that answers: “What should the agent read first?”
+- `codemap_context` tool that answers: “What should the agent read first?”
 
 ## 6. Out of Scope / Non-Goals
 
@@ -147,10 +147,10 @@ V1 includes:
 5. Chunker for code/Markdown/text
 6. SQLite schema + raw SQL migrations
 7. SQLite FTS5 tables
-8. `codebase_index`
-9. `codebase_search`
-10. `codebase_context`
-11. `codebase_status`
+8. `codemap_index`
+9. `codemap_search`
+10. `codemap_context`
+11. `codemap_status`
 12. Minimal symbol extraction where cheap and reliable
 
 V1 explicitly excludes:
@@ -196,7 +196,7 @@ V1 must not:
 First indexing requires explicit approval, e.g.:
 
 ```text
-/codebase-index --approve-repo
+/codemap-index --approve-repo
 ```
 
 Registry stores:
@@ -282,7 +282,7 @@ Files above the limit are skipped and counted in status output.
 Use local per-repo SQLite databases plus a global registry:
 
 ```text
-~/.pi/agent/code-search/
+~/.pi/agent/codemap/
   registry.sqlite
   repos/
     <repo-hash>.sqlite
@@ -383,7 +383,7 @@ UNIQUE(file_id, name, kind, start_line);
 
 ## 14. Tool API
 
-### `codebase_status`
+### `codemap_status`
 
 Returns index health and repo approval state.
 
@@ -397,7 +397,7 @@ Output should include:
 - stale status
 - skipped file counts by reason
 
-### `codebase_index`
+### `codemap_index`
 
 Indexes or updates current repo.
 
@@ -411,7 +411,7 @@ Inputs:
 }
 ```
 
-### `codebase_search`
+### `codemap_search`
 
 Searches paths, chunks, and symbols.
 
@@ -441,7 +441,7 @@ Output item contract:
 }
 ```
 
-### `codebase_context`
+### `codemap_context`
 
 Builds compact context for a file, symbol, or query.
 
@@ -488,10 +488,10 @@ Embeddings are not part of V1 ranking.
 Recommended commands:
 
 ```text
-/codebase-status
-/codebase-index
-/codebase-search <query>
-/codebase-context <path-or-symbol>
+/codemap-status
+/codemap-index
+/codemap-search <query>
+/codemap-context <path-or-symbol>
 ```
 
 ## 17. Packaging
@@ -501,12 +501,12 @@ The project should be packaged as a Pi extension/package.
 Recommended structure:
 
 ```text
-pi-ext-code-search/
+pi-ext-codemap/
   README.md
   PRD.md
   docs/
     adr/
-      001-memory-vs-code-search.md
+      001-memory-vs-codemap.md
       002-local-index-safety.md
   migrations/
     001_init.sql
@@ -583,10 +583,10 @@ V1 is successful if:
 6. Hash/mtime incremental indexing
 7. Chunker for code/Markdown/text
 8. FTS5 tables and indexing
-9. `codebase_status`
-10. `codebase_index`
-11. `codebase_search`
-12. `codebase_context`
+9. `codemap_status`
+10. `codemap_index`
+11. `codemap_search`
+12. `codemap_context`
 13. Minimal symbol extraction
 14. Tests/docs heuristics
 15. Optional V1.5 features

@@ -38,7 +38,7 @@ interface SearchDiagnostics {
   warnings?: string[];
 }
 
-export interface CodebaseSearchPackage {
+export interface CodeMapSearchPackage {
   query: string;
   root: string;
   lastIndexedAt: string | null;
@@ -50,7 +50,7 @@ export interface CodebaseSearchPackage {
   results: SearchResult[];
 }
 
-export function searchCodebaseWithDiagnostics(options: { query: string; cwd?: string; limit?: number }): CodebaseSearchPackage {
+export function searchCodeMapWithDiagnostics(options: { query: string; cwd?: string; limit?: number }): CodeMapSearchPackage {
   const diagnostics = status(options.cwd, { health: "full" }) as SearchDiagnostics & { root: string };
   return {
     query: options.query,
@@ -61,11 +61,11 @@ export function searchCodebaseWithDiagnostics(options: { query: string; cwd?: st
     missing: diagnostics.missing ?? 0,
     deleted: diagnostics.deleted ?? 0,
     warnings: diagnostics.warnings ?? [],
-    results: searchCodebase(options),
+    results: searchCodeMap(options),
   };
 }
 
-export function searchCodebase(options: { query: string; cwd?: string; limit?: number }): SearchResult[] {
+export function searchCodeMap(options: { query: string; cwd?: string; limit?: number }): SearchResult[] {
   const info = getRepoInfo(options.cwd);
   if (!info.approved) throw new Error("Repository is not approved/indexed yet.");
   const db = openRepoDb(info.dbPath);

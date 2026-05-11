@@ -1,10 +1,10 @@
 import { openRepoDb } from "./db.ts";
 import { getRepoInfo } from "./repo.ts";
-import { searchCodebase } from "./search.ts";
+import { searchCodeMap } from "./search.ts";
 import { snippet } from "./chunker.ts";
 import { status } from "./indexer.ts";
 
-export function codebaseContext(options: { target: string; cwd?: string; limit?: number }) {
+export function codemapContext(options: { target: string; cwd?: string; limit?: number }) {
   const info = getRepoInfo(options.cwd);
   if (!info.approved) throw new Error("Repository is not approved/indexed yet.");
   const db = openRepoDb(info.dbPath);
@@ -24,7 +24,7 @@ export function codebaseContext(options: { target: string; cwd?: string; limit?:
       readFirst = chunks.map((chunk) => ({ path: file.path, language: file.language, ...chunk, snippet: snippet(chunk.text) }));
     } else {
       warnings.push("Target was not an indexed file path; falling back to search results.");
-      readFirst = searchCodebase({ query: target, cwd: options.cwd, limit });
+      readFirst = searchCodeMap({ query: target, cwd: options.cwd, limit });
     }
 
     const base = file?.path ?? target;

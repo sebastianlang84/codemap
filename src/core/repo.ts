@@ -1,16 +1,25 @@
 import { createHash } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
 import type { RepoInfo } from "./types.ts";
 
-const baseDir = join(homedir(), ".pi", "agent", "code-search");
+const baseDir = join(homedir(), ".pi", "agent", "codemap");
+const legacyBaseDir = join(homedir(), ".pi", "agent", "code-search");
 const registryPath = join(baseDir, "registry.sqlite");
+const legacyRegistryPath = join(legacyBaseDir, "registry.sqlite");
+
+function copyLegacyFileIfNeeded(source: string, target: string): void {
+  if (existsSync(target) || !existsSync(source)) return;
+  mkdirSync(dirname(target), { recursive: true });
+  copyFileSync(source, target);
+}
 
 export function getRegistryPath(): string {
   mkdirSync(baseDir, { recursive: true });
+  copyLegacyFileIfNeeded(legacyRegistryPath, registryPath);
   return registryPath;
 }
 
@@ -43,8 +52,9 @@ export function repoKey(root: string): string {
 }
 
 function registryDb(): DatabaseSync {
-  mkdirSync(dirname(registryPath), { recursive: true });
-  const db = new DatabaseSync(registryPath);
+  const activeRegistryPath = getRegistryPath();
+  mkdirSync(dirname(activeRegistryPath), { recursive: true });
+  const db = new DatabaseSync(activeRegistryPath);
   db.exec(`
     create table if not exists repos (
       key text primary key,
@@ -63,6 +73,7 @@ export function getRepoInfo(cwd = process.cwd()): RepoInfo {
   const root = findRepoRoot(cwd);
   const key = repoKey(root);
   const dbPath = join(baseDir, "repos", `${key}.sqlite`);
+  copyLegacyFileIfNeeded(join(legacyBaseDir, "repos", `${key}.sqlite`), dbPath);
   const db = registryDb();
   const row = db.prepare("select enabled from repos where key = ?").get(key) as { enabled: number } | undefined;
   db.close();

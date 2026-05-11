@@ -3,8 +3,8 @@ import type { AgentToolResult, ExtensionAPI, Theme, ToolRenderResultOptions } fr
 import { keyHint } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { indexRepo, status } from "../core/indexer.ts";
-import { searchCodebaseWithDiagnostics } from "../core/search.ts";
-import { codebaseContext } from "../core/context.ts";
+import { searchCodeMapWithDiagnostics } from "../core/search.ts";
+import { codemapContext } from "../core/context.ts";
 
 function textResult(value: unknown) {
   return { content: [{ type: "text" as const, text: typeof value === "string" ? value : JSON.stringify(value, null, 2) }], details: value };
@@ -55,14 +55,14 @@ function formatList(value: unknown, theme: Theme): string[] {
   return [];
 }
 
-function renderCodeSearchCall(label: string, detail?: unknown) {
+function renderCodeMapCall(label: string, detail?: unknown) {
   return (_args: unknown, theme: Theme) => {
     const text = detail === undefined || detail === "" ? "" : ` ${theme.fg("muted", String(detail))}`;
     return new Text(`${theme.fg("toolTitle", theme.bold(label))}${text}`, 0, 0);
   };
 }
 
-function renderCodeSearchResult(result: AgentToolResult<unknown>, options: ToolRenderResultOptions, theme: Theme) {
+function renderCodeMapResult(result: AgentToolResult<unknown>, options: ToolRenderResultOptions, theme: Theme) {
   const summary = summarizeValue(result.details);
   const warnings = formatWarnings(result.details, theme);
   const list = formatList(result.details, theme);
@@ -77,68 +77,106 @@ function renderCodeSearchResult(result: AgentToolResult<unknown>, options: ToolR
   return new Text(`${compact}\n${theme.fg("dim", body)}`, 0, 0);
 }
 
-export function registerCodeSearchTools(pi: ExtensionAPI): void {
-  pi.registerTool({
-    name: "codebase_status",
-    label: "Codebase Status",
-    description: "Show approval and local SQLite index status for the current Git repository. Uses cheap diagnostics unless full=true.",
+export function registerCodeMapTools(pi: ExtensionAPI): void {
+  const statusTool = {
+    label: "CodeMap Status",
+    description: "Show CodeMap approval and local SQLite index status for the current Git repository. Uses cheap diagnostics unless full=true.",
     parameters: Type.Object({
       full: Type.Optional(Type.Boolean({ description: "Run a full repository scan to report stale index diagnostics." })),
     }),
-    async execute(_id, params) {
+    async execute(_id: string, params: { full?: boolean }) {
       return textResult(status(process.cwd(), { health: params.full === true ? "full" : "cheap" }));
     },
-    renderCall: renderCodeSearchCall("codebase_status"),
-    renderResult: renderCodeSearchResult,
-  });
+    renderResult: renderCodeMapResult,
+  };
 
-  pi.registerTool({
-    name: "codebase_index",
-    label: "Codebase Index",
-    description: "Index or refresh the current Git repository. Requires approveRepo=true the first time.",
+  const indexTool = {
+    label: "CodeMap Index",
+    description: "Index or refresh the current Git repository for CodeMap. Requires approveRepo=true the first time.",
     parameters: Type.Object({
       approveRepo: Type.Optional(Type.Boolean({ description: "Approve this Git repository for local-only indexing." })),
     }),
-    async execute(_id, params) {
+    async execute(_id: string, params: { approveRepo?: boolean }) {
       return textResult(indexRepo({ cwd: process.cwd(), approve: params.approveRepo === true }));
     },
-    renderCall(args, theme) {
-      return renderCodeSearchCall("codebase_index", args.approveRepo ? "approve + index" : "refresh")(args, theme);
-    },
-    renderResult: renderCodeSearchResult,
-  });
+    renderResult: renderCodeMapResult,
+  };
 
-  pi.registerTool({
-    name: "codebase_search",
-    label: "Codebase Search",
-    description: "Search the indexed repository using SQLite FTS over paths, chunks, and cheap symbols.",
+  const searchTool = {
+    label: "CodeMap Search",
+    description: "Search the CodeMap index using SQLite FTS over paths, chunks, and cheap symbols.",
     parameters: Type.Object({
       query: Type.String({ description: "Feature, symbol, path, or phrase to search for." }),
       limit: Type.Optional(Type.Number({ minimum: 1, maximum: 50, description: "Maximum result count." })),
     }),
-    async execute(_id, params) {
-      return textResult(searchCodebaseWithDiagnostics({ query: params.query, limit: params.limit, cwd: process.cwd() }));
+    async execute(_id: string, params: { query: string; limit?: number }) {
+      return textResult(searchCodeMapWithDiagnostics({ query: params.query, limit: params.limit, cwd: process.cwd() }));
     },
-    renderCall(args, theme) {
-      return renderCodeSearchCall("codebase_search", args.query)(args, theme);
-    },
-    renderResult: renderCodeSearchResult,
-  });
+    renderResult: renderCodeMapResult,
+  };
 
-  pi.registerTool({
-    name: "codebase_context",
-    label: "Codebase Context",
-    description: "Return a compact read-first context package for an indexed file path or symbol/query.",
+  const contextTool = {
+    label: "CodeMap Context",
+    description: "Return a compact read-first context package from CodeMap for an indexed file path or symbol/query.",
     parameters: Type.Object({
       target: Type.String({ description: "Indexed file path, symbol, subsystem, or phrase." }),
       limit: Type.Optional(Type.Number({ minimum: 1, maximum: 25, description: "Maximum read-first items." })),
     }),
-    async execute(_id, params) {
-      return textResult(codebaseContext({ target: params.target, limit: params.limit, cwd: process.cwd() }));
+    async execute(_id: string, params: { target: string; limit?: number }) {
+      return textResult(codemapContext({ target: params.target, limit: params.limit, cwd: process.cwd() }));
     },
+    renderResult: renderCodeMapResult,
+  };
+
+  pi.registerTool({ ...statusTool, name: "codemap_status", renderCall: renderCodeMapCall("codemap_status") });
+  pi.registerTool({
+    ...indexTool,
+    name: "codemap_index",
     renderCall(args, theme) {
-      return renderCodeSearchCall("codebase_context", args.target)(args, theme);
+      return renderCodeMapCall("codemap_index", args.approveRepo ? "approve + index" : "refresh")(args, theme);
     },
-    renderResult: renderCodeSearchResult,
+  });
+  pi.registerTool({
+    ...searchTool,
+    name: "codemap_search",
+    renderCall(args, theme) {
+      return renderCodeMapCall("codemap_search", args.query)(args, theme);
+    },
+  });
+  pi.registerTool({
+    ...contextTool,
+    name: "codemap_context",
+    renderCall(args, theme) {
+      return renderCodeMapCall("codemap_context", args.target)(args, theme);
+    },
+  });
+
+  pi.registerTool({ ...statusTool, name: "codebase_status", label: "CodeMap Status (deprecated alias)", description: "Deprecated alias for codemap_status. " + statusTool.description, renderCall: renderCodeMapCall("codebase_status", "deprecated: use codemap_status") });
+  pi.registerTool({
+    ...indexTool,
+    name: "codebase_index",
+    label: "CodeMap Index (deprecated alias)",
+    description: "Deprecated alias for codemap_index. " + indexTool.description,
+    renderCall(args, theme) {
+      return renderCodeMapCall("codebase_index", args.approveRepo ? "deprecated: use codemap_index · approve + index" : "deprecated: use codemap_index · refresh")(args, theme);
+    },
+  });
+  pi.registerTool({
+    ...searchTool,
+    name: "codebase_search",
+    label: "CodeMap Search (deprecated alias)",
+    description: "Deprecated alias for codemap_search. " + searchTool.description,
+    renderCall(args, theme) {
+      return renderCodeMapCall("codebase_search", `deprecated: use codemap_search · ${args.query}`)(args, theme);
+    },
+  });
+  pi.registerTool({
+    ...contextTool,
+    name: "codebase_context",
+    label: "CodeMap Context (deprecated alias)",
+    description: "Deprecated alias for codemap_context. " + contextTool.description,
+    renderCall(args, theme) {
+      return renderCodeMapCall("codebase_context", `deprecated: use codemap_context · ${args.target}`)(args, theme);
+    },
   });
 }
