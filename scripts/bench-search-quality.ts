@@ -24,6 +24,11 @@ interface RepoReport {
   natural: Metrics;
 }
 
+interface SearchCase {
+  query: string;
+  expectedPaths: string[];
+}
+
 interface Metrics {
   cases: number;
   top1Accuracy: number;
@@ -31,12 +36,13 @@ interface Metrics {
   mrrAt5: number;
   avgLatencyMs: number;
   p95LatencyMs: number;
-  misses: Array<{ query: string; expectedPath: string; actual: string[] }>;
+  misses: Array<{ query: string; expectedPaths: string[]; actual: string[] }>;
 }
 
 const defaultRoots = [
   "/home/wasti/macrolens",
   "/home/wasti/ai_stack/services/newsletter-writer",
+  "/home/wasti/dev/autoresearch",
 ];
 
 const roots = process.argv.slice(2).length > 0 ? process.argv.slice(2) : defaultRoots.filter(existsSync);
@@ -53,7 +59,7 @@ for (const rootArg of roots) {
   const pathPrefix = relative(info.root, root).split("\\").join("/");
   const indexed = indexRepo({ cwd: root, approve: true, pathPrefix });
   const symbols = astGrepAvailable ? astGrepSymbols(root, indexed.root).slice(0, 50) : [];
-  const structuralCases = symbols.map((hit) => ({ query: hit.name, expectedPath: hit.path }));
+  const structuralCases = symbols.map((hit) => ({ query: hit.name, expectedPaths: [hit.path] }));
   const naturalCases = naturalCasesFor(root, indexed.root);
   reports.push({
     root,
@@ -102,31 +108,45 @@ function astGrepSymbols(searchRoot: string, indexRoot: string): GroundTruthHit[]
   return dedupeHits(hits);
 }
 
-function naturalCasesFor(searchRoot: string, indexRoot: string): Array<{ query: string; expectedPath: string }> {
+function naturalCasesFor(searchRoot: string, indexRoot: string): SearchCase[] {
   const root = searchRoot;
   const lower = searchRoot.toLowerCase();
   const toIndexedPath = (path: string) => relative(indexRoot, `${searchRoot}/${path}`).split("\\").join("/");
+  const toCases = (items: Array<{ query: string; expectedPath?: string; expectedPaths?: string[] }>) => items
+    .map((item) => ({ query: item.query, expectedPaths: item.expectedPaths ?? (item.expectedPath ? [item.expectedPath] : []) }))
+    .map((item) => ({ ...item, expectedPaths: item.expectedPaths.filter((path) => existsSync(`${root}/${path}`)).map(toIndexedPath) }))
+    .filter((item) => item.expectedPaths.length > 0);
   if (lower.includes("macrolens")) {
-    return [
+    return toCases([
       { query: "declarative macro signal rules thresholds inputs", expectedPath: "apps/web/src/lib/macro-signal-rules.ts" },
       { query: "derived RSI consensus divergences history", expectedPath: "apps/web/src/lib/macro-derivations.ts" },
       { query: "GET api newsletter macro snapshot endpoint", expectedPath: "apps/web/src/app/api/newsletter/macro/route.ts" },
       { query: "MacroLens newsletter macro data integration plan", expectedPath: "docs/plans/20260502-newsletter-macro-data-integration.md" },
-    ].filter((item) => existsSync(`${root}/${item.expectedPath}`)).map((item) => ({ ...item, expectedPath: toIndexedPath(item.expectedPath) }));
+    ]);
   }
   if (lower.includes("newsletter")) {
-    return [
+    return toCases([
       { query: "optional MacroLens context GET api newsletter macro", expectedPath: "src/newsletter_writer/macrolens.py" },
       { query: "freshness gate evaluation matrix aggregator", expectedPath: "src/newsletter_writer/aggregator.py" },
       { query: "telegram delivery log host lock", expectedPath: "src/newsletter_writer/delivery.py" },
       { query: "audit revise newsletter risk tracker draft", expectedPath: "src/newsletter_writer/auditor.py" },
       { query: "orchestrator run newsletter pipeline", expectedPath: "src/newsletter_writer/main.py" },
-    ].filter((item) => existsSync(`${root}/${item.expectedPath}`)).map((item) => ({ ...item, expectedPath: toIndexedPath(item.expectedPath) }));
+    ]);
+  }
+  if (lower.includes("autoresearch")) {
+    return toCases([
+      { query: "what is this project about?", expectedPath: "README.md" },
+      { query: "where are agent instructions?", expectedPath: "program.md" },
+      { query: "what file should the agent edit?", expectedPaths: ["README.md", "program.md", "train.py"] },
+      { query: "what should not be modified?", expectedPaths: ["README.md", "prepare.py"] },
+      { query: "where is validation metric computed?", expectedPath: "prepare.py" },
+      { query: "where is model architecture defined?", expectedPath: "train.py" },
+    ]);
   }
   return [];
 }
 
-function scoreCases(root: string, cases: Array<{ query: string; expectedPath: string }>, pathPrefix = ""): Metrics {
+function scoreCases(root: string, cases: SearchCase[], pathPrefix = ""): Metrics {
   if (cases.length === 0) return { cases: 0, top1Accuracy: 0, recallAt5: 0, mrrAt5: 0, avgLatencyMs: 0, p95LatencyMs: 0, misses: [] };
   let top1 = 0;
   let recall5 = 0;
@@ -138,14 +158,14 @@ function scoreCases(root: string, cases: Array<{ query: string; expectedPath: st
     const start = performance.now();
     const results = searchCodeMap({ cwd: root, query: item.query, limit: 5, pathPrefix });
     latencies.push(performance.now() - start);
-    const paths = results.map((result) => result.path);
-    const rank = paths.findIndex((path) => path === item.expectedPath);
+    const paths = [...new Set(results.map((result) => result.path))];
+    const rank = paths.findIndex((path) => item.expectedPaths.includes(path));
     if (rank === 0) top1++;
     if (rank >= 0) {
       recall5++;
       reciprocalRankSum += 1 / (rank + 1);
     } else {
-      misses.push({ query: item.query, expectedPath: item.expectedPath, actual: paths });
+      misses.push({ query: item.query, expectedPaths: item.expectedPaths, actual: paths });
     }
   }
 

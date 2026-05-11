@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 - 2026-05-12
+
+- Improve natural-language CodeMap ranking with lightweight query normalization, path/text coverage scoring, heuristic file roles, and role-aware boosts for overview, agent instructions, implementation, setup, tooling, tests, dependencies, and lockfiles.
+- Add Python class/function symbol extraction and force index refreshes when extraction semantics change.
+- Extend search-quality benchmarks with autoresearch natural-language cases, distinct-path scoring, and multi-expected-path support.
+
 ## 0.4.2 - 2026-05-12
 
 - Fix the root Pi extension entrypoint so package discovery can import it with Node type stripping.

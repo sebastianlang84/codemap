@@ -5,12 +5,17 @@ import { chunkText } from "./chunker.ts";
 import { extractSymbols } from "./symbols.ts";
 import type { IndexStats } from "./types.ts";
 
+const INDEX_VERSION = "3";
+
 export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix?: string } = {}): IndexStats & { dbPath: string; root: string; pathPrefix: string } {
   const info = options.approve ? approveRepo(options.cwd, "codemap_index") : getRepoInfo(options.cwd);
   if (!info.approved) throw new Error("Repository is not approved. Run codemap_index with approveRepo: true first.");
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const db = openRepoDb(info.dbPath);
   const scan = scanRepo(info.root, { pathPrefix });
+  const indexVersionKey = pathPrefix ? `index_version:${pathPrefix}` : "index_version";
+  const storedIndexVersion = (db.prepare("select value from meta where key=?").get(indexVersionKey) as { value: string } | undefined)?.value;
+  const forceReindex = storedIndexVersion !== INDEX_VERSION;
   const seen = new Set<string>();
   let indexed = 0;
 
@@ -19,7 +24,7 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
     for (const file of scan.files) {
       seen.add(file.relPath);
       const existing = db.prepare("select id, hash, mtime_ms from files where path = ?").get(file.relPath) as { id: number; hash: string; mtime_ms: number } | undefined;
-      if (existing && existing.hash === file.hash && Math.round(existing.mtime_ms) === Math.round(file.mtimeMs)) continue;
+      if (!forceReindex && existing && existing.hash === file.hash && Math.round(existing.mtime_ms) === Math.round(file.mtimeMs)) continue;
 
       let fileId = existing?.id;
       if (fileId) {
@@ -62,6 +67,7 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
       }
     }
     db.prepare("insert or replace into meta(key, value) values ('last_indexed_at', ?)").run(new Date().toISOString());
+    db.prepare("insert or replace into meta(key, value) values (?, ?)").run(indexVersionKey, INDEX_VERSION);
     db.exec("commit");
     return { scanned: scan.files.length, indexed, skipped: scan.skipped, skippedReasons: scan.skippedReasons, removed, warnings: scan.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
   } catch (error) {

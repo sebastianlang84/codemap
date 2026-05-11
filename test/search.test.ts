@@ -44,6 +44,11 @@ export function registerTool(name: string) {
   return name;
 }
 `);
+  writeFileSync(join(root, "src", "core", "delivery.py"), `
+class DeliveryClient:
+    def send_telegram(self, text: str) -> None:
+        return None
+`);
   writeFileSync(join(root, "docs", "ops.md"), `
 # Operations
 
@@ -78,6 +83,12 @@ test("prefix symbol queries prefer matching symbols", (t) => {
   const results = searchCodeMap({ cwd: root, query: "approve", limit: 5 });
   assert.equal(results[0]?.path, "src/core/user-service.ts");
   assert.equal(results[0]?.kind, "function");
+});
+
+test("python class and function symbols are searchable", (t) => {
+  const root = fixtureRepo(t);
+  assert.ok(searchCodeMap({ cwd: root, query: "DeliveryClient", limit: 5 }).some((result) => result.kind === "class"));
+  assert.ok(searchCodeMap({ cwd: root, query: "send_telegram", limit: 5 }).some((result) => result.kind === "function"));
 });
 
 test("path-like queries return file matches first", (t) => {
