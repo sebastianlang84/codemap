@@ -4,7 +4,7 @@ CodeMap is a local SQLite/FTS codebase index for Pi coding agents. It indexes a 
 
 ## How indexing works
 
-CodeMap does not build embeddings or use a vector database. After a repository is explicitly approved, it walks the current Git repository and stores a local SQLite database under `~/.pi/agent/codemap/`.
+CodeMap does not build embeddings or use a vector database. After a repository is explicitly approved, it walks the current Git repository and stores a local SQLite database under `~/.pi/agent/state/codemap/`.
 
 During the scan it:
 
@@ -63,7 +63,7 @@ Legacy `/codebase-*` commands and `codebase_*` tools are still registered as dep
 - `codemap_search`
 - `codemap_context`
 
-CodeMap stores indexes under `~/.pi/agent/codemap/` and non-destructively migrates existing `~/.pi/agent/code-search/` data when needed.
+CodeMap stores indexes under `~/.pi/agent/state/codemap/` and non-destructively migrates existing `~/.pi/agent/codemap/` or `~/.pi/agent/code-search/` data when needed.
 
 ## License
 

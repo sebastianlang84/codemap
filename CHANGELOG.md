@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 - 2026-05-11
+
+- Move CodeMap indexes under `~/.pi/agent/state/codemap/` and migrate existing `~/.pi/agent/codemap/` or `~/.pi/agent/code-search/` data non-destructively.
+- Add a root Pi extension entrypoint for cleaner package discovery.
+
 ## 0.4.0 - 2026-05-11
 
 - Add scoped CodeMap indexing/search/context via `pathPrefix` and command `--path-prefix` for monorepos and nested services.

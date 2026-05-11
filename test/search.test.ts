@@ -270,18 +270,18 @@ export function cheapStatusAdded() {
   assert.match(full.warnings.join("\n"), /Index stale/);
 });
 
-test("CodeMap uses codemap storage and migrates legacy code-search repo DBs", (t) => {
+test("CodeMap uses state storage and migrates legacy repo DBs", (t) => {
   const root = fixtureRepo(t);
   const info = getRepoInfo(root);
-  assert.match(info.dbPath, /\.pi\/agent\/codemap\/repos\//);
+  assert.match(info.dbPath, /\.pi\/agent\/state\/codemap\/repos\//);
   assert.ok(existsSync(info.dbPath));
 
   const legacyHome = mkdtempSync(join(tmpdir(), "pi-codemap-legacy-home-"));
   t.after(() => rmSync(legacyHome, { recursive: true, force: true }));
-  const legacyRegistry = join(legacyHome, ".pi", "agent", "code-search", "registry.sqlite");
-  const legacyDb = join(legacyHome, ".pi", "agent", "code-search", "repos", `${info.key}.sqlite`);
-  mkdirSync(join(legacyHome, ".pi", "agent", "code-search", "repos"), { recursive: true });
-  copyFileSync(join(storageHome, ".pi", "agent", "codemap", "registry.sqlite"), legacyRegistry);
+  const legacyRegistry = join(legacyHome, ".pi", "agent", "codemap", "registry.sqlite");
+  const legacyDb = join(legacyHome, ".pi", "agent", "codemap", "repos", `${info.key}.sqlite`);
+  mkdirSync(join(legacyHome, ".pi", "agent", "codemap", "repos"), { recursive: true });
+  copyFileSync(join(storageHome, ".pi", "agent", "state", "codemap", "registry.sqlite"), legacyRegistry);
   copyFileSync(info.dbPath, legacyDb);
 
   const repoModuleUrl = pathToFileURL(join(process.cwd(), "src", "core", "repo.ts")).href;
@@ -291,8 +291,8 @@ test("CodeMap uses codemap storage and migrates legacy code-search repo DBs", (t
     env: { ...process.env, HOME: legacyHome, USERPROFILE: legacyHome },
   });
   const migrated = JSON.parse(output) as { dbPath: string };
-  assert.match(migrated.dbPath, /\.pi\/agent\/codemap\/repos\//);
-  assert.ok(existsSync(join(legacyHome, ".pi", "agent", "codemap", "registry.sqlite")));
+  assert.match(migrated.dbPath, /\.pi\/agent\/state\/codemap\/repos\//);
+  assert.ok(existsSync(join(legacyHome, ".pi", "agent", "state", "codemap", "registry.sqlite")));
   assert.ok(existsSync(migrated.dbPath));
 });
 
