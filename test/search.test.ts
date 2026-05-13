@@ -171,6 +171,31 @@ test("context path matching treats LIKE wildcards literally", (t) => {
   assert.ok(result.warnings.includes("Target was not an indexed file path; falling back to search results."));
 });
 
+test("status pathPrefix treats LIKE wildcards literally", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-status-prefix-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "services", "api_v1"), { recursive: true });
+  mkdirSync(join(root, "services", "apiXv1"), { recursive: true });
+  mkdirSync(join(root, "services", "api%v1"), { recursive: true });
+  mkdirSync(join(root, "services", "apiYv1"), { recursive: true });
+
+  writeFileSync(join(root, "services", "api_v1", "handler.ts"), "export function exactUnderscoreApiNeedle() { return true; }\n");
+  writeFileSync(join(root, "services", "apiXv1", "handler.ts"), "export function wildcardUnderscoreApiNeedle() { return true; }\n");
+  writeFileSync(join(root, "services", "api%v1", "handler.ts"), "export function exactPercentApiNeedle() { return true; }\n");
+  writeFileSync(join(root, "services", "apiYv1", "handler.ts"), "export function wildcardPercentApiNeedle() { return true; }\n");
+
+  indexRepo({ cwd: root, approve: true });
+
+  const underscoreScoped = status(root, { health: "full", pathPrefix: "services/api_v1" });
+  assert.equal(underscoreScoped.files, 1);
+  assert.equal(underscoreScoped.deleted, 0);
+
+  const percentScoped = status(root, { health: "full", pathPrefix: "services/api%v1" });
+  assert.equal(percentScoped.files, 1);
+  assert.equal(percentScoped.deleted, 0);
+});
+
 test("context packages direct files with related tests and docs", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "test"), { recursive: true });
@@ -269,6 +294,31 @@ test("pathPrefix scopes indexing, status, search, context, and deletions", (t) =
   const refreshed = indexRepo({ cwd: root, pathPrefix: "services/api" });
   assert.equal(refreshed.removed, 1);
   assert.equal(searchCodeMap({ cwd: root, query: "webOnlyNeedle", limit: 5 })[0]?.path, "services/web/handler.ts");
+});
+
+test("pathPrefix normalizes internal dot-dot segments consistently", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-dotdot-prefix-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src"), { recursive: true });
+  mkdirSync(join(root, "docs"), { recursive: true });
+
+  writeFileSync(join(root, "src", "app.ts"), "export function srcNeedle() { return true; }\n");
+  writeFileSync(join(root, "docs", "guide.md"), "# Guide\n\ncanonical docs needle\n");
+
+  const scoped = indexRepo({ cwd: root, approve: true, pathPrefix: "src/../docs" });
+  assert.equal(scoped.pathPrefix, "docs/");
+  assert.equal(scoped.scanned, 1);
+  assert.equal(status(root, { health: "full", pathPrefix: "src/../docs" }).files, 1);
+  assert.equal(searchCodeMap({ cwd: root, query: "canonical docs needle", pathPrefix: "src/../docs", limit: 5 })[0]?.path, "docs/guide.md");
+  assert.equal((codemapContext({ cwd: root, target: "guide.md", pathPrefix: "src/../docs" }).readFirst[0] as { path: string }).path, "docs/guide.md");
+
+  indexRepo({ cwd: root });
+  unlinkSync(join(root, "docs", "guide.md"));
+  const refreshed = indexRepo({ cwd: root, pathPrefix: "src/../docs" });
+  assert.equal(refreshed.pathPrefix, "docs/");
+  assert.equal(refreshed.removed, 1);
+  assert.equal(searchCodeMap({ cwd: root, query: "srcNeedle", limit: 5 })[0]?.path, "src/app.ts");
 });
 
 test("index refreshes only changed files and removes deleted files", (t) => {

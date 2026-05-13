@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { relative, join, resolve } from "node:path";
+import { relative, join, resolve, posix } from "node:path";
 import { createScanPolicy, detectLanguage } from "./scan-policy.ts";
 
 export { detectLanguage };
@@ -78,7 +78,8 @@ export function scanRepo(root: string, options: { pathPrefix?: string } = {}): S
 
 export function normalizePathPrefix(pathPrefix?: string): string {
   if (!pathPrefix) return "";
-  const normalized = pathPrefix.trim().replace(/^\.\/?/, "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  const cleaned = pathPrefix.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  const normalized = posix.normalize(cleaned).replace(/^\.\/+/, "").replace(/^\/+|\/+$/g, "");
   if (!normalized || normalized === ".") return "";
   return `${normalized}/`;
 }

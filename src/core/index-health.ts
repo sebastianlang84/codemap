@@ -20,14 +20,15 @@ export interface IndexHealth {
 }
 
 export function readIndexStatusCounts(db: ReturnType<typeof openRepoDb>, pathPrefix = ""): IndexStatusCounts {
+  const pathFilter = pathPrefix ? `${escapeLike(pathPrefix)}%` : "";
   const files = pathPrefix
-    ? (db.prepare("select count(*) as n from files where path like ?").get(`${pathPrefix}%`) as { n: number }).n
+    ? (db.prepare("select count(*) as n from files where path like ? escape '\\'").get(pathFilter) as { n: number }).n
     : (db.prepare("select count(*) as n from files").get() as { n: number }).n;
   const chunks = pathPrefix
-    ? (db.prepare("select count(*) as n from chunks join files f on f.id = chunks.file_id where f.path like ?").get(`${pathPrefix}%`) as { n: number }).n
+    ? (db.prepare("select count(*) as n from chunks join files f on f.id = chunks.file_id where f.path like ? escape '\\'").get(pathFilter) as { n: number }).n
     : (db.prepare("select count(*) as n from chunks").get() as { n: number }).n;
   const symbols = pathPrefix
-    ? (db.prepare("select count(*) as n from symbols join files f on f.id = symbols.file_id where f.path like ?").get(`${pathPrefix}%`) as { n: number }).n
+    ? (db.prepare("select count(*) as n from symbols join files f on f.id = symbols.file_id where f.path like ? escape '\\'").get(pathFilter) as { n: number }).n
     : (db.prepare("select count(*) as n from symbols").get() as { n: number }).n;
   const lastIndexedAt = (db.prepare("select value from meta where key='last_indexed_at'").get() as { value: string } | undefined)?.value ?? null;
   return { indexed: files > 0, files, chunks, symbols, lastIndexedAt };
@@ -40,7 +41,7 @@ export function cheapIndexHealth(): IndexHealth {
 export function fullIndexHealth(db: ReturnType<typeof openRepoDb>, root: string, pathPrefix = ""): IndexHealth {
   const scan = scanRepo(root, { pathPrefix });
   const rows = (pathPrefix
-    ? db.prepare("select path, hash from files where path like ?").all(`${pathPrefix}%`)
+    ? db.prepare("select path, hash from files where path like ? escape '\\'").all(`${escapeLike(pathPrefix)}%`)
     : db.prepare("select path, hash from files").all()) as Array<{ path: string; hash: string }>;
   const indexed = new Map(rows.map((row) => [row.path, row.hash]));
   const current = new Map(scan.files.map((file) => [file.relPath, file.hash]));
@@ -56,4 +57,8 @@ export function fullIndexHealth(db: ReturnType<typeof openRepoDb>, root: string,
   const warnings = [...scan.warnings];
   if (stale) warnings.push(`Index stale: ${changed} changed, ${missing} missing, ${deleted} deleted files.`);
   return { stale, changed, missing, deleted, skipped: scan.skipped, skippedReasons: scan.skippedReasons, warnings };
+}
+
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
