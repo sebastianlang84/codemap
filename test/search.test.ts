@@ -171,6 +171,20 @@ test("context path matching treats LIKE wildcards literally", (t) => {
   assert.ok(result.warnings.includes("Target was not an indexed file path; falling back to search results."));
 });
 
+test("context packages direct files with related tests and docs", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "test"), { recursive: true });
+  writeFileSync(join(root, "test", "user-service.test.ts"), "import '../src/core/user-service';\n");
+  writeFileSync(join(root, "docs", "user-service.md"), "# User service\n\napprove and archive users\n");
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/core/user-service.ts", limit: 3 });
+  assert.equal((result.readFirst[0] as { path: string }).path, "src/core/user-service.ts");
+  assert.deepEqual(result.relatedTests, ["test/user-service.test.ts"]);
+  assert.deepEqual(result.relatedDocs, ["docs/user-service.md"]);
+  assert.deepEqual(result.warnings, []);
+});
+
 test("safety skips secrets, generated files, heavy directories, binary files, large files, and symlinks", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-safety-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -325,8 +339,8 @@ test("CodeMap uses state storage and migrates legacy repo DBs", (t) => {
 });
 
 test("registers codemap tools and deprecated codebase aliases", () => {
-  const tools: Array<{ name: string; label?: string; description?: string }> = [];
-  registerCodeMapTools({ registerTool: (tool: { name: string; label?: string; description?: string }) => tools.push(tool) } as never);
+  const tools: Array<{ name: string; label?: string; description?: string; promptSnippet?: string; promptGuidelines?: string[] }> = [];
+  registerCodeMapTools({ registerTool: (tool: { name: string; label?: string; description?: string; promptSnippet?: string; promptGuidelines?: string[] }) => tools.push(tool) } as never);
 
   const names = tools.map((tool) => tool.name).sort();
   assert.deepEqual(names, [
@@ -340,6 +354,16 @@ test("registers codemap tools and deprecated codebase aliases", () => {
     "codemap_status",
   ]);
   assert.ok(tools.find((tool) => tool.name === "codebase_search")?.description?.includes("Deprecated alias for codemap_search"));
+  for (const name of ["codemap_status", "codemap_index", "codemap_search", "codemap_context"]) {
+    const tool = tools.find((candidate) => candidate.name === name);
+    assert.ok(tool?.promptSnippet, `${name} should provide promptSnippet`);
+    assert.ok(tool?.promptGuidelines?.every((guideline) => guideline.includes(name)), `${name} guidelines should name the tool`);
+  }
+  for (const name of ["codebase_status", "codebase_index", "codebase_search", "codebase_context"]) {
+    const tool = tools.find((candidate) => candidate.name === name);
+    assert.equal(tool?.promptSnippet, undefined, `${name} should not add deprecated promptSnippet noise`);
+    assert.equal(tool?.promptGuidelines, undefined, `${name} should not add deprecated promptGuidelines noise`);
+  }
 });
 
 test("registers codemap commands and deprecated codebase aliases", () => {
@@ -358,4 +382,30 @@ test("registers codemap commands and deprecated codebase aliases", () => {
     "codemap-status",
   ]);
   assert.ok(commands.find((command) => command.name === "codebase-search")?.description?.includes("Deprecated alias for /codemap-search"));
+});
+
+test("codemap search command uses shared pathPrefix behavior", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-command-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "services", "api"), { recursive: true });
+  mkdirSync(join(root, "services", "web"), { recursive: true });
+  writeFileSync(join(root, "services", "api", "handler.ts"), "export function commandNeedle() { return 'api'; }\n");
+  writeFileSync(join(root, "services", "web", "handler.ts"), "export function commandNeedle() { return 'web'; }\n");
+  indexRepo({ cwd: root, approve: true });
+
+  const commands: Array<{ name: string; handler: (args: string, ctx: { ui: { notify: (message: string, level: string) => void } }) => Promise<void> }> = [];
+  registerCodeMapCommands({ registerCommand: (name: string, command: { handler: (args: string, ctx: { ui: { notify: (message: string, level: string) => void } }) => Promise<void> }) => commands.push({ name, handler: command.handler }) } as never);
+  const cwd = process.cwd();
+  const notifications: Array<{ message: string; level: string }> = [];
+  try {
+    process.chdir(root);
+    await commands.find((command) => command.name === "codemap-search")?.handler("--path-prefix services/api commandNeedle", { ui: { notify: (message, level) => notifications.push({ message, level }) } });
+  } finally {
+    process.chdir(cwd);
+  }
+
+  assert.equal(notifications[0]?.level, "info");
+  assert.match(notifications[0]?.message ?? "", /services\/api\/handler\.ts/);
+  assert.doesNotMatch(notifications[0]?.message ?? "", /services\/web\/handler\.ts/);
 });

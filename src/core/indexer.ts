@@ -1,8 +1,7 @@
 import { openRepoDb } from "./db.ts";
+import { applyIndexUpdate } from "./index-store.ts";
 import { getRepoInfo, approveRepo } from "./repo.ts";
 import { normalizePathPrefix, scanRepo } from "./scanner.ts";
-import { chunkText } from "./chunker.ts";
-import { extractSymbols } from "./symbols.ts";
 import type { IndexStats } from "./types.ts";
 
 const INDEX_VERSION = "3";
@@ -16,60 +15,9 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
   const indexVersionKey = pathPrefix ? `index_version:${pathPrefix}` : "index_version";
   const storedIndexVersion = (db.prepare("select value from meta where key=?").get(indexVersionKey) as { value: string } | undefined)?.value;
   const forceReindex = storedIndexVersion !== INDEX_VERSION;
-  const seen = new Set<string>();
-  let indexed = 0;
-
   try {
-    db.exec("begin immediate");
-    for (const file of scan.files) {
-      seen.add(file.relPath);
-      const existing = db.prepare("select id, hash, mtime_ms from files where path = ?").get(file.relPath) as { id: number; hash: string; mtime_ms: number } | undefined;
-      if (!forceReindex && existing && existing.hash === file.hash && Math.round(existing.mtime_ms) === Math.round(file.mtimeMs)) continue;
-
-      let fileId = existing?.id;
-      if (fileId) {
-        db.prepare("update files set language=?, size=?, hash=?, mtime_ms=?, indexed_at=? where id=?")
-          .run(file.language, file.size, file.hash, file.mtimeMs, new Date().toISOString(), fileId);
-        db.prepare("delete from chunks where file_id=?").run(fileId);
-        db.prepare("delete from symbols where file_id=?").run(fileId);
-        db.prepare("delete from chunks_fts where path=?").run(file.relPath);
-        db.prepare("delete from symbols_fts where path=?").run(file.relPath);
-      } else {
-        const result = db.prepare("insert into files(path, language, size, hash, mtime_ms, indexed_at) values (?, ?, ?, ?, ?, ?)")
-          .run(file.relPath, file.language, file.size, file.hash, file.mtimeMs, new Date().toISOString());
-        fileId = Number(result.lastInsertRowid);
-      }
-
-      for (const chunk of chunkText(file.text, file.language)) {
-        const result = db.prepare("insert into chunks(file_id, ordinal, start_line, end_line, kind, text) values (?, ?, ?, ?, ?, ?)")
-          .run(fileId, chunk.ordinal, chunk.startLine, chunk.endLine, chunk.kind, chunk.text);
-        db.prepare("insert into chunks_fts(rowid, path, language, kind, text) values (?, ?, ?, ?, ?)")
-          .run(Number(result.lastInsertRowid), file.relPath, file.language, chunk.kind, chunk.text);
-      }
-
-      for (const symbol of extractSymbols(file.text, file.language)) {
-        const result = db.prepare("insert into symbols(file_id, name, kind, start_line, end_line, signature) values (?, ?, ?, ?, ?, ?)")
-          .run(fileId, symbol.name, symbol.kind, symbol.startLine, symbol.endLine ?? null, symbol.signature ?? null);
-        db.prepare("insert into symbols_fts(rowid, path, name, kind, signature) values (?, ?, ?, ?, ?)")
-          .run(Number(result.lastInsertRowid), file.relPath, symbol.name, symbol.kind, symbol.signature ?? "");
-      }
-      indexed++;
-    }
-    const rows = db.prepare("select path from files").all() as Array<{ path: string }>;
-    let removed = 0;
-    for (const row of rows) {
-      if (pathPrefix && !row.path.startsWith(pathPrefix)) continue;
-      if (!seen.has(row.path)) {
-        db.prepare("delete from chunks_fts where path=?").run(row.path);
-        db.prepare("delete from symbols_fts where path=?").run(row.path);
-        db.prepare("delete from files where path=?").run(row.path);
-        removed++;
-      }
-    }
-    db.prepare("insert or replace into meta(key, value) values ('last_indexed_at', ?)").run(new Date().toISOString());
-    db.prepare("insert or replace into meta(key, value) values (?, ?)").run(indexVersionKey, INDEX_VERSION);
-    db.exec("commit");
-    return { scanned: scan.files.length, indexed, skipped: scan.skipped, skippedReasons: scan.skippedReasons, removed, warnings: scan.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
+    const update = applyIndexUpdate({ db, files: scan.files, pathPrefix, indexVersionKey, indexVersion: INDEX_VERSION, forceReindex });
+    return { scanned: scan.files.length, indexed: update.indexed, skipped: scan.skipped, skippedReasons: scan.skippedReasons, removed: update.removed, warnings: scan.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
   } catch (error) {
     try { db.exec("rollback"); } catch { /* already closed or not in transaction */ }
     throw error;

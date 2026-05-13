@@ -12,6 +12,7 @@ after(() => rmSync(storageHome, { recursive: true, force: true }));
 
 const { indexRepo } = await import("../src/core/indexer.ts");
 const { searchCodeMap } = await import("../src/core/search.ts");
+const { evaluateSearchQualityGate, scoreSearchQualityCases } = await import("../src/core/search-quality-metrics.ts");
 
 interface GroundTruthHit {
   name: string;
@@ -122,32 +123,86 @@ function astGrepSymbols(root: string): GroundTruthHit[] {
 }
 
 function scoreCases(root: string, cases: QueryCase[]) {
-  let top1 = 0;
-  let recall5 = 0;
-  let reciprocalRankSum = 0;
-  const misses: Array<{ query: string; expectedPath: string; actual: string[] }> = [];
-
-  for (const item of cases) {
-    const results = searchCodeMap({ cwd: root, query: item.query, limit: 5 });
-    const paths = results.map((result) => result.path);
-    const rank = paths.findIndex((path) => path === item.expectedPath);
-    if (rank === 0) top1++;
-    if (rank >= 0) {
-      recall5++;
-      reciprocalRankSum += 1 / (rank + 1);
-    } else {
-      misses.push({ query: item.query, expectedPath: item.expectedPath, actual: paths });
-    }
-  }
-
-  return {
-    cases: cases.length,
-    top1Accuracy: top1 / cases.length,
-    recallAt5: recall5 / cases.length,
-    mrrAt5: reciprocalRankSum / cases.length,
-    misses,
-  };
+  return scoreSearchQualityCases(
+    cases.map((item) => ({ query: item.query, expectedPaths: [item.expectedPath] })),
+    (query) => searchCodeMap({ cwd: root, query, limit: 5 }).map((result) => result.path),
+  );
 }
+
+test("search quality metrics report top1, recall, MRR, misses, and partial misses", () => {
+  let tick = 0;
+  const metrics = scoreSearchQualityCases([
+    { query: "exact", expectedPaths: ["a.ts"] },
+    { query: "second", expectedPaths: ["b.ts"] },
+    { query: "partial", expectedPaths: ["c.ts", "d.ts"] },
+    { query: "miss", expectedPaths: ["z.ts"] },
+  ], (query) => ({
+    exact: ["a.ts", "noise.ts"],
+    second: ["noise.ts", "b.ts"],
+    partial: ["c.ts", "other.ts"],
+    miss: ["x.ts"],
+  }[query] ?? []), () => tick++);
+
+  assert.equal(metrics.cases, 4);
+  assert.equal(metrics.top1Accuracy, 0.5);
+  assert.equal(metrics.recallAt5, 0.75);
+  assert.equal(metrics.expectedCoverageAt5, 0.625);
+  assert.equal(metrics.mrrAt5, 0.625);
+  assert.equal(metrics.avgLatencyMs, 1);
+  assert.equal(metrics.p95LatencyMs, 1);
+  assert.deepEqual(metrics.misses, [{ query: "miss", expectedPaths: ["z.ts"], actual: ["x.ts"] }]);
+  assert.deepEqual(metrics.partialMisses, [
+    { query: "partial", expectedPaths: ["c.ts", "d.ts"], missingExpectedPaths: ["d.ts"], actual: ["c.ts", "other.ts"] },
+    { query: "miss", expectedPaths: ["z.ts"], missingExpectedPaths: ["z.ts"], actual: ["x.ts"] },
+  ]);
+});
+
+test("search quality metrics reject cases without expected paths", () => {
+  assert.throws(
+    () => scoreSearchQualityCases([{ query: "empty", expectedPaths: [] }], () => []),
+    /no expected paths: empty/,
+  );
+});
+
+test("search quality gates report threshold failures", () => {
+  const gate = evaluateSearchQualityGate({
+    cases: 2,
+    top1Accuracy: 0.5,
+    recallAt5: 1,
+    expectedCoverageAt5: 0.75,
+    mrrAt5: 0.75,
+    avgLatencyMs: 12,
+    p95LatencyMs: 42,
+    misses: [],
+    partialMisses: [{ query: "partial", expectedPaths: ["a.ts", "b.ts"], missingExpectedPaths: ["b.ts"], actual: ["a.ts"] }],
+  }, {
+    minTop1Accuracy: 0.8,
+    minExpectedCoverageAt5: 1,
+    maxP95LatencyMs: 25,
+    failOnPartialMisses: true,
+  }, "fixture");
+
+  assert.equal(gate.passed, false);
+  assert.deepEqual(evaluateSearchQualityGate({
+    cases: 0,
+    top1Accuracy: 0,
+    recallAt5: 0,
+    expectedCoverageAt5: 0,
+    mrrAt5: 0,
+    avgLatencyMs: 0,
+    p95LatencyMs: 0,
+    misses: [],
+    partialMisses: [],
+  }, { requireCases: true }, "empty").issues, [
+    { label: "empty", metric: "cases", expected: "> 0", actual: 0 },
+  ]);
+  assert.deepEqual(gate.issues.map((issue) => [issue.label, issue.metric, issue.expected, issue.actual]), [
+    ["fixture", "top1Accuracy", ">= 0.8", 0.5],
+    ["fixture", "expectedCoverageAt5", ">= 1", 0.75],
+    ["fixture", "p95LatencyMs", "<= 25", 42],
+    ["fixture", "partialMisses", "0", 1],
+  ]);
+});
 
 test("CodeMap search quality is quantifiable against ast-grep structural ground truth", { skip: !astGrepAvailable() && "ast-grep CLI is not installed" }, (t) => {
   const root = qualityFixtureRepo(t);

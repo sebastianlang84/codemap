@@ -2,11 +2,17 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import { performance } from "node:perf_hooks";
-
 import { indexRepo } from "../src/core/indexer.ts";
 import { getRepoInfo } from "../src/core/repo.ts";
 import { searchCodeMap } from "../src/core/search.ts";
+import {
+  evaluateSearchQualityGate,
+  scoreSearchQualityCases,
+  type SearchQualityCase,
+  type SearchQualityGateIssue,
+  type SearchQualityMetrics,
+  type SearchQualityThresholds,
+} from "../src/core/search-quality-metrics.ts";
 
 interface GroundTruthHit {
   name: string;
@@ -24,36 +30,29 @@ interface RepoReport {
   natural: Metrics;
 }
 
-interface SearchCase {
-  query: string;
-  expectedPaths: string[];
+interface ParsedArgs {
+  roots: string[];
+  thresholds: SearchQualityThresholds;
+  gateEnabled: boolean;
 }
 
-interface Metrics {
-  cases: number;
-  top1Accuracy: number;
-  recallAt5: number;
-  expectedCoverageAt5: number;
-  mrrAt5: number;
-  avgLatencyMs: number;
-  p95LatencyMs: number;
-  misses: Array<{ query: string; expectedPaths: string[]; actual: string[] }>;
-  partialMisses: Array<{ query: string; expectedPaths: string[]; missingExpectedPaths: string[]; actual: string[] }>;
-}
+type SearchCase = SearchQualityCase;
+type Metrics = SearchQualityMetrics;
 
 const defaultRoots = [
   "/home/wasti/macrolens",
   "/home/wasti/ai_stack/services/newsletter-writer",
   "/home/wasti/dev/autoresearch",
 ];
+const ignoredStructuralNames = new Set(["main"]);
 
-const roots = process.argv.slice(2).length > 0 ? process.argv.slice(2) : defaultRoots.filter(existsSync);
+const parsed = parseArgs(process.argv.slice(2));
+const roots = parsed.roots.length > 0 ? parsed.roots : defaultRoots.filter(existsSync);
 if (roots.length === 0) {
-  console.error("No repository roots supplied and default macrolens/newsletter-writer paths were not found.");
+  console.error("No repository roots supplied and default macrolens/newsletter-writer/autoresearch paths were not found.");
   process.exit(2);
 }
 
-const ignoredStructuralNames = new Set(["main"]);
 const astGrepAvailable = hasAstGrep();
 const reports: RepoReport[] = [];
 for (const rootArg of roots) {
@@ -74,7 +73,104 @@ for (const rootArg of roots) {
   });
 }
 
-console.log(JSON.stringify({ generatedAt: new Date().toISOString(), reports }, null, 2));
+const gate = evaluateReports(reports, parsed.thresholds);
+console.log(JSON.stringify({ generatedAt: new Date().toISOString(), thresholds: parsed.thresholds, reports, gate }, null, 2));
+if (parsed.gateEnabled && !gate.passed) process.exitCode = 1;
+
+function parseArgs(args: string[]): ParsedArgs {
+  const roots: string[] = [];
+  const thresholds: SearchQualityThresholds = {};
+  let gateEnabled = false;
+  const applyDefaultGate = () => {
+    thresholds.minTop1Accuracy ??= 0.6;
+    thresholds.minRecallAt5 ??= 1;
+    thresholds.minMrrAt5 ??= 0.85;
+    thresholds.failOnMisses ??= true;
+    thresholds.requireCases ??= true;
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const [name, inlineValue] = arg.split("=", 2);
+    const value = inlineValue ?? args[i + 1];
+    if (arg === "--quality-gate") {
+      gateEnabled = true;
+      applyDefaultGate();
+    } else if (name === "--min-top1") {
+      thresholds.minTop1Accuracy = parseRateArg(name, value);
+      thresholds.requireCases ??= true;
+      if (inlineValue === undefined) i++;
+      gateEnabled = true;
+    } else if (name === "--min-recall-at-5") {
+      thresholds.minRecallAt5 = parseRateArg(name, value);
+      thresholds.requireCases ??= true;
+      if (inlineValue === undefined) i++;
+      gateEnabled = true;
+    } else if (name === "--min-coverage-at-5") {
+      thresholds.minExpectedCoverageAt5 = parseRateArg(name, value);
+      thresholds.requireCases ??= true;
+      if (inlineValue === undefined) i++;
+      gateEnabled = true;
+    } else if (name === "--min-mrr-at-5") {
+      thresholds.minMrrAt5 = parseRateArg(name, value);
+      thresholds.requireCases ??= true;
+      if (inlineValue === undefined) i++;
+      gateEnabled = true;
+    } else if (name === "--max-p95-ms") {
+      thresholds.maxP95LatencyMs = parseNonNegativeArg(name, value);
+      thresholds.requireCases ??= true;
+      if (inlineValue === undefined) i++;
+      gateEnabled = true;
+    } else if (arg === "--fail-on-misses") {
+      thresholds.failOnMisses = true;
+      thresholds.requireCases ??= true;
+      gateEnabled = true;
+    } else if (arg === "--fail-on-partial-misses") {
+      thresholds.failOnPartialMisses = true;
+      thresholds.requireCases ??= true;
+      gateEnabled = true;
+    } else if (arg.startsWith("--")) {
+      throw new Error(`Unknown option: ${arg}`);
+    } else {
+      roots.push(arg);
+    }
+  }
+  return { roots, thresholds, gateEnabled };
+}
+
+function parseNumberArg(name: string, value: string | undefined): number {
+  if (value === undefined || value.trim() === "") throw new Error(`${name} requires a numeric value`);
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue)) throw new Error(`${name} requires a numeric value`);
+  return parsedValue;
+}
+
+function parseRateArg(name: string, value: string | undefined): number {
+  const parsedValue = parseNumberArg(name, value);
+  if (parsedValue < 0 || parsedValue > 1) throw new Error(`${name} must be between 0 and 1`);
+  return parsedValue;
+}
+
+function parseNonNegativeArg(name: string, value: string | undefined): number {
+  const parsedValue = parseNumberArg(name, value);
+  if (parsedValue < 0) throw new Error(`${name} must be non-negative`);
+  return parsedValue;
+}
+
+function evaluateReports(reports: RepoReport[], thresholds: SearchQualityThresholds): { passed: boolean; issues: SearchQualityGateIssue[] } {
+  const metricThresholds = { ...thresholds, requireCases: false };
+  const issues = reports.flatMap((report) => {
+    const reportIssues = [
+      ...evaluateSearchQualityGate(report.structural, metricThresholds, `${report.root}:structural`).issues,
+      ...evaluateSearchQualityGate(report.natural, metricThresholds, `${report.root}:natural`).issues,
+    ];
+    if (thresholds.requireCases === true && report.structural.cases + report.natural.cases === 0) {
+      reportIssues.push({ label: report.root, metric: "cases", expected: "> 0", actual: 0 });
+    }
+    return reportIssues;
+  });
+  return { passed: issues.length === 0, issues };
+}
 
 function hasAstGrep(): boolean {
   try {
@@ -154,48 +250,7 @@ function naturalCasesFor(searchRoot: string, indexRoot: string): SearchCase[] {
 }
 
 function scoreCases(root: string, cases: SearchCase[], pathPrefix = ""): Metrics {
-  if (cases.length === 0) return { cases: 0, top1Accuracy: 0, recallAt5: 0, expectedCoverageAt5: 0, mrrAt5: 0, avgLatencyMs: 0, p95LatencyMs: 0, misses: [], partialMisses: [] };
-  let top1 = 0;
-  let recall5 = 0;
-  let expectedCoverage5 = 0;
-  let reciprocalRankSum = 0;
-  const latencies: number[] = [];
-  const misses: Metrics["misses"] = [];
-  const partialMisses: Metrics["partialMisses"] = [];
-
-  for (const item of cases) {
-    const start = performance.now();
-    const results = searchCodeMap({ cwd: root, query: item.query, limit: 5, pathPrefix });
-    latencies.push(performance.now() - start);
-    const paths = [...new Set(results.map((result) => result.path))];
-    const matchedExpectedPaths = item.expectedPaths.filter((path) => paths.includes(path));
-    const missingExpectedPaths = item.expectedPaths.filter((path) => !paths.includes(path));
-    expectedCoverage5 += matchedExpectedPaths.length / item.expectedPaths.length;
-    const rank = paths.findIndex((path) => item.expectedPaths.includes(path));
-    if (rank === 0) top1++;
-    if (rank >= 0) {
-      recall5++;
-      reciprocalRankSum += 1 / (rank + 1);
-    } else {
-      misses.push({ query: item.query, expectedPaths: item.expectedPaths, actual: paths });
-    }
-    if (missingExpectedPaths.length > 0) {
-      partialMisses.push({ query: item.query, expectedPaths: item.expectedPaths, missingExpectedPaths, actual: paths });
-    }
-  }
-
-  latencies.sort((a, b) => a - b);
-  return {
-    cases: cases.length,
-    top1Accuracy: round(top1 / cases.length),
-    recallAt5: round(recall5 / cases.length),
-    expectedCoverageAt5: round(expectedCoverage5 / cases.length),
-    mrrAt5: round(reciprocalRankSum / cases.length),
-    avgLatencyMs: round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length),
-    p95LatencyMs: round(latencies[Math.min(latencies.length - 1, Math.floor(latencies.length * 0.95))] ?? 0),
-    misses,
-    partialMisses,
-  };
+  return scoreSearchQualityCases(cases, (query) => searchCodeMap({ cwd: root, query, limit: 5, pathPrefix }).map((result) => result.path));
 }
 
 function groupedSymbolCases(hits: GroundTruthHit[]): SearchCase[] {
@@ -217,8 +272,4 @@ function dedupeHits(hits: GroundTruthHit[]): GroundTruthHit[] {
     seen.add(key);
     return true;
   });
-}
-
-function round(value: number): number {
-  return Math.round(value * 1000) / 1000;
 }
