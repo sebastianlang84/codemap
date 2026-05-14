@@ -1,7 +1,7 @@
 import type { AgentToolResult, ExtensionAPI, Theme, ToolRenderResultOptions } from "@earendil-works/pi-coding-agent";
 import { keyHint } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import { codeMapOperations, deprecatedCallDetail, deprecatedToolDescription } from "./operations.ts";
+import { codeMapOperations } from "./operations.ts";
 
 function textResult(value: unknown) {
   return { content: [{ type: "text" as const, text: typeof value === "string" ? value : JSON.stringify(value, null, 2) }], details: value };
@@ -89,22 +89,6 @@ export function registerCodeMapTools(pi: ExtensionAPI): void {
       name: operation.toolName,
       renderCall(args, theme) {
         return renderCodeMapCall(operation.toolName, operation.renderCallDetail?.(args))(args, theme);
-      },
-    });
-  }
-
-  for (const operation of codeMapOperations) {
-    pi.registerTool({
-      label: `${operation.label} (deprecated alias)`,
-      description: deprecatedToolDescription(operation),
-      parameters: operation.parameters,
-      async execute(_id: string, params: unknown) {
-        return textResult(operation.execute(process.cwd(), params));
-      },
-      renderResult: renderCodeMapResult,
-      name: operation.deprecatedToolName,
-      renderCall(args, theme) {
-        return renderCodeMapCall(operation.deprecatedToolName, deprecatedCallDetail(operation, args))(args, theme);
       },
     });
   }

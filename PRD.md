@@ -516,7 +516,7 @@ Commands:
 /codemap-context [--path-prefix <subtree>] <path-or-symbol-or-query>
 ```
 
-Deprecated aliases remain registered for compatibility: `/codebase-status`, `/codebase-index`, `/codebase-search`, `/codebase-context` and the matching `codebase_*` tools.
+Legacy `codebase_*` tool aliases and `/codebase-*` commands are intentionally not registered. Use the `codemap_*` tools and `/codemap-*` commands to keep Pi's default tool surface small.
 
 ## 17. Packaging
 
@@ -625,7 +625,7 @@ Resolved V1 defaults:
 
 - The package uses a `package.json` `pi.extensions` manifest pointing at `./index.ts`.
 - V1 exposes four primary tools: `codemap_status`, `codemap_index`, `codemap_search`, and `codemap_context`.
-- Deprecated `codebase_*` aliases remain available only for compatibility.
+- Legacy `codebase_*` aliases are removed; use the `codemap_*` tools and `/codemap-*` commands.
 - Indexing is manual/on-demand.
 - Stale search/context results warn instead of silently reindexing.
 - Symlinks are not followed.

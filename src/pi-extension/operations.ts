@@ -14,9 +14,7 @@ export interface CodeMapOperation {
   id: "status" | "index" | "search" | "context";
   label: string;
   toolName: string;
-  deprecatedToolName: string;
   commandName: string;
-  deprecatedCommandName: string;
   description: string;
   commandDescription: string;
   promptSnippet: string;
@@ -70,9 +68,7 @@ export const codeMapOperations: readonly CodeMapOperation[] = [
     id: "status",
     label: "CodeMap Status",
     toolName: "codemap_status",
-    deprecatedToolName: "codebase_status",
     commandName: "codemap-status",
-    deprecatedCommandName: "codebase-status",
     description: "Show CodeMap approval and local SQLite index status for the current Git repository. Uses cheap diagnostics unless full=true.",
     commandDescription: "Show CodeMap approval/index status; pass --full for stale diagnostics",
     promptSnippet: "Check CodeMap repo approval, index freshness, and optional subtree diagnostics before relying on indexed context.",
@@ -95,9 +91,7 @@ export const codeMapOperations: readonly CodeMapOperation[] = [
     id: "index",
     label: "CodeMap Index",
     toolName: "codemap_index",
-    deprecatedToolName: "codebase_index",
     commandName: "codemap-index",
-    deprecatedCommandName: "codebase-index",
     description: "Index or refresh the current Git repository for CodeMap. Requires approveRepo=true the first time.",
     commandDescription: "Index current repo for CodeMap; pass --approve-repo the first time",
     promptSnippet: "Index or refresh the current Git repository for CodeMap after explicit repo approval or when the index is stale.",
@@ -123,9 +117,7 @@ export const codeMapOperations: readonly CodeMapOperation[] = [
     id: "search",
     label: "CodeMap Search",
     toolName: "codemap_search",
-    deprecatedToolName: "codebase_search",
     commandName: "codemap-search",
-    deprecatedCommandName: "codebase-search",
     description: "Search the CodeMap index using SQLite FTS over paths, chunks, and cheap symbols.",
     commandDescription: "Search the CodeMap index: /codemap-search <query>",
     promptSnippet: "Search indexed repository paths, chunks, and symbols for feature, file, symbol, or subsystem discovery.",
@@ -154,9 +146,7 @@ export const codeMapOperations: readonly CodeMapOperation[] = [
     id: "context",
     label: "CodeMap Context",
     toolName: "codemap_context",
-    deprecatedToolName: "codebase_context",
     commandName: "codemap-context",
-    deprecatedCommandName: "codebase-context",
     description: "Return a compact read-first context package from CodeMap for an indexed file path or symbol/query.",
     commandDescription: "Get CodeMap read-first context: /codemap-context <path-or-symbol>",
     promptSnippet: "Get compact read-first context for an indexed file, symbol, feature, or subsystem before reading broader code.",
@@ -180,19 +170,6 @@ export const codeMapOperations: readonly CodeMapOperation[] = [
     },
   },
 ];
-
-export function deprecatedToolDescription(operation: CodeMapOperation): string {
-  return `Deprecated alias for ${operation.toolName}. ${operation.description}`;
-}
-
-export function deprecatedCommandDescription(operation: CodeMapOperation): string {
-  return `Deprecated alias for /${operation.commandName}. ${operation.commandDescription}`;
-}
-
-export function deprecatedCallDetail(operation: CodeMapOperation, params: any): string {
-  const detail = operation.renderCallDetail?.(params);
-  return detail ? `deprecated: use ${operation.toolName} · ${detail}` : `deprecated: use ${operation.toolName}`;
-}
 
 export function codeMapStatus(cwd: string, params: { full?: boolean; pathPrefix?: string }) {
   return status(cwd, { health: params.full === true ? "full" : "cheap", pathPrefix: params.pathPrefix });

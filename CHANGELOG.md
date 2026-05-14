@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Breaking: remove deprecated `codebase_*` tool aliases and `/codebase-*` commands. Use `codemap_*` tools and `/codemap-*` commands instead.
+
 ## 0.5.0 - 2026-05-12
 
 - Improve natural-language CodeMap ranking with lightweight query normalization, path/text coverage scoring, heuristic file roles, and role-aware boosts for overview, agent instructions, implementation, setup, tooling, tests, dependencies, and lockfiles.

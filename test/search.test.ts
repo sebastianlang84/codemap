@@ -388,50 +388,35 @@ test("CodeMap uses state storage and migrates legacy repo DBs", (t) => {
   assert.ok(existsSync(migrated.dbPath));
 });
 
-test("registers codemap tools and deprecated codebase aliases", () => {
+test("registers only codemap tools", () => {
   const tools: Array<{ name: string; label?: string; description?: string; promptSnippet?: string; promptGuidelines?: string[] }> = [];
   registerCodeMapTools({ registerTool: (tool: { name: string; label?: string; description?: string; promptSnippet?: string; promptGuidelines?: string[] }) => tools.push(tool) } as never);
 
   const names = tools.map((tool) => tool.name).sort();
   assert.deepEqual(names, [
-    "codebase_context",
-    "codebase_index",
-    "codebase_search",
-    "codebase_status",
     "codemap_context",
     "codemap_index",
     "codemap_search",
     "codemap_status",
   ]);
-  assert.ok(tools.find((tool) => tool.name === "codebase_search")?.description?.includes("Deprecated alias for codemap_search"));
   for (const name of ["codemap_status", "codemap_index", "codemap_search", "codemap_context"]) {
     const tool = tools.find((candidate) => candidate.name === name);
     assert.ok(tool?.promptSnippet, `${name} should provide promptSnippet`);
     assert.ok(tool?.promptGuidelines?.every((guideline) => guideline.includes(name)), `${name} guidelines should name the tool`);
   }
-  for (const name of ["codebase_status", "codebase_index", "codebase_search", "codebase_context"]) {
-    const tool = tools.find((candidate) => candidate.name === name);
-    assert.equal(tool?.promptSnippet, undefined, `${name} should not add deprecated promptSnippet noise`);
-    assert.equal(tool?.promptGuidelines, undefined, `${name} should not add deprecated promptGuidelines noise`);
-  }
 });
 
-test("registers codemap commands and deprecated codebase aliases", () => {
+test("registers only codemap commands", () => {
   const commands: Array<{ name: string; description?: string }> = [];
   registerCodeMapCommands({ registerCommand: (name: string, command: { description?: string }) => commands.push({ name, description: command.description }) } as never);
 
   const names = commands.map((command) => command.name).sort();
   assert.deepEqual(names, [
-    "codebase-context",
-    "codebase-index",
-    "codebase-search",
-    "codebase-status",
     "codemap-context",
     "codemap-index",
     "codemap-search",
     "codemap-status",
   ]);
-  assert.ok(commands.find((command) => command.name === "codebase-search")?.description?.includes("Deprecated alias for /codemap-search"));
 });
 
 test("codemap search command uses shared pathPrefix behavior", async (t) => {

@@ -36,7 +36,7 @@ Re-indexing is incremental: unchanged files are skipped, changed files are refre
 | Return read-first context for a file, symbol, feature, or query | Implemented |
 | Warn when the index is stale | Implemented |
 | Provide simple related test/doc path hints | Implemented |
-| Deprecated `codebase_*` aliases for older workflows | Implemented |
+| Legacy `codebase_*` aliases | Removed; use `codemap_*` |
 | Embeddings/vector search | Planned, not V1 |
 | ast-grep integration, callgraphs, graph expansion | Planned, not V1 |
 | Daemon/background watcher or remote service | Not a goal |
@@ -102,12 +102,7 @@ Use the tools this way:
 
 ## Compatibility
 
-Legacy `/codebase-*` commands and `codebase_*` tools are still registered as deprecated aliases. Prefer:
-
-- `codemap_status`
-- `codemap_index`
-- `codemap_search`
-- `codemap_context`
+Use the `codemap_*` tools and `/codemap-*` commands. Legacy `codebase_*` tool aliases and `/codebase-*` commands have been removed to keep the default Pi tool surface small.
 
 CodeMap non-destructively migrates existing `~/.pi/agent/codemap/` or `~/.pi/agent/code-search/` data into `~/.pi/agent/state/codemap/` when needed.
 
