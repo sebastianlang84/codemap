@@ -11,6 +11,7 @@ export type CodeMapContextReasonKind =
   | "include"
   | "reverse_include"
   | "implementation_pair"
+  | "near_config"
   | "sibling_test"
   | "related_doc";
 
@@ -73,6 +74,19 @@ export function relatedTestReason(targetPath: string, path: string): CodeMapCont
 
 export function relatedDocReason(targetPath: string, path: string): CodeMapContextReason {
   return { kind: "related_doc", label: "name/path-related documentation", sourcePath: path, targetPath };
+}
+
+export function nearConfigReason(targetPath: string, path: string): CodeMapContextReason {
+  return { kind: "near_config", label: "nearby configuration file", sourcePath: path, targetPath };
+}
+
+export function isConfigReadFirstPath(path: string, size = 0): boolean {
+  const lowerPath = path.toLowerCase();
+  const basename = lowerPath.split("/").pop() ?? lowerPath;
+  const roles = fileRoles(lowerPath, size);
+  return roles.includes("configuration")
+    || /(?:^|[._-])config(?:[._-]|\.|$)/.test(basename)
+    || /\.config\.[cm]?[jt]sx?$/.test(basename);
 }
 
 export function isNoisyReadFirstPath(path: string, size = 0): boolean {

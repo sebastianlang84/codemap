@@ -10,7 +10,7 @@ Use CodeMap when you want to answer:
 
 - Where is this feature, symbol, endpoint, config key, or script implemented?
 - Which file should I read first before making a change?
-- Are there nearby tests, docs, imports, or callers worth checking?
+- Are there nearby tests, docs, config files, imports, or callers worth checking?
 - Is the index fresh enough to trust?
 
 CodeMap is not a semantic memory system. `pi-memory` stores durable decisions and handoffs; CodeMap indexes rebuildable repo state.
@@ -23,7 +23,7 @@ CodeMap is not a semantic memory system. `pi-memory` stores durable decisions an
 | Local indexing | Stores a rebuildable SQLite index under `~/.pi/agent/state/codemap/`. | `/codemap-index` |
 | Status diagnostics | Shows approval, index counts, DB path, and optional stale diagnostics. | `/codemap-status --full` |
 | Code/text search | Searches paths, chunks, and cheap symbols with SQLite FTS. | `/codemap-search <query>` |
-| Read-first context | Returns the target file plus likely imports, callers, tests, and docs. | `/codemap-context <path-or-query>` |
+| Read-first context | Returns the target file plus likely imports, callers, nearby config, tests, and docs. | `/codemap-context <path-or-query>` |
 | Monorepo scoping | Limits status/index/search/context to a subtree. | `--path-prefix services/api` |
 | Stale warnings | Warns instead of silently refreshing old results. | Refresh with `/codemap-index` |
 | Noise handling | Keeps lockfiles/generated/build/minified files from dominating ordinary results. | Automatic; explicit lockfile queries still work. |
@@ -90,6 +90,7 @@ For direct file targets, CodeMap may return:
 - the target file's first useful chunk;
 - directly imported local files;
 - local files that import the target;
+- nearby configuration files;
 - likely sibling tests;
 - likely related docs.
 
@@ -133,7 +134,7 @@ Pi commands are for humans in the TUI. LLM tools expose the same operations as s
 | Search | `/codemap-search [--path-prefix <subtree>] <query>` | `codemap_search({ query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
 | Context | `/codemap-context [--path-prefix <subtree>] <target>` | `codemap_context({ target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
 
-`codemap_context` reason kinds are best-effort navigation hints such as `target`, `search_result`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `sibling_test`, and `related_doc`. They are derived from indexed content and path/name heuristics; TypeScript/JavaScript imports, Python relative imports, and C/C++ quoted includes/header-source pairs are supported without building a full language graph.
+`codemap_context` reason kinds are best-effort navigation hints such as `target`, `search_result`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `near_config`, `sibling_test`, and `related_doc`. They are derived from indexed content and path/name heuristics; TypeScript/JavaScript imports, Python relative imports, nearby config files, and C/C++ quoted includes/header-source pairs are supported without building a full language graph.
 
 Recommended agent flow:
 

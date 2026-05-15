@@ -215,6 +215,17 @@ test("search quality gates report threshold failures", () => {
   ]);
 });
 
+test("bench search-quality fixture gate uses checked-in fixtures", () => {
+  const output = execFileSync(process.execPath, ["--experimental-strip-types", "scripts/bench-search-quality.ts", "--quality-gate", "--fixtures"], { encoding: "utf8" });
+  const report = JSON.parse(output) as { gate: { passed: boolean }; reports: Array<{ root: string; natural: { cases: number; excludedHits?: unknown[] }; structural: { cases: number } }> };
+
+  assert.equal(report.gate.passed, true);
+  assert.equal(report.reports.length, 1);
+  assert.ok(report.reports[0]?.root.endsWith("test/fixtures/search-quality/agent-nav"), report.reports[0]?.root);
+  assert.ok(report.reports[0]?.natural.cases >= 4, JSON.stringify(report.reports[0]?.natural));
+  assert.deepEqual(report.reports[0]?.natural.excludedHits, []);
+});
+
 test("bench search-quality gate includes generic repo-shape regression cases", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-bench-gate-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));

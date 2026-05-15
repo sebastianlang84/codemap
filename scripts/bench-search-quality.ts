@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { relative, resolve } from "node:path";
 import { indexRepo } from "../src/core/indexer.ts";
 import { getRepoInfo } from "../src/core/repo.ts";
@@ -34,22 +35,27 @@ interface ParsedArgs {
   roots: string[];
   thresholds: SearchQualityThresholds;
   gateEnabled: boolean;
+  fixtureRepos: boolean;
+  localRepos: boolean;
 }
 
 type SearchCase = SearchQualityCase;
 type Metrics = SearchQualityMetrics;
 
-const defaultRoots = [
+const localRepoRoots = [
   "/home/wasti/macrolens",
   "/home/wasti/ai_stack/services/newsletter-writer",
   "/home/wasti/dev/autoresearch",
 ];
+const fixtureRoots = [
+  fileURLToPath(new URL("../test/fixtures/search-quality/agent-nav", import.meta.url)),
+];
 const ignoredStructuralNames = new Set(["main", "run"]);
 
 const parsed = parseArgs(process.argv.slice(2));
-const roots = parsed.roots.length > 0 ? parsed.roots : defaultRoots.filter(existsSync);
+const roots = resolveBenchmarkRoots(parsed);
 if (roots.length === 0) {
-  console.error("No repository roots supplied and default macrolens/newsletter-writer/autoresearch paths were not found.");
+  console.error("No benchmark repository roots found. Use --fixtures, --local-repos, or pass explicit repo roots.");
   process.exit(2);
 }
 
@@ -81,6 +87,8 @@ function parseArgs(args: string[]): ParsedArgs {
   const roots: string[] = [];
   const thresholds: SearchQualityThresholds = {};
   let gateEnabled = false;
+  let fixtureRepos = false;
+  let localRepos = false;
   const applyDefaultGate = () => {
     thresholds.minTop1Accuracy ??= 0.6;
     thresholds.minRecallAt5 ??= 1;
@@ -97,6 +105,10 @@ function parseArgs(args: string[]): ParsedArgs {
     if (arg === "--quality-gate") {
       gateEnabled = true;
       applyDefaultGate();
+    } else if (arg === "--fixtures") {
+      fixtureRepos = true;
+    } else if (arg === "--local-repos") {
+      localRepos = true;
     } else if (name === "--min-top1") {
       thresholds.minTop1Accuracy = parseRateArg(name, value);
       thresholds.requireCases ??= true;
@@ -136,7 +148,14 @@ function parseArgs(args: string[]): ParsedArgs {
       roots.push(arg);
     }
   }
-  return { roots, thresholds, gateEnabled };
+  if (fixtureRepos && localRepos) throw new Error("Use either --fixtures or --local-repos, not both");
+  return { roots, thresholds, gateEnabled, fixtureRepos, localRepos };
+}
+
+function resolveBenchmarkRoots(parsed: ParsedArgs): string[] {
+  if (parsed.roots.length > 0) return parsed.roots;
+  if (parsed.localRepos) return localRepoRoots.filter(existsSync);
+  return fixtureRoots.filter(existsSync);
 }
 
 function parseNumberArg(name: string, value: string | undefined): number {

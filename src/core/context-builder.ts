@@ -3,9 +3,11 @@ import { openRepoDb } from "./db.ts";
 import { status } from "./indexer.ts";
 import {
   findIndexedRelationships,
+  isConfigReadFirstPath,
   isNoisyIndexedPath,
   isNoisyReadFirstPath,
   mergeRelatedPaths,
+  nearConfigReason,
   relatedDocReason,
   relatedTestReason,
   searchResultReason,
@@ -74,7 +76,7 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
     const related = relatedPaths(db, readFirst.base, request.pathFilter);
     const relationships = readFirst.direct ? findIndexedRelationships(db, readFirst.base, request.pathFilter) : { imports: [], importers: [], implementationPairs: [] };
     const items = readFirst.direct
-      ? localReadFirstItems(db, readFirst.items, relationships.imports, relationships.implementationPairs, relationships.importers, related.tests, related.docs, request.limit)
+      ? localReadFirstItems(db, readFirst.items, relationships.imports, relationships.implementationPairs, relationships.importers, related.configs, related.tests, related.docs, request.limit)
       : readFirst.items;
     const lastIndexedAt = diagnostics.lastIndexedAt ?? null;
 
@@ -145,6 +147,7 @@ function localReadFirstItems(
   imports: RelatedPath[],
   implementationPairs: RelatedPath[],
   importers: RelatedPath[],
+  configs: RelatedPath[],
   tests: string[],
   docs: string[],
   limit: number,
@@ -155,9 +158,11 @@ function localReadFirstItems(
     ...imports,
     ...implementationPairs,
     ...(importers[0] ? [importers[0]] : []),
+    ...(configs[0] ? [configs[0]] : []),
     ...(testItems[0] ? [testItems[0]] : []),
     ...(docItems[0] ? [docItems[0]] : []),
     ...importers.slice(1),
+    ...configs.slice(1),
     ...testItems.slice(1),
     ...docItems.slice(1),
   ]).filter((item) => !isNoisyIndexedPath(db, item.path));
@@ -187,7 +192,7 @@ function dedupeReadFirstItems(items: CodeMapReadFirstItem[], existing: CodeMapRe
   });
 }
 
-function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilter: string): { tests: string[]; docs: string[] } {
+function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilter: string): { configs: RelatedPath[]; tests: string[]; docs: string[] } {
   const stem = base.split("/").pop()?.replace(/\.[^.]+$/, "") ?? base;
   const stemLike = `%${escapeLike(stem)}%`;
   const baseLike = `%${escapeLike(base)}%`;
@@ -201,10 +206,31 @@ function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilte
     where language = 'markdown' and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
     order by path
   `).all(stemLike, baseLike, pathFilter) as Array<{ path: string; size: number }>;
+  const possibleConfigs = db.prepare(`
+    select path, size from files
+    where path <> ? and path like ? escape '\\'
+    order by path
+  `).all(base, pathFilter) as Array<{ path: string; size: number }>;
+  const configs = sortByLocality(
+    base,
+    possibleConfigs
+      .filter((row) => isNearbyConfigPath(base, row.path, row.size))
+      .map((row) => row.path),
+  ).slice(0, 8).map((path) => ({ path, reasons: [nearConfigReason(base, path)] }));
   return {
+    configs,
     tests: sortByLocality(base, relatedTests.filter((row) => !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
     docs: sortByLocality(base, relatedDocs.filter((row) => !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
   };
+}
+
+function isNearbyConfigPath(base: string, path: string, size: number): boolean {
+  if (isNoisyReadFirstPath(path, size) || !isConfigReadFirstPath(path, size)) return false;
+  const baseDir = base.split("/").slice(0, -1).join("/");
+  const pathDir = path.split("/").slice(0, -1).join("/");
+  const stem = base.split("/").pop()?.replace(/\.[^.]+$/, "").toLowerCase() ?? base.toLowerCase();
+  const basename = path.split("/").pop()?.toLowerCase() ?? path.toLowerCase();
+  return pathDir === baseDir || basename.includes(stem);
 }
 
 function sortByLocality(base: string, paths: string[]): string[] {

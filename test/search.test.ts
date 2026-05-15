@@ -530,6 +530,37 @@ test("context read-first includes indexed local files that import the target", (
   assert.deepEqual(result.warnings, []);
 });
 
+test("context read-first includes nearby config files with reasons", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "core", "payments"), { recursive: true });
+  mkdirSync(join(root, "dist"), { recursive: true });
+
+  writeFileSync(join(root, "src", "core", "payments", "payment-service.ts"), `
+import { createGateway } from "./gateway";
+
+export function chargeInvoice(id: string) {
+  return createGateway().charge(id);
+}
+`);
+  writeFileSync(join(root, "src", "core", "payments", "gateway.ts"), "export function createGateway() { return { charge: (id: string) => id }; }\n");
+  writeFileSync(join(root, "src", "core", "payments", "payment-service.config.json"), JSON.stringify({ retries: 3, provider: "stripe" }, null, 2));
+  writeFileSync(join(root, "src", "core", "payments", "payment-service.test.ts"), "import './payment-service';\n");
+  writeFileSync(join(root, "docs", "payment-service.md"), "# Payment service\n\nRead src/core/payments/payment-service.ts with its config.\n");
+  writeFileSync(join(root, "dist", "payment-service.config.json"), JSON.stringify({ retries: 99, noise: "build output" }, null, 2));
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/core/payments/payment-service.ts", limit: 6 });
+  const paths = result.readFirst.map((item) => item.path);
+
+  assert.equal(paths[0], "src/core/payments/payment-service.ts");
+  assert.ok(paths.includes("src/core/payments/gateway.ts"), JSON.stringify(paths));
+  assert.ok(paths.includes("src/core/payments/payment-service.config.json"), JSON.stringify(paths));
+  assert.ok(paths.includes("src/core/payments/payment-service.test.ts"), JSON.stringify(paths));
+  assert.ok(paths.includes("docs/payment-service.md"), JSON.stringify(paths));
+  assert.ok(!paths.includes("dist/payment-service.config.json"), JSON.stringify(paths));
+  assert.deepEqual(result.readFirst.find((item) => item.path === "src/core/payments/payment-service.config.json")?.reasons?.map((reason) => reason.kind), ["near_config"]);
+});
+
 test("context read-first excludes noisy generated and lockfile neighbors", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "src", "__generated__"), { recursive: true });

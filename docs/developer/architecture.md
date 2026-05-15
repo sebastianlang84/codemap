@@ -172,10 +172,11 @@ For direct file targets, context can include:
 - directly imported/included local files;
 - indexed local files that import/include the target;
 - C/C++ header/source implementation pairs;
+- nearby configuration files;
 - likely sibling tests;
 - likely related docs.
 
-Each `readFirst` item may carry `reasons[]` such as `target`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `sibling_test`, or `related_doc`. Relationship extraction is a lightweight core seam in `src/core/relationships.ts`: TypeScript/JavaScript imports, Python explicit relative imports, C/C++ quoted includes, and path/name test-doc heuristics are supported; full AST/callgraph/package resolution is intentionally out of scope.
+Each `readFirst` item may carry `reasons[]` such as `target`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `near_config`, `sibling_test`, or `related_doc`. Relationship extraction is a lightweight core seam in `src/core/relationships.ts`: TypeScript/JavaScript imports, Python explicit relative imports, nearby config files, C/C++ quoted includes, and path/name test-doc heuristics are supported; full AST/callgraph/package resolution is intentionally out of scope.
 
 Related imports/reverse-imports/includes are resolved from indexed content, so context remains useful even when the working tree is stale. `pathPrefix` must scope context and related-file discovery to the requested subtree.
 

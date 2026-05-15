@@ -20,8 +20,8 @@ TDD-Regel:
 
 1. [ ] Context Builder Module: verbleibende Herkunftsgründe und Locality verbessern.
    - Architektur: `codemapContext` bleibt kleine Interface; Beziehungserkennung und Nachbarschaftslogik liegen hinter dem Context-Builder-Seam.
-   - Bereits erledigte Slices: `readFirst` Items tragen `reasons[]`; TS/JS Imports, Python relative Imports, C/C++ quoted Includes und Header/Source-Paare werden aus indexierten Chunks abgeleitet; Stale-Verhalten bleibt indexbasiert.
-   - Offen: `near_config`, `same_dir`, feinere Testrollen wie `test_of`, `sibling_test`, `reverse_test`; Tests sind nützliche Rollen, keine Noise-Klasse.
+   - Bereits erledigte Slices: `readFirst` Items tragen `reasons[]`; TS/JS Imports, Python relative Imports, C/C++ quoted Includes, Header/Source-Paare und `near_config` werden aus indexierten Chunks/Pfaden abgeleitet; Stale-Verhalten bleibt indexbasiert.
+   - Offen: `same_dir`, feinere Testrollen wie `test_of`, `sibling_test`, `reverse_test`; Tests sind nützliche Rollen, keine Noise-Klasse.
    - Behavior-Test: Fixture mit Modul, Caller, Test, naher Config, Doc und Rauschdatei liefert Target + echte Beziehungen stabil vor Rauschen und erklärt die Herkunft der Context-Items über `reasons[]`.
 
 2. [ ] Typische Query-Klassen als vertikale TDD-Slices abdecken.
@@ -36,20 +36,13 @@ TDD-Regel:
    - Behavior-Test: Vorhandene/alte Test-DB oder simulierte Vorversion wird über öffentliche Index-/Search-Pfade geöffnet; Version steigt, Index/Search funktionieren, keine Datenverluste oder Crashs.
    - Benefit: Quality-Metriken sind nur belastbar, wenn der Index reproduzierbar und migrationssicher ist.
 
-4. [ ] Search-Quality-Gate deterministisch und closeout-tauglich machen.
-   - Architektur: Benchmark/Quality-Metriken sind ein Diagnose-Seam, nicht Teil des Public SearchResult.
-   - Problem: `scripts/bench-search-quality.ts` und `test/search-quality.test.ts` existieren, aber lokale Default-Repos unter `/home/wasti/...` sind kein stabiler Pflicht-Gate.
-   - Scope: Trennen zwischen verpflichtendem deterministischem Fixture-Gate und optionalen lokalen Tuning-Fixtures.
-   - Behavior-Test: `npm run bench:search-quality:gate` oder ein neuer Pflichtmodus läuft ohne private lokale Repos stabil grün; lokale Real-Repo-Benchmarks bleiben als optionales Tuning sichtbar.
-   - Closeout: Vor Release/Commit-Closeout sollen `npm run typecheck`, `npm test` und der deterministische Quality-Gate klar dokumentiert sein.
-
-5. [ ] Fehlgeschlagene Natural-Language-Benchmark-Cases als konkrete Regressionen bearbeiten.
+4. [ ] Fehlgeschlagene Natural-Language-Benchmark-Cases als konkrete Regressionen bearbeiten.
    - Einordnung: Nur sinnvoll, wenn jeder rote Case in einen überprüfbaren Behavior-Fall überführt wird.
    - Scope: Pro rotem Case Top-5-Treffer, erwartete Pfade, Query-Formulierung, Ranking-Diagnostics, Noise-Hits und Miss-Klasse analysieren.
    - Entscheidung je Case: Ranking/Query-Plan/File-Rollen verbessern, Ground Truth korrigieren oder Case als ungeeignet entfernen; keine Benchmark-Erleichterung nach Ergebnislage.
    - Test: Ein konkreter Regressionstest oder Benchmark-Case mit maschinenlesbarem Erfolgskriterium; keine bloße Notiz „Gate später grün machen“.
 
-6. [ ] Thin CLI Adapter über `src/core/` ergänzen.
+5. [ ] Thin CLI Adapter über `src/core/` ergänzen.
    - Architektur: `src/cli/` ist Adapter, nicht neue Implementation; Core bleibt Single Source of Truth für Approval, State, Status, Search und Context.
    - Scope: Kleiner CLI-Adapter, zuerst `status --json` und maximal ein Such-/Context-Befehl.
    - Behavior-Test: CLI-Integration nutzt temp `stateDir`, dupliziert keine State-Logik und gibt stabiles JSON aus.
@@ -57,12 +50,12 @@ TDD-Regel:
 
 ## Parked / später
 
-7. [ ] Refresh-Automation als expliziten Command oder Hook entscheiden.
+6. [ ] Refresh-Automation als expliziten Command oder Hook entscheiden.
    - Einordnung: Erst nach besserem Status-Modul sinnvoll. Kein Daemon/Background-Crawling als Default.
    - Scope: Kurze ADR/Doc-Entscheidung plus kleinster Implementierungs-Slice.
    - Behavior-Test: Gewählter Command/Hook respektiert Approval, `pathPrefix` und stale-index Warnungen.
 
-8. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
+7. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
    - Einordnung: Möglichkeit zur Verbesserung, **nicht** erster Schritt. Vorher müssen stabile Tests, Ground-Truth-Cases und maschinenlesbare Metriken existieren.
    - Idee: Autoresearch kann Ranking-Parameter adaptieren, wenn Resultate quantifiziert werden; `/home/wasti/dev/autoresearch/program.md` beschreibt bereits ein passendes Experimentprotokoll.
    - Voraussetzungen: maschinenlesbare Benchmark-Ausgabe mit `top1Accuracy`, `recallAt5`, `expectedCoverageAt5`, `mrrAt5`, `avgLatencyMs`, `p95LatencyMs`, `misses`, `partialMisses` und `excludedHits`; feste Trainings-/Validierungs-Cases; keine Anpassung ausschließlich auf ein einzelnes lokales Repo.
@@ -76,6 +69,6 @@ TDD-Regel:
 - Git-aware Status Module: `status({ health: "full" })` meldet jetzt `currentHead`, `indexedHead`, `headChanged`, `dirty`, `dirtyFiles` und den passenden `lastIndexedAt`; Git-HEAD/Dirty-Working-Tree-Drift wird über öffentliche `indexRepo`/`status`-Tests abgedeckt.
 - Ranking-Diagnostics: erster interner Helper `scoreSearchRow()` zerlegt Treffer in `finalScore`, Retrieval-/FTS-/Path-/Filename-/Symbol-/Coverage-Scores, Rollenboosts, Test-/Doc-/Noise-Penalties und gematchte Tokens; Public `SearchResult` bleibt ohne Explain-Felder. Wenn daran weitergearbeitet wird, dann über einen klaren Debug-/Benchmark-Seam statt Tests gegen beliebige private Implementation.
 - Agentischer E2E-Smoke-Test: `test/search.test.ts` prüft die Produkt-Interface-Kette über `codeMapIndex -> codeMapSearch -> codeMapContext`: „where is the main implementation?“ findet den Source-Einstiegspunkt, und das Read-first-Paket enthält Target plus Import-/Test-/Doc-Nachbarn ohne Lockfile-/Generated-/Build-Noise.
-- Search-Quality-Metriken: Metriken und Gate existieren in `scripts/bench-search-quality.ts` und `test/search-quality.test.ts`. Aktive Arbeit ist jetzt nicht „Metriken bauen“, sondern deterministische Pflicht-Gates und konkrete Regressionen.
+- Search-Quality-Metriken: Metriken und Gate existieren in `scripts/bench-search-quality.ts` und `test/search-quality.test.ts`. `npm run bench:search-quality:gate` läuft jetzt gegen eingecheckte deterministische Fixtures; lokale Real-Repo-Benchmarks sind über `npm run bench:search-quality:local` optionales Tuning. Aktive Arbeit ist jetzt konkrete Regressionen statt Benchmark-Infrastruktur.
 
 Weitere Zukunfts- und Parkthemen stehen in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work). Abgeschlossene Lieferungshistorie steht dort bzw. im Changelog, nicht als aktive TODOs.

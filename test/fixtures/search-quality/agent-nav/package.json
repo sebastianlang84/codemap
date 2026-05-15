@@ -1,0 +1,7 @@
+{
+  "name": "codemap-search-quality-fixture",
+  "version": "1.0.0",
+  "dependencies": {
+    "typebox": "1.0.0"
+  }
+}

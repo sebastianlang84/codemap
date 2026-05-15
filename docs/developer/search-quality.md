@@ -14,19 +14,31 @@ It is intentionally deterministic and local. It does not call an LLM or embeddin
 
 ## Commands
 
-Run an informational report:
+Run the deterministic in-repo fixture report:
+
+```bash
+npm run bench:search-quality
+```
+
+Run the deterministic quality gate used for closeout/CI:
+
+```bash
+npm run bench:search-quality:gate
+```
+
+Run against explicit repositories for ad hoc tuning:
 
 ```bash
 npm run bench:search-quality -- /path/to/repo
 ```
 
-Run the default quality gate:
+Run the opt-in local real-repo tuning profile:
 
 ```bash
-npm run bench:search-quality:gate -- /path/to/repo
+npm run bench:search-quality:local
 ```
 
-If no repository path is supplied, the script uses existing default local fixtures when present:
+The default and gate commands use checked-in fixtures under `test/fixtures/search-quality/`. They do not depend on private local repositories. `--local-repos` is the only mode that uses known local paths when present:
 
 - `/home/wasti/macrolens`
 - `/home/wasti/ai_stack/services/newsletter-writer`
@@ -44,7 +56,7 @@ This checks whether exact or prefix symbol searches still surface definitions ne
 
 ### Natural-language cases
 
-For known local repos, the benchmark includes hand-written questions that represent agent-style navigation, for example:
+For checked-in fixtures and known local repos, the benchmark includes hand-written questions that represent agent-style navigation, for example:
 
 - `where is the main implementation?` → `train.py`
 - `where are dependencies declared?` → `pyproject.toml`
@@ -83,9 +95,11 @@ require at least one evaluated case per repo
 
 The gate exits non-zero when a threshold fails. Informational benchmark runs still print the gate section but do not fail unless a gate flag is supplied.
 
-Custom gate flags:
+Repo-selection and custom gate flags:
 
 ```text
+--fixtures
+--local-repos
 --quality-gate
 --min-top1 <0..1>
 --min-recall-at-5 <0..1>
@@ -139,6 +153,6 @@ Do not promote an embedder or reranker to a default path unless it beats the lex
 ## Current limitations
 
 - Structural ground truth depends on optional `ast-grep`; without it, only natural cases run.
-- Natural cases are currently hard-coded in `scripts/bench-search-quality.ts` for known local repos.
+- Natural cases are hard-coded in `scripts/bench-search-quality.ts` for checked-in fixtures and optional known local repos.
 - Metrics judge file-path retrieval, not whether the returned snippet is the best possible line range.
 - The benchmark is designed for local tuning and regression checks, not as a universal search benchmark across arbitrary projects.
