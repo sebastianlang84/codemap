@@ -4,6 +4,8 @@
 
 - Breaking: remove deprecated `codebase_*` tool aliases and `/codebase-*` commands. Use `codemap_*` tools and `/codemap-*` commands instead.
 - Improve `codemap_context` read-first packages by adding directly imported local files and local caller hints alongside name-based test/doc hints.
+- Keep lockfile/generated/build/minified neighbors out of read-first context while preserving useful related tests/docs.
+- Add internal ranking diagnostics for tests and benchmarks without adding public `codemap_search` explain fields.
 
 ## 0.5.0 - 2026-05-12
 

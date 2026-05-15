@@ -34,7 +34,7 @@ During indexing it:
 - skips files larger than 1 MB or containing NUL bytes;
 - stores each file's path, language, size, SHA-256 hash, and mtime;
 - chunks source files into overlapping line ranges and Markdown files by headings;
-- extracts cheap symbols such as TypeScript/JavaScript classes, functions, const arrow functions, interfaces, types, methods, and Markdown headings;
+- extracts cheap symbols such as TypeScript/JavaScript classes, functions, const arrow functions, interfaces, types, methods, Python classes/functions, and Markdown headings;
 - writes paths, chunks, and symbols into SQLite FTS5 tables.
 
 Re-indexing is incremental: unchanged files are skipped, changed files are refreshed, and deleted files are removed. `pathPrefix` can scope indexing, status, search, and context to a subtree in monorepos.

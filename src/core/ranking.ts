@@ -13,7 +13,39 @@ export interface SearchRow {
   symbolName?: string | null;
 }
 
+export interface SearchScoreDiagnostics {
+  finalScore: number;
+  retrievalBoost: number;
+  ftsScore: number;
+  pathScore: number;
+  filenameScore: number;
+  exactTextScore: number;
+  symbolScore: number;
+  textCoverageScore: number;
+  tokenCoverage: number;
+  matchedTokens: string[];
+  codeIntentBoost: number;
+  roleBoost: number;
+  testPenalty: number;
+  docPenalty: number;
+  noisePenalty: number;
+  roles: string[];
+}
+
 export function toResult(row: SearchRow, plan: QueryPlan, boost: number): SearchResult {
+  const diagnostics = scoreSearchRow(row, plan, boost);
+  return {
+    path: row.path,
+    language: row.language,
+    startLine: row.startLine,
+    endLine: row.endLine,
+    kind: row.kind,
+    snippet: matchSnippet(row.text, plan),
+    score: diagnostics.finalScore,
+  };
+}
+
+export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): SearchScoreDiagnostics {
   const exactPath = row.path.toLowerCase().includes(plan.normalized);
   const exactText = row.text.toLowerCase().includes(plan.normalized);
   const symbolish = row.kind !== "text" && row.kind !== "markdown" && row.kind !== "file";
@@ -30,39 +62,46 @@ export function toResult(row: SearchRow, plan: QueryPlan, boost: number): Search
   const sourceLike = /(^|\/)src\//.test(lowerPath);
   const testLike = /(^|\/)(?:test|tests|__tests__)\//.test(lowerPath) || /(?:^|[._-])test\./.test(basename);
   const docLike = /(^|\/)(?:readme|architecture|changelog|todo)(?:\.|$)|\.(?:md|mdx|rst|txt)$/.test(lowerPath);
-  const roleBoost = fileRoleBoost(fileRoles(lowerPath), plan.roleIntents);
-  const lockPenalty = /(^|[/.-])(?:package-lock|npm-shrinkwrap|yarn\.lock|pnpm-lock|.*\.lock)(?:$|[/.])/.test(row.path) ? 4 : 0;
+  const roles = fileRoles(lowerPath);
+  const retrievalBoost = boost;
+  const ftsScore = rankScore(row.rank);
+  const pathScore = (exactPath ? 6 : 0) + (lowerPath.endsWith(plan.normalized) ? 3 : 0) + pathCoverage * 5;
+  const filenameScore = basenameCoverage * 4;
+  const exactTextScore = exactText ? 4 : 0;
+  const symbolScore = (symbolish && exactText ? 3 : 0) + (exactSymbol ? 8 : 0) + (prefixSymbol ? 5 : 0);
+  const textCoverageScore = textCoverage * 3;
+  const codeIntentBoost = (plan.codeIntent && codeLike ? 2 : 0) + (plan.codeIntent && sourceLike ? 4 : 0);
+  const roleBoost = fileRoleBoost(roles, plan.roleIntents);
+  const testPenalty = plan.codeIntent && testLike ? 3 : 0;
+  const docPenalty = plan.codeIntent && docLike ? 6 : 0;
+  const noisePenalty = fileRolePenalty(roles, plan);
+  const matchedTokens = matchedQueryTokens([lowerPath, lowerText, symbolName].join("\n"), plan.coreTerms);
+  const tokenCoverage = plan.coreTerms.length > 0 ? matchedTokens.length / plan.coreTerms.length : 0;
+  const finalScore = retrievalBoost + ftsScore + pathScore + filenameScore + exactTextScore + symbolScore + textCoverageScore + codeIntentBoost + roleBoost - testPenalty - docPenalty - noisePenalty;
 
   return {
-    path: row.path,
-    language: row.language,
-    startLine: row.startLine,
-    endLine: row.endLine,
-    kind: row.kind,
-    snippet: matchSnippet(row.text, plan),
-    score:
-      boost +
-      rankScore(row.rank) +
-      (exactPath ? 6 : 0) +
-      (lowerPath.endsWith(plan.normalized) ? 3 : 0) +
-      (exactText ? 4 : 0) +
-      (symbolish && exactText ? 3 : 0) +
-      (exactSymbol ? 8 : 0) +
-      (prefixSymbol ? 5 : 0) +
-      pathCoverage * 5 +
-      basenameCoverage * 4 +
-      textCoverage * 3 +
-      (plan.codeIntent && codeLike ? 2 : 0) +
-      (plan.codeIntent && sourceLike ? 4 : 0) +
-      roleBoost -
-      (plan.codeIntent && testLike ? 3 : 0) -
-      (plan.codeIntent && docLike ? 6 : 0) -
-      lockPenalty,
+    finalScore,
+    retrievalBoost,
+    ftsScore,
+    pathScore,
+    filenameScore,
+    exactTextScore,
+    symbolScore,
+    textCoverageScore,
+    tokenCoverage,
+    matchedTokens,
+    codeIntentBoost,
+    roleBoost,
+    testPenalty,
+    docPenalty,
+    noisePenalty,
+    roles,
   };
 }
 
 export function rankAndSlice(results: SearchResult[], limit: number): SearchResult[] {
   return dedupe(results)
+    .filter((result) => result.score > 0)
     .sort((a, b) => b.score - a.score || a.path.localeCompare(b.path) || a.startLine - b.startLine)
     .slice(0, limit);
 }
@@ -75,6 +114,7 @@ export function fileRoleBoost(roles: string[], intents: string[]): number {
 
 export function fileRoles(path: string): string[] {
   const basename = path.split("/").pop() ?? path;
+  const parts = path.split("/");
   const roles: string[] = [];
   if (basename === "readme.md") roles.push("overview");
   if (["program.md", "agents.md", "claude.md"].includes(basename)) roles.push("agent_instructions");
@@ -84,14 +124,42 @@ export function fileRoles(path: string): string[] {
   if (path.startsWith("scripts/") || /(?:^|\/)scripts\//.test(path)) roles.push("tooling");
   if (path.startsWith("tests/") || /(?:^|\/)(?:test|tests|__tests__)\//.test(path)) roles.push("tests");
   if (["pyproject.toml", "package.json", "requirements.txt", "cargo.toml", "go.mod"].includes(basename)) roles.push("dependencies");
-  if (/(?:^|[/.])(?:uv|package|pnpm|yarn|cargo)\.lock$/.test(path) || basename.endsWith(".lock")) roles.push("lockfile");
+  if (isLockfilePath(path, basename)) roles.push("lockfile");
+  if (parts.some((part) => ["dist", "build", ".next", "coverage", "vendor"].includes(part))) roles.push("build_output");
+  if (parts.some((part) => /generated|__generated__/.test(part)) || /(?:^|[._-])generated(?:[._-]|$)/.test(basename)) roles.push("generated");
+  if (/\.min\.[cm]?js$/.test(basename)) roles.push("minified");
   return uniqueStrings(roles);
+}
+
+function isLockfilePath(path: string, basename: string): boolean {
+  return /^(?:package-lock|npm-shrinkwrap)\.json$/.test(basename)
+    || /^pnpm-lock\.ya?ml$/.test(basename)
+    || basename === "yarn.lock"
+    || basename.endsWith(".lock")
+    || /(?:^|[/.])(?:uv|package|pnpm|yarn|cargo)\.lock$/.test(path);
+}
+
+function fileRolePenalty(roles: string[], plan: QueryPlan): number {
+  const explicitNoiseQuery = hasExplicitNoiseIntent(plan);
+  let penalty = 0;
+  if (roles.includes("lockfile")) penalty += explicitNoiseQuery ? 0 : 60;
+  if (roles.includes("generated")) penalty += explicitNoiseQuery ? 8 : 24;
+  if (roles.includes("build_output") || roles.includes("minified")) penalty += explicitNoiseQuery ? 12 : 36;
+  return penalty;
+}
+
+function hasExplicitNoiseIntent(plan: QueryPlan): boolean {
+  const tokens = [plan.normalized, ...plan.terms].join(" ");
+  return /\b(?:lockfile|lock|package-lock|pnpm-lock|yarn\.lock|generated|dist|build|bundle|minified|vendor)\b/.test(tokens);
 }
 
 function termCoverage(text: string, terms: string[]): number {
   if (terms.length === 0) return 0;
-  const hits = terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}($|[^\\p{L}\\p{N}])`, "u").test(text)).length;
-  return hits / terms.length;
+  return matchedQueryTokens(text, terms).length / terms.length;
+}
+
+function matchedQueryTokens(text: string, terms: string[]): string[] {
+  return terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}($|[^\\p{L}\\p{N}])`, "u").test(text));
 }
 
 function escapeRegExp(value: string): string {

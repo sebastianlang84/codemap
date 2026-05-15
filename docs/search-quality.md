@@ -98,13 +98,29 @@ Custom gate flags:
 
 Custom numeric thresholds must be present and in range. Supplying any custom gate flag also requires at least one evaluated case.
 
+## Ranking/noise behavior covered by tests
+
+The current product contract is documented in [`docs/PRD.md#15-ranking-and-noise-handling`](PRD.md#15-ranking-and-noise-handling). The benchmark and unit tests act as executable documentation for these rules:
+
+- Lockfiles are indexed so explicit queries such as `package-lock.json` can find them.
+- Ordinary dependency or phrase queries should prefer source/config/docs/tests and should not include lockfiles in the top results.
+- Generated/build/minified outputs are noisy signals and should not become read-first context neighbors.
+- `codemap_context` should keep lockfile/generated/build/minified import or reverse-import neighbors out of `readFirst` while preserving useful related tests/docs.
+- Ranking diagnostics exist for maintainer/debug paths, but public `codemap_search` results stay compact and do not expose explain fields.
+
+Relevant tests in `test/search.test.ts` include:
+
+- `lockfiles are indexed but only prominent for explicit lockfile queries`
+- `context read-first excludes noisy generated and lockfile neighbors`
+- `ranking diagnostics expose score components without search API explain fields`
+
 ## How to use this when improving CodeMap
 
 1. Run the gate before changing search behavior.
 2. Change ranking, query planning, chunking, or symbol extraction.
 3. Re-run the same gate command.
-4. Inspect `misses` and `partialMisses` first; then inspect Top-1/MRR shifts.
-5. Add a natural-language case when a real agent query should have found a specific file.
+4. Inspect `misses`, `partialMisses`, and `excludedHits` first; then inspect Top-1/MRR shifts.
+5. Add a natural-language case when a real agent query should have found a specific file or avoided a known noise file.
 6. Only relax thresholds when the benchmark data or case design is wrong.
 
 ## Future semantic benchmark track

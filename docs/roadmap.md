@@ -23,7 +23,7 @@ When evaluating prior art, CodeMap should combine the strongest compatible ideas
 
 ## Completed V1 improvement slices
 
-The previous prioritized TDD slices are complete and kept here as delivery history. `TODO.md` is the canonical tactical backlog; it currently has no open tactical items. When new work is selected, promote one concrete slice from [Future work](#future-work) or [Deferred questions](#deferred-questions) into `TODO.md` with scope, benefit, first TDD test, and verification.
+The previous prioritized TDD slices are complete and kept here as delivery history. `TODO.md` is the canonical tactical backlog; it contains only active concrete follow-up slices, each with scope, benefit, first test, and verification.
 
 | Completed slice | Module / Seam | Public Interface tested | First behavior test | Verification |
 |---|---|---|---|---|
@@ -41,15 +41,28 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ## Future work
 
+### Product direction for arbitrary repos
+
+CodeMap should improve arbitrary, non-CodeMap-optimized repositories without requiring `.codemap` folders, curated benchmark files, or manually maintained file links. Its product identity is **agent navigation**, not a general code-retrieval system: an agent asks, CodeMap returns a useful entry point, nearby files to read first, and enough internal reasons to debug bad rankings.
+
+Think in two tracks:
+
+- **A: get more out of the current lightweight baseline** — stronger file-role/noise handling for lockfiles/generated/vendor/build outputs, better ranking diagnostics, deterministic read-first relationships from imports, reverse imports, sibling tests, nearby configs, paths, symbols, and precise stale-index status.
+- **B: add new capabilities when A is insufficient** — optional structural search (`ast-grep`) and optional semantic/vector search. PRD/feature-idea → code discovery across different vocabulary belongs here; do not promise it as a lexical feature.
+
+File roles matter more than raw FTS rank for agents: tests are useful context, lockfiles are indexed but rarely read-first, generated/minified/build/vendor outputs get strong penalties, and large JSON/snapshots should not bloat context packages. Explicit Markdown links are only an opportunistic signal, not a central product bet.
+
+Hard design rule for future semantic search: **exact path/symbol > lexical FTS > import/test/config neighbors > semantic similarity**. Semantics may supplement, but must not dominate or make CodeMap unpredictable.
+
 | Area | Possible direction | Notes |
 |---|---|---|
 | Chunking | Better Markdown/code-fence/function-aware chunks | Borrow qmd's principles: scored breakpoints, avoid splitting fenced code, preserve line ranges. |
-| Search explain | Ranking traces for path/symbol/FTS and future hybrid signals | Needed before heavier ranking changes so quality regressions are debuggable. |
-| Embeddings/vector adapters | Optional local embedding provider interface; evaluate FastEmbed/ONNX and vector storage such as `sqlite-vec`, Vec1, LanceDB, or an external vector backend | No cloud requirement; FTS must stay useful without embeddings. Treat model runtimes and vector stores as opt-in. |
-| Ranking | Hybrid lexical/semantic ranking, possibly Reciprocal Rank Fusion | Keep deterministic lexical ranking as the fallback; protect exact path/symbol matches. |
+| Ranking diagnostics | Internal ranking traces for path/filename/symbol/FTS/token coverage/context bonuses/noise penalties | Needed before heavier ranking changes so quality regressions are debuggable; keep public `SearchResult` compact. |
+| Embeddings/vector adapters | Optional local `EmbeddingProvider`, `VectorStore`, and `HybridRanker`; evaluate LanceDB first for embedded local storage, Qdrant/FastEmbed only if a stronger vector stack is intentionally needed | No cloud requirement; FTS must stay useful without embeddings. Treat model runtimes and vector stores as opt-in. |
+| Ranking | Hybrid lexical/semantic ranking, possibly Reciprocal Rank Fusion | Keep deterministic lexical ranking as the fallback; exact path/symbol matches must not be displaced by semantic similarity. |
 | ast-grep and symbols | Optional query-time structural search plus stronger symbol extraction | Must degrade cleanly when `ast-grep` is unavailable. |
 | Graph and relationships | Small SQLite mini-graph for file/symbol/doc/test relationships, including test/doc relationship extraction | No external graph server. Promote only relationships that improve read-first context enough to justify maintenance. |
-| Related context | Better test/doc/dependency hints | Direct local imports and reverse-import callers are implemented for read-first context; remaining work should focus on measured gaps such as Markdown links or stronger test/doc relationships. |
+| Related context | Better test/dependency/config hints for arbitrary repos | Direct local imports and reverse-import callers are implemented for read-first context; remaining work should focus on measured zero-config gaps such as stronger test/callsite/config relationships and context expansion reasons. Treat Markdown links as opportunistic, not central. |
 | CLI adapter | Add a thin `src/cli/` adapter over `src/core/` | Keep CLI output/argv parsing separate from product logic; see the architecture boundary in [`PRD.md`](PRD.md#17-packaging). |
 | Memory links | Link CodeMap results to `pi-memory` artifact references | Keep CodeMap rebuildable; durable decisions stay in memory. |
 | Automation | Optional hooks or commands for refresh workflows | Avoid daemon/background crawling as a default. |
@@ -60,7 +73,7 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 - Which vector backend, if any, is worth supporting first: `sqlite-vec`, Vec1, LanceDB, or an external vector backend?
 - How far should cheap regex symbol extraction go before using optional `ast-grep`?
 - How much query-time structural search should come from `ast-grep`, and what should remain lexical/FTS-only?
-- After direct/reverse import hints, which graph/test/doc relationships are useful enough for V1.5/V2?
+- After direct/reverse import hints, which zero-config test/callsite/config relationships are useful enough for V1.5/V2?
 - When should a CLI adapter become worth adding, and which output modes besides JSON are needed?
 - Should refresh automation be an explicit command, hook, or remain manual-only?
 

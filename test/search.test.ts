@@ -12,6 +12,8 @@ process.env.USERPROFILE = storageHome;
 after(() => rmSync(storageHome, { recursive: true, force: true }));
 
 const { indexRepo, status } = await import("../src/core/indexer.ts");
+const { planQuery } = await import("../src/core/query-plan.ts");
+const { scoreSearchRow } = await import("../src/core/ranking.ts");
 const { searchCodeMap, searchCodeMapWithDiagnostics } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
 const { getRepoInfo, repoKey } = await import("../src/core/repo.ts");
@@ -69,6 +71,7 @@ The alpha beta workflow covers complete matches.
 
 alpha alpha alpha alpha alpha alpha alpha alpha
 `);
+  writeFileSync(join(root, "package.json"), JSON.stringify({ name: "fixture", dependencies: { leftpad: "1.0.0" } }, null, 2));
   writeFileSync(join(root, "package-lock.json"), JSON.stringify({ noise: "ignored directory approveUser left-pad" }, null, 2));
 
   indexRepo({ cwd: root, approve: true });
@@ -115,6 +118,42 @@ test("phrase queries find phrase-bearing docs without lockfile noise", (t) => {
   const results = searchCodeMap({ cwd: root, query: "\"ignored directory\"", limit: 5 });
   assert.equal(results[0]?.path, "docs/ops.md");
   assert.ok(results.every((result) => result.path !== "package-lock.json"));
+});
+
+test("lockfiles are indexed but only prominent for explicit lockfile queries", (t) => {
+  const root = fixtureRepo(t);
+
+  const dependencies = searchCodeMap({ cwd: root, query: "package dependencies leftpad", limit: 5 });
+  assert.equal(dependencies[0]?.path, "package.json");
+  assert.ok(dependencies.every((result) => result.path !== "package-lock.json"));
+
+  const lockfile = searchCodeMap({ cwd: root, query: "package-lock.json", limit: 5 });
+  assert.equal(lockfile[0]?.path, "package-lock.json");
+});
+
+test("ranking diagnostics expose score components without search API explain fields", (t) => {
+  const root = fixtureRepo(t);
+  const results = searchCodeMap({ cwd: root, query: "package dependencies leftpad", limit: 5 });
+  assert.ok(results.length > 0);
+  assert.ok(results.every((result) => !("diagnostics" in result) && !("scoreDiagnostics" in result)));
+
+  const diagnostics = scoreSearchRow({
+    path: "package-lock.json",
+    language: "json",
+    startLine: 1,
+    endLine: 1,
+    kind: "text",
+    text: "leftpad dependencies package",
+    rank: -3,
+    symbolName: null,
+  }, planQuery("package dependencies leftpad"), 1);
+
+  assert.ok(diagnostics.finalScore < 0, JSON.stringify(diagnostics));
+  assert.equal(diagnostics.retrievalBoost, 1);
+  assert.ok(diagnostics.ftsScore > 0, JSON.stringify(diagnostics));
+  assert.ok(diagnostics.tokenCoverage > 0, JSON.stringify(diagnostics));
+  assert.deepEqual(diagnostics.matchedTokens.sort(), ["dependencies", "leftpad", "package"]);
+  assert.ok(diagnostics.noisePenalty >= 60, JSON.stringify(diagnostics));
 });
 
 test("multi-term queries prefer all-term matches over OR fallback", (t) => {
@@ -285,6 +324,32 @@ test("context read-first includes indexed local files that import the target", (
   assert.deepEqual(result.warnings, []);
 });
 
+test("context read-first excludes noisy generated and lockfile neighbors", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "__generated__"), { recursive: true });
+  writeFileSync(join(root, "src", "feature.ts"), `
+import lockData from "../package-lock.json";
+import { generatedClient } from "./__generated__/client";
+export const feature = generatedClient + String(lockData);
+`);
+  writeFileSync(join(root, "src", "__generated__", "client.ts"), `
+import { feature } from "../feature";
+export const generatedClient = String(feature);
+`);
+  writeFileSync(join(root, "src", "feature.test.ts"), `
+import { feature } from "./feature";
+test("feature", () => feature);
+`);
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/feature.ts", limit: 6 });
+  const paths = result.readFirst.map((item) => item.path);
+  assert.equal(paths[0], "src/feature.ts");
+  assert.ok(paths.includes("src/feature.test.ts"), JSON.stringify(paths));
+  assert.ok(!paths.includes("src/__generated__/client.ts"), JSON.stringify(paths));
+  assert.ok(!paths.includes("package-lock.json"), JSON.stringify(paths));
+});
+
 test("context read-first excludes imported files outside pathPrefix", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-context-import-prefix-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -356,6 +421,7 @@ test("safety skips secrets, generated files, heavy directories, binary files, la
   writeFileSync(join(root, ".env"), "SUPER_SKIPPED_NEEDLE=1\n");
   writeFileSync(join(root, "private-key.ts"), "export const superSkippedNeedle = true;\n");
   writeFileSync(join(root, "package-lock.json"), JSON.stringify({ superSkippedNeedle: true }));
+  writeFileSync(join(root, "bundle.min.js"), "const superSkippedNeedle=true;");
   writeFileSync(join(root, "binary.txt"), Buffer.from("superSkippedNeedle\0"));
   writeFileSync(join(root, "huge.txt"), `${"x".repeat(1_000_001)}superSkippedNeedle`);
   writeFileSync(join(root, "ignored.txt"), "superSkippedNeedle\n");

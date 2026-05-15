@@ -6,10 +6,6 @@ const ignoredDirs = new Set([
   ".venv", "venv", "env", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", "site-packages", ".gradle", ".parcel-cache",
 ]);
 const ignoredFiles = [
-  /\.lock$/i,
-  /^(?:package-lock|npm-shrinkwrap)\.json$/i,
-  /^pnpm-lock\.ya?ml$/i,
-  /^yarn\.lock$/i,
   /\.min\.js$/i,
   /\.png$/i,
   /\.jpe?g$/i,

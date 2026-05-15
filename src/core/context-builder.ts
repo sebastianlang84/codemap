@@ -3,6 +3,7 @@ import { posix } from "node:path";
 import { snippet } from "./chunker.ts";
 import { openRepoDb } from "./db.ts";
 import { status } from "./indexer.ts";
+import { fileRoles } from "./ranking.ts";
 import { getRepoInfo, type StateOptions } from "./repo.ts";
 import { searchCodeMap } from "./search.ts";
 import { normalizePathPrefix } from "./scanner.ts";
@@ -128,7 +129,8 @@ function readFirstItems(
 }
 
 function localReadFirstItems(db: ReturnType<typeof openRepoDb>, targetItems: CodeMapReadFirstItem[], imports: string[], importers: string[], tests: string[], docs: string[], limit: number): CodeMapReadFirstItem[] {
-  const related = [...imports, importers[0], tests[0], docs[0], ...importers.slice(1), ...tests.slice(1), ...docs.slice(1)].filter((path): path is string => Boolean(path));
+  const related = [...imports, importers[0], tests[0], docs[0], ...importers.slice(1), ...tests.slice(1), ...docs.slice(1)]
+    .filter((path): path is string => Boolean(path && !isNoisyReadFirstPath(path)));
   const relatedItems = related.flatMap((path) => firstChunkForPath(db, path));
   const items = targetItems.length > 0 ? [targetItems[0]] : [];
   items.push(...dedupeReadFirstItems(relatedItems, items).slice(0, Math.max(0, limit - items.length)));
@@ -151,7 +153,7 @@ function importedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string,
   if (!text) return [];
   const resolved = extractLocalModuleSpecifiers(text)
     .map((specifier) => resolveIndexedImport(db, fromPath, specifier, pathFilter))
-    .filter((path): path is string => Boolean(path && path !== fromPath));
+    .filter((path): path is string => Boolean(path && path !== fromPath && !isNoisyReadFirstPath(path)));
   return uniqueStrings(resolved).slice(0, 8);
 }
 
@@ -159,7 +161,7 @@ function importingLocalPaths(db: ReturnType<typeof openRepoDb>, targetPath: stri
   const rows = db.prepare("select path from files where path <> ? and path like ? escape '\\' order by path")
     .all(targetPath, pathFilter) as Array<{ path: string }>;
   const importers = rows
-    .filter((row) => indexedFileImportsTarget(db, row.path, targetPath, pathFilter))
+    .filter((row) => !isNoisyReadFirstPath(row.path) && indexedFileImportsTarget(db, row.path, targetPath, pathFilter))
     .map((row) => row.path);
   return sortByLocality(targetPath, uniqueStrings(importers)).slice(0, 8);
 }
@@ -246,9 +248,14 @@ function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilte
     order by path
   `).all(stemLike, baseLike, pathFilter) as Array<{ path: string }>;
   return {
-    tests: sortByLocality(base, relatedTests.map((r) => r.path)).slice(0, 8),
-    docs: sortByLocality(base, relatedDocs.map((r) => r.path)).slice(0, 8),
+    tests: sortByLocality(base, relatedTests.map((r) => r.path).filter((path) => !isNoisyReadFirstPath(path))).slice(0, 8),
+    docs: sortByLocality(base, relatedDocs.map((r) => r.path).filter((path) => !isNoisyReadFirstPath(path))).slice(0, 8),
   };
+}
+
+function isNoisyReadFirstPath(path: string): boolean {
+  const roles = fileRoles(path.toLowerCase());
+  return roles.some((role) => ["lockfile", "generated", "build_output", "minified"].includes(role));
 }
 
 function sortByLocality(base: string, paths: string[]): string[] {

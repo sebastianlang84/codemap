@@ -222,16 +222,17 @@ Index common code, docs, and config files only:
 - JSON/YAML/TOML/SQL/CSS/SCSS/HTML
 - important config files
 
-Default excludes:
+Default skips/excludes:
 
 - binaries
 - images/videos/PDFs/archives
-- lockfiles
-- minified/bundled output
+- minified/bundled output files
 - dependency folders
-- generated output
-- coverage/build directories
+- generated/cache/build/output directories
+- coverage directories
 - secret-like files
+
+Lockfiles are intentionally different from generated binaries: supported text lockfiles that pass the file-inclusion policy, such as `package-lock.json`, `npm-shrinkwrap.json`, and `pnpm-lock.yaml`, may be indexed so explicit lockfile queries work. They are treated as noisy files in ranking and read-first context and should not displace source/config/docs/tests for ordinary agent navigation queries.
 
 Default ignored patterns include:
 
@@ -246,7 +247,6 @@ vendor
 target
 .idea
 .vscode
-*.lock
 *.min.js
 .env*
 *.pem
@@ -482,18 +482,27 @@ Output:
 }
 ```
 
-## 15. Ranking
+## 15. Ranking and noise handling
 
-V1 ranking signals:
+V1 ranking is deterministic and lexical/local-first. Embeddings are not part of V1 ranking.
+
+Primary positive signals:
 
 1. Exact path/name match
-2. Symbol match
-3. FTS chunk match
-4. Markdown heading/doc match
-5. Test-file boost if query mentions test/debug/failing
-6. Small recency boost only
+2. Exact or prefix symbol match
+3. SQLite FTS chunk/symbol match
+4. Token coverage in path, filename, symbol, and chunk text
+5. Query-intent boosts for implementation/config/dependency/docs/tests where applicable
+6. File-role boosts such as implementation entrypoints or dependency manifests
 
-Embeddings are not part of V1 ranking.
+Noise handling:
+
+- Lockfiles are indexed but receive a strong noise penalty for ordinary queries; explicit lockfile/path queries can still surface them first.
+- Generated files, build output, vendor/output folders, and minified files are strongly de-prioritized or skipped depending on scan policy.
+- `codemap_context` keeps noisy related imports/reverse-imports out of `readFirst` when they point to lockfiles, generated files, build output, or minified files, while still allowing an explicitly requested noisy target to be returned directly.
+- Tests and docs are useful context, not generic noise; they should appear as related read-first files when they are actual sibling, reverse-import, or path-related context.
+
+Search-result objects remain compact. Internal score diagnostics may decompose retrieval/FTS/path/filename/symbol/coverage/role/noise components for tests and benchmark debugging, but the public `codemap_search` result shape does not include explain fields.
 
 ## 16. Commands
 
