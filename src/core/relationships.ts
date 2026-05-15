@@ -12,7 +12,10 @@ export type CodeMapContextReasonKind =
   | "reverse_include"
   | "implementation_pair"
   | "near_config"
+  | "same_dir"
+  | "test_of"
   | "sibling_test"
+  | "reverse_test"
   | "related_doc";
 
 export interface CodeMapContextReason {
@@ -68,8 +71,20 @@ export function searchResultReason(target: string): CodeMapContextReason {
   return { kind: "search_result", label: "fallback search result", specifier: target };
 }
 
+export function sameDirReason(targetPath: string, path: string): CodeMapContextReason {
+  return { kind: "same_dir", label: "same-directory source file", sourcePath: path, targetPath };
+}
+
+export function testOfReason(testPath: string, path: string): CodeMapContextReason {
+  return { kind: "test_of", label: "source file tested by target", sourcePath: testPath, targetPath: path };
+}
+
 export function relatedTestReason(targetPath: string, path: string): CodeMapContextReason {
   return { kind: "sibling_test", label: "name/path-related test", sourcePath: path, targetPath };
+}
+
+export function reverseTestReason(targetPath: string, path: string): CodeMapContextReason {
+  return { kind: "reverse_test", label: "test file imports target", sourcePath: path, targetPath };
 }
 
 export function relatedDocReason(targetPath: string, path: string): CodeMapContextReason {
@@ -94,6 +109,13 @@ export function isNoisyReadFirstPath(path: string, size = 0): boolean {
   return roles.some((role) => ["lockfile", "generated", "build_output", "minified", "large_json"].includes(role));
 }
 
+export function isTestReadFirstPath(path: string): boolean {
+  const lowerPath = path.toLowerCase();
+  const basename = lowerPath.split("/").pop() ?? lowerPath;
+  return /(?:^|\/)(?:__tests__|tests?|spec)(?:\/|$)/.test(lowerPath)
+    || /(?:^|[._-])(?:test|spec)(?:[._-]|\.|$)/.test(basename);
+}
+
 export function isNoisyIndexedPath(db: ReturnType<typeof openRepoDb>, path: string): boolean {
   const row = db.prepare("select size from files where path = ?").get(path) as { size: number } | undefined;
   return isNoisyReadFirstPath(path, row?.size ?? 0);
@@ -106,16 +128,15 @@ function importedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string,
     .map((reference) => {
       const targetPath = resolveIndexedReference(db, fromPath, source.language, reference, pathFilter);
       if (!targetPath || targetPath === fromPath || isNoisyIndexedPath(db, targetPath)) return undefined;
-      const related: RelatedPath = {
-        path: targetPath,
-        reasons: [{
-          kind: reference.kind,
-          label: reference.kind === "include" ? "quoted local include" : "local import",
-          sourcePath: fromPath,
-          targetPath,
-          specifier: reference.specifier,
-        }],
-      };
+      const reasons: CodeMapContextReason[] = [{
+        kind: reference.kind,
+        label: reference.kind === "include" ? "quoted local include" : "local import",
+        sourcePath: fromPath,
+        targetPath,
+        specifier: reference.specifier,
+      }];
+      if (isTestReadFirstPath(fromPath) && !isTestReadFirstPath(targetPath)) reasons.push(testOfReason(fromPath, targetPath));
+      const related: RelatedPath = { path: targetPath, reasons };
       return related;
     })
     .filter((path): path is RelatedPath => Boolean(path));
@@ -138,16 +159,15 @@ function indexedFileReferencesTarget(db: ReturnType<typeof openRepoDb>, fromPath
     .map((reference) => {
       const resolved = resolveIndexedReference(db, fromPath, source.language, reference, pathFilter);
       if (resolved !== targetPath) return undefined;
-      const related: RelatedPath = {
-        path: fromPath,
-        reasons: [{
-          kind: reference.kind === "include" ? "reverse_include" : "reverse_import",
-          label: reference.kind === "include" ? "file includes target" : "file imports target",
-          sourcePath: fromPath,
-          targetPath,
-          specifier: reference.specifier,
-        }],
-      };
+      const reasons: CodeMapContextReason[] = [{
+        kind: reference.kind === "include" ? "reverse_include" : "reverse_import",
+        label: reference.kind === "include" ? "file includes target" : "file imports target",
+        sourcePath: fromPath,
+        targetPath,
+        specifier: reference.specifier,
+      }];
+      if (isTestReadFirstPath(fromPath) && !isTestReadFirstPath(targetPath)) reasons.push(reverseTestReason(targetPath, fromPath));
+      const related: RelatedPath = { path: fromPath, reasons };
       return related;
     })
     .filter((path): path is RelatedPath => Boolean(path));

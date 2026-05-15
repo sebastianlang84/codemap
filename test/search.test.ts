@@ -561,6 +561,52 @@ export function chargeInvoice(id: string) {
   assert.deepEqual(result.readFirst.find((item) => item.path === "src/core/payments/payment-service.config.json")?.reasons?.map((reason) => reason.kind), ["near_config"]);
 });
 
+test("context read-first explains same-directory and test-role neighbors", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "core", "billing"), { recursive: true });
+
+  writeFileSync(join(root, "src", "core", "billing", "invoice-service.ts"), `
+import { createGateway } from "./gateway";
+
+export function settleInvoice(id: string) {
+  return createGateway().settle(id);
+}
+`);
+  writeFileSync(join(root, "src", "core", "billing", "gateway.ts"), "export function createGateway() { return { settle: (id: string) => id }; }\n");
+  writeFileSync(join(root, "src", "core", "billing", "invoice-service.policy.ts"), "export const invoiceServicePolicy = 'standard';\n");
+  writeFileSync(join(root, "src", "core", "billing", "latest-invoice-service.ts"), "export const latestInvoiceServiceNotes = true;\n");
+  writeFileSync(join(root, "src", "core", "billing", "invoice-service.test.ts"), "import './invoice-service';\n");
+  writeFileSync(join(root, "src", "core", "billing", "invoice-service.spec.ts"), "export const siblingSpec = true;\n");
+  writeFileSync(join(root, "src", "core", "billing", "invoice-service.config.json"), JSON.stringify({ retries: 2 }, null, 2));
+  writeFileSync(join(root, "docs", "invoice-service.md"), "# Invoice service\n\nBilling docs.\n");
+  indexRepo({ cwd: root });
+
+  const sourceContext = codemapContext({ cwd: root, target: "src/core/billing/invoice-service.ts" });
+  const reasonKindsByPath = new Map(sourceContext.readFirst.map((item) => [item.path, item.reasons?.map((reason) => reason.kind) ?? []]));
+
+  assert.equal(sourceContext.readFirst[0]?.path, "src/core/billing/invoice-service.ts");
+  assert.ok(reasonKindsByPath.get("src/core/billing/invoice-service.policy.ts")?.includes("same_dir"), JSON.stringify(sourceContext.readFirst));
+  assert.ok(reasonKindsByPath.get("src/core/billing/invoice-service.test.ts")?.includes("reverse_test"), JSON.stringify(sourceContext.readFirst));
+  assert.ok(reasonKindsByPath.get("src/core/billing/invoice-service.spec.ts")?.includes("sibling_test"), JSON.stringify(sourceContext.readFirst));
+  assert.ok(!reasonKindsByPath.get("src/core/billing/latest-invoice-service.ts")?.includes("sibling_test"), JSON.stringify(sourceContext.readFirst));
+
+  const testContext = codemapContext({ cwd: root, target: "src/core/billing/invoice-service.test.ts", limit: 3 });
+  const sourceUnderTest = testContext.readFirst.find((item) => item.path === "src/core/billing/invoice-service.ts");
+  assert.ok(sourceUnderTest?.reasons?.some((reason) => reason.kind === "test_of"), JSON.stringify(testContext.readFirst));
+});
+
+test("context read-first includes same-directory source before extra target chunks at default limit", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "isolated-widget.ts"), `${Array.from({ length: 90 }, (_, index) => `export const isolatedWidgetLine${index} = ${index};`).join("\n")}\n`);
+  writeFileSync(join(root, "src", "core", "isolated-widget.policy.ts"), "export const isolatedWidgetPolicy = true;\n");
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/core/isolated-widget.ts" });
+  const sameDirItem = result.readFirst.find((item) => item.path === "src/core/isolated-widget.policy.ts");
+
+  assert.ok(sameDirItem?.reasons?.some((reason) => reason.kind === "same_dir"), JSON.stringify(result.readFirst));
+});
+
 test("context read-first excludes noisy generated and lockfile neighbors", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "src", "__generated__"), { recursive: true });

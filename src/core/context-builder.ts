@@ -6,12 +6,15 @@ import {
   isConfigReadFirstPath,
   isNoisyIndexedPath,
   isNoisyReadFirstPath,
+  isTestReadFirstPath,
   mergeRelatedPaths,
   nearConfigReason,
   relatedDocReason,
   relatedTestReason,
+  sameDirReason,
   searchResultReason,
   targetReason,
+  testOfReason,
   type CodeMapContextReason,
   type RelatedPath,
 } from "./relationships.ts";
@@ -76,7 +79,7 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
     const related = relatedPaths(db, readFirst.base, request.pathFilter);
     const relationships = readFirst.direct ? findIndexedRelationships(db, readFirst.base, request.pathFilter) : { imports: [], importers: [], implementationPairs: [] };
     const items = readFirst.direct
-      ? localReadFirstItems(db, readFirst.items, relationships.imports, relationships.implementationPairs, relationships.importers, related.configs, related.tests, related.docs, request.limit)
+      ? localReadFirstItems(db, readFirst.items, relationships.imports, relationships.implementationPairs, relationships.importers, related.configs, related.tests, related.docs, related.sameDir, related.testOf, request.limit)
       : readFirst.items;
     const lastIndexedAt = diagnostics.lastIndexedAt ?? null;
 
@@ -150,26 +153,35 @@ function localReadFirstItems(
   configs: RelatedPath[],
   tests: string[],
   docs: string[],
+  sameDir: RelatedPath[],
+  testOf: RelatedPath[],
   limit: number,
 ): CodeMapReadFirstItem[] {
   const testItems = tests.map((path) => ({ path, reasons: [relatedTestReason(targetItems[0]?.path ?? "", path)] }));
   const docItems = docs.map((path) => ({ path, reasons: [relatedDocReason(targetItems[0]?.path ?? "", path)] }));
-  const related = mergeRelatedPaths([
+  const strongRelated = mergeRelatedPaths([
     ...imports,
     ...implementationPairs,
     ...(importers[0] ? [importers[0]] : []),
+    ...(testOf[0] ? [testOf[0]] : []),
     ...(configs[0] ? [configs[0]] : []),
     ...(testItems[0] ? [testItems[0]] : []),
     ...(docItems[0] ? [docItems[0]] : []),
     ...importers.slice(1),
+    ...testOf.slice(1),
     ...configs.slice(1),
     ...testItems.slice(1),
     ...docItems.slice(1),
   ]).filter((item) => !isNoisyIndexedPath(db, item.path));
-  const relatedItems = related.flatMap((item) => firstChunkForPath(db, item));
+  const strongPaths = new Set(strongRelated.map((item) => item.path));
+  const sameDirItems = sameDir.filter((item) => !strongPaths.has(item.path) && !isNoisyIndexedPath(db, item.path));
+  const strongItems = strongRelated.flatMap((item) => firstChunkForPath(db, item));
+  const weakItems = sameDirItems.flatMap((item) => firstChunkForPath(db, item));
+  const laterTargetItems = targetItems.slice(1);
   const items = targetItems.length > 0 ? [targetItems[0]] : [];
-  items.push(...dedupeReadFirstItems(relatedItems, items).slice(0, Math.max(0, limit - items.length)));
-  if (items.length < limit) items.push(...targetItems.slice(1, 1 + Math.max(0, limit - items.length)));
+  items.push(...dedupeReadFirstItems(strongItems, items).slice(0, Math.max(0, limit - items.length)));
+  if (items.length < limit) items.push(...dedupeReadFirstItems(weakItems, items).slice(0, Math.max(0, limit - items.length)));
+  if (items.length < limit) items.push(...laterTargetItems.slice(0, Math.max(0, limit - items.length)));
   return items.slice(0, limit);
 }
 
@@ -192,7 +204,7 @@ function dedupeReadFirstItems(items: CodeMapReadFirstItem[], existing: CodeMapRe
   });
 }
 
-function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilter: string): { configs: RelatedPath[]; tests: string[]; docs: string[] } {
+function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilter: string): { configs: RelatedPath[]; tests: string[]; docs: string[]; sameDir: RelatedPath[]; testOf: RelatedPath[] } {
   const stem = base.split("/").pop()?.replace(/\.[^.]+$/, "") ?? base;
   const stemLike = `%${escapeLike(stem)}%`;
   const baseLike = `%${escapeLike(base)}%`;
@@ -217,20 +229,74 @@ function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilte
       .filter((row) => isNearbyConfigPath(base, row.path, row.size))
       .map((row) => row.path),
   ).slice(0, 8).map((path) => ({ path, reasons: [nearConfigReason(base, path)] }));
+  const sameDir = sortByLocality(
+    base,
+    sameDirSourcePaths(base, possibleConfigs),
+  ).slice(0, 8).map((path) => ({ path, reasons: [sameDirReason(base, path)] }));
+  const testOf = isTestReadFirstPath(base)
+    ? sortByLocality(base, possibleConfigs.filter((row) => isLikelySourceUnderTest(base, row.path, row.size)).map((row) => row.path))
+      .slice(0, 8)
+      .map((path) => ({ path, reasons: [testOfReason(base, path)] }))
+    : [];
   return {
     configs,
-    tests: sortByLocality(base, relatedTests.filter((row) => !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
+    tests: sortByLocality(base, relatedTests.filter((row) => isTestReadFirstPath(row.path) && !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
     docs: sortByLocality(base, relatedDocs.filter((row) => !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
+    sameDir,
+    testOf,
   };
+}
+
+function sameDirSourcePaths(base: string, rows: Array<{ path: string; size: number }>): string[] {
+  return rows
+    .filter((row) => isSameDirSourceNeighbor(base, row.path, row.size))
+    .map((row) => row.path);
+}
+
+function isSameDirSourceNeighbor(base: string, path: string, size: number): boolean {
+  if (dirname(path) !== dirname(base)) return false;
+  if (isNoisyReadFirstPath(path, size) || isConfigReadFirstPath(path, size) || isTestReadFirstPath(path) || isMarkdownPath(path)) return false;
+  return hasStemAffinity(stemWithoutExtension(base), stemWithoutExtension(path));
+}
+
+function isLikelySourceUnderTest(testPath: string, path: string, size: number): boolean {
+  if (path === testPath || isNoisyReadFirstPath(path, size) || isTestReadFirstPath(path) || isConfigReadFirstPath(path, size) || isMarkdownPath(path)) return false;
+  return dirname(path) === dirname(testPath) && stemWithoutTestMarker(testPath) === stemWithoutExtension(path);
 }
 
 function isNearbyConfigPath(base: string, path: string, size: number): boolean {
   if (isNoisyReadFirstPath(path, size) || !isConfigReadFirstPath(path, size)) return false;
-  const baseDir = base.split("/").slice(0, -1).join("/");
-  const pathDir = path.split("/").slice(0, -1).join("/");
+  const baseDir = dirname(base);
+  const pathDir = dirname(path);
   const stem = base.split("/").pop()?.replace(/\.[^.]+$/, "").toLowerCase() ?? base.toLowerCase();
   const basename = path.split("/").pop()?.toLowerCase() ?? path.toLowerCase();
   return pathDir === baseDir || basename.includes(stem);
+}
+
+function dirname(path: string): string {
+  return path.split("/").slice(0, -1).join("/");
+}
+
+function isMarkdownPath(path: string): boolean {
+  return path.toLowerCase().endsWith(".md") || path.toLowerCase().endsWith(".mdx");
+}
+
+function stemWithoutExtension(path: string): string {
+  return (path.split("/").pop() ?? path).replace(/\.[^.]+$/, "").toLowerCase();
+}
+
+function stemWithoutTestMarker(path: string): string {
+  return stemWithoutExtension(path).replace(/(?:[._-](?:test|spec)|(?:test|spec)[._-])$/i, "");
+}
+
+function hasStemAffinity(baseStem: string, candidateStem: string): boolean {
+  if (baseStem === candidateStem) return false;
+  return candidateStem.startsWith(`${baseStem}.`)
+    || candidateStem.startsWith(`${baseStem}-`)
+    || candidateStem.startsWith(`${baseStem}_`)
+    || baseStem.startsWith(`${candidateStem}.`)
+    || baseStem.startsWith(`${candidateStem}-`)
+    || baseStem.startsWith(`${candidateStem}_`);
 }
 
 function sortByLocality(base: string, paths: string[]): string[] {
