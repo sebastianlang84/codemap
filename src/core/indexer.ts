@@ -1,12 +1,13 @@
 import { openRepoDb } from "./db.ts";
 import { cheapIndexHealth, fullIndexHealth, readIndexStatusCounts } from "./index-health.ts";
 import { applyIndexUpdate } from "./index-store.ts";
-import { getRepoInfo, approveRepo } from "./repo.ts";
+import { getRepoInfo, approveRepo, type StateOptions } from "./repo.ts";
 import { normalizePathPrefix, scanRepo } from "./scanner.ts";
 import type { IndexStats } from "./types.ts";
 
-export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix?: string } = {}): IndexStats & { dbPath: string; root: string; pathPrefix: string } {
-  const info = options.approve ? approveRepo(options.cwd, "codemap_index") : getRepoInfo(options.cwd);
+export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix?: string } & StateOptions = {}): IndexStats & { dbPath: string; root: string; pathPrefix: string } {
+  const stateOptions = { stateDir: options.stateDir };
+  const info = options.approve ? approveRepo(options.cwd, "codemap_index", stateOptions) : getRepoInfo(options.cwd, stateOptions);
   if (!info.approved) throw new Error("Repository is not approved. Run codemap_index with approveRepo: true first.");
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const db = openRepoDb(info.dbPath);
@@ -22,10 +23,10 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
   }
 }
 
-export function status(cwd = process.cwd(), options: { health?: "cheap" | "full"; pathPrefix?: string } = {}) {
+export function status(cwd = process.cwd(), options: { health?: "cheap" | "full"; pathPrefix?: string } & StateOptions = {}) {
   const healthMode = options.health ?? "cheap";
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
-  const info = getRepoInfo(cwd);
+  const info = getRepoInfo(cwd, { stateDir: options.stateDir });
   if (!info.approved) {
     return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, warnings: [] };
   }

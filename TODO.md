@@ -7,7 +7,7 @@ Priorisierte Details stehen in [`docs/roadmap.md`](docs/roadmap.md#prioritized-n
 1. [x] Nicht-indexierte Repos neutral anzeigen.
    - Benefit: Nutzer/Agenten sehen „noch nicht bereit“ statt falschem Erfolg/Fehler.
    - Test: unapproved/unindexed Repo liefert neutralen Session-Status.
-2. [ ] `cwd`/`stateDir` als Core-Seam absichern.
+2. [x] `cwd`/`stateDir` als Core-Seam absichern.
    - Benefit: Core bleibt testbar und künftige CLI/Adapter müssen keine State-Logik duplizieren.
    - Test: temp `stateDir` isoliert Registry und Index-DBs.
 3. [ ] Prompt-Surface der Adapter kürzen.

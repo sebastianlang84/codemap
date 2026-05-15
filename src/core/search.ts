@@ -1,5 +1,5 @@
 import { openRepoDb } from "./db.ts";
-import { getRepoInfo } from "./repo.ts";
+import { getRepoInfo, type StateOptions } from "./repo.ts";
 import { status } from "./indexer.ts";
 import { planQuery } from "./query-plan.ts";
 import { rankAndSlice } from "./ranking.ts";
@@ -29,9 +29,9 @@ export interface CodeMapSearchPackage {
   results: SearchResult[];
 }
 
-export function searchCodeMapWithDiagnostics(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string }): CodeMapSearchPackage {
+export function searchCodeMapWithDiagnostics(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string } & StateOptions): CodeMapSearchPackage {
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
-  const diagnostics = status(options.cwd, { health: "full", pathPrefix }) as SearchDiagnostics & { root: string };
+  const diagnostics = status(options.cwd, { health: "full", pathPrefix, stateDir: options.stateDir }) as SearchDiagnostics & { root: string };
   return {
     query: options.query,
     root: diagnostics.root,
@@ -46,8 +46,8 @@ export function searchCodeMapWithDiagnostics(options: { query: string; cwd?: str
   };
 }
 
-export function searchCodeMap(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string }): SearchResult[] {
-  const info = getRepoInfo(options.cwd);
+export function searchCodeMap(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string } & StateOptions): SearchResult[] {
+  const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
   if (!info.approved) throw new Error("Repository is not approved/indexed yet.");
   const db = openRepoDb(info.dbPath);
   const limit = Math.min(Math.max(options.limit ?? 10, 1), 50);

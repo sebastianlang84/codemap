@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdtempSync, mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, mkdirSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -14,7 +14,7 @@ after(() => rmSync(storageHome, { recursive: true, force: true }));
 const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodeMap, searchCodeMapWithDiagnostics } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
-const { getRepoInfo } = await import("../src/core/repo.ts");
+const { getRepoInfo, repoKey } = await import("../src/core/repo.ts");
 const { registerCodeMapTools } = await import("../src/pi-extension/tools.ts");
 const { registerCodeMapCommands } = await import("../src/pi-extension/commands.ts");
 const { default: codeMapExtension } = await import("../src/pi-extension/index.ts");
@@ -373,6 +373,45 @@ export function cheapStatusAdded() {
   assert.equal(full.stale, true);
   assert.equal(full.missing, 1);
   assert.match(full.warnings.join("\n"), /Index stale/);
+});
+
+test("stateDir isolates approval registry and repo index DBs", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-state-seam-repo-"));
+  const stateDir = mkdtempSync(join(tmpdir(), "pi-codemap-state-seam-state-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => rmSync(stateDir, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src"), { recursive: true });
+  writeFileSync(join(root, "src", "isolated.ts"), `
+export function isolatedFeature() {
+  return true;
+}
+`);
+  const defaultRegistryPath = join(storageHome, ".pi", "agent", "state", "codemap", "registry.sqlite");
+  const defaultDbPath = join(storageHome, ".pi", "agent", "state", "codemap", "repos", `${repoKey(root)}.sqlite`);
+  const defaultRegistryBefore = existsSync(defaultRegistryPath) ? statSync(defaultRegistryPath) : undefined;
+  assert.equal(existsSync(defaultDbPath), false);
+
+  const indexed = indexRepo({ cwd: root, approve: true, stateDir });
+  const isolatedInfo = getRepoInfo(root, { stateDir });
+
+  assert.equal(isolatedInfo.approved, true);
+  assert.equal(indexed.dbPath, join(stateDir, "repos", `${isolatedInfo.key}.sqlite`));
+  assert.ok(existsSync(join(stateDir, "registry.sqlite")));
+  assert.ok(existsSync(indexed.dbPath));
+  assert.equal(status(root, { stateDir }).readiness, "ready");
+  assert.equal(searchCodeMap({ cwd: root, query: "isolatedFeature", stateDir })[0]?.path, "src/isolated.ts");
+  assert.equal(codemapContext({ cwd: root, target: "isolatedFeature", stateDir }).root, root);
+
+  assert.notEqual(defaultDbPath, isolatedInfo.dbPath);
+  assert.equal(existsSync(defaultDbPath), false);
+  if (defaultRegistryBefore) {
+    const defaultRegistryAfter = statSync(defaultRegistryPath);
+    assert.equal(defaultRegistryAfter.size, defaultRegistryBefore.size);
+    assert.equal(defaultRegistryAfter.mtimeMs, defaultRegistryBefore.mtimeMs);
+  } else {
+    assert.equal(existsSync(defaultRegistryPath), false);
+  }
 });
 
 test("CodeMap uses state storage and migrates legacy repo DBs", (t) => {

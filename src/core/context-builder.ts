@@ -1,12 +1,12 @@
 import { snippet } from "./chunker.ts";
 import { openRepoDb } from "./db.ts";
 import { status } from "./indexer.ts";
-import { getRepoInfo } from "./repo.ts";
+import { getRepoInfo, type StateOptions } from "./repo.ts";
 import { searchCodeMap } from "./search.ts";
 import { normalizePathPrefix } from "./scanner.ts";
 import type { SearchResult } from "./types.ts";
 
-export interface CodeMapContextOptions {
+export interface CodeMapContextOptions extends StateOptions {
   target: string;
   cwd?: string;
   limit?: number;
@@ -49,14 +49,14 @@ interface ContextDiagnostics {
 }
 
 export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapContextPackage {
-  const info = getRepoInfo(options.cwd);
+  const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
   if (!info.approved) throw new Error("Repository is not approved/indexed yet.");
   const db = openRepoDb(info.dbPath);
   try {
     const request = normalizeContextRequest(options);
-    const diagnostics = status(options.cwd, { health: "full", pathPrefix: request.pathPrefix }) as ContextDiagnostics;
+    const diagnostics = status(options.cwd, { health: "full", pathPrefix: request.pathPrefix, stateDir: options.stateDir }) as ContextDiagnostics;
     const warnings: string[] = [...(diagnostics.warnings ?? [])];
-    const readFirst = readFirstItems(db, request, warnings, options.cwd);
+    const readFirst = readFirstItems(db, request, warnings, options.cwd, options.stateDir);
     const related = relatedPaths(db, readFirst.base, request.pathFilter);
     const lastIndexedAt = (db.prepare("select value from meta where key='last_indexed_at'").get() as { value: string } | undefined)?.value ?? null;
 
@@ -97,6 +97,7 @@ function readFirstItems(
   request: ReturnType<typeof normalizeContextRequest>,
   warnings: string[],
   cwd?: string,
+  stateDir?: string,
 ): { base: string; items: CodeMapReadFirstItem[] } {
   const file = db.prepare("select id, path, language from files where (path = ? or path like ? escape '\\') and path like ? escape '\\' limit 1")
     .get(request.target, request.targetLike, request.pathFilter) as { id: number; path: string; language: string } | undefined;
@@ -105,7 +106,7 @@ function readFirstItems(
     warnings.push("Target was not an indexed file path; falling back to search results.");
     return {
       base: request.target,
-      items: searchCodeMap({ query: request.target, cwd, limit: request.limit, pathPrefix: request.pathPrefix }),
+      items: searchCodeMap({ query: request.target, cwd, limit: request.limit, pathPrefix: request.pathPrefix, stateDir }),
     };
   }
 

@@ -6,14 +6,24 @@ import { execFileSync } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
 import type { RepoInfo } from "./types.ts";
 
-const baseDir = join(homedir(), ".pi", "agent", "state", "codemap");
-const topLevelLegacyBaseDir = join(homedir(), ".pi", "agent", "codemap");
-const legacyBaseDir = join(homedir(), ".pi", "agent", "code-search");
-const registryPath = join(baseDir, "registry.sqlite");
-const legacyRegistryPaths = [
-  join(topLevelLegacyBaseDir, "registry.sqlite"),
-  join(legacyBaseDir, "registry.sqlite"),
-];
+export interface StateOptions {
+  stateDir?: string;
+}
+
+function defaultStateDir(): string {
+  return join(homedir(), ".pi", "agent", "state", "codemap");
+}
+
+function legacyStateDirs(): string[] {
+  return [
+    join(homedir(), ".pi", "agent", "codemap"),
+    join(homedir(), ".pi", "agent", "code-search"),
+  ];
+}
+
+function resolveStateDir(stateDir?: string): string {
+  return stateDir ? resolve(stateDir) : defaultStateDir();
+}
 
 function copyFirstLegacyFileIfNeeded(sources: string[], target: string): void {
   if (existsSync(target)) return;
@@ -23,9 +33,11 @@ function copyFirstLegacyFileIfNeeded(sources: string[], target: string): void {
   copyFileSync(source, target);
 }
 
-export function getRegistryPath(): string {
+export function getRegistryPath(options: StateOptions = {}): string {
+  const baseDir = resolveStateDir(options.stateDir);
+  const registryPath = join(baseDir, "registry.sqlite");
   mkdirSync(baseDir, { recursive: true });
-  copyFirstLegacyFileIfNeeded(legacyRegistryPaths, registryPath);
+  if (!options.stateDir) copyFirstLegacyFileIfNeeded(legacyStateDirs().map((dir) => join(dir, "registry.sqlite")), registryPath);
   return registryPath;
 }
 
@@ -57,8 +69,8 @@ export function repoKey(root: string): string {
   return createHash("sha256").update(resolve(root)).digest("hex").slice(0, 24);
 }
 
-function registryDb(): DatabaseSync {
-  const activeRegistryPath = getRegistryPath();
+function registryDb(options: StateOptions = {}): DatabaseSync {
+  const activeRegistryPath = getRegistryPath(options);
   mkdirSync(dirname(activeRegistryPath), { recursive: true });
   const db = new DatabaseSync(activeRegistryPath);
   db.exec(`
@@ -75,24 +87,21 @@ function registryDb(): DatabaseSync {
   return db;
 }
 
-export function getRepoInfo(cwd = process.cwd()): RepoInfo {
+export function getRepoInfo(cwd = process.cwd(), options: StateOptions = {}): RepoInfo {
   const root = findRepoRoot(cwd);
   const key = repoKey(root);
-  const dbPath = join(baseDir, "repos", `${key}.sqlite`);
-  copyFirstLegacyFileIfNeeded([
-    join(topLevelLegacyBaseDir, "repos", `${key}.sqlite`),
-    join(legacyBaseDir, "repos", `${key}.sqlite`),
-  ], dbPath);
-  const db = registryDb();
+  const dbPath = join(resolveStateDir(options.stateDir), "repos", `${key}.sqlite`);
+  if (!options.stateDir) copyFirstLegacyFileIfNeeded(legacyStateDirs().map((dir) => join(dir, "repos", `${key}.sqlite`)), dbPath);
+  const db = registryDb(options);
   const row = db.prepare("select enabled from repos where key = ?").get(key) as { enabled: number } | undefined;
   db.close();
   return { root, key, remote: getRemote(root), approved: row?.enabled === 1, dbPath };
 }
 
-export function approveRepo(cwd = process.cwd(), source = "tool"): RepoInfo {
-  const info = getRepoInfo(cwd);
+export function approveRepo(cwd = process.cwd(), source = "tool", options: StateOptions = {}): RepoInfo {
+  const info = getRepoInfo(cwd, options);
   mkdirSync(dirname(info.dbPath), { recursive: true });
-  const db = registryDb();
+  const db = registryDb(options);
   const now = new Date().toISOString();
   db.prepare(`
     insert into repos(key, root_path, git_remote, enabled, approved_at, approval_source, updated_at)
