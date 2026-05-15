@@ -114,12 +114,19 @@ test("main implementation entrypoint", () => mainImplementationEntrypoint());
   assert.ok(indexResult.scanned >= 6, JSON.stringify(indexResult));
   assert.ok(indexResult.indexed >= 6, JSON.stringify(indexResult));
 
+  const symbolSearchResult = codeMapSearch(root, { query: "mainImplementationEntrypoint", limit: 5 });
+  assert.equal(symbolSearchResult.stale, false);
+  assert.deepEqual(symbolSearchResult.warnings, []);
+  assert.equal(symbolSearchResult.results[0]?.path, "src/index.ts");
+  assert.equal(symbolSearchResult.results[0]?.kind, "function");
+  assert.ok(symbolSearchResult.results.every((result) => result.path !== "dist/index.js"), JSON.stringify(symbolSearchResult.results.map((result) => result.path)));
+
   const searchResult = codeMapSearch(root, { query: "where is the main implementation?", limit: 5 });
   assert.equal(searchResult.stale, false);
   assert.deepEqual(searchResult.warnings, []);
   assert.equal(searchResult.results[0]?.path, "src/index.ts");
 
-  const contextResult = codeMapContext(root, { target: searchResult.results[0]?.path ?? "", limit: 6 });
+  const contextResult = codeMapContext(root, { target: symbolSearchResult.results[0]?.path ?? "", limit: 6 });
   const readFirstPaths = contextResult.readFirst.map((item) => item.path);
   assert.equal(readFirstPaths[0], "src/index.ts");
   assert.ok(readFirstPaths.includes("src/core/navigation-engine.ts"), JSON.stringify(readFirstPaths));
