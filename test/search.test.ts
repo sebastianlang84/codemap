@@ -536,6 +536,20 @@ test("registers only codemap tools with compact complete prompt guidance", () =>
   }
 });
 
+test("codemap tool renderer shows indexed false as not indexed", () => {
+  const tools: Array<{ name: string; renderResult?: (result: unknown, options: { expanded: boolean }, theme: { fg: (_name: string, text: string) => string; bold: (text: string) => string }) => { render: (width: number) => string[] } }> = [];
+  registerCodeMapTools({ registerTool: (tool: { name: string; renderResult?: (result: unknown, options: { expanded: boolean }, theme: { fg: (_name: string, text: string) => string; bold: (text: string) => string }) => { render: (width: number) => string[] } }) => tools.push(tool) } as never);
+
+  const rendered = tools.find((tool) => tool.name === "codemap_status")?.renderResult?.(
+    { content: [{ type: "text", text: JSON.stringify({ indexed: false }) }], details: { indexed: false } },
+    { expanded: true },
+    { fg: (_name, text) => text, bold: (text) => text },
+  ).render(120).join("\n") ?? "";
+
+  assert.match(rendered, /not indexed/);
+  assert.doesNotMatch(rendered, /index ready/);
+});
+
 test("registers only codemap commands", () => {
   const commands: Array<{ name: string; description?: string }> = [];
   registerCodeMapCommands({ registerCommand: (name: string, command: { description?: string }) => commands.push({ name, description: command.description }) } as never);

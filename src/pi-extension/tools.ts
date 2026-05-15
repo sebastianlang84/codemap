@@ -18,7 +18,10 @@ function summarizeValue(value: unknown): string {
     if (Array.isArray(record.readFirst)) return `${record.readFirst.length} read-first item${record.readFirst.length === 1 ? "" : "s"}${stale}`;
     if (typeof record.status === "string") return record.status;
     if (typeof record.message === "string") return record.message;
-    if (typeof record.indexed === "boolean") return record.stale === true ? "index stale" : "index ready";
+    if (typeof record.indexed === "boolean") {
+      if (!record.indexed) return "not indexed";
+      return record.stale === true ? "index stale" : "index ready";
+    }
     return Object.keys(record).slice(0, 4).join(", ") || "ok";
   }
   return String(value);
