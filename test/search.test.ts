@@ -18,6 +18,7 @@ const { codemapContext } = await import("../src/core/context.ts");
 const { getRepoInfo, repoKey } = await import("../src/core/repo.ts");
 const { registerCodeMapTools } = await import("../src/pi-extension/tools.ts");
 const { registerCodeMapCommands } = await import("../src/pi-extension/commands.ts");
+const { codeMapContext, codeMapIndex, codeMapSearch } = await import("../src/pi-extension/operations.ts");
 const { default: codeMapExtension } = await import("../src/pi-extension/index.ts");
 
 function fixtureRepo(t: TestContext): string {
@@ -76,6 +77,61 @@ alpha alpha alpha alpha alpha alpha alpha alpha
   indexRepo({ cwd: root, approve: true });
   return root;
 }
+
+test("agentic E2E smoke test navigates from search to read-first context", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-agentic-e2e-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src", "core"), { recursive: true });
+  mkdirSync(join(root, "src", "__generated__"), { recursive: true });
+  mkdirSync(join(root, "test"), { recursive: true });
+  mkdirSync(join(root, "docs"), { recursive: true });
+  mkdirSync(join(root, "dist"), { recursive: true });
+
+  writeFileSync(join(root, "src", "index.ts"), `
+import { createNavigationEngine } from "./core/navigation-engine";
+
+export function mainImplementationEntrypoint() {
+  return createNavigationEngine().answer("where is the main implementation?");
+}
+`);
+  writeFileSync(join(root, "src", "core", "navigation-engine.ts"), `
+export function createNavigationEngine() {
+  return { answer: (question: string) => question + " -> src/index.ts" };
+}
+`);
+  writeFileSync(join(root, "test", "index.test.ts"), `
+import { mainImplementationEntrypoint } from "../src/index";
+
+test("main implementation entrypoint", () => mainImplementationEntrypoint());
+`);
+  writeFileSync(join(root, "docs", "index.md"), "# Main implementation\n\nStart with src/index.ts, then read the navigation engine.\n");
+  writeFileSync(join(root, "src", "__generated__", "client.ts"), "export const generatedClient = 'where is the main implementation noise';\n");
+  writeFileSync(join(root, "dist", "index.js"), "function mainImplementationEntrypoint(){return 'build output noise'}\n");
+  writeFileSync(join(root, "package-lock.json"), JSON.stringify({ noise: "where is the main implementation" }, null, 2));
+
+  const indexResult = codeMapIndex(root, { approveRepo: true });
+  assert.ok(indexResult.scanned >= 6, JSON.stringify(indexResult));
+  assert.ok(indexResult.indexed >= 6, JSON.stringify(indexResult));
+
+  const searchResult = codeMapSearch(root, { query: "where is the main implementation?", limit: 5 });
+  assert.equal(searchResult.stale, false);
+  assert.deepEqual(searchResult.warnings, []);
+  assert.equal(searchResult.results[0]?.path, "src/index.ts");
+
+  const contextResult = codeMapContext(root, { target: searchResult.results[0]?.path ?? "", limit: 6 });
+  const readFirstPaths = contextResult.readFirst.map((item) => item.path);
+  assert.equal(readFirstPaths[0], "src/index.ts");
+  assert.ok(readFirstPaths.includes("src/core/navigation-engine.ts"), JSON.stringify(readFirstPaths));
+  assert.ok(readFirstPaths.includes("test/index.test.ts"), JSON.stringify(readFirstPaths));
+  assert.ok(readFirstPaths.includes("docs/index.md"), JSON.stringify(readFirstPaths));
+  assert.ok(!readFirstPaths.includes("src/__generated__/client.ts"), JSON.stringify(readFirstPaths));
+  assert.ok(!readFirstPaths.includes("dist/index.js"), JSON.stringify(readFirstPaths));
+  assert.ok(!readFirstPaths.includes("package-lock.json"), JSON.stringify(readFirstPaths));
+  assert.deepEqual(contextResult.relatedTests, ["test/index.test.ts"]);
+  assert.deepEqual(contextResult.relatedDocs, ["docs/index.md"]);
+  assert.deepEqual(contextResult.warnings, []);
+});
 
 test("exact symbol matches rank above chunk matches", (t) => {
   const root = fixtureRepo(t);
