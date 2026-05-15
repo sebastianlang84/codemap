@@ -212,8 +212,11 @@ Run the standard checks:
 ```bash
 npm run typecheck
 npm test
+npm run check:token-injection
 npm run audit:lightweight
 ```
+
+`npm run check:token-injection` reports the estimated agent-context cost of registered Pi tools (`description`, `parameters`, `promptSnippet`, and `promptGuidelines`) and fails when the default budgets are exceeded: 190 estimated tokens per tool and 700 estimated tokens total. Slash commands are not counted because they are not injected as tool prompt/schema context.
 
 Run the search-quality gate when changing ranking, query planning, chunking, or symbol extraction:
 

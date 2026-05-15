@@ -36,6 +36,7 @@
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "bench:search-quality": "node --experimental-strip-types scripts/bench-search-quality.ts",
     "bench:search-quality:gate": "node --experimental-strip-types scripts/bench-search-quality.ts --quality-gate",
+    "check:token-injection": "node --experimental-strip-types scripts/check-token-injection.ts --budget-gate",
     "audit:lightweight": "node scripts/audit.mjs"
   },
   "dependencies": {

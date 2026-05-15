@@ -10,6 +10,7 @@
 - Add internal ranking diagnostics for tests and benchmarks without adding public `codemap_search` explain fields.
 - Add Git-aware full status diagnostics for current/indexed HEAD, dirty working trees, dirty file lists, and path-scoped last-index metadata.
 - Harden ranking roles and noise penalties so source/config/docs/tests beat generated/build/vendor/minified/large-JSON noise unless noisy files are explicitly requested.
+- Add a token-injection budget report and test gate for registered CodeMap Pi tools.
 
 ## 0.5.0 - 2026-05-12
 
