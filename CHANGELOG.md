@@ -8,6 +8,8 @@
 - Add `codemap_context` read-first relationship reasons plus lightweight TypeScript/JavaScript, Python relative import, and C/C++ include/header-source relationship hints.
 - Keep lockfile/generated/build/minified neighbors out of read-first context while preserving useful related tests/docs.
 - Add internal ranking diagnostics for tests and benchmarks without adding public `codemap_search` explain fields.
+- Add Git-aware full status diagnostics for current/indexed HEAD, dirty working trees, dirty file lists, and path-scoped last-index metadata.
+- Harden ranking roles and noise penalties so source/config/docs/tests beat generated/build/vendor/minified/large-JSON noise unless noisy files are explicitly requested.
 
 ## 0.5.0 - 2026-05-12
 

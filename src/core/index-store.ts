@@ -14,9 +14,12 @@ export function applyIndexUpdate(options: {
   db: ReturnType<typeof openRepoDb>;
   files: ScannedFile[];
   pathPrefix: string;
+  indexedHead: string | null;
 }): IndexStoreResult {
-  const { db, files, pathPrefix } = options;
+  const { db, files, pathPrefix, indexedHead } = options;
   const indexVersionKey = pathPrefix ? `index_version:${pathPrefix}` : "index_version";
+  const lastIndexedAtKey = pathPrefix ? `last_indexed_at:${pathPrefix}` : "last_indexed_at";
+  const indexedHeadKey = pathPrefix ? `indexed_head:${pathPrefix}` : "indexed_head";
   const forceReindex = shouldForceReindex(db, indexVersionKey);
   const seen = new Set<string>();
   let indexed = 0;
@@ -27,7 +30,7 @@ export function applyIndexUpdate(options: {
     if (upsertIndexedFile(db, file, forceReindex)) indexed++;
   }
   const removed = removeDeletedFiles(db, seen, pathPrefix);
-  writeIndexMetadata(db, indexVersionKey);
+  writeIndexMetadata(db, indexVersionKey, lastIndexedAtKey, indexedHeadKey, indexedHead);
   db.exec("commit");
   return { indexed, removed };
 }
@@ -37,8 +40,9 @@ function shouldForceReindex(db: ReturnType<typeof openRepoDb>, indexVersionKey: 
   return storedIndexVersion !== INDEX_VERSION;
 }
 
-function writeIndexMetadata(db: ReturnType<typeof openRepoDb>, indexVersionKey: string): void {
-  db.prepare("insert or replace into meta(key, value) values ('last_indexed_at', ?)").run(new Date().toISOString());
+function writeIndexMetadata(db: ReturnType<typeof openRepoDb>, indexVersionKey: string, lastIndexedAtKey: string, indexedHeadKey: string, indexedHead: string | null): void {
+  db.prepare("insert or replace into meta(key, value) values (?, ?)").run(lastIndexedAtKey, new Date().toISOString());
+  db.prepare("insert or replace into meta(key, value) values (?, ?)").run(indexedHeadKey, indexedHead ?? "");
   db.prepare("insert or replace into meta(key, value) values (?, ?)").run(indexVersionKey, INDEX_VERSION);
 }
 

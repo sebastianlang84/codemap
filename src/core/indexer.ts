@@ -1,4 +1,5 @@
 import { openRepoDb } from "./db.ts";
+import { readGitHead } from "./git-status.ts";
 import { cheapIndexHealth, fullIndexHealth, readIndexStatusCounts } from "./index-health.ts";
 import { applyIndexUpdate } from "./index-store.ts";
 import { getRepoInfo, approveRepo, type StateOptions } from "./repo.ts";
@@ -13,7 +14,7 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
   const db = openRepoDb(info.dbPath);
   const scan = scanRepo(info.root, { pathPrefix });
   try {
-    const update = applyIndexUpdate({ db, files: scan.files, pathPrefix });
+    const update = applyIndexUpdate({ db, files: scan.files, pathPrefix, indexedHead: readGitHead(info.root) });
     return { scanned: scan.files.length, indexed: update.indexed, skipped: scan.skipped, skippedReasons: scan.skippedReasons, removed: update.removed, warnings: scan.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
   } catch (error) {
     try { db.exec("rollback"); } catch { /* already closed or not in transaction */ }
@@ -28,7 +29,7 @@ export function status(cwd = process.cwd(), options: { health?: "cheap" | "full"
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const info = getRepoInfo(cwd, { stateDir: options.stateDir });
   if (!info.approved) {
-    return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, warnings: [] };
+    return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] };
   }
   const db = openRepoDb(info.dbPath);
   try {

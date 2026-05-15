@@ -28,7 +28,7 @@ export function collectSearchCandidates(db: ReturnType<typeof openRepoDb>, reque
 function pathMatchCandidates(db: ReturnType<typeof openRepoDb>, request: SearchRetrievalRequest): SearchResult[] {
   if (!request.plan.pathLike) return [];
   const rows = db.prepare(`
-    select path, language, 1 as startLine, 1 as endLine, 'file' as kind, path as text, 0 as rank, null as symbolName
+    select path, language, 1 as startLine, 1 as endLine, 'file' as kind, path as text, 0 as rank, size, null as symbolName
     from files
     where lower(path) like ? escape '\\' and path like ? escape '\\'
     order by length(path), path
@@ -40,14 +40,16 @@ function pathMatchCandidates(db: ReturnType<typeof openRepoDb>, request: SearchR
 function roleIntentCandidates(db: ReturnType<typeof openRepoDb>, request: SearchRetrievalRequest): SearchResult[] {
   if (request.plan.roleIntents.length === 0) return [];
   const rows = db.prepare(`
-    select path, language, 1 as startLine, 1 as endLine, 'file' as kind, path as text, 0 as rank, null as symbolName
-    from files
-    where path like ? escape '\\'
-    order by length(path), path
+    select f.path, f.language, 1 as startLine, 1 as endLine, 'file' as kind,
+           coalesce(c.text, f.path) as text, 0 as rank, f.size as size, null as symbolName
+    from files f
+    left join chunks c on c.file_id = f.id and c.ordinal = 0
+    where f.path like ? escape '\\'
+    order by length(f.path), f.path
     limit 500
   `).all(request.pathFilter) as unknown as SearchRow[];
   return rows
-    .filter((row) => fileRoleBoost(fileRoles(row.path.toLowerCase()), request.plan.roleIntents) > 0)
+    .filter((row) => fileRoleBoost(fileRoles(row.path.toLowerCase(), row.size ?? undefined), request.plan.roleIntents) > 0)
     .map((row) => toResult(row, request.plan, 18));
 }
 
@@ -57,7 +59,7 @@ function chunkFtsCandidates(
 ): SearchResult[] {
   const rows = db.prepare(`
     select f.path, f.language, c.start_line as startLine, c.end_line as endLine, c.kind, c.text,
-           bm25(chunks_fts) as rank, null as symbolName
+           bm25(chunks_fts) as rank, f.size as size, null as symbolName
     from chunks_fts
     join chunks c on c.id = chunks_fts.rowid
     join files f on f.id = c.file_id
@@ -74,7 +76,7 @@ function symbolFtsCandidates(
 ): SearchResult[] {
   const rows = db.prepare(`
     select f.path, f.language, s.start_line as startLine, coalesce(s.end_line, s.start_line) as endLine,
-           s.kind, coalesce(s.signature, s.name) as text, bm25(symbols_fts) as rank, s.name as symbolName
+           s.kind, coalesce(s.signature, s.name) as text, bm25(symbols_fts) as rank, f.size as size, s.name as symbolName
     from symbols_fts
     join symbols s on s.id = symbols_fts.rowid
     join files f on f.id = s.file_id

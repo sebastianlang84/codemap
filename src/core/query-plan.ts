@@ -57,11 +57,14 @@ const codeIntentTerms = new Set([
 
 function inferRoleIntents(normalized: string, terms: string[]): string[] {
   const intents: string[] = [];
-  const has = (...needles: string[]) => needles.some((needle) => terms.includes(needle) || normalized.includes(needle));
+  const has = (...needles: string[]) => needles.some((needle) => needle.includes(" ") ? normalized.includes(needle) : terms.includes(needle));
   if (has("what is this project", "project about", "overview", "purpose")) intents.push("overview");
   if (has("agent", "instructions", "program")) intents.push("agent_instructions");
   if (has("edit")) intents.push("overview", "agent_instructions", "implementation/main");
-  if (has("implemented", "implementation", "main", "defined", "architecture", "model", "used", "orchestrator", "pipeline", "run")) intents.push("implementation", "implementation/main");
+  if (has("implemented", "implementation", "main", "source", "defined", "architecture", "model", "used", "orchestrator", "pipeline", "run")) intents.push("implementation", "implementation/main");
+  if (has("config", "configuration")) intents.push("configuration");
+  if (has("docs", "doc", "documentation")) intents.push("documentation");
+  if (has("tests", "test", "testing")) intents.push("tests");
   if (has("computed")) intents.push("setup/utility");
   if (has("data", "setup", "preparation", "prepare")) intents.push("setup/utility");
   if (has("not be modified", "not modified", "do not modify")) intents.push("overview", "setup/utility");

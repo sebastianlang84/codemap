@@ -108,7 +108,7 @@ Treat this as a read-first list, not as a replacement for reading the files.
 
 ### Handle stale results
 
-Search and context include stale warnings when the index no longer matches the working tree. CodeMap does not auto-refresh in the background.
+Search and context include stale warnings when the index no longer matches the working tree. Full status also reports Git freshness fields: `currentHead`, `indexedHead`, `headChanged`, `dirty`, and `dirtyFiles`. CodeMap does not auto-refresh in the background.
 
 If results are stale and freshness matters:
 
@@ -128,7 +128,7 @@ Pi commands are for humans in the TUI. LLM tools expose the same operations as s
 
 | Operation | Command | Tool params | Result shape |
 |---|---|---|---|
-| Status | `/codemap-status [--full] [--path-prefix <subtree>]` | `codemap_status({ full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, stale diagnostics when `full=true` |
+| Status | `/codemap-status [--full] [--path-prefix <subtree>]` | `codemap_status({ full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, and full Git/index diagnostics (`currentHead`, `indexedHead`, `headChanged`, `dirty`, `dirtyFiles`, stale counts) when `full=true` |
 | Index | `/codemap-index [--approve-repo] [--path-prefix <subtree>]` | `codemap_index({ approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
 | Search | `/codemap-search [--path-prefix <subtree>] <query>` | `codemap_search({ query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
 | Context | `/codemap-context [--path-prefix <subtree>] <target>` | `codemap_context({ target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |

@@ -75,9 +75,14 @@ export function relatedDocReason(targetPath: string, path: string): CodeMapConte
   return { kind: "related_doc", label: "name/path-related documentation", sourcePath: path, targetPath };
 }
 
-export function isNoisyReadFirstPath(path: string): boolean {
-  const roles = fileRoles(path.toLowerCase());
-  return roles.some((role) => ["lockfile", "generated", "build_output", "minified"].includes(role));
+export function isNoisyReadFirstPath(path: string, size = 0): boolean {
+  const roles = fileRoles(path.toLowerCase(), size);
+  return roles.some((role) => ["lockfile", "generated", "build_output", "minified", "large_json"].includes(role));
+}
+
+export function isNoisyIndexedPath(db: ReturnType<typeof openRepoDb>, path: string): boolean {
+  const row = db.prepare("select size from files where path = ?").get(path) as { size: number } | undefined;
+  return isNoisyReadFirstPath(path, row?.size ?? 0);
 }
 
 function importedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string, pathFilter: string): RelatedPath[] {
@@ -86,7 +91,7 @@ function importedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string,
   const resolved = extractLocalReferences(source.text, source.language, source.path)
     .map((reference) => {
       const targetPath = resolveIndexedReference(db, fromPath, source.language, reference, pathFilter);
-      if (!targetPath || targetPath === fromPath || isNoisyReadFirstPath(targetPath)) return undefined;
+      if (!targetPath || targetPath === fromPath || isNoisyIndexedPath(db, targetPath)) return undefined;
       const related: RelatedPath = {
         path: targetPath,
         reasons: [{
@@ -104,10 +109,10 @@ function importedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string,
 }
 
 function importingLocalPaths(db: ReturnType<typeof openRepoDb>, targetPath: string, pathFilter: string): RelatedPath[] {
-  const rows = db.prepare("select path from files where path <> ? and path like ? escape '\\' order by path")
-    .all(targetPath, pathFilter) as Array<{ path: string }>;
+  const rows = db.prepare("select path, size from files where path <> ? and path like ? escape '\\' order by path")
+    .all(targetPath, pathFilter) as Array<{ path: string; size: number }>;
   const importers = rows
-    .filter((row) => !isNoisyReadFirstPath(row.path))
+    .filter((row) => !isNoisyReadFirstPath(row.path, row.size))
     .flatMap((row) => indexedFileReferencesTarget(db, row.path, targetPath, pathFilter));
   return mergeRelatedPaths(sortRelatedByLocality(targetPath, importers)).slice(0, 8);
 }
@@ -144,8 +149,8 @@ function implementationPairPaths(db: ReturnType<typeof openRepoDb>, targetPath: 
   const candidateExtensions = headerExtensions.has(extension) ? [...sourceExtensions] : [...headerExtensions];
   const rows = candidateExtensions
     .map((candidateExtension) => `${stem}${candidateExtension}`)
-    .map((path) => db.prepare("select path from files where path = ? and path like ? escape '\\' limit 1").get(path, pathFilter) as { path: string } | undefined)
-    .filter((row): row is { path: string } => Boolean(row && !isNoisyReadFirstPath(row.path)));
+    .map((path) => db.prepare("select path, size from files where path = ? and path like ? escape '\\' limit 1").get(path, pathFilter) as { path: string; size: number } | undefined)
+    .filter((row): row is { path: string; size: number } => Boolean(row && !isNoisyReadFirstPath(row.path, row.size)));
 
   return rows.map((row) => ({
     path: row.path,

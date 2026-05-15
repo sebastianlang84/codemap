@@ -1,4 +1,5 @@
 import { openRepoDb } from "./db.ts";
+import { readGitWorkingTreeStatus, type GitDirtyFile } from "./git-status.ts";
 import { scanRepo } from "./scanner.ts";
 
 export interface IndexStatusCounts {
@@ -7,6 +8,7 @@ export interface IndexStatusCounts {
   chunks: number;
   symbols: number;
   lastIndexedAt: string | null;
+  indexedHead: string | null;
 }
 
 export interface IndexHealth {
@@ -17,6 +19,10 @@ export interface IndexHealth {
   skipped?: number;
   skippedReasons?: Record<string, number>;
   warnings: string[];
+  currentHead: string | null;
+  headChanged: boolean;
+  dirty: boolean;
+  dirtyFiles: GitDirtyFile[];
 }
 
 export function readIndexStatusCounts(db: ReturnType<typeof openRepoDb>, pathPrefix = ""): IndexStatusCounts {
@@ -30,12 +36,13 @@ export function readIndexStatusCounts(db: ReturnType<typeof openRepoDb>, pathPre
   const symbols = pathPrefix
     ? (db.prepare("select count(*) as n from symbols join files f on f.id = symbols.file_id where f.path like ? escape '\\'").get(pathFilter) as { n: number }).n
     : (db.prepare("select count(*) as n from symbols").get() as { n: number }).n;
-  const lastIndexedAt = (db.prepare("select value from meta where key='last_indexed_at'").get() as { value: string } | undefined)?.value ?? null;
-  return { indexed: files > 0, files, chunks, symbols, lastIndexedAt };
+  const lastIndexedAt = readPathAwareMeta(db, "last_indexed_at", pathPrefix);
+  const indexedHead = readPathAwareMeta(db, "indexed_head", pathPrefix);
+  return { indexed: files > 0, files, chunks, symbols, lastIndexedAt, indexedHead };
 }
 
 export function cheapIndexHealth(): IndexHealth {
-  return { stale: false, changed: 0, missing: 0, deleted: 0, warnings: [] };
+  return { stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] };
 }
 
 export function fullIndexHealth(db: ReturnType<typeof openRepoDb>, root: string, pathPrefix = ""): IndexHealth {
@@ -53,10 +60,29 @@ export function fullIndexHealth(db: ReturnType<typeof openRepoDb>, root: string,
     else if (indexed.get(path) !== hash) changed++;
   }
   for (const path of indexed.keys()) if (!current.has(path)) deleted++;
-  const stale = changed > 0 || missing > 0 || deleted > 0;
+  const fileDrift = changed > 0 || missing > 0 || deleted > 0;
   const warnings = [...scan.warnings];
-  if (stale) warnings.push(`Index stale: ${changed} changed, ${missing} missing, ${deleted} deleted files.`);
-  return { stale, changed, missing, deleted, skipped: scan.skipped, skippedReasons: scan.skippedReasons, warnings };
+  if (fileDrift) warnings.push(`Index stale: ${changed} changed, ${missing} missing, ${deleted} deleted files.`);
+  const indexedHead = readPathAwareMeta(db, "indexed_head", pathPrefix);
+  const git = readGitWorkingTreeStatus(root, pathPrefix);
+  const headChanged = Boolean(indexedHead && git.currentHead && indexedHead !== git.currentHead);
+  const dirtyFiles = git.dirtyFiles;
+  const dirty = dirtyFiles.length > 0;
+  const hasIndexedGitBaseline = Boolean(indexedHead && git.currentHead);
+  if (headChanged) warnings.push("Git HEAD changed since last index.");
+  if (dirty && hasIndexedGitBaseline) warnings.push(`Working tree dirty: ${dirtyFiles.length} file${dirtyFiles.length === 1 ? "" : "s"}.`);
+  const stale = fileDrift || headChanged || (dirty && hasIndexedGitBaseline);
+  return { stale, changed, missing, deleted, skipped: scan.skipped, skippedReasons: scan.skippedReasons, currentHead: git.currentHead, headChanged, dirty, dirtyFiles, warnings };
+}
+
+function readPathAwareMeta(db: ReturnType<typeof openRepoDb>, baseKey: string, pathPrefix: string): string | null {
+  const scoped = pathPrefix ? readMeta(db, `${baseKey}:${pathPrefix}`) : null;
+  return scoped ?? readMeta(db, baseKey);
+}
+
+function readMeta(db: ReturnType<typeof openRepoDb>, key: string): string | null {
+  const value = (db.prepare("select value from meta where key=?").get(key) as { value: string } | undefined)?.value ?? null;
+  return value || null;
 }
 
 function escapeLike(value: string): string {

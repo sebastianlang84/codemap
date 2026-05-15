@@ -130,6 +130,53 @@ test("lockfiles are indexed but only prominent for explicit lockfile queries", (
   assert.equal(lockfile[0]?.path, "package-lock.json");
 });
 
+test("navigation queries rank source config docs and tests before noisy files", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-ranking-noise-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src", "__generated__"), { recursive: true });
+  mkdirSync(join(root, "dist"), { recursive: true });
+  mkdirSync(join(root, "docs"), { recursive: true });
+  mkdirSync(join(root, "test"), { recursive: true });
+  mkdirSync(join(root, "data"), { recursive: true });
+
+  writeFileSync(join(root, "src", "index.ts"), "export function featureGateway() { return 'feature gateway source entrypoint'; }\n");
+  writeFileSync(join(root, "package.json"), JSON.stringify({ name: "feature-gateway", description: "feature gateway config", scripts: { test: "node --test" } }, null, 2));
+  writeFileSync(join(root, "docs", "feature-gateway.md"), "# Feature gateway docs\n\nFeature gateway documentation for operators.\n");
+  writeFileSync(join(root, "test", "feature-gateway.test.ts"), "import '../src/index';\n// feature gateway tests validate behavior\n");
+  writeFileSync(join(root, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, noise: "feature gateway config docs tests" }, null, 2));
+  writeFileSync(join(root, "dist", "index.js"), "function featureGateway(){return 'feature gateway build output config docs tests'}\n");
+  writeFileSync(join(root, "src", "__generated__", "feature-client.ts"), "export const generatedFeatureGateway = 'feature gateway generated config docs tests';\n");
+  writeFileSync(join(root, "dist", "app.min.js"), "var featureGateway='feature gateway minified config docs tests';\n");
+  writeFileSync(join(root, "data", "catalog.json"), JSON.stringify({ rows: Array.from({ length: 1500 }, (_, index) => ({ index, text: "feature gateway config docs tests noisy data" })) }, null, 2));
+
+  indexRepo({ cwd: root, approve: true });
+
+  const results = searchCodeMap({ cwd: root, query: "feature gateway config docs tests", limit: 10 });
+  const paths = results.map((result) => result.path);
+  const useful = ["src/index.ts", "package.json", "docs/feature-gateway.md", "test/feature-gateway.test.ts"];
+  const noisy = ["package-lock.json", "dist/index.js", "src/__generated__/feature-client.ts", "dist/app.min.js", "data/catalog.json"];
+  const firstNoisyIndex = Math.min(...noisy.map((path) => paths.indexOf(path)).filter((index) => index >= 0));
+
+  assert.ok(Number.isFinite(firstNoisyIndex), JSON.stringify(paths));
+  for (const path of useful) {
+    const index = paths.indexOf(path);
+    assert.ok(index >= 0, `${path} missing from ${JSON.stringify(paths)}`);
+    assert.ok(index < firstNoisyIndex, `${path} should rank before noisy files: ${JSON.stringify(paths)}`);
+  }
+
+  const jsonResults = searchCodeMap({ cwd: root, query: "feature gateway json config docs tests", limit: 10 });
+  const jsonPaths = jsonResults.map((result) => result.path);
+  const firstJsonNoisyIndex = Math.min(...noisy.map((path) => jsonPaths.indexOf(path)).filter((index) => index >= 0));
+  const packageJsonIndex = jsonPaths.indexOf("package.json");
+  assert.ok(Number.isFinite(firstJsonNoisyIndex), JSON.stringify(jsonPaths));
+  assert.ok(packageJsonIndex >= 0, JSON.stringify(jsonPaths));
+  assert.ok(packageJsonIndex < firstJsonNoisyIndex, JSON.stringify(jsonPaths));
+
+  const explicitNoise = searchCodeMap({ cwd: root, query: "catalog.json", limit: 5 });
+  assert.equal(explicitNoise[0]?.path, "data/catalog.json");
+});
+
 test("ranking diagnostics expose score components without search API explain fields", (t) => {
   const root = fixtureRepo(t);
   const results = searchCodeMap({ cwd: root, query: "package dependencies leftpad", limit: 5 });
@@ -208,6 +255,50 @@ test("context path matching treats LIKE wildcards literally", (t) => {
   const root = fixtureRepo(t);
   const result = codemapContext({ cwd: root, target: "user_service.ts", limit: 5 });
   assert.ok(result.warnings.includes("Target was not an indexed file path; falling back to search results."));
+});
+
+test("full status reports git head and dirty tracked files", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-git-status-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "codemap@example.test"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "CodeMap Test"], { cwd: root });
+  mkdirSync(join(root, "src"), { recursive: true });
+  writeFileSync(join(root, "src", "changed.ts"), "export const changed = 1;\n");
+  writeFileSync(join(root, "src", "deleted.ts"), "export const deleted = 1;\n");
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["commit", "-m", "initial"], { cwd: root, stdio: "ignore" });
+
+  indexRepo({ cwd: root, approve: true });
+  const clean = status(root, { health: "full" });
+  assert.ok(clean.lastIndexedAt);
+  assert.ok(clean.currentHead);
+  assert.ok(clean.indexedHead);
+  assert.equal(clean.currentHead, clean.indexedHead);
+  assert.equal(clean.headChanged, false);
+  assert.equal(clean.dirty, false);
+  assert.deepEqual(clean.dirtyFiles, []);
+
+  writeFileSync(join(root, "src", "changed.ts"), "export const changed = 2;\n");
+  unlinkSync(join(root, "src", "deleted.ts"));
+  const dirty = status(root, { health: "full" });
+  assert.equal(dirty.stale, true);
+  assert.equal(dirty.changed, 1);
+  assert.equal(dirty.deleted, 1);
+  assert.equal(dirty.dirty, true);
+  assert.deepEqual(dirty.dirtyFiles.map((file) => [file.path, file.status]).sort(), [
+    ["src/changed.ts", "modified"],
+    ["src/deleted.ts", "deleted"],
+  ]);
+
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-m", "change tracked files"], { cwd: root, stdio: "ignore" });
+  const committed = status(root, { health: "full" });
+  assert.equal(committed.stale, true);
+  assert.notEqual(committed.currentHead, committed.indexedHead);
+  assert.equal(committed.headChanged, true);
+  assert.equal(committed.dirty, false);
+  assert.deepEqual(committed.dirtyFiles, []);
 });
 
 test("status pathPrefix treats LIKE wildcards literally", (t) => {
@@ -386,10 +477,12 @@ test("context read-first includes indexed local files that import the target", (
 test("context read-first excludes noisy generated and lockfile neighbors", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "src", "__generated__"), { recursive: true });
+  mkdirSync(join(root, "data"), { recursive: true });
   writeFileSync(join(root, "src", "feature.ts"), `
 import lockData from "../package-lock.json";
+import catalogData from "../data/catalog.json";
 import { generatedClient } from "./__generated__/client";
-export const feature = generatedClient + String(lockData);
+export const feature = generatedClient + String(lockData) + String(catalogData);
 `);
   writeFileSync(join(root, "src", "__generated__", "client.ts"), `
 import { feature } from "../feature";
@@ -399,6 +492,7 @@ export const generatedClient = String(feature);
 import { feature } from "./feature";
 test("feature", () => feature);
 `);
+  writeFileSync(join(root, "data", "catalog.json"), JSON.stringify({ rows: Array.from({ length: 1500 }, (_, index) => ({ index, text: "feature catalog data" })) }, null, 2));
   indexRepo({ cwd: root });
 
   const result = codemapContext({ cwd: root, target: "src/feature.ts", limit: 6 });
@@ -407,6 +501,7 @@ test("feature", () => feature);
   assert.ok(paths.includes("src/feature.test.ts"), JSON.stringify(paths));
   assert.ok(!paths.includes("src/__generated__/client.ts"), JSON.stringify(paths));
   assert.ok(!paths.includes("package-lock.json"), JSON.stringify(paths));
+  assert.ok(!paths.includes("data/catalog.json"), JSON.stringify(paths));
 });
 
 test("context read-first excludes imported files outside pathPrefix", (t) => {
@@ -609,6 +704,23 @@ test("status reports unapproved repos as not ready", (t) => {
   assert.equal(result.approved, false);
   assert.equal(result.indexed, false);
   assert.equal(result.readiness, "not_approved");
+});
+
+test("full status reports dirty files before the first commit without stale warnings", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-unborn-dirty-status-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  writeFileSync(join(root, "untracked.ts"), "export const unbornDirtyStatus = true;\n");
+  indexRepo({ cwd: root, approve: true });
+
+  const result = status(root, { health: "full" });
+
+  assert.equal(result.currentHead, null);
+  assert.equal(result.indexedHead, null);
+  assert.equal(result.dirty, true);
+  assert.deepEqual(result.dirtyFiles.map((file) => [file.path, file.status]), [["untracked.ts", "untracked"]]);
+  assert.equal(result.stale, false);
+  assert.deepEqual(result.warnings, []);
 });
 
 test("cheap status avoids stale scan while full status reports drift", (t) => {

@@ -65,7 +65,7 @@ Implemented V1 capabilities:
 - search paths, chunks, and cheap symbols with SQLite FTS5;
 - return line-bounded snippets with ranking scores;
 - return read-first context for a file, symbol, feature, or query;
-- warn when the index is stale;
+- warn when the index is stale, including Git HEAD and dirty-working-tree drift in full status;
 - provide simple related test/doc/import/caller hints;
 - scope status, indexing, search, and context to a subtree with `pathPrefix`.
 

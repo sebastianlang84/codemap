@@ -3,6 +3,7 @@ import { openRepoDb } from "./db.ts";
 import { status } from "./indexer.ts";
 import {
   findIndexedRelationships,
+  isNoisyIndexedPath,
   isNoisyReadFirstPath,
   mergeRelatedPaths,
   relatedDocReason,
@@ -53,6 +54,7 @@ export interface CodeMapContextPackage {
 }
 
 interface ContextDiagnostics {
+  lastIndexedAt?: string | null;
   stale?: boolean;
   changed?: number;
   missing?: number;
@@ -74,7 +76,7 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
     const items = readFirst.direct
       ? localReadFirstItems(db, readFirst.items, relationships.imports, relationships.implementationPairs, relationships.importers, related.tests, related.docs, request.limit)
       : readFirst.items;
-    const lastIndexedAt = (db.prepare("select value from meta where key='last_indexed_at'").get() as { value: string } | undefined)?.value ?? null;
+    const lastIndexedAt = diagnostics.lastIndexedAt ?? null;
 
     return {
       target: request.target,
@@ -158,7 +160,7 @@ function localReadFirstItems(
     ...importers.slice(1),
     ...testItems.slice(1),
     ...docItems.slice(1),
-  ]).filter((item) => !isNoisyReadFirstPath(item.path));
+  ]).filter((item) => !isNoisyIndexedPath(db, item.path));
   const relatedItems = related.flatMap((item) => firstChunkForPath(db, item));
   const items = targetItems.length > 0 ? [targetItems[0]] : [];
   items.push(...dedupeReadFirstItems(relatedItems, items).slice(0, Math.max(0, limit - items.length)));
@@ -190,18 +192,18 @@ function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilte
   const stemLike = `%${escapeLike(stem)}%`;
   const baseLike = `%${escapeLike(base)}%`;
   const relatedTests = db.prepare(`
-    select path from files
+    select path, size from files
     where (path like '%test%' or path like '%spec%') and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
     order by path
-  `).all(stemLike, baseLike, pathFilter) as Array<{ path: string }>;
+  `).all(stemLike, baseLike, pathFilter) as Array<{ path: string; size: number }>;
   const relatedDocs = db.prepare(`
-    select path from files
+    select path, size from files
     where language = 'markdown' and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
     order by path
-  `).all(stemLike, baseLike, pathFilter) as Array<{ path: string }>;
+  `).all(stemLike, baseLike, pathFilter) as Array<{ path: string; size: number }>;
   return {
-    tests: sortByLocality(base, relatedTests.map((r) => r.path).filter((path) => !isNoisyReadFirstPath(path))).slice(0, 8),
-    docs: sortByLocality(base, relatedDocs.map((r) => r.path).filter((path) => !isNoisyReadFirstPath(path))).slice(0, 8),
+    tests: sortByLocality(base, relatedTests.filter((row) => !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
+    docs: sortByLocality(base, relatedDocs.filter((row) => !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
   };
 }
 

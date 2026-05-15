@@ -10,6 +10,7 @@ export interface SearchRow {
   kind: string;
   text: string;
   rank: number;
+  size?: number | null;
   symbolName?: string | null;
 }
 
@@ -62,7 +63,7 @@ export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): 
   const sourceLike = /(^|\/)src\//.test(lowerPath);
   const testLike = /(^|\/)(?:test|tests|__tests__)\//.test(lowerPath) || /(?:^|[._-])test\./.test(basename);
   const docLike = /(^|\/)(?:readme|architecture|changelog|todo)(?:\.|$)|\.(?:md|mdx|rst|txt)$/.test(lowerPath);
-  const roles = fileRoles(lowerPath);
+  const roles = fileRoles(lowerPath, row.size ?? undefined);
   const retrievalBoost = boost;
   const ftsScore = rankScore(row.rank);
   const pathScore = (exactPath ? 6 : 0) + (lowerPath.endsWith(plan.normalized) ? 3 : 0) + pathCoverage * 5;
@@ -112,7 +113,7 @@ export function fileRoleBoost(roles: string[], intents: string[]): number {
   return roles.some((role) => intents.includes(role)) ? 15 : 0;
 }
 
-export function fileRoles(path: string): string[] {
+export function fileRoles(path: string, size = 0): string[] {
   const basename = path.split("/").pop() ?? path;
   const parts = path.split("/");
   const roles: string[] = [];
@@ -123,11 +124,14 @@ export function fileRoles(path: string): string[] {
   if (["prepare.py", "setup.py"].includes(basename)) roles.push("setup/utility");
   if (path.startsWith("scripts/") || /(?:^|\/)scripts\//.test(path)) roles.push("tooling");
   if (path.startsWith("tests/") || /(?:^|\/)(?:test|tests|__tests__)\//.test(path)) roles.push("tests");
-  if (["pyproject.toml", "package.json", "requirements.txt", "cargo.toml", "go.mod"].includes(basename)) roles.push("dependencies");
+  if (path.startsWith("docs/") || /(?:^|\/)docs\//.test(path) || /\.(?:md|mdx|rst|txt)$/.test(basename)) roles.push("documentation");
+  if (["pyproject.toml", "package.json", "requirements.txt", "cargo.toml", "go.mod"].includes(basename)) roles.push("dependencies", "configuration");
+  if (/\.(?:json|ya?ml|toml|ini|env)$/.test(basename) && !isLockfilePath(path, basename)) roles.push("configuration");
   if (isLockfilePath(path, basename)) roles.push("lockfile");
   if (parts.some((part) => ["dist", "build", ".next", "coverage", "vendor"].includes(part))) roles.push("build_output");
   if (parts.some((part) => /generated|__generated__/.test(part)) || /(?:^|[._-])generated(?:[._-]|$)/.test(basename)) roles.push("generated");
   if (/\.min\.[cm]?js$/.test(basename)) roles.push("minified");
+  if (/\.json$/.test(basename) && size >= 64_000) roles.push("large_json");
   return uniqueStrings(roles);
 }
 
@@ -140,17 +144,23 @@ function isLockfilePath(path: string, basename: string): boolean {
 }
 
 function fileRolePenalty(roles: string[], plan: QueryPlan): number {
-  const explicitNoiseQuery = hasExplicitNoiseIntent(plan);
+  const explicit = explicitNoiseIntents(plan);
   let penalty = 0;
-  if (roles.includes("lockfile")) penalty += explicitNoiseQuery ? 0 : 60;
-  if (roles.includes("generated")) penalty += explicitNoiseQuery ? 8 : 24;
-  if (roles.includes("build_output") || roles.includes("minified")) penalty += explicitNoiseQuery ? 12 : 36;
+  if (roles.includes("lockfile")) penalty += explicit.lockfile ? 0 : 60;
+  if (roles.includes("generated")) penalty += explicit.generated ? 8 : 24;
+  if (roles.includes("build_output") || roles.includes("minified")) penalty += explicit.buildOutput ? 12 : 36;
+  if (roles.includes("large_json")) penalty += explicit.largeJson ? 12 : 36;
   return penalty;
 }
 
-function hasExplicitNoiseIntent(plan: QueryPlan): boolean {
-  const tokens = [plan.normalized, ...plan.terms].join(" ");
-  return /\b(?:lockfile|lock|package-lock|pnpm-lock|yarn\.lock|generated|dist|build|bundle|minified|vendor)\b/.test(tokens);
+function explicitNoiseIntents(plan: QueryPlan): { lockfile: boolean; generated: boolean; buildOutput: boolean; largeJson: boolean } {
+  const text = [plan.normalized, ...plan.terms].join(" ");
+  return {
+    lockfile: /(?:\blockfile\b|\b(?:package-lock|npm-shrinkwrap)\.json\b|\bpnpm-lock\.ya?ml\b|\byarn\.lock\b|\b\S+\.lock\b)/.test(text),
+    generated: /\b(?:generated|__generated__)\b/.test(text),
+    buildOutput: /(?:^|[/\\])(?:dist|build|vendor)(?:[/\\]|$)|\b(?:build output|bundle|minified)\b|\.min\.[cm]?js\b/.test(text),
+    largeJson: /(?:\.json\b|\blarge json\b)/.test(text),
+  };
 }
 
 function termCoverage(text: string, terms: string[]): number {
