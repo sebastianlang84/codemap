@@ -168,6 +168,72 @@ test("role-intent queries can surface main implementation files without lexical 
   assert.equal(results[0]?.kind, "file");
 });
 
+test("endpoint route queries find route handlers before docs and generated noise", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-route-query-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "apps", "web", "src", "app", "api", "newsletter", "macro"), { recursive: true });
+  mkdirSync(join(root, "docs"), { recursive: true });
+  mkdirSync(join(root, "dist"), { recursive: true });
+
+  writeFileSync(join(root, "apps", "web", "src", "app", "api", "newsletter", "macro", "route.ts"), `
+export async function GET() {
+  const macroSnapshot = await loadMacroSnapshot();
+  return Response.json({ macroSnapshot, channel: "newsletter" });
+}
+
+async function loadMacroSnapshot() {
+  return { risk: "steady" };
+}
+`);
+  writeFileSync(join(root, "apps", "web", "src", "app", "api", "newsletter", "macro", "route.test.ts"), `
+import { GET } from "./route";
+
+export const routeSmoke = GET;
+`);
+  writeFileSync(join(root, "docs", "newsletter-macro-api.md"), "# Newsletter macro API\n\nThe GET api newsletter macro snapshot endpoint is documented here.\n");
+  writeFileSync(join(root, "package-lock.json"), JSON.stringify({ noise: "GET api newsletter macro snapshot endpoint" }, null, 2));
+  writeFileSync(join(root, "dist", "route.js"), "export const generated = 'GET api newsletter macro snapshot endpoint';\n");
+
+  indexRepo({ cwd: root, approve: true });
+
+  const results = searchCodeMap({ cwd: root, query: "GET api newsletter macro snapshot endpoint", limit: 5 });
+  assert.equal(results[0]?.path, "apps/web/src/app/api/newsletter/macro/route.ts");
+  assert.ok(results.every((result) => result.path !== "package-lock.json"), JSON.stringify(results.map((result) => result.path)));
+
+  const contextResult = codemapContext({ cwd: root, target: results[0]?.path ?? "", limit: 5 });
+  const readFirstPaths = contextResult.readFirst.map((item) => item.path);
+  assert.equal(readFirstPaths[0], "apps/web/src/app/api/newsletter/macro/route.ts");
+  assert.ok(readFirstPaths.includes("apps/web/src/app/api/newsletter/macro/route.test.ts"), JSON.stringify(readFirstPaths));
+  assert.ok(!readFirstPaths.includes("dist/route.js"), JSON.stringify(readFirstPaths));
+  assert.ok(!readFirstPaths.includes("package-lock.json"), JSON.stringify(readFirstPaths));
+});
+
+test("config-key queries find source config before docs and lockfile noise", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-config-key-query-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "config"), { recursive: true });
+  mkdirSync(join(root, "src", "newsletter"), { recursive: true });
+  mkdirSync(join(root, "docs"), { recursive: true });
+
+  writeFileSync(join(root, "config", "newsletter-macro.json"), JSON.stringify({ newsletterMacroSnapshotTtlMs: 900000, channel: "macro" }, null, 2));
+  writeFileSync(join(root, "src", "newsletter", "macro-service.ts"), "export const macroSnapshotTtl = 900000;\n");
+  writeFileSync(join(root, "docs", "newsletter-macro.md"), "# Newsletter macro\n\nOperators tune newsletterMacroSnapshotTtlMs in config.\n");
+  writeFileSync(join(root, "package-lock.json"), JSON.stringify({ noise: "newsletterMacroSnapshotTtlMs config key" }, null, 2));
+
+  indexRepo({ cwd: root, approve: true });
+
+  const results = searchCodeMap({ cwd: root, query: "newsletterMacroSnapshotTtlMs config key", limit: 5 });
+  assert.equal(results[0]?.path, "config/newsletter-macro.json");
+  assert.ok(results.every((result) => result.path !== "package-lock.json"), JSON.stringify(results.map((result) => result.path)));
+
+  const contextResult = codemapContext({ cwd: root, target: results[0]?.path ?? "", limit: 4 });
+  const readFirstPaths = contextResult.readFirst.map((item) => item.path);
+  assert.equal(readFirstPaths[0], "config/newsletter-macro.json");
+  assert.ok(!readFirstPaths.includes("package-lock.json"), JSON.stringify(readFirstPaths));
+});
+
 test("phrase queries find phrase-bearing docs without lockfile noise", (t) => {
   const root = fixtureRepo(t);
   const results = searchCodeMap({ cwd: root, query: "\"ignored directory\"", limit: 5 });

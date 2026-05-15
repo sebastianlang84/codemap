@@ -244,6 +244,12 @@ function naturalCasesFor(searchRoot: string, indexRoot: string): SearchCase[] {
     }))
     .filter((item) => item.expectedPaths.length > 0);
   const generic = genericRepoShapeCases(root, toCases);
+  if (lower.includes("search-quality/agent-nav")) {
+    return [...generic, ...toCases([
+      { query: "GET api newsletter macro snapshot endpoint", expectedPath: "apps/web/src/app/api/newsletter/macro/route.ts", excludedPaths: ["dist/index.js", "dist/bundle.js"] },
+      { query: "newsletterMacroSnapshotTtlMs config key", expectedPath: "config/newsletter-macro.json", excludedPaths: ["package-lock.json"] },
+    ])];
+  }
   if (lower.includes("macrolens")) {
     return [...generic, ...toCases([
       { query: "declarative macro signal rules thresholds inputs", expectedPath: "apps/web/src/lib/macro-signal-rules.ts" },
