@@ -169,12 +169,15 @@ Search-quality gates and diagnostics are documented in [`search-quality.md`](sea
 For direct file targets, context can include:
 
 - target file chunks;
-- directly imported local files;
-- indexed local files that import the target;
+- directly imported/included local files;
+- indexed local files that import/include the target;
+- C/C++ header/source implementation pairs;
 - likely sibling tests;
 - likely related docs.
 
-Related imports/reverse-imports are resolved from indexed content, so context remains useful even when the working tree is stale. `pathPrefix` must scope context and related-file discovery to the requested subtree.
+Each `readFirst` item may carry `reasons[]` such as `target`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `sibling_test`, or `related_doc`. Relationship extraction is a lightweight core seam in `src/core/relationships.ts`: TypeScript/JavaScript imports, Python explicit relative imports, C/C++ quoted includes, and path/name test-doc heuristics are supported; full AST/callgraph/package resolution is intentionally out of scope.
+
+Related imports/reverse-imports/includes are resolved from indexed content, so context remains useful even when the working tree is stale. `pathPrefix` must scope context and related-file discovery to the requested subtree.
 
 Noisy related paths — lockfiles, generated files, build output, minified files — are filtered out of `readFirst`, while an explicitly requested noisy target may still be returned directly.
 
@@ -200,7 +203,7 @@ Coverage expectations:
 - Indexer tests: first indexing, incremental no-op indexing, changed files, deleted files, failed runs.
 - Chunker tests: code, Markdown headings, fenced code blocks, plain text, line ranges, overlap/default sizing, truncation-safe snippets.
 - Search tests: path matches, symbol matches, FTS chunk matches, doc matches, test boosts, limits, empty results, ranking/noise behavior.
-- Context tests: read-first ordering, related tests/docs/imports/callers, budget limits, stale warnings, missing target behavior, `pathPrefix` scoping.
+- Context tests: read-first ordering, relationship reasons, related tests/docs/imports/includes/callers, budget limits, stale warnings, missing target behavior, `pathPrefix` scoping.
 - Safety tests: unapproved repos cannot be indexed; paths outside the repo root are rejected.
 - Package/integration tests: the Pi extension loads and each V1 tool validates inputs and returns the documented contract.
 

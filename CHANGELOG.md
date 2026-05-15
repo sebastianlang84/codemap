@@ -5,6 +5,7 @@
 - Restructure documentation into product, user, and developer sections, with README kept as a concise entry point.
 - Remove stale compatibility wording and migration code for obsolete names/paths.
 - Improve `codemap_context` read-first packages by adding directly imported local files and local caller hints alongside name-based test/doc hints.
+- Add `codemap_context` read-first relationship reasons plus lightweight TypeScript/JavaScript, Python relative import, and C/C++ include/header-source relationship hints.
 - Keep lockfile/generated/build/minified neighbors out of read-first context while preserving useful related tests/docs.
 - Add internal ranking diagnostics for tests and benchmarks without adding public `codemap_search` explain fields.
 

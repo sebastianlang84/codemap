@@ -224,8 +224,9 @@ Noise handling:
 
 - Lockfiles are indexed but receive a strong noise penalty for ordinary queries; explicit lockfile/path queries can still surface them first.
 - Generated files, build output, vendor/output folders, and minified files are strongly de-prioritized or skipped depending on scan policy.
-- `codemap_context` keeps noisy related imports/reverse-imports out of `readFirst` when they point to lockfiles, generated files, build output, or minified files, while still allowing an explicitly requested noisy target to be returned directly.
-- Tests and docs are useful context, not generic noise; they should appear as related read-first files when they are actual sibling, reverse-import, or path-related context.
+- `codemap_context` keeps noisy related imports/reverse-imports/includes out of `readFirst` when they point to lockfiles, generated files, build output, or minified files, while still allowing an explicitly requested noisy target to be returned directly.
+- `codemap_context` may include compact `reasons[]` on read-first items to explain lightweight relationships such as target, import/include, reverse import/include, C/C++ implementation pair, sibling test, or related doc.
+- Tests and docs are useful context, not generic noise; they should appear as related read-first files when they are actual sibling, reverse-import/include, or path-related context.
 
 Search-result objects remain compact. Internal score diagnostics may decompose retrieval/FTS/path/filename/symbol/coverage/role/noise components for tests and benchmark debugging, but the public `codemap_search` result shape does not include explain fields.
 
@@ -244,7 +245,7 @@ Search-result objects remain compact. Internal score diagnostics may decompose r
 - Implement only cheap, reliable symbol extraction in V1; defer full AST/callgraph behavior.
 - Rank by exact path/name, symbol matches, FTS matches, query-term coverage, file-role intent boosts, and noise penalties for lockfiles/generated/build/minified files.
 - Return warnings instead of silently auto-refreshing stale indexes.
-- Treat embeddings, ast-grep, graph relationships, and memory artifact linking as V1.5/V2 work.
+- Treat embeddings, ast-grep, persisted graph relationships, and memory artifact linking as V1.5/V2 work.
 
 ## 14. Success metrics
 

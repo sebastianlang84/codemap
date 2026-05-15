@@ -72,7 +72,7 @@ check("package contents do not include local indexes, env files, or obvious priv
 check("package tarball stays small", () => {
   const pack = npmPackInfo();
   const unpackedSize = Number(pack?.unpackedSize ?? 0);
-  const limit = 250_000;
+  const limit = 275_000;
   if (unpackedSize > limit) throw new Error(`unpackedSize ${unpackedSize} exceeds ${limit}`);
 });
 

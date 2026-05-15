@@ -131,7 +131,9 @@ Pi commands are for humans in the TUI. LLM tools expose the same operations as s
 | Status | `/codemap-status [--full] [--path-prefix <subtree>]` | `codemap_status({ full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, stale diagnostics when `full=true` |
 | Index | `/codemap-index [--approve-repo] [--path-prefix <subtree>]` | `codemap_index({ approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
 | Search | `/codemap-search [--path-prefix <subtree>] <query>` | `codemap_search({ query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
-| Context | `/codemap-context [--path-prefix <subtree>] <target>` | `codemap_context({ target, limit?, pathPrefix? })` | `readFirst[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
+| Context | `/codemap-context [--path-prefix <subtree>] <target>` | `codemap_context({ target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
+
+`codemap_context` reason kinds are best-effort navigation hints such as `target`, `search_result`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `sibling_test`, and `related_doc`. They are derived from indexed content and path/name heuristics; TypeScript/JavaScript imports, Python relative imports, and C/C++ quoted includes/header-source pairs are supported without building a full language graph.
 
 Recommended agent flow:
 

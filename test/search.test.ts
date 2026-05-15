@@ -249,7 +249,7 @@ test("context packages direct files with related tests and docs", (t) => {
   assert.deepEqual(result.warnings, []);
 });
 
-test("context read-first includes directly imported local files", (t) => {
+test("context read-first includes directly imported local files with reasons", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "test"), { recursive: true });
   writeFileSync(join(root, "src", "core", "user-service.ts"), `
@@ -275,8 +275,66 @@ export function approveUser(id: string) {
     "src/core/db.ts",
     "src/core/validation.ts",
   ]);
+  assert.deepEqual(result.readFirst[0]?.reasons?.map((reason) => reason.kind), ["target"]);
+  assert.deepEqual(result.readFirst[1]?.reasons?.map((reason) => reason.kind), ["import"]);
+  assert.equal(result.readFirst[1]?.reasons?.[0]?.specifier, "./db");
   assert.ok(result.readFirst.every((item) => item.path !== "external-package"));
   assert.deepEqual(result.warnings, []);
+});
+
+test("context read-first includes Python relative imports with reasons", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "pkg"), { recursive: true });
+  writeFileSync(join(root, "src", "pkg", "service.py"), `
+from .db import connect_db
+from . import validation
+
+
+def run_service():
+    return connect_db(), validation.validate()
+`);
+  writeFileSync(join(root, "src", "pkg", "db.py"), "def connect_db():\n    return True\n");
+  writeFileSync(join(root, "src", "pkg", "db.ts"), "export const wrongLanguageDb = true;\n");
+  writeFileSync(join(root, "src", "pkg", "validation.py"), "def validate():\n    return True\n");
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/pkg/service.py", limit: 4 });
+
+  assert.deepEqual(result.readFirst.slice(0, 3).map((item) => item.path), [
+    "src/pkg/service.py",
+    "src/pkg/db.py",
+    "src/pkg/validation.py",
+  ]);
+  assert.deepEqual(result.readFirst[1]?.reasons?.map((reason) => reason.kind), ["import"]);
+  assert.equal(result.readFirst[2]?.reasons?.[0]?.specifier, "./validation");
+});
+
+test("context read-first includes C++ includes and header implementation pairs with reasons", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "parser"), { recursive: true });
+  writeFileSync(join(root, "src", "parser", "parser.h"), "int parse_value();\n");
+  writeFileSync(join(root, "src", "parser", "parser.cpp"), `
+#include "parser.h"
+
+int parse_value() { return 1; }
+`);
+  writeFileSync(join(root, "src", "parser", "parser_test.cpp"), `
+#include "parser.h"
+
+int main() { return parse_value(); }
+`);
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/parser/parser.h", limit: 4 });
+
+  assert.deepEqual(result.readFirst.slice(0, 3).map((item) => item.path), [
+    "src/parser/parser.h",
+    "src/parser/parser.cpp",
+    "src/parser/parser_test.cpp",
+  ]);
+  assert.ok(result.readFirst[1]?.reasons?.some((reason) => reason.kind === "implementation_pair"));
+  assert.ok(result.readFirst[1]?.reasons?.some((reason) => reason.kind === "reverse_include"));
+  assert.ok(result.readFirst[2]?.reasons?.some((reason) => reason.kind === "reverse_include"));
 });
 
 test("context import hints come from indexed content when target is stale", (t) => {
@@ -290,8 +348,10 @@ test("context import hints come from indexed content when target is stale", (t) 
   const result = codemapContext({ cwd: root, target: "src/core/user-service.ts", limit: 4 });
   const paths = result.readFirst.map((item) => item.path);
 
+  const dbItem = result.readFirst.find((item) => item.path === "src/core/db.ts");
   assert.equal(result.stale, true);
   assert.ok(paths.includes("src/core/db.ts"));
+  assert.equal(dbItem?.reasons?.[0]?.specifier, "./db");
   assert.ok(!paths.includes("src/core/validation.ts"));
 });
 

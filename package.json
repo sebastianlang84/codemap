@@ -9,6 +9,23 @@
     "codemap"
   ],
   "license": "MIT",
+  "files": [
+    "index.ts",
+    "src/",
+    "migrations/",
+    "docs/product/",
+    "docs/user/",
+    "docs/developer/architecture.md",
+    "docs/developer/search-quality.md",
+    "docs/developer/qmd-research.md",
+    "docs/archive/brainstorming.md",
+    "scripts/",
+    "test/",
+    "TODO.md",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "pi": {
     "extensions": [
       "./index.ts"
