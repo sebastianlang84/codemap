@@ -24,38 +24,45 @@ TDD-Regel:
    - Behavior-Test: „where is the main implementation?“ findet Source-Einstiegspunkt; `codemapContext` enthält Target plus relevanten Test/Doc/Import-Nachbarn und keine Lockfile-/Generated-Noise-Dateien.
    - Benefit: Beweist stärker als Unit-Tests, dass CodeMap den Agenten zum richtigen nächsten Leseort führt.
 
-2. [ ] Context Builder Module: verbleibende Herkunftsgründe und Locality verbessern.
+2. [ ] Token-Injection-Budget-Test für Pi-Tool-Registrierung ergänzen.
+   - Problem: Jede Extension injiziert über Tool-Registrierung `description`, `parameters`, `promptSnippet` und `promptGuidelines` Tokens in den Agent-Kontext; die Kosten müssen explizit bekannt und regressionsgeschützt sein.
+   - Vorbild: `pi-ext-memory/test/pi-extension/token-injection-budget.test.ts` plus `scripts/check-token-injection.ts`: statischer Report, einfache Token-Schätzung, Budgets pro Tool und Gesamtbudget.
+   - Scope: CodeMap-spezifischen Token-Injection-Report für registrierte Tools/Commands bzw. Prompt-Metadaten bauen; Budgetwerte dokumentieren und bei Überschreitung im Test klar ausgeben.
+   - Behavior-Test: registrierte CodeMap-Tools bleiben unter definierten Prompt-/Schema-/Gesamtbudgets; der Test zeigt pro Tool geschätzte Tokens, damit Kontextgewicht sichtbar bleibt.
+   - Benefit: Verhindert schleichenden Kontext-Bloat und macht Extension-Kosten vor Releases messbar.
+
+3. [ ] Context Builder Module: verbleibende Herkunftsgründe und Locality verbessern.
    - Architektur: `codemapContext` bleibt kleine Interface; Beziehungserkennung und Nachbarschaftslogik liegen hinter dem Context-Builder-Seam.
    - Bereits erledigte Slices: `readFirst` Items tragen `reasons[]`; TS/JS Imports, Python relative Imports, C/C++ quoted Includes und Header/Source-Paare werden aus indexierten Chunks abgeleitet; Stale-Verhalten bleibt indexbasiert.
    - Offen: `near_config`, `same_dir`, feinere Testrollen wie `test_of`, `sibling_test`, `reverse_test`; Tests sind nützliche Rollen, keine Noise-Klasse.
    - Behavior-Test: Fixture mit Modul, Caller, Test, naher Config, Doc und Rauschdatei liefert Target + echte Beziehungen stabil vor Rauschen und erklärt die Herkunft der Context-Items über `reasons[]`.
 
-3. [ ] Typische Query-Klassen als vertikale TDD-Slices abdecken.
+4. [ ] Typische Query-Klassen als vertikale TDD-Slices abdecken.
    - Architektur: Keine neue Retrieval-Schicht; Query-Plan/Ranking werden nur vertieft, wenn ein öffentlicher Navigationsfall es verlangt.
    - Scope: Einzelne repräsentative Slices für Symbol, Pfad, Fehlermeldung, Endpoint/Route, Config-Key und noisy query.
    - TDD-Regel: Nicht alles vorab schreiben. Pro Query-Klasse: ein Fixture, ein öffentlicher Test für Top-Ergebnis + optional Context-Paket, dann minimale Implementation.
    - Benefit: Verbesserungen bleiben auf agentische Navigationsfälle ausgerichtet statt auf abstrakte Retrieval-Metriken.
 
-4. [ ] DB-/Migration-Schema-Tests ergänzen.
+5. [ ] DB-/Migration-Schema-Tests ergänzen.
    - Architektur: Index-Storage wird als langlebiges Core-Modul abgesichert; Migrationen dürfen Adapter und Ranking nicht leaken.
    - Scope: Migrationen/SQLite-Schema, Index-Versionierung und bestehende DB-Aktualisierung explizit testen.
    - Behavior-Test: Vorhandene/alte Test-DB oder simulierte Vorversion wird über öffentliche Index-/Search-Pfade geöffnet; Version steigt, Index/Search funktionieren, keine Datenverluste oder Crashs.
    - Benefit: Quality-Metriken sind nur belastbar, wenn der Index reproduzierbar und migrationssicher ist.
 
-5. [ ] Search-Quality-Gate deterministisch und closeout-tauglich machen.
+6. [ ] Search-Quality-Gate deterministisch und closeout-tauglich machen.
    - Architektur: Benchmark/Quality-Metriken sind ein Diagnose-Seam, nicht Teil des Public SearchResult.
    - Problem: `scripts/bench-search-quality.ts` und `test/search-quality.test.ts` existieren, aber lokale Default-Repos unter `/home/wasti/...` sind kein stabiler Pflicht-Gate.
    - Scope: Trennen zwischen verpflichtendem deterministischem Fixture-Gate und optionalen lokalen Tuning-Fixtures.
    - Behavior-Test: `npm run bench:search-quality:gate` oder ein neuer Pflichtmodus läuft ohne private lokale Repos stabil grün; lokale Real-Repo-Benchmarks bleiben als optionales Tuning sichtbar.
    - Closeout: Vor Release/Commit-Closeout sollen `npm run typecheck`, `npm test` und der deterministische Quality-Gate klar dokumentiert sein.
 
-6. [ ] Fehlgeschlagene Natural-Language-Benchmark-Cases als konkrete Regressionen bearbeiten.
+7. [ ] Fehlgeschlagene Natural-Language-Benchmark-Cases als konkrete Regressionen bearbeiten.
    - Einordnung: Nur sinnvoll, wenn jeder rote Case in einen überprüfbaren Behavior-Fall überführt wird.
    - Scope: Pro rotem Case Top-5-Treffer, erwartete Pfade, Query-Formulierung, Ranking-Diagnostics, Noise-Hits und Miss-Klasse analysieren.
    - Entscheidung je Case: Ranking/Query-Plan/File-Rollen verbessern, Ground Truth korrigieren oder Case als ungeeignet entfernen; keine Benchmark-Erleichterung nach Ergebnislage.
    - Test: Ein konkreter Regressionstest oder Benchmark-Case mit maschinenlesbarem Erfolgskriterium; keine bloße Notiz „Gate später grün machen“.
 
-7. [ ] Thin CLI Adapter über `src/core/` ergänzen.
+8. [ ] Thin CLI Adapter über `src/core/` ergänzen.
    - Architektur: `src/cli/` ist Adapter, nicht neue Implementation; Core bleibt Single Source of Truth für Approval, State, Status, Search und Context.
    - Scope: Kleiner CLI-Adapter, zuerst `status --json` und maximal ein Such-/Context-Befehl.
    - Behavior-Test: CLI-Integration nutzt temp `stateDir`, dupliziert keine State-Logik und gibt stabiles JSON aus.
@@ -63,12 +70,12 @@ TDD-Regel:
 
 ## Parked / später
 
-8. [ ] Refresh-Automation als expliziten Command oder Hook entscheiden.
+9. [ ] Refresh-Automation als expliziten Command oder Hook entscheiden.
    - Einordnung: Erst nach besserem Status-Modul sinnvoll. Kein Daemon/Background-Crawling als Default.
    - Scope: Kurze ADR/Doc-Entscheidung plus kleinster Implementierungs-Slice.
    - Behavior-Test: Gewählter Command/Hook respektiert Approval, `pathPrefix` und stale-index Warnungen.
 
-9. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
+10. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
    - Einordnung: Möglichkeit zur Verbesserung, **nicht** erster Schritt. Vorher müssen stabile Tests, Ground-Truth-Cases und maschinenlesbare Metriken existieren.
    - Idee: Autoresearch kann Ranking-Parameter adaptieren, wenn Resultate quantifiziert werden; `/home/wasti/dev/autoresearch/program.md` beschreibt bereits ein passendes Experimentprotokoll.
    - Voraussetzungen: maschinenlesbare Benchmark-Ausgabe mit `top1Accuracy`, `recallAt5`, `expectedCoverageAt5`, `mrrAt5`, `avgLatencyMs`, `p95LatencyMs`, `misses`, `partialMisses` und `excludedHits`; feste Trainings-/Validierungs-Cases; keine Anpassung ausschließlich auf ein einzelnes lokales Repo.
