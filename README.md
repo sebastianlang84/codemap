@@ -8,7 +8,7 @@ It complements `pi-memory`:
 
 ```text
 pi-memory stores durable decisions and handoffs.
-CodeMap indexes the current repo state and can be rebuilt.
+CodeMap indexes the current or explicitly targeted repo state and can be rebuilt.
 ```
 
 ## Install
@@ -45,6 +45,12 @@ Find relevant files, symbols, or chunks:
 /codemap-search --path-prefix services/api auth middleware
 ```
 
+Target another repo without changing the session cwd:
+
+```text
+/codemap-search --repo-path /path/to/repo memory handoff retrieval
+```
+
 Get a compact read-first package before opening broader code:
 
 ```text
@@ -56,17 +62,18 @@ Start with [`docs/user/usage.md`](docs/user/usage.md) to understand what CodeMap
 
 ## What CodeMap does
 
-After explicit approval, CodeMap indexes the current Git repository into a local SQLite database under `~/.pi/agent/state/codemap/`. Repository content is not sent to a remote service.
+After explicit approval, CodeMap indexes the current or explicitly targeted Git repository into a local SQLite database under `~/.pi/agent/state/codemap/`. Repository content is not sent to a remote service.
 
 Implemented V1 capabilities:
 
-- approve and index the current Git repo locally;
+- approve and index the current or `repoPath` target Git repo locally;
 - search code plus Markdown/YAML/JSON/TOML/plain project files;
 - search paths, chunks, and cheap symbols with SQLite FTS5;
 - return line-bounded snippets with ranking scores;
 - return read-first context for a file, symbol, feature, or query;
 - warn when the index is stale, including Git HEAD and dirty-working-tree drift in full status;
 - provide simple related test/doc/import/caller hints;
+- target another repo with `repoPath` / `--repo-path` without changing session cwd;
 - scope status, indexing, search, and context to a subtree with `pathPrefix`.
 
 ## Documentation map

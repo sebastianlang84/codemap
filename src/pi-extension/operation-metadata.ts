@@ -20,8 +20,8 @@ export const codeMapOperationMetadataById = {
     label: "CodeMap Status",
     toolName: "codemap_status",
     commandName: "codemap-status",
-    description: "Show CodeMap approval and local SQLite index status for the current Git repository. Uses cheap diagnostics unless full=true.",
-    commandDescription: "Show CodeMap approval/index status; pass --full for stale diagnostics",
+    description: "Show CodeMap approval/index status for cwd or repoPath; full=true checks stale.",
+    commandDescription: "Show CodeMap approval/index status; pass --repo-path and/or --full",
     promptSnippet: "Check CodeMap approval/index readiness and stale state for cwd.",
     promptGuidelines: [
       "Use codemap_status before search/context when approval or index state is unknown.",
@@ -30,6 +30,7 @@ export const codeMapOperationMetadataById = {
     ],
     parameters: Type.Object({
       full: Type.Optional(Type.Boolean({ description: "Run a full repository scan to report stale index diagnostics." })),
+      repoPath: Type.Optional(Type.String({ description: "Repo root/path; defaults cwd." })),
       pathPrefix: Type.Optional(Type.String({ description: "Limit diagnostics to an indexed subtree, e.g. services/api/." })),
     }),
   },
@@ -38,8 +39,8 @@ export const codeMapOperationMetadataById = {
     label: "CodeMap Index",
     toolName: "codemap_index",
     commandName: "codemap-index",
-    description: "Index or refresh the current Git repository for CodeMap. Requires approveRepo=true the first time.",
-    commandDescription: "Index current repo for CodeMap; pass --approve-repo the first time",
+    description: "Index/refresh cwd or repoPath; first run needs approveRepo=true.",
+    commandDescription: "Index cwd or --repo-path for CodeMap; pass --approve-repo the first time",
     promptSnippet: "Approve once or refresh the CodeMap index for cwd.",
     promptGuidelines: [
       "Use codemap_index approveRepo=true only after explicit local approval.",
@@ -48,6 +49,7 @@ export const codeMapOperationMetadataById = {
     ],
     parameters: Type.Object({
       approveRepo: Type.Optional(Type.Boolean({ description: "Approve this Git repository for local-only indexing." })),
+      repoPath: Type.Optional(Type.String({ description: "Repo root/path; defaults cwd." })),
       pathPrefix: Type.Optional(Type.String({ description: "Only index/refresh this repository subtree, e.g. services/api/." })),
     }),
   },
@@ -56,8 +58,8 @@ export const codeMapOperationMetadataById = {
     label: "CodeMap Search",
     toolName: "codemap_search",
     commandName: "codemap-search",
-    description: "Search the CodeMap index using SQLite FTS over paths, chunks, and cheap symbols.",
-    commandDescription: "Search the CodeMap index: /codemap-search <query>",
+    description: "Search indexed CodeMap paths, chunks, and symbols.",
+    commandDescription: "Search the CodeMap index: /codemap-search [--repo-path <path>] <query>",
     promptSnippet: "Search indexed CodeMap paths, chunks, and symbols by query.",
     promptGuidelines: [
       "Use codemap_search for navigation when target path/symbol is unknown.",
@@ -67,6 +69,7 @@ export const codeMapOperationMetadataById = {
     parameters: Type.Object({
       query: Type.String({ description: "Feature, symbol, path, or phrase to search for." }),
       limit: Type.Optional(Type.Number({ minimum: 1, maximum: 50, description: "Maximum result count." })),
+      repoPath: Type.Optional(Type.String({ description: "Repo root/path; defaults cwd." })),
       pathPrefix: Type.Optional(Type.String({ description: "Limit results to an indexed subtree, e.g. services/api/." })),
     }),
   },
@@ -75,8 +78,8 @@ export const codeMapOperationMetadataById = {
     label: "CodeMap Context",
     toolName: "codemap_context",
     commandName: "codemap-context",
-    description: "Return a compact read-first context package from CodeMap for an indexed file path or symbol/query.",
-    commandDescription: "Get CodeMap read-first context: /codemap-context <path-or-symbol>",
+    description: "Return read-first CodeMap context for a path, symbol, or query.",
+    commandDescription: "Get CodeMap read-first context: /codemap-context [--repo-path <path>] <target>",
     promptSnippet: "Get read-first context from indexed CodeMap files or query matches.",
     promptGuidelines: [
       "Use codemap_context after codemap_search to choose files to read.",
@@ -86,6 +89,7 @@ export const codeMapOperationMetadataById = {
     parameters: Type.Object({
       target: Type.String({ description: "Indexed file path, symbol, subsystem, or phrase." }),
       limit: Type.Optional(Type.Number({ minimum: 1, maximum: 25, description: "Maximum read-first items." })),
+      repoPath: Type.Optional(Type.String({ description: "Repo root/path; defaults cwd." })),
       pathPrefix: Type.Optional(Type.String({ description: "Limit lookup to an indexed subtree, e.g. services/api/." })),
     }),
   },

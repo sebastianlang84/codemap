@@ -4,13 +4,13 @@
 
 `pi-ext-codemap` is a lightweight local codebase search and context extension for Pi/Coding Agents.
 
-It indexes the current repository state into a local SQLite/FTS5 database and provides agent-friendly tools for finding relevant files, line ranges, snippets, docs, tests, and entry points.
+It indexes the current or explicitly targeted repository state into a local SQLite/FTS5 database and provides agent-friendly tools for finding relevant files, line ranges, snippets, docs, tests, and entry points.
 
 It complements `pi-memory` but is not part of it.
 
 ```text
 pi-memory stores durable decisions.
-pi-ext-codemap indexes current repo state.
+pi-ext-codemap indexes current or explicitly targeted repo state.
 ```
 
 Canonical detailed docs:
@@ -182,7 +182,7 @@ V1 must not:
 - scan arbitrary parent folders;
 - auto-discover all repos;
 - run a global watcher;
-- index outside the current repo context;
+- index outside the current or explicitly targeted repo context;
 - follow symlinks by default;
 - send repository content to a remote service.
 
@@ -203,7 +203,7 @@ V1 exposes four primary tools and matching slash commands:
 | `codemap_search` | `/codemap-search` | Search indexed paths, chunks, and cheap symbols. |
 | `codemap_context` | `/codemap-context` | Return read-first context for a file path, symbol, feature, or query. |
 
-All four operations accept optional `pathPrefix` / `--path-prefix` where applicable to scope monorepos and nested services.
+All four operations accept optional `repoPath` / `--repo-path` to target a repo root, directory inside a repo, or file inside a repo without changing session cwd. They also accept optional `pathPrefix` / `--path-prefix` where applicable to scope monorepos and nested services.
 
 Public result contracts are documented in [`../user/usage.md#commands-and-tools`](../user/usage.md#commands-and-tools). Adapter/core boundaries are documented in [`../developer/architecture.md`](../developer/architecture.md).
 

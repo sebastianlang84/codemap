@@ -4,7 +4,7 @@ Read this file when you want to understand what CodeMap can do, which features e
 
 ## What CodeMap is
 
-CodeMap is a local repository map for Pi coding agents. It indexes the current Git repo into SQLite/FTS and gives agents a small set of tools for finding the right files before reading or editing code.
+CodeMap is a local repository map for Pi coding agents. It indexes the current or explicitly targeted Git repo into SQLite/FTS and gives agents a small set of tools for finding the right files before reading or editing code.
 
 Use CodeMap when you want to answer:
 
@@ -24,6 +24,7 @@ CodeMap is not a semantic memory system. `pi-memory` stores durable decisions an
 | Status diagnostics | Shows approval, index counts, DB path, and optional stale diagnostics. | `/codemap-status --full` |
 | Code/text search | Searches paths, chunks, and cheap symbols with SQLite FTS. | `/codemap-search <query>` |
 | Read-first context | Returns the target file plus likely imports, callers, nearby config, tests, and docs. | `/codemap-context <path-or-query>` |
+| Repo targeting | Runs status/index/search/context for another repo path without changing the session cwd. | `--repo-path /path/to/repo` or `repoPath` |
 | Monorepo scoping | Limits status/index/search/context to a subtree. | `--path-prefix services/api` |
 | Stale warnings | Warns instead of silently refreshing old results. | Refresh with `/codemap-index` |
 | Noise handling | Keeps lockfiles/generated/build/minified files from dominating ordinary results. | Automatic; explicit lockfile queries still work. |
@@ -96,6 +97,26 @@ For direct file targets, CodeMap may return:
 
 Treat this as a read-first list, not as a replacement for reading the files.
 
+### Target another repo by path
+
+All CodeMap tools and commands default to the current working directory. To target another repo, pass a repo root, a directory inside a repo, or a file inside a repo:
+
+```text
+/codemap-status --repo-path /path/to/repo --full
+/codemap-index --repo-path /path/to/repo --approve-repo
+/codemap-search --repo-path /path/to/repo repoPathNeedle
+/codemap-context --repo-path /path/to/repo src/core/search.ts
+```
+
+Equivalent tool params:
+
+```ts
+codemap_status({ repoPath: "/path/to/repo", full: true })
+codemap_search({ repoPath: "/path/to/repo", query: "auth middleware" })
+```
+
+Approval is still per repo. If the target repo is not approved, ask before running `codemap_index({ repoPath, approveRepo: true })`.
+
 ### Work inside a monorepo subtree
 
 ```text
@@ -129,10 +150,10 @@ Pi commands are for humans in the TUI. LLM tools expose the same operations as s
 
 | Operation | Command | Tool params | Result shape |
 |---|---|---|---|
-| Status | `/codemap-status [--full] [--path-prefix <subtree>]` | `codemap_status({ full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, and full Git/index diagnostics (`currentHead`, `indexedHead`, `headChanged`, `dirty`, `dirtyFiles`, stale counts) when `full=true` |
-| Index | `/codemap-index [--approve-repo] [--path-prefix <subtree>]` | `codemap_index({ approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
-| Search | `/codemap-search [--path-prefix <subtree>] <query>` | `codemap_search({ query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
-| Context | `/codemap-context [--path-prefix <subtree>] <target>` | `codemap_context({ target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
+| Status | `/codemap-status [--repo-path <path>] [--full] [--path-prefix <subtree>]` | `codemap_status({ repoPath?, full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, and full Git/index diagnostics (`currentHead`, `indexedHead`, `headChanged`, `dirty`, `dirtyFiles`, stale counts) when `full=true` |
+| Index | `/codemap-index [--repo-path <path>] [--approve-repo] [--path-prefix <subtree>]` | `codemap_index({ repoPath?, approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
+| Search | `/codemap-search [--repo-path <path>] [--path-prefix <subtree>] <query>` | `codemap_search({ repoPath?, query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
+| Context | `/codemap-context [--repo-path <path>] [--path-prefix <subtree>] <target>` | `codemap_context({ repoPath?, target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
 
 `codemap_context` reason kinds are best-effort navigation hints such as `target`, `search_result`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `near_config`, `same_dir`, `test_of`, `sibling_test`, `reverse_test`, and `related_doc`. They are derived from indexed content and path/name heuristics; TypeScript/JavaScript imports, Python relative imports, nearby config files, same-directory source neighbors, test/source roles, and C/C++ quoted includes/header-source pairs are supported without building a full language graph.
 

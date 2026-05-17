@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add optional `repoPath` / `--repo-path` targeting to CodeMap status, index, search, and context so agents can query another repo without changing session cwd.
 - Restructure documentation into product, user, and developer sections, with README kept as a concise entry point.
 - Remove stale compatibility wording and migration code for obsolete names/paths.
 - Improve `codemap_context` read-first packages by adding directly imported local files and local caller hints alongside name-based test/doc hints.

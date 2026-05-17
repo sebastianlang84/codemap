@@ -128,7 +128,7 @@ symbols_fts(path, name, kind, signature);
 Default indexing is whitelist-first. The scanner should:
 
 - require explicit approval before first indexing;
-- stay inside the current Git repository boundary;
+- stay inside the current or explicitly targeted Git repository boundary;
 - respect `.gitignore` and optional `.codemapignore` rules;
 - skip symlinks;
 - skip binaries, unsupported extensions, secret-like files, generated/cache/build/dependency folders, and files larger than 1 MB;
@@ -191,6 +191,8 @@ The public Pi tool/command surface is intentionally small:
 - `codemap_index`
 - `codemap_search`
 - `codemap_context`
+
+All four tools/commands default to cwd and optionally accept `repoPath` / `--repo-path`. The Pi adapter resolves repoPath to a directory cwd before calling core APIs, so core stays cwd-oriented and adapter-independent.
 
 Detailed user-facing command usage is in [`../user/usage.md`](../user/usage.md). Product-level contracts are in [`../product/PRD.md#11-tool-api-contract`](../product/PRD.md#11-tool-api-contract).
 

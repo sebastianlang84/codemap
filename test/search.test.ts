@@ -19,7 +19,7 @@ const { codemapContext } = await import("../src/core/context.ts");
 const { getRepoInfo, repoKey } = await import("../src/core/repo.ts");
 const { registerCodeMapTools } = await import("../src/pi-extension/tools.ts");
 const { registerCodeMapCommands } = await import("../src/pi-extension/commands.ts");
-const { codeMapContext, codeMapIndex, codeMapSearch } = await import("../src/pi-extension/operations.ts");
+const { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus, parsePathPrefix } = await import("../src/pi-extension/operations.ts");
 const { default: codeMapExtension } = await import("../src/pi-extension/index.ts");
 
 function fixtureRepo(t: TestContext): string {
@@ -1024,6 +1024,41 @@ export function changedUserFlow(id: string) {
   assert.deepEqual(searchCodeMap({ cwd: root, query: "404", limit: 5 }), []);
 });
 
+test("CodeMap operations can target another repo with repoPath", (t) => {
+  const currentRoot = mkdtempSync(join(tmpdir(), "pi-codemap-current-repopath-"));
+  const targetRoot = mkdtempSync(join(tmpdir(), "pi-codemap-target-repopath-"));
+  t.after(() => rmSync(currentRoot, { recursive: true, force: true }));
+  t.after(() => rmSync(targetRoot, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: currentRoot, stdio: "ignore" });
+  execFileSync("git", ["init"], { cwd: targetRoot, stdio: "ignore" });
+  mkdirSync(join(currentRoot, "src"), { recursive: true });
+  mkdirSync(join(targetRoot, "src"), { recursive: true });
+  writeFileSync(join(currentRoot, "src", "current.ts"), "export const currentRepoOnly = true;\n");
+  writeFileSync(join(targetRoot, "src", "target.ts"), `
+export function repoPathNeedle() {
+  return "target repo only";
+}
+`);
+
+  assert.throws(() => codeMapIndex(currentRoot, { repoPath: targetRoot }), /Repository is not approved/);
+  codeMapIndex(currentRoot, { approveRepo: true });
+  codeMapIndex(currentRoot, { repoPath: targetRoot, approveRepo: true });
+  const cwdStatus = codeMapStatus(currentRoot, {});
+  const statusResult = codeMapStatus(currentRoot, { repoPath: targetRoot });
+  const nestedStatus = codeMapStatus(currentRoot, { repoPath: join(targetRoot, "src") });
+  const searchResult = codeMapSearch(currentRoot, { repoPath: targetRoot, query: "repoPathNeedle", limit: 5 });
+  const contextResult = codeMapContext(currentRoot, { repoPath: join(targetRoot, "src", "target.ts"), target: "src/target.ts", limit: 3 });
+
+  assert.equal(cwdStatus.root, currentRoot);
+  assert.equal(statusResult.root, targetRoot);
+  assert.equal(statusResult.readiness, "ready");
+  assert.equal(nestedStatus.root, targetRoot);
+  assert.equal(searchResult.root, targetRoot);
+  assert.equal(searchResult.results[0]?.path, "src/target.ts");
+  assert.equal(contextResult.root, targetRoot);
+  assert.equal(contextResult.readFirst[0]?.path, "src/target.ts");
+});
+
 test("status reports unapproved repos as not ready", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-unapproved-status-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -1242,6 +1277,34 @@ test("codemap tool renderer shows indexed false as not indexed", () => {
 
   assert.match(rendered, /not indexed/);
   assert.doesNotMatch(rendered, /index ready/);
+});
+
+test("codemap command args parse repoPath and pathPrefix", () => {
+  assert.deepEqual(parsePathPrefix("--repo-path /tmp/repo --path-prefix services/api needle"), {
+    repoPath: "/tmp/repo",
+    pathPrefix: "services/api",
+    query: "needle",
+  });
+  assert.deepEqual(parsePathPrefix('--repo-path "/tmp/repo with spaces" needle'), {
+    repoPath: "/tmp/repo with spaces",
+    pathPrefix: undefined,
+    query: "needle",
+  });
+});
+
+test("codemap index command requires explicit approve flag token", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-command-noapprove--approve-repo-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  writeFileSync(join(root, "target.ts"), "export const commandApprovalNeedle = true;\n");
+
+  const commands: Array<{ name: string; handler: (args: string, ctx: { ui: { notify: (message: string, level: string) => void } }) => Promise<void> }> = [];
+  registerCodeMapCommands({ registerCommand: (name: string, command: { handler: (args: string, ctx: { ui: { notify: (message: string, level: string) => void } }) => Promise<void> }) => commands.push({ name, handler: command.handler }) } as never);
+
+  await assert.rejects(
+    () => commands.find((command) => command.name === "codemap-index")!.handler(`--repo-path ${root}`, { ui: { notify() {} } }),
+    /Repository is not approved/,
+  );
 });
 
 test("registers only codemap commands", () => {
