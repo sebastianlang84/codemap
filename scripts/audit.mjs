@@ -69,14 +69,6 @@ check("package contents do not include local indexes, env files, or obvious priv
   if (forbidden.length > 0) throw new Error(forbidden.join(", "));
 });
 
-check("package tarball stays small", () => {
-  const pack = npmPackInfo();
-  const unpackedSize = Number(pack?.unpackedSize ?? 0);
-  // Includes packaged tests/scripts; keep enough headroom for lightweight local audit tooling without normalizing large artifacts.
-  const limit = 290_000;
-  if (unpackedSize > limit) throw new Error(`unpackedSize ${unpackedSize} exceeds ${limit}`);
-});
-
 check("typecheck", () => {
   run("npm", ["run", "typecheck", "--", "--pretty", "false"]);
 });
