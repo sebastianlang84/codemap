@@ -13,7 +13,7 @@ Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; s
 Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sondern Misses sichtbar machen und daraus gezielte Verbesserungs-Slices ableiten. Die eigentlichen To-do-Checkboxen stehen im nächsten Abschnitt, damit die Backlog-Liste nicht doppelt gezählt wird.
 
 - **TypeScript-Pfadaliasse — Restgrenzen**: Minimaler `tsconfig.json` / `jsconfig.json` `baseUrl` + `paths`-Support ist umgesetzt; offen bleiben komplexe `extends`-Ketten, Workspace-Aliasse und Budget-Ordering bei vielen Alias-Imports.
-- **Framework-/Konventions-Nachbarn**: relevante Dateien sind teils nicht über direkte Imports verbunden, sondern über Namens-/Framework-Konventionen, z. B. UI-zu-API, Route-Handler, Provider oder Config-Dateien. Source→Test-Budget-Ordering ist als erster kleiner Vertical geschützt; weitere Konventionen bleiben getrennte Slices.
+- **Framework-/Konventions-Nachbarn**: relevante Dateien sind teils nicht über direkte Imports verbunden, sondern über Namens-/Framework-Konventionen, z. B. UI-zu-API, Route-Handler, Provider oder Config-Dateien. Source→Test-Budget-Ordering ist als erster kleiner Vertical geschützt; aktuelle Navigation-Diagnostik zeigt, ob ein Konventions-Miss wirklich am Context-Budget hängt oder durch einen verfehlten Entry verursacht wird.
 - **Natürlichere Bug-/Änderungsanfragen**: aktueller Real-Repo-Gate ist symbol-/entrypoint-lastig und beweist nicht beliebige natürliche Bugreports.
 - **False positives / verbotene Reads**: lexical liest im Real-Repo-Gate häufiger verbotene/noisy Dateien; CodeMap vermeidet sie aktuell, aber neue Heuristiken können Noise zurückbringen.
 
@@ -31,9 +31,9 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
    - Ziel: Fälle ohne exakten Symbolnamen, z. B. “Newsletter-Dashboard lädt FINRA Snapshot falsch”, gegen `rg/find`, `codemap_search`, `codemap_search+context` messen.
    - Gate: verhindert Overfitting auf symbol-/entrypoint-lastige Queries.
 
-4. [ ] Ranking-/Context-Diagnostik für Evals verbessern.
-   - Ziel: Reports sollen zeigen, warum Dateien gewählt oder verpasst wurden: symbol hit, path hit, import edge, alias edge, convention edge, noise penalty.
-   - Grenze: zuerst nur eval-/debug-intern; keine Tool-Schema-/Prompt-Erweiterung ohne klaren Nutzen.
+4. [ ] Entry-Ranking-Misses aus der neuen Eval-Diagnostik gezielt untersuchen.
+   - Befund: der verbleibende Source→Test-Miss ist `context_neighbor_unreachable`, weil `src/pi-extension/retrieval.ts` nicht als Context-Target gewählt wird.
+   - Grenze: keine Ranking-Gewichte ändern, bevor die Diagnose über mehrere Cases zeigt, welcher Hebel wirkt; keine Tool-Schema-/Prompt-Erweiterung.
 
 ## Parked / später
 

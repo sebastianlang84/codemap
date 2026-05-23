@@ -6,6 +6,7 @@ import { basename, join } from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { codemapContext } from "../src/core/context.ts";
+import { explainNavigationMisses, type NavigationMissExplanation } from "../src/core/eval-navigation-diagnostics.ts";
 import { classifyMisses, emptyClassCounts, summarizeMissTaxonomy, type MissClass, type MissDiagnostic, type MissTaxonomySummary } from "../src/core/eval-miss-taxonomy.ts";
 import { indexRepo, status as indexStatus } from "../src/core/indexer.ts";
 import { searchCodeMap } from "../src/core/search.ts";
@@ -45,9 +46,33 @@ interface CaseReport {
   contextRecall: number;
   forbiddenRead: string[];
   misses: MissDiagnostic[];
+  navigationDiagnostics: NavigationDiagnostics;
   success: boolean;
   toolCalls: number;
   latencyMs: number;
+}
+
+interface FileSelectionDiagnostic {
+  path: string;
+  source: "lexical" | "search" | "context";
+  rank: number;
+  score?: number;
+  kind?: string;
+  reasons?: string[];
+}
+
+interface NavigationDiagnostics {
+  searchTop: FileSelectionDiagnostic[];
+  contextTarget?: string;
+  readFirst?: FileSelectionDiagnostic[];
+  missingExpected: NavigationMissExplanation[];
+}
+
+interface NavigationResult {
+  filesRead: string[];
+  searchTop: FileSelectionDiagnostic[];
+  contextTarget?: string;
+  readFirst?: FileSelectionDiagnostic[];
 }
 
 interface ModeMetrics {
@@ -292,8 +317,8 @@ function runSuite(suite: RealRepoSuite, options: ParsedArgs, stateDir: string): 
 
 function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number; indexStale: boolean }): CaseReport {
   const { suite, stateDir, mode, task, limit, indexStale } = options;
-  const [latencyMs, filesRead] = timed(() => navigate({ root: suite.root, stateDir, mode, task, limit }));
-  const uniqueFilesRead = uniqueStrings(filesRead);
+  const [latencyMs, navigation] = timed(() => navigate({ root: suite.root, stateDir, mode, task, limit }));
+  const uniqueFilesRead = uniqueStrings(navigation.filesRead);
   const found = new Set(uniqueFilesRead);
   const expected = uniqueStrings([task.entry, ...task.requiredContext]);
   const missingExpectedFiles = expected.filter((path) => !found.has(path));
@@ -312,6 +337,21 @@ function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: N
     indexStale,
     hints: task.missHints,
   });
+  const navigationDiagnostics: NavigationDiagnostics = {
+    searchTop: navigation.searchTop,
+    contextTarget: navigation.contextTarget,
+    readFirst: navigation.readFirst,
+    missingExpected: explainNavigationMisses({
+      mode,
+      entry: task.entry,
+      requiredContext: task.requiredContext,
+      missingExpectedFiles,
+      filesRead: uniqueFilesRead,
+      searchPaths: navigation.searchTop.map((item) => item.path),
+      contextTarget: navigation.contextTarget,
+      readFirstPaths: navigation.readFirst?.map((item) => item.path),
+    }),
+  };
   return {
     repo: suite.label,
     root: suite.root,
@@ -331,21 +371,52 @@ function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: N
     contextRecall,
     forbiddenRead,
     misses,
+    navigationDiagnostics,
     success: entryFound && contextRecall === 1 && forbiddenRead.length === 0,
     toolCalls: mode === "codemap_search_context" ? 2 : 1,
     latencyMs: roundMs(latencyMs),
   };
 }
 
-function navigate(options: { root: string; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number }): string[] {
+function navigate(options: { root: string; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number }): NavigationResult {
   const { root, stateDir, mode, task, limit } = options;
-  if (mode === "lexical") return lexicalSearch(root, task.query, task.pathPrefix, limit).map((hit) => hit.path);
+  if (mode === "lexical") {
+    const hits = lexicalSearch(root, task.query, task.pathPrefix, limit);
+    return {
+      filesRead: hits.map((hit) => hit.path),
+      searchTop: uniqueSelections(hits.map((hit, index) => ({ path: hit.path, source: "lexical", rank: index + 1, score: hit.score }))),
+    };
+  }
   const searchResults = searchCodeMap({ cwd: root, query: task.query, pathPrefix: task.pathPrefix, stateDir, limit });
   const searchPaths = searchResults.map((result) => result.path);
-  if (mode === "codemap_search") return searchPaths;
+  const searchTop: FileSelectionDiagnostic[] = uniqueSelections(searchResults.map((result, index) => ({
+    path: result.path,
+    source: "search",
+    rank: index + 1,
+    score: roundRate(result.score),
+    kind: result.kind,
+  })));
+  if (mode === "codemap_search") return { filesRead: searchPaths, searchTop };
   const contextTarget = searchPaths[0] ?? task.query;
   const context = codemapContext({ cwd: root, target: contextTarget, pathPrefix: task.pathPrefix, stateDir, limit });
-  return [...searchPaths.slice(0, 1), ...context.readFirst.map((item) => item.path)];
+  const readFirst: FileSelectionDiagnostic[] = uniqueSelections(context.readFirst.map((item, index) => ({
+    path: item.path,
+    source: "context",
+    rank: index + 1,
+    score: "score" in item ? roundRate(item.score) : undefined,
+    kind: item.kind,
+    reasons: item.reasons?.map((reason) => reason.kind),
+  })));
+  return { filesRead: [...searchPaths.slice(0, 1), ...context.readFirst.map((item) => item.path)], searchTop, contextTarget, readFirst };
+}
+
+function uniqueSelections(items: FileSelectionDiagnostic[]): FileSelectionDiagnostic[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.path)) return false;
+    seen.add(item.path);
+    return true;
+  });
 }
 
 function lexicalSearch(root: string, query: string, pathPrefix = "", limit: number): Array<{ path: string; score: number }> {

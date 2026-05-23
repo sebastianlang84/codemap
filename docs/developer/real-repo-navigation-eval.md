@@ -46,6 +46,7 @@ Per mode, the eval reports:
 - `forbiddenReadRate`: noisy or explicitly forbidden files read, such as lockfiles or stale planning/archive files.
 - `avgLatencyMs` / `p95LatencyMs`.
 - `missTaxonomy`: classified misses across missing expected files and forbidden/noisy reads.
+- `navigationDiagnostics`: per-case trace with selected search hits, the context target, read-first relationship reasons, and missing-expected explanations.
 
 The miss taxonomy is diagnostic, not a gate by itself. Current classes are:
 
@@ -67,14 +68,14 @@ On 2026-05-23, after adding minimal TS/JS path-alias graph resolution and then p
 |---|---:|---:|---:|---:|---:|---:|
 | `lexical` | 0.125 | 0.375 | 0.438 | 0.500 | 5.000 | 22.830 ms |
 | `codemap_search` | 0.000 | 1.000 | 0.510 | 0.188 | 3.750 | 34.457 ms |
-| `codemap_search_context` | 0.625 | 0.875 | 0.771 | 0.729 | 3.875 | 48.637 ms |
+| `codemap_search_context` | 0.625 | 0.875 | 0.771 | 0.729 | 3.875 | 51.598 ms |
 
 Deltas:
 
 - Search+context vs lexical: `+0.500` success, `+0.333` expected recall, `+0.229` context recall, with `1.125` fewer files read on average.
 - Search+context vs search-only: `+0.625` success, `+0.261` expected recall, `+0.541` context recall.
 
-The eval also emits a miss taxonomy. In the latest local run, `codemap_search_context` had 6 classified misses: 1 `convention`, 1 `missing_symbol`, 2 `query_formulation`, and 2 `unknown`; its previously classified `alias` miss is resolved. Lexical still had 19 misses including 5 `noise` reads.
+The eval also emits a miss taxonomy and per-case navigation diagnostics. In the latest local run, `codemap_search_context` had 6 classified misses: 1 `convention`, 1 `missing_symbol`, 2 `query_formulation`, and 2 `unknown`; its previously classified `alias` miss is resolved. The diagnostics show the remaining source→test miss is `context_neighbor_unreachable`: the expected entry ranked below the chosen context target. Lexical still had 19 misses including 5 `noise` reads.
 
 Interpretation: under a realistic small read budget, CodeMap's value is strongest when agents use the intended workflow: search for an entry point, then call context. Search-only is not enough; context supplies the neighboring test/config/doc/source files that lexical search often misses or buries behind noisy hits. The taxonomy turns remaining misses into actionable next slices instead of broad guesses. The current case set is symbol/entrypoint-heavy; it does not prove arbitrary natural bug-report navigation.
 

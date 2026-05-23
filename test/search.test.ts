@@ -11,6 +11,7 @@ process.env.HOME = storageHome;
 process.env.USERPROFILE = storageHome;
 after(() => rmSync(storageHome, { recursive: true, force: true }));
 
+const { explainNavigationMisses } = await import("../src/core/eval-navigation-diagnostics.ts");
 const { classifyMisses, summarizeMissTaxonomy } = await import("../src/core/eval-miss-taxonomy.ts");
 const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { planQuery } = await import("../src/core/query-plan.ts");
@@ -79,6 +80,24 @@ alpha alpha alpha alpha alpha alpha alpha alpha
   indexRepo({ cwd: root, approve: true });
   return root;
 }
+
+test("real-repo eval navigation diagnostics explain entry-coupled context misses", () => {
+  const explanations = explainNavigationMisses({
+    mode: "codemap_search_context",
+    entry: "src/pi-extension/retrieval.ts",
+    requiredContext: ["test/pi-extension/retrieval.test.ts", "src/pi-extension/turn-intake.ts"],
+    missingExpectedFiles: ["src/pi-extension/retrieval.ts", "test/pi-extension/retrieval.test.ts"],
+    filesRead: ["src/pi-extension/tools.ts", "test/pi-extension/tools.test.ts"],
+    searchPaths: ["src/pi-extension/tools.ts", "src/pi-extension/retrieval.ts"],
+    contextTarget: "src/pi-extension/tools.ts",
+    readFirstPaths: ["src/pi-extension/tools.ts", "test/pi-extension/tools.test.ts"],
+  });
+
+  assert.deepEqual(explanations.map((item) => [item.file, item.reason]), [
+    ["src/pi-extension/retrieval.ts", "context_entry_miss"],
+    ["test/pi-extension/retrieval.test.ts", "context_neighbor_unreachable"],
+  ]);
+});
 
 test("real-repo eval miss taxonomy classifies actionable misses", () => {
   const misses = classifyMisses({
