@@ -62,20 +62,20 @@ The gate requires CodeMap search+context to improve success over lexical search,
 
 ## Current local result
 
-On 2026-05-23, after adding minimal TS/JS path-alias graph resolution, protecting one source→test neighbor ahead of nearby config, and narrowing generic `implementation` role-intent retrieval, `npm run eval:real-repo-navigation:gate` passed on 8 local tasks with the default 5-file read budget:
+On 2026-05-23, after adding minimal TS/JS path-alias graph resolution, protecting source→test convention neighbors in small budgets, and narrowing generic `implementation` role-intent retrieval, `npm run eval:real-repo-navigation:gate` passed on 8 local tasks with the default 5-file read budget:
 
 | Mode | Success | Entry hit | Expected recall | Context recall | Avg files | p95 latency |
 |---|---:|---:|---:|---:|---:|---:|
-| `lexical` | 0.125 | 0.375 | 0.438 | 0.500 | 5.000 | 24.362 ms |
-| `codemap_search` | 0.125 | 1.000 | 0.542 | 0.229 | 2.125 | 36.297 ms |
-| `codemap_search_context` | 0.625 | 1.000 | 0.854 | 0.792 | 3.875 | 75.755 ms |
+| `lexical` | 0.125 | 0.375 | 0.438 | 0.500 | 5.000 | 24.811 ms |
+| `codemap_search` | 0.125 | 1.000 | 0.542 | 0.229 | 2.125 | 34.149 ms |
+| `codemap_search_context` | 0.625 | 1.000 | 0.865 | 0.813 | 3.875 | 60.482 ms |
 
 Deltas:
 
-- Search+context vs lexical: `+0.500` success, `+0.416` expected recall, `+0.292` context recall, with `1.125` fewer files read on average.
-- Search+context vs search-only: `+0.500` success, `+0.312` expected recall, `+0.563` context recall.
+- Search+context vs lexical: `+0.500` success, `+0.427` expected recall, `+0.313` context recall, with `1.125` fewer files read on average.
+- Search+context vs search-only: `+0.500` success, `+0.323` expected recall, `+0.584` context recall.
 
-The eval also emits a miss taxonomy and per-case navigation diagnostics. In the latest local run, `codemap_search_context` had 4 classified misses: 1 `convention`, 2 `query_formulation`, and 1 `unknown`; its previously classified `alias` and `missing_symbol` misses are resolved. The remaining source→test miss is now a `context_target_mismatch`: the selected target imports the expected source file, but the imported source's sibling test is still outside the 5-file read budget. Lexical still had 19 misses including 5 `noise` reads.
+The eval also emits a miss taxonomy and per-case navigation diagnostics. In the latest local run, `codemap_search_context` had 4 classified misses: 2 `query_formulation` and 2 `unknown`; its previously classified `alias`, `missing_symbol`, and `convention` misses are resolved. The pi-ext-memory turn-intake case now reads both the imported `retrieval.ts` source and `retrieval.test.ts` within the 5-file budget. Lexical still had 19 misses including 5 `noise` reads.
 
 Interpretation: under a realistic small read budget, CodeMap's value is strongest when agents use the intended workflow: search for an entry point, then call context. Search-only is not enough; context supplies the neighboring test/config/doc/source files that lexical search often misses or buries behind noisy hits. The taxonomy turns remaining misses into actionable next slices instead of broad guesses. The current case set is symbol/entrypoint-heavy; it does not prove arbitrary natural bug-report navigation.
 
@@ -85,8 +85,8 @@ The eval is intentionally honest. It still exposes misses:
 
 - Minimal TypeScript/JavaScript path-alias support covers indexed `tsconfig.json` / `jsconfig.json` `baseUrl` + `paths`; it does not yet chase complex `extends` chains or package-manager workspace aliases.
 - Some framework/UI-to-API relationships are convention/config based, not import based.
-- Alias imports add useful direct neighbors and increase average search+context reads on this suite; direct imports are therefore capped, and one convention sibling test is kept ahead of nearby config files in the read-first budget.
-- The remaining `codemap_search_context` convention miss in the current suite is no longer an entry miss; it is an imported-neighbor test that does not fit the current 5-file context budget.
+- Alias imports add useful direct neighbors and increase average search+context reads on this suite; direct imports are therefore capped, and only one imported-neighbor convention test is promoted in the read-first budget.
+- Remaining `codemap_search_context` misses are now query-formulation or unknown cases rather than alias/missing-symbol/convention misses.
 - Search+context is slower than lexical scanning on these small repos, though still under the local gate threshold.
 
 These are candidates for future gated work; they should not be expanded unless this real-repo eval or a follow-up case proves the benefit.

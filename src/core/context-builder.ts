@@ -78,8 +78,9 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
     const readFirst = readFirstItems(db, request, warnings, options.cwd, options.stateDir);
     const related = relatedPaths(db, readFirst.base, request.pathFilter);
     const relationships = readFirst.direct ? findIndexedRelationships(db, readFirst.base, request.pathFilter) : { imports: [], importers: [], implementationPairs: [] };
+    const importedNeighborTests = readFirst.direct ? importedNeighborTestPaths(db, relationships.imports, request.pathFilter) : [];
     const items = readFirst.direct
-      ? localReadFirstItems(db, readFirst.items, relationships.imports, relationships.implementationPairs, relationships.importers, related.configs, related.tests, related.docs, related.sameDir, related.testOf, request.limit)
+      ? localReadFirstItems(db, readFirst.items, relationships.imports, importedNeighborTests, relationships.implementationPairs, relationships.importers, related.configs, related.tests, related.docs, related.sameDir, related.testOf, request.limit)
       : readFirst.items;
     const lastIndexedAt = diagnostics.lastIndexedAt ?? null;
 
@@ -148,6 +149,7 @@ function localReadFirstItems(
   db: ReturnType<typeof openRepoDb>,
   targetItems: CodeMapReadFirstItem[],
   imports: RelatedPath[],
+  importedNeighborTests: RelatedPath[],
   implementationPairs: RelatedPath[],
   importers: RelatedPath[],
   configs: RelatedPath[],
@@ -164,9 +166,10 @@ function localReadFirstItems(
   const strongRelated = mergeRelatedPaths([
     ...primaryImports,
     ...implementationPairs,
+    ...(testItems[0] ? [testItems[0]] : []),
+    ...importedNeighborTests,
     ...(importers[0] ? [importers[0]] : []),
     ...(testOf[0] ? [testOf[0]] : []),
-    ...(testItems[0] ? [testItems[0]] : []),
     ...(configs[0] ? [configs[0]] : []),
     ...(docItems[0] ? [docItems[0]] : []),
     ...laterImports,
@@ -211,11 +214,6 @@ function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilte
   const stem = base.split("/").pop()?.replace(/\.[^.]+$/, "") ?? base;
   const stemLike = `%${escapeLike(stem)}%`;
   const baseLike = `%${escapeLike(base)}%`;
-  const relatedTests = db.prepare(`
-    select path, size from files
-    where (path like '%test%' or path like '%spec%') and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
-    order by path
-  `).all(stemLike, baseLike, pathFilter) as Array<{ path: string; size: number }>;
   const relatedDocs = db.prepare(`
     select path, size from files
     where language = 'markdown' and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
@@ -243,11 +241,31 @@ function relatedPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilte
     : [];
   return {
     configs,
-    tests: sortByLocality(base, relatedTests.filter((row) => isTestReadFirstPath(row.path) && !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
+    tests: findRelatedTestPaths(db, base, pathFilter),
     docs: sortByLocality(base, relatedDocs.filter((row) => !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8),
     sameDir,
     testOf,
   };
+}
+
+function importedNeighborTestPaths(db: ReturnType<typeof openRepoDb>, imports: RelatedPath[], pathFilter: string): RelatedPath[] {
+  return mergeRelatedPaths(
+    imports.slice(0, 2).flatMap((item) => findRelatedTestPaths(db, item.path, pathFilter)
+      .slice(0, 1)
+      .map((path) => ({ path, reasons: [relatedTestReason(item.path, path)] }))),
+  ).slice(0, 1);
+}
+
+function findRelatedTestPaths(db: ReturnType<typeof openRepoDb>, base: string, pathFilter: string): string[] {
+  const stem = base.split("/").pop()?.replace(/\.[^.]+$/, "") ?? base;
+  const stemLike = `%${escapeLike(stem)}%`;
+  const baseLike = `%${escapeLike(base)}%`;
+  const rows = db.prepare(`
+    select path, size from files
+    where (path like '%test%' or path like '%spec%') and (path like ? escape '\\' or path like ? escape '\\') and path like ? escape '\\'
+    order by path
+  `).all(stemLike, baseLike, pathFilter) as Array<{ path: string; size: number }>;
+  return sortByLocality(base, rows.filter((row) => isTestReadFirstPath(row.path) && !isNoisyReadFirstPath(row.path, row.size)).map((row) => row.path)).slice(0, 8);
 }
 
 function sameDirSourcePaths(base: string, rows: Array<{ path: string; size: number }>): string[] {

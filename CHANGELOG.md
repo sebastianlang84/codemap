@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Include one imported local neighbor's convention sibling test in small `codemap_context` read-first budgets when direct imports bring the source file in.
 - Reduce generic `implementation` role-intent noise so broad source entrypoints do not outrank more specific CodeMap search hits in local real-repo navigation.
 - Add per-case navigation diagnostics to the local real-repo eval: search top hits, context target, read-first reasons, and entry-coupled miss explanations.
 - Keep one convention-based sibling test earlier than nearby config files in small `codemap_context` read-first budgets.

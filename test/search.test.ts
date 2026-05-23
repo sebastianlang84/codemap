@@ -812,6 +812,37 @@ export function retrieve(query: string) {
   assert.ok(result.readFirst.find((item) => item.path === "test/pi-extension/retrieval.test.ts")?.reasons?.some((reason) => reason.kind === "sibling_test"), JSON.stringify(result.readFirst));
 });
 
+test("context read-first includes tests for imported local neighbors within the small read budget", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "pi-extension"), { recursive: true });
+  mkdirSync(join(root, "test", "pi-extension"), { recursive: true });
+
+  writeFileSync(join(root, "src", "pi-extension", "turn-intake.ts"), `
+import { loadCore } from "../core/index";
+import { retrieve } from "./retrieval";
+
+export function runTurnIntake(prompt: string) {
+  return retrieve(loadCore(prompt));
+}
+`);
+  writeFileSync(join(root, "src", "core", "index.ts"), "export function loadCore(prompt: string) { return prompt; }\n");
+  writeFileSync(join(root, "src", "pi-extension", "retrieval.ts"), "export function retrieve(query: string) { return [query]; }\n");
+  writeFileSync(join(root, "src", "pi-extension", "index.ts"), "import { runTurnIntake } from './turn-intake';\nexport const run = runTurnIntake;\n");
+  writeFileSync(join(root, "src", "pi-extension", "turn-intake.config.json"), JSON.stringify({ mode: "turn" }, null, 2));
+  writeFileSync(join(root, "test", "pi-extension", "turn-intake.test.ts"), "test('turn intake', () => true);\n");
+  writeFileSync(join(root, "test", "pi-extension", "retrieval.test.ts"), "test('retrieval imported neighbor', () => true);\n");
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/pi-extension/turn-intake.ts", limit: 5 });
+  const paths = result.readFirst.map((item) => item.path);
+  const retrievalTest = result.readFirst.find((item) => item.path === "test/pi-extension/retrieval.test.ts");
+
+  assert.equal(paths[0], "src/pi-extension/turn-intake.ts");
+  assert.ok(paths.includes("src/pi-extension/retrieval.ts"), JSON.stringify(paths));
+  assert.ok(retrievalTest, JSON.stringify(paths));
+  assert.ok(retrievalTest.reasons?.some((reason) => reason.kind === "sibling_test" && reason.targetPath === "src/pi-extension/retrieval.ts"), JSON.stringify(retrievalTest));
+});
+
 test("context read-first includes Python relative imports with reasons", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "src", "pkg"), { recursive: true });
