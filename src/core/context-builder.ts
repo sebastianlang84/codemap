@@ -159,14 +159,17 @@ function localReadFirstItems(
 ): CodeMapReadFirstItem[] {
   const testItems = tests.map((path) => ({ path, reasons: [relatedTestReason(targetItems[0]?.path ?? "", path)] }));
   const docItems = docs.map((path) => ({ path, reasons: [relatedDocReason(targetItems[0]?.path ?? "", path)] }));
+  const primaryImports = imports.slice(0, 2);
+  const laterImports = imports.slice(2);
   const strongRelated = mergeRelatedPaths([
-    ...imports,
+    ...primaryImports,
     ...implementationPairs,
     ...(importers[0] ? [importers[0]] : []),
     ...(testOf[0] ? [testOf[0]] : []),
     ...(configs[0] ? [configs[0]] : []),
     ...(testItems[0] ? [testItems[0]] : []),
     ...(docItems[0] ? [docItems[0]] : []),
+    ...laterImports,
     ...importers.slice(1),
     ...testOf.slice(1),
     ...configs.slice(1),

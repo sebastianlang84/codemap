@@ -1,6 +1,7 @@
 import { posix } from "node:path";
 
 import { openRepoDb } from "./db.ts";
+import { tsJsPathAliasCandidates } from "./tsconfig-paths.ts";
 
 export interface LocalReference {
   kind: "import" | "include";
@@ -45,7 +46,7 @@ function extractTsJsReferences(text: string): LocalReference[] {
   for (const pattern of patterns) {
     for (const match of text.matchAll(pattern)) {
       const specifier = cleanSpecifier(match[1] ?? "");
-      if (specifier.startsWith(".")) references.push(withLines({ kind: "import", specifier }, text, match));
+      if (isPotentialLocalTsJsSpecifier(specifier)) references.push(withLines({ kind: "import", specifier }, text, match));
     }
   }
   return references;
@@ -90,10 +91,15 @@ function cleanSpecifier(specifier: string): string {
   return specifier.split(/[?#]/, 1)[0].trim();
 }
 
+function isPotentialLocalTsJsSpecifier(specifier: string): boolean {
+  return Boolean(specifier) && !specifier.startsWith("/") && !/^[a-z]+:/i.test(specifier);
+}
+
 function resolveIndexedImport(db: ReturnType<typeof openRepoDb>, fromPath: string, language: string, specifier: string, pathFilter: string): string | undefined {
   const normalized = normalizeLocalSpecifier(fromPath, specifier);
-  if (!normalized) return undefined;
-  const candidates = isPythonPath(language, fromPath) ? pythonImportCandidates(normalized) : importCandidates(normalized);
+  const candidateBases = normalized ? [normalized] : isTsJsPath(language, fromPath) ? tsJsPathAliasCandidates(db, fromPath, specifier) : [];
+  if (candidateBases.length === 0) return undefined;
+  const candidates = uniqueStrings(candidateBases.flatMap((candidate) => isPythonPath(language, fromPath) ? pythonImportCandidates(candidate) : importCandidates(candidate)));
   for (const candidate of candidates) {
     const row = db.prepare("select path from files where path = ? and path like ? escape '\\' limit 1")
       .get(candidate, pathFilter) as { path: string } | undefined;
@@ -114,6 +120,7 @@ function resolveIndexedInclude(db: ReturnType<typeof openRepoDb>, fromPath: stri
 }
 
 function normalizeLocalSpecifier(fromPath: string, specifier: string): string | undefined {
+  if (!specifier.startsWith(".")) return undefined;
   const baseDir = posix.dirname(fromPath);
   const normalized = posix.normalize(posix.join(baseDir, specifier));
   if (!normalized || normalized === "." || normalized.startsWith("../") || normalized.startsWith("/")) return undefined;

@@ -12,30 +12,26 @@ Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; s
 
 Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sondern Misses sichtbar machen und daraus gezielte Verbesserungs-Slices ableiten. Die eigentlichen To-do-Checkboxen stehen im nächsten Abschnitt, damit die Backlog-Liste nicht doppelt gezählt wird.
 
-- **TypeScript-Pfadaliasse**: Real-Repo-Eval findet Search+Context klar besser als lexical, verpasst aber relevante Nachbarn bei Imports wie `@/lib/...`.
+- **TypeScript-Pfadaliasse — Restgrenzen**: Minimaler `tsconfig.json` / `jsconfig.json` `baseUrl` + `paths`-Support ist umgesetzt; offen bleiben komplexe `extends`-Ketten, Workspace-Aliasse und Budget-Ordering bei vielen Alias-Imports.
 - **Framework-/Konventions-Nachbarn**: relevante Dateien sind teils nicht über direkte Imports verbunden, sondern über Namens-/Framework-Konventionen, z. B. UI-zu-API, Route-Handler, Provider, Tests oder Config-Dateien.
 - **Natürlichere Bug-/Änderungsanfragen**: aktueller Real-Repo-Gate ist symbol-/entrypoint-lastig und beweist nicht beliebige natürliche Bugreports.
 - **False positives / verbotene Reads**: lexical liest im Real-Repo-Gate häufiger verbotene/noisy Dateien; CodeMap vermeidet sie aktuell, aber neue Heuristiken können Noise zurückbringen.
 
 ## Nächste sinnvolle Slices — vorgeschlagene Reihenfolge
 
-1. [ ] TS-/JS-Pfadalias-Slice minimal umsetzen.
-   - Scope: `tsconfig.json` / `jsconfig.json` `baseUrl` + `paths` lesen und nur exakte lokale Alias-Imports wie `@/lib/foo` in Graph-Nachbarn auflösen.
-   - Gate: Real-Repo- und Context-Quality-Eval müssen Recall verbessern, Forbidden-/Noise-Rate stabil halten und Budget nicht sprengen.
-
-2. [ ] Konventions-Nachbarn als kleine, getrennte Verticals testen.
+1. [ ] Konventions-Nachbarn als kleine, getrennte Verticals testen.
    - Kandidaten: Source↔Test, Route↔Handler, UI↔API, Provider/Hook↔Consumer, Config-Key↔Nutzung.
    - Regel: pro Konvention ein Fixture/Real-Repo-Case, eigene Metrik, keine breite Heuristik ohne messbaren Gewinn.
 
-3. [ ] ast-grep/AST-gestützten Structural-Analyzer als Prototyp evaluieren.
+2. [ ] ast-grep/AST-gestützten Structural-Analyzer als Prototyp evaluieren.
    - Ziel: prüfen, ob AST-Beziehungen CodeMap-Context verbessern, ohne CodeMap zu einem vollständigen ast-grep-Ersatz zu machen.
    - Scope: zuerst eval-/index-intern und optional; keine harte Runtime-Abhängigkeit und kein neues prompt-facing Tool, bevor Recall/Budget/Noise klar besser sind.
 
-4. [ ] Natural-language Navigation Holdout ergänzen.
+3. [ ] Natural-language Navigation Holdout ergänzen.
    - Ziel: Fälle ohne exakten Symbolnamen, z. B. “Newsletter-Dashboard lädt FINRA Snapshot falsch”, gegen `rg/find`, `codemap_search`, `codemap_search+context` messen.
    - Gate: verhindert Overfitting auf symbol-/entrypoint-lastige Queries.
 
-5. [ ] Ranking-/Context-Diagnostik für Evals verbessern.
+4. [ ] Ranking-/Context-Diagnostik für Evals verbessern.
    - Ziel: Reports sollen zeigen, warum Dateien gewählt oder verpasst wurden: symbol hit, path hit, import edge, alias edge, convention edge, noise penalty.
    - Grenze: zuerst nur eval-/debug-intern; keine Tool-Schema-/Prompt-Erweiterung ohne klaren Nutzen.
 

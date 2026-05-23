@@ -61,20 +61,20 @@ The gate requires CodeMap search+context to improve success over lexical search,
 
 ## Current local result
 
-On 2026-05-23, after strengthening exact/prefix symbol ranking and adding miss-taxonomy diagnostics, `npm run eval:real-repo-navigation:gate` passed on 8 local tasks with the default 5-file read budget:
+On 2026-05-23, after adding minimal TS/JS path-alias graph resolution, `npm run eval:real-repo-navigation:gate` passed on 8 local tasks with the default 5-file read budget:
 
 | Mode | Success | Entry hit | Expected recall | Context recall | Avg files | p95 latency |
 |---|---:|---:|---:|---:|---:|---:|
-| `lexical` | 0.125 | 0.375 | 0.438 | 0.500 | 5.000 | 23.707 ms |
-| `codemap_search` | 0.000 | 1.000 | 0.510 | 0.188 | 3.750 | 31.999 ms |
-| `codemap_search_context` | 0.500 | 0.875 | 0.740 | 0.688 | 2.875 | 51.125 ms |
+| `lexical` | 0.125 | 0.375 | 0.438 | 0.500 | 5.000 | 24.962 ms |
+| `codemap_search` | 0.000 | 1.000 | 0.510 | 0.188 | 3.750 | 35.455 ms |
+| `codemap_search_context` | 0.625 | 0.875 | 0.771 | 0.729 | 3.875 | 50.931 ms |
 
 Deltas:
 
-- Search+context vs lexical: `+0.375` success, `+0.302` expected recall, `+0.188` context recall, with `2.125` fewer files read on average.
-- Search+context vs search-only: `+0.500` success, `+0.230` expected recall, `+0.500` context recall.
+- Search+context vs lexical: `+0.500` success, `+0.333` expected recall, `+0.229` context recall, with `1.125` fewer files read on average.
+- Search+context vs search-only: `+0.625` success, `+0.261` expected recall, `+0.541` context recall.
 
-The eval also emits a miss taxonomy. In the latest local run after adding the taxonomy, `codemap_search_context` had 7 classified misses: 1 `alias`, 1 `convention`, 1 `missing_symbol`, 2 `query_formulation`, and 2 `unknown`; lexical had 19 misses including 5 `noise` reads.
+The eval also emits a miss taxonomy. In the latest local run, `codemap_search_context` had 6 classified misses: 1 `convention`, 1 `missing_symbol`, 2 `query_formulation`, and 2 `unknown`; its previously classified `alias` miss is resolved. Lexical still had 19 misses including 5 `noise` reads.
 
 Interpretation: under a realistic small read budget, CodeMap's value is strongest when agents use the intended workflow: search for an entry point, then call context. Search-only is not enough; context supplies the neighboring test/config/doc/source files that lexical search often misses or buries behind noisy hits. The taxonomy turns remaining misses into actionable next slices instead of broad guesses. The current case set is symbol/entrypoint-heavy; it does not prove arbitrary natural bug-report navigation.
 
@@ -82,8 +82,9 @@ Interpretation: under a realistic small read budget, CodeMap's value is stronges
 
 The eval is intentionally honest. It still exposes misses:
 
-- TypeScript path aliases such as `@/lib/...` are not fully resolved as import edges in larger apps.
+- Minimal TypeScript/JavaScript path-alias support covers indexed `tsconfig.json` / `jsconfig.json` `baseUrl` + `paths`; it does not yet chase complex `extends` chains or package-manager workspace aliases.
 - Some framework/UI-to-API relationships are convention/config based, not import based.
+- Alias imports add useful direct neighbors and increase average search+context reads on this suite; direct imports are therefore capped before convention/test neighbors get a chance in the read-first budget.
 - Search+context is slower than lexical scanning on these small repos, though still under the local gate threshold.
 
 These are candidates for future gated work; they should not be expanded unless this real-repo eval or a follow-up case proves the benefit.

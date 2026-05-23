@@ -177,6 +177,77 @@ test("main implementation entrypoint", () => mainImplementationEntrypoint());
   assert.deepEqual(contextResult.warnings, []);
 });
 
+test("codemap context resolves TypeScript path aliases from tsconfig paths", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-alias-context-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "apps", "web", "src", "app"), { recursive: true });
+  mkdirSync(join(root, "apps", "web", "src", "lib"), { recursive: true });
+  mkdirSync(join(root, "src", "app"), { recursive: true });
+  mkdirSync(join(root, "src", "lib"), { recursive: true });
+  mkdirSync(join(root, "src", "root-wrong", "lib"), { recursive: true });
+
+  const rootPaths: Record<string, string[]> = { "~/*": ["lib/*"], "@/*": ["root-wrong/*"] };
+  for (let index = 0; index < 90; index++) rootPaths[`dummy-${index}/*`] = [`unused-${index}/*`];
+
+  writeFileSync(join(root, "apps", "web", "tsconfig.json"), JSON.stringify({ compilerOptions: { paths: { "@/*": ["./src/*"] } } }, null, 2));
+  writeFileSync(join(root, "apps", "web", "src", "app", "page.ts"), `
+import { formatHeadline } from "@/lib/headline";
+
+export function renderPageHeadline(value: string) {
+  return formatHeadline(value);
+}
+`);
+  writeFileSync(join(root, "apps", "web", "src", "app", "missing-page.ts"), `
+import { wrongAliasTarget } from "@/lib/missing";
+
+export const missingPage = wrongAliasTarget;
+`);
+  writeFileSync(join(root, "apps", "web", "src", "lib", "headline.ts"), `
+export function formatHeadline(value: string) {
+  return value.toUpperCase();
+}
+`);
+  writeFileSync(join(root, "jsconfig.json"), JSON.stringify({ compilerOptions: { baseUrl: "src", paths: rootPaths } }, null, 2));
+  writeFileSync(join(root, "src", "app", "widget.js"), `
+import { formatWidgetHeadline } from "~/headline";
+
+export function renderWidget(value) {
+  return formatWidgetHeadline(value);
+}
+`);
+  writeFileSync(join(root, "src", "lib", "headline.js"), `
+export function formatWidgetHeadline(value) {
+  return value.toLowerCase();
+}
+`);
+  writeFileSync(join(root, "src", "root-wrong", "lib", "headline.ts"), `
+export const wrongAliasTarget = true;
+`);
+  writeFileSync(join(root, "src", "root-wrong", "lib", "missing.ts"), `
+export const wrongAliasTarget = true;
+`);
+
+  indexRepo({ cwd: root, approve: true });
+
+  const contextResult = codemapContext({ cwd: root, target: "apps/web/src/app/page.ts", limit: 5 });
+  const readFirstPaths = contextResult.readFirst.map((item) => item.path);
+  assert.ok(readFirstPaths.includes("apps/web/src/lib/headline.ts"), JSON.stringify(readFirstPaths));
+  assert.ok(!readFirstPaths.includes("src/root-wrong/lib/headline.ts"), JSON.stringify(readFirstPaths));
+  const headlineReason = contextResult.readFirst.find((item) => item.path === "apps/web/src/lib/headline.ts")?.reasons ?? [];
+  assert.ok(headlineReason.some((reason) => reason.kind === "import" && reason.specifier === "@/lib/headline"), JSON.stringify(headlineReason));
+
+  const missingContextResult = codemapContext({ cwd: root, target: "apps/web/src/app/missing-page.ts", limit: 5 });
+  const missingReadFirstPaths = missingContextResult.readFirst.map((item) => item.path);
+  assert.ok(!missingReadFirstPaths.includes("src/root-wrong/lib/missing.ts"), JSON.stringify(missingReadFirstPaths));
+
+  const jsContextResult = codemapContext({ cwd: root, target: "src/app/widget.js", limit: 5 });
+  const jsReadFirstPaths = jsContextResult.readFirst.map((item) => item.path);
+  assert.ok(jsReadFirstPaths.includes("src/lib/headline.js"), JSON.stringify(jsReadFirstPaths));
+  const jsHeadlineReason = jsContextResult.readFirst.find((item) => item.path === "src/lib/headline.js")?.reasons ?? [];
+  assert.ok(jsHeadlineReason.some((reason) => reason.kind === "import" && reason.specifier === "~/headline"), JSON.stringify(jsHeadlineReason));
+});
+
 test("exact symbol matches rank above chunk matches", (t) => {
   const root = fixtureRepo(t);
   const results = searchCodeMap({ cwd: root, query: "approveUser", limit: 5 });
@@ -1311,7 +1382,7 @@ export function migratedNeedle() {
     assert.ok(!nodeColumns.has("symbol_id"));
     assert.ok(!edgeColumns.has("scope"));
     assert.ok(!edgeColumns.has("confidence"));
-    assert.equal((migratedDb.prepare("select value from meta where key = 'index_version'").get() as { value: string }).value, "5");
+    assert.equal((migratedDb.prepare("select value from meta where key = 'index_version'").get() as { value: string }).value, "6");
     assert.equal((migratedDb.prepare("select value from meta where key = 'graph_version'").get() as { value: string }).value, "1");
     assert.equal((migratedDb.prepare("select count(*) as count from files where path = 'src/legacy.ts'").get() as { count: number }).count, 1);
   } finally {
