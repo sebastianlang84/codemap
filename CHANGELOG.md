@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add a context-quality benchmark gate and fixture to prove graph-backed `codemap_context` returns required imports, reverse imports, includes, tests, docs/config, and path-scoped neighbors without noisy leaks.
 - Add a graph-budget benchmark script and fixture to measure V1.5 relationship-graph index time, SQLite size, and `codemap_context` latency before further graph expansion.
 - Add the first relationship-graph slice for `codemap_context`: local file import/include edges are persisted in SQLite and reused for direct/reverse read-first context without changing public tool schemas or search ranking.
 - Replace `○ not indexed` status text with `✗` for a cleaner status bar indicator.

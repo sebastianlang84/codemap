@@ -267,6 +267,21 @@ Measured on 2026-05-23 with `npm run bench:graph-budget` and `npm run bench:grap
 
 Budget decision: V1.5 remains acceptable for the measured fixture and local repos. The all-indexed-source graph rebuild cost was small relative to cold indexing in these runs, so no incremental graph invalidation work is justified yet. Keep the existing cap-and-measure posture: do not expand graph scope until a concrete context-quality gain outweighs additional index time, DB size, and context latency.
 
+## V1.5 context-quality gate
+
+`npm run bench:context-quality:gate` proves the relationship graph improves `codemap_context` outputs, not just that it fits the budget. The checked-in fixture is copied into a temporary clean Git repo so path-role heuristics are not contaminated by the repository's own `test/fixtures/` path.
+
+The gate currently covers:
+
+- direct local JS imports, Python relative imports, and C/C++ quoted includes;
+- reverse import/include neighbors, including reverse test-import reasons;
+- nearby config and related documentation read-first neighbors;
+- `pathPrefix` isolation in a monorepo-shaped fixture;
+- noisy read-first exclusions for lockfiles, generated files, build output, and minified files;
+- context latency over 5 iterations per case (`p95 <= 100 ms` by default).
+
+Initial fixture result on 2026-05-23: 4/4 cases, target-first rate 1.0, mandatory neighbor recall@K 1.0, reason-kind recall 1.0, noise/forbidden/pathPrefix leak rate 0, avg context latency 21.037 ms, p95 25.091 ms.
+
 ## Milestones
 
 ### Milestone 0 — Plan and baseline measurements
