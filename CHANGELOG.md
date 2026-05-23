@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Prefer context-related tests when the scripted search+context read plan fills remaining budget, resolving the expanded holdout's workbench chart-test miss without changing public tool schemas.
 - Expand natural identifier-pair search terms and demote local Claude settings for ordinary searches, improving the expanded holdout's workbench-session entry recall without changing public tool schemas.
 - Penalize agent-instruction files for non-agent search queries, resolving the expanded holdout's ambiguous `sg` binary target mismatch without changing public tool schemas.
 - Expand the local real-repo natural-language navigation holdout from 4 to 10 cases and recalibrate its diagnostic gate floor so new symptom-style misses stay visible without weakening the baseline gate.

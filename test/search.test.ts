@@ -176,6 +176,33 @@ test("search+context read plan preserves visible search hits within the read bud
   );
 });
 
+test("search+context read plan promotes context-related tests into remaining budget", () => {
+  assert.deepEqual(
+    mergeSearchContextReadPlan(
+      [
+        "apps/web/src/lib/series-workbench-chart.ts",
+        "apps/web/src/components/series-workbench.tsx",
+        "apps/web/src/lib/use-series-workbench-session.ts",
+        "docs/plans/20260502-newsletter-macro-data-integration.md",
+      ],
+      [
+        { path: "apps/web/src/lib/series-workbench-chart.ts", reasons: [{ kind: "target" }] },
+        { path: "apps/web/src/lib/formatters.ts", reasons: [{ kind: "import" }] },
+        { path: "apps/web/src/lib/series-analysis.ts", reasons: [{ kind: "import" }] },
+        { path: "apps/web/src/lib/__tests__/series-workbench-chart.test.ts", reasons: [{ kind: "sibling_test" }, { kind: "reverse_test" }] },
+      ],
+      5,
+    ),
+    [
+      "apps/web/src/lib/series-workbench-chart.ts",
+      "apps/web/src/components/series-workbench.tsx",
+      "apps/web/src/lib/use-series-workbench-session.ts",
+      "docs/plans/20260502-newsletter-macro-data-integration.md",
+      "apps/web/src/lib/__tests__/series-workbench-chart.test.ts",
+    ],
+  );
+});
+
 test("agentic E2E smoke test navigates from search to read-first context", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-agentic-e2e-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));

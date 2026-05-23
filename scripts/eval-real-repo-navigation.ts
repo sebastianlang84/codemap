@@ -525,7 +525,7 @@ function navigate(options: { root: string; stateDir: string; mode: NavigationMod
     kind: item.kind,
     reasons: item.reasons?.map((reason) => reason.kind),
   })));
-  const filesRead = mergeSearchContextReadPlan(searchPaths, context.readFirst.map((item) => item.path), limit);
+  const filesRead = mergeSearchContextReadPlan(searchPaths, context.readFirst, limit);
   return { filesRead, searchTop, contextTarget, readFirst };
 }
 

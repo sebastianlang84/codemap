@@ -215,7 +215,7 @@ function navigate(options: { root: string; stateDir: string; mode: NavigationMod
   if (mode === "codemap_search") return searchPaths;
   const contextTarget = searchPaths[0] ?? task.query;
   const context = codemapContext({ cwd: root, target: contextTarget, pathPrefix: task.pathPrefix, stateDir, limit });
-  return mergeSearchContextReadPlan(searchPaths, context.readFirst.map((item) => item.path), limit);
+  return mergeSearchContextReadPlan(searchPaths, context.readFirst, limit);
 }
 
 function lexicalSearch(root: string, query: string, pathPrefix = "", limit: number): Array<{ path: string; score: number }> {
