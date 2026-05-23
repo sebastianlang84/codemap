@@ -6,7 +6,7 @@ Active offene Arbeit für `pi-ext-codemap`. Abgehakte Punkte werden hier gelösc
 
 Aktuell kein nächster Slice ausgewählt. Der V1.5 Relationship-Graph ist implementiert; Budget- und Context-Quality-Baselines sind in [`docs/developer/relationship-graph-plan.md`](docs/developer/relationship-graph-plan.md#v15-budget-baseline) / [`Context-Quality-Gate`](docs/developer/relationship-graph-plan.md#v15-context-quality-gate) dokumentiert. Weiterer Graph-Ausbau bleibt gated: kein Symbol-/Docs-/Config-/Heuristik-/Search-Ranking-Ausbau ohne klaren Context-Gewinn und neue Budget-Entscheidung.
 
-Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; siehe [`docs/developer/agent-refresh-eval.md`](docs/developer/agent-refresh-eval.md#current-finding). Der nächste starke Produktbeweis wäre ein separater Agent-Navigation-Eval gegen Baselines (`rg`/search/search+context), ist aber noch nicht als aktiver Slice ausgewählt.
+Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; siehe [`docs/developer/agent-refresh-eval.md`](docs/developer/agent-refresh-eval.md#current-finding). Der deterministische Agent-Navigation-Eval gegen Baselines (`lexical`/search/search+context) ist in [`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md) dokumentiert; ein zusätzlicher Live-LLM-Navigation-Eval ist noch nicht als aktiver Slice ausgewählt.
 
 ## Parked / später
 

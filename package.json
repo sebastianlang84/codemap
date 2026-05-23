@@ -18,6 +18,7 @@
     "docs/developer/architecture.md",
     "docs/developer/search-quality.md",
     "docs/developer/agent-refresh-eval.md",
+    "docs/developer/agent-navigation-eval.md",
     "docs/developer/qmd-research.md",
     "docs/developer/relationship-graph-plan.md",
     "docs/archive/brainstorming.md",
@@ -43,6 +44,8 @@
     "bench:graph-budget:local": "node --experimental-strip-types scripts/bench-graph-budget.ts --local-repos",
     "bench:context-quality": "node --experimental-strip-types scripts/bench-context-quality.ts --fixtures",
     "bench:context-quality:gate": "node --experimental-strip-types scripts/bench-context-quality.ts --quality-gate --fixtures",
+    "eval:agent-navigation": "node --experimental-strip-types scripts/eval-agent-navigation.ts --fixtures",
+    "eval:agent-navigation:gate": "node --experimental-strip-types scripts/eval-agent-navigation.ts --quality-gate --fixtures",
     "eval:agent-refresh": "node --experimental-strip-types scripts/eval-agent-refresh.ts",
     "check:token-injection": "node --experimental-strip-types scripts/check-token-injection.ts --budget-gate",
     "audit:lightweight": "node scripts/audit.mjs"
