@@ -727,6 +727,74 @@ test("context read-first includes indexed local files that import the target", (
   assert.deepEqual(result.warnings, []);
 });
 
+test("graph schema stores file import edges without symbol or heuristic columns", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "user-service.ts"), "import { connectDb } from './db';\nexport const userService = connectDb;\n");
+  writeFileSync(join(root, "src", "core", "db.ts"), "export function connectDb() { return true; }\n");
+  indexRepo({ cwd: root });
+
+  const db = new DatabaseSync(getRepoInfo(root).dbPath, { readOnly: true });
+  try {
+    const nodeColumns = new Set((db.prepare("pragma table_info(graph_nodes)").all() as Array<{ name: string }>).map((row) => row.name));
+    const edgeColumns = new Set((db.prepare("pragma table_info(graph_edges)").all() as Array<{ name: string }>).map((row) => row.name));
+    assert.ok(!nodeColumns.has("symbol_id"));
+    assert.ok(!edgeColumns.has("scope"));
+    assert.ok(!edgeColumns.has("confidence"));
+    assert.equal((db.prepare("select count(*) as count from graph_nodes where ref = 'file:src/core/db.ts' and kind = 'file'").get() as { count: number }).count, 1);
+    assert.equal((db.prepare("select count(*) as count from graph_edges where kind = 'imports' and specifier = './db'").get() as { count: number }).count, 1);
+  } finally {
+    db.close();
+  }
+});
+
+test("reverse importer context uses graph edges when importer chunks are wiped", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "validation.ts"), "export function validateUser(id: string) { return Boolean(id); }\n");
+  writeFileSync(join(root, "src", "core", "user-service.ts"), "import { validateUser } from './validation';\nexport const userService = validateUser;\n");
+  indexRepo({ cwd: root });
+
+  const db = new DatabaseSync(getRepoInfo(root).dbPath);
+  try {
+    db.prepare("update chunks set text = '' where file_id = (select id from files where path = ?)").run("src/core/user-service.ts");
+  } finally {
+    db.close();
+  }
+
+  const result = codemapContext({ cwd: root, target: "src/core/validation.ts", limit: 3 });
+
+  assert.ok(result.readFirst.map((item) => item.path).includes("src/core/user-service.ts"), JSON.stringify(result.readFirst));
+});
+
+test("graph rebuild resolves imports from unchanged files when target appears later", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "user-service.ts"), "import { lateTarget } from './late-target';\nexport const userService = lateTarget;\n");
+  indexRepo({ cwd: root });
+  writeFileSync(join(root, "src", "core", "late-target.ts"), "export const lateTarget = true;\n");
+  const refreshed = indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/core/late-target.ts", limit: 3 });
+
+  assert.equal(refreshed.indexed, 1);
+  assert.ok(result.readFirst.map((item) => item.path).includes("src/core/user-service.ts"), JSON.stringify(result.readFirst));
+});
+
+test("graph rebuild removes stale edges when imported target is deleted", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "core", "user-service.ts"), "import { connectDb } from './db';\nexport const userService = connectDb;\n");
+  writeFileSync(join(root, "src", "core", "db.ts"), "export function connectDb() { return true; }\n");
+  indexRepo({ cwd: root });
+  unlinkSync(join(root, "src", "core", "db.ts"));
+  const refreshed = indexRepo({ cwd: root });
+
+  const db = new DatabaseSync(getRepoInfo(root).dbPath, { readOnly: true });
+  try {
+    assert.equal(refreshed.removed, 1);
+    assert.equal((db.prepare("select count(*) as count from graph_edges where specifier = './db'").get() as { count: number }).count, 0);
+  } finally {
+    db.close();
+  }
+});
+
 test("context read-first includes nearby config files with reasons", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "src", "core", "payments"), { recursive: true });
@@ -1192,8 +1260,16 @@ export function migratedNeedle() {
   const migratedDb = new DatabaseSync(info.dbPath, { readOnly: true });
   try {
     const tables = new Set((migratedDb.prepare("select name from sqlite_master where type in ('table', 'virtual table')").all() as Array<{ name: string }>).map((row) => row.name));
-    for (const table of ["meta", "files", "chunks", "symbols", "chunks_fts", "symbols_fts"]) assert.ok(tables.has(table), `${table} should exist`);
-    assert.equal((migratedDb.prepare("select value from meta where key = 'index_version'").get() as { value: string }).value, "4");
+    for (const table of ["meta", "files", "chunks", "symbols", "chunks_fts", "symbols_fts", "graph_nodes", "graph_edges"]) assert.ok(tables.has(table), `${table} should exist`);
+    const indexes = new Set((migratedDb.prepare("select name from sqlite_master where type = 'index'").all() as Array<{ name: string }>).map((row) => row.name));
+    for (const index of ["graph_edges_from_kind", "graph_edges_to_kind", "graph_edges_source_file", "graph_nodes_kind_path"]) assert.ok(indexes.has(index), `${index} should exist`);
+    const nodeColumns = new Set((migratedDb.prepare("pragma table_info(graph_nodes)").all() as Array<{ name: string }>).map((row) => row.name));
+    const edgeColumns = new Set((migratedDb.prepare("pragma table_info(graph_edges)").all() as Array<{ name: string }>).map((row) => row.name));
+    assert.ok(!nodeColumns.has("symbol_id"));
+    assert.ok(!edgeColumns.has("scope"));
+    assert.ok(!edgeColumns.has("confidence"));
+    assert.equal((migratedDb.prepare("select value from meta where key = 'index_version'").get() as { value: string }).value, "5");
+    assert.equal((migratedDb.prepare("select value from meta where key = 'graph_version'").get() as { value: string }).value, "1");
     assert.equal((migratedDb.prepare("select count(*) as count from files where path = 'src/legacy.ts'").get() as { count: number }).count, 1);
   } finally {
     migratedDb.close();
@@ -1232,7 +1308,7 @@ test("session start shows neutral status for an unapproved repo", async (t) => {
     process.chdir(cwd);
   }
 
-  assert.deepEqual(statuses, [{ key: "codemap", text: "CodeMap ○ not indexed" }]);
+  assert.deepEqual(statuses, [{ key: "codemap", text: "CodeMap ✗" }]);
 });
 
 test("registers only codemap tools with compact complete prompt guidance", () => {

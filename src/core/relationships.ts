@@ -1,6 +1,6 @@
-import { posix } from "node:path";
-
 import { openRepoDb } from "./db.ts";
+import { hasGraphMetadata, incomingGraphDependencies, outgoingGraphDependencies } from "./graph-store.ts";
+import { extractLocalReferences, resolveIndexedReference } from "./local-references.ts";
 import { fileRoles } from "./ranking.ts";
 
 export type CodeMapContextReasonKind =
@@ -29,11 +29,6 @@ export interface CodeMapContextReason {
 export interface RelatedPath {
   path: string;
   reasons: CodeMapContextReason[];
-}
-
-interface LocalReference {
-  kind: "import" | "include";
-  specifier: string;
 }
 
 export interface IndexedRelationships {
@@ -122,6 +117,44 @@ export function isNoisyIndexedPath(db: ReturnType<typeof openRepoDb>, path: stri
 }
 
 function importedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string, pathFilter: string): RelatedPath[] {
+  if (!hasGraphMetadata(db)) return legacyImportedLocalPaths(db, fromPath, pathFilter);
+  const resolved = outgoingGraphDependencies(db, fromPath, pathFilter)
+    .map((dependency) => {
+      if (dependency.targetPath === fromPath || isNoisyIndexedPath(db, dependency.targetPath)) return undefined;
+      const reasons: CodeMapContextReason[] = [{
+        kind: dependency.kind,
+        label: dependency.kind === "include" ? "quoted local include" : "local import",
+        sourcePath: fromPath,
+        targetPath: dependency.targetPath,
+        specifier: dependency.specifier,
+      }];
+      if (isTestReadFirstPath(fromPath) && !isTestReadFirstPath(dependency.targetPath)) reasons.push(testOfReason(fromPath, dependency.targetPath));
+      return { path: dependency.targetPath, reasons };
+    })
+    .filter((path): path is RelatedPath => Boolean(path));
+  return mergeRelatedPaths(resolved).slice(0, 8);
+}
+
+function importingLocalPaths(db: ReturnType<typeof openRepoDb>, targetPath: string, pathFilter: string): RelatedPath[] {
+  if (!hasGraphMetadata(db)) return legacyImportingLocalPaths(db, targetPath, pathFilter);
+  const importers = incomingGraphDependencies(db, targetPath, pathFilter)
+    .map((dependency) => {
+      if (dependency.sourcePath === targetPath || isNoisyIndexedPath(db, dependency.sourcePath)) return undefined;
+      const reasons: CodeMapContextReason[] = [{
+        kind: dependency.kind === "include" ? "reverse_include" : "reverse_import",
+        label: dependency.kind === "include" ? "file includes target" : "file imports target",
+        sourcePath: dependency.sourcePath,
+        targetPath,
+        specifier: dependency.specifier,
+      }];
+      if (isTestReadFirstPath(dependency.sourcePath) && !isTestReadFirstPath(targetPath)) reasons.push(reverseTestReason(targetPath, dependency.sourcePath));
+      return { path: dependency.sourcePath, reasons };
+    })
+    .filter((path): path is RelatedPath => Boolean(path));
+  return mergeRelatedPaths(sortRelatedByLocality(targetPath, importers)).slice(0, 8);
+}
+
+function legacyImportedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string, pathFilter: string): RelatedPath[] {
   const source = readIndexedSource(db, fromPath);
   if (!source) return [];
   const resolved = extractLocalReferences(source.text, source.language, source.path)
@@ -143,7 +176,7 @@ function importedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string,
   return mergeRelatedPaths(resolved).slice(0, 8);
 }
 
-function importingLocalPaths(db: ReturnType<typeof openRepoDb>, targetPath: string, pathFilter: string): RelatedPath[] {
+function legacyImportingLocalPaths(db: ReturnType<typeof openRepoDb>, targetPath: string, pathFilter: string): RelatedPath[] {
   const rows = db.prepare("select path, size from files where path <> ? and path like ? escape '\\' order by path")
     .all(targetPath, pathFilter) as Array<{ path: string; size: number }>;
   const importers = rows
@@ -201,135 +234,6 @@ function readIndexedSource(db: ReturnType<typeof openRepoDb>, path: string): { p
   return rows.length > 0 ? { path: rows[0].path, language: rows[0].language, text: rows.map((row) => row.text).join("\n") } : undefined;
 }
 
-function extractLocalReferences(text: string, language: string, path: string): LocalReference[] {
-  const references: LocalReference[] = [];
-  if (isTsJsPath(language, path)) references.push(...extractTsJsReferences(text));
-  if (isPythonPath(language, path)) references.push(...extractPythonReferences(text));
-  if (isCppPath(language, path)) references.push(...extractCppReferences(text));
-  return uniqueReferences(references);
-}
-
-function isTsJsPath(language: string, path: string): boolean {
-  return ["typescript", "javascript"].includes(language) || /\.[cm]?[jt]sx?$/.test(path.toLowerCase());
-}
-
-function isPythonPath(language: string, path: string): boolean {
-  return language === "python" || language === "py" || path.toLowerCase().endsWith(".py");
-}
-
-function isCppPath(language: string, path: string): boolean {
-  return ["c", "h", "cpp", "hpp"].includes(language) || /\.(?:c|cc|cpp|cxx|h|hh|hpp|hxx)$/.test(path.toLowerCase());
-}
-
-function extractTsJsReferences(text: string): LocalReference[] {
-  const references: LocalReference[] = [];
-  const patterns = [
-    /\b(?:import|export)\s+(?:type\s+)?[\s\S]{0,500}?\bfrom\s*["']([^"']+)["']/g,
-    /(?:^|\n)\s*import\s*["']([^"']+)["']/g,
-    /\brequire\(\s*["']([^"']+)["']\s*\)/g,
-    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
-  ];
-  for (const pattern of patterns) {
-    for (const match of text.matchAll(pattern)) {
-      const specifier = cleanSpecifier(match[1] ?? "");
-      if (specifier.startsWith(".")) references.push({ kind: "import", specifier });
-    }
-  }
-  return references;
-}
-
-function extractPythonReferences(text: string): LocalReference[] {
-  const references: LocalReference[] = [];
-  for (const match of text.matchAll(/(?:^|\n)\s*from\s+(\.+)([A-Za-z_][\w.]*)?\s+import\s+([^\n#]+)/g)) {
-    const dots = match[1] ?? "";
-    const moduleName = (match[2] ?? "").replace(/\./g, "/");
-    if (moduleName) {
-      references.push({ kind: "import", specifier: pythonRelativeSpecifier(dots, moduleName) });
-      continue;
-    }
-    for (const imported of (match[3] ?? "").split(",")) {
-      const name = imported.trim().split(/\s+as\s+/, 1)[0];
-      if (/^[A-Za-z_]\w*$/.test(name)) references.push({ kind: "import", specifier: pythonRelativeSpecifier(dots, name) });
-    }
-  }
-  return references;
-}
-
-function extractCppReferences(text: string): LocalReference[] {
-  return [...text.matchAll(/(?:^|\n)\s*#\s*include\s*"([^"]+)"/g)]
-    .map((match) => ({ kind: "include" as const, specifier: cleanSpecifier(match[1] ?? "") }))
-    .filter((reference) => Boolean(reference.specifier) && !reference.specifier.startsWith("/"));
-}
-
-function pythonRelativeSpecifier(dots: string, moduleName: string): string {
-  const parentHops = Math.max(0, dots.length - 1);
-  return `${"../".repeat(parentHops)}./${moduleName}`.replace(/^\.\.\/\.\//, "../").replace(/^\.\//, "./");
-}
-
-function cleanSpecifier(specifier: string): string {
-  return specifier.split(/[?#]/, 1)[0].trim();
-}
-
-function resolveIndexedReference(db: ReturnType<typeof openRepoDb>, fromPath: string, language: string, reference: LocalReference, pathFilter: string): string | undefined {
-  if (reference.kind === "include") return resolveIndexedInclude(db, fromPath, reference.specifier, pathFilter);
-  return resolveIndexedImport(db, fromPath, language, reference.specifier, pathFilter);
-}
-
-function resolveIndexedImport(db: ReturnType<typeof openRepoDb>, fromPath: string, language: string, specifier: string, pathFilter: string): string | undefined {
-  const normalized = normalizeLocalSpecifier(fromPath, specifier);
-  if (!normalized) return undefined;
-  const candidates = isPythonPath(language, fromPath) ? pythonImportCandidates(normalized) : importCandidates(normalized);
-  for (const candidate of candidates) {
-    const row = db.prepare("select path from files where path = ? and path like ? escape '\\' limit 1")
-      .get(candidate, pathFilter) as { path: string } | undefined;
-    if (row) return row.path;
-  }
-  return undefined;
-}
-
-function resolveIndexedInclude(db: ReturnType<typeof openRepoDb>, fromPath: string, specifier: string, pathFilter: string): string | undefined {
-  const direct = normalizeLocalSpecifier(fromPath, specifier.startsWith(".") ? specifier : `./${specifier}`);
-  if (!direct) return undefined;
-  for (const candidate of includeCandidates(direct)) {
-    const row = db.prepare("select path from files where path = ? and path like ? escape '\\' limit 1")
-      .get(candidate, pathFilter) as { path: string } | undefined;
-    if (row) return row.path;
-  }
-  return undefined;
-}
-
-function normalizeLocalSpecifier(fromPath: string, specifier: string): string | undefined {
-  const baseDir = posix.dirname(fromPath);
-  const normalized = posix.normalize(posix.join(baseDir, specifier));
-  if (!normalized || normalized === "." || normalized.startsWith("../") || normalized.startsWith("/")) return undefined;
-  return normalized;
-}
-
-function importCandidates(path: string): string[] {
-  const extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".yaml", ".yml", ".md", ".py"];
-  const hasExtension = /\.[^/.]+$/.test(path);
-  return uniqueStrings([
-    path,
-    ...(hasExtension ? [] : extensions.map((extension) => `${path}${extension}`)),
-    ...(hasExtension ? [] : [`${path}/__init__.py`]),
-    ...extensions.map((extension) => `${path}/index${extension}`),
-  ]);
-}
-
-function pythonImportCandidates(path: string): string[] {
-  const hasExtension = /\.[^/.]+$/.test(path);
-  return uniqueStrings([
-    path,
-    ...(hasExtension ? [] : [`${path}.py`, `${path}/__init__.py`]),
-  ]);
-}
-
-function includeCandidates(path: string): string[] {
-  const hasExtension = /\.[^/.]+$/.test(path);
-  const extensions = [".h", ".hh", ".hpp", ".hxx", ".c", ".cc", ".cpp", ".cxx"];
-  return uniqueStrings([path, ...(hasExtension ? [] : extensions.map((extension) => `${path}${extension}`))]);
-}
-
 function sortRelatedByLocality(base: string, paths: RelatedPath[]): RelatedPath[] {
   return paths.filter((path) => path.path !== base).sort((left, right) => localityScore(base, right.path) - localityScore(base, left.path) || left.path.localeCompare(right.path));
 }
@@ -352,18 +256,4 @@ function dedupeReasons(reasons: CodeMapContextReason[]): CodeMapContextReason[] 
     seen.add(key);
     return true;
   });
-}
-
-function uniqueReferences(references: LocalReference[]): LocalReference[] {
-  const seen = new Set<string>();
-  return references.filter((reference) => {
-    const key = `${reference.kind}:${reference.specifier}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values)];
 }

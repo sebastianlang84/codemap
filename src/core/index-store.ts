@@ -1,9 +1,10 @@
 import { chunkText } from "./chunker.ts";
 import { openRepoDb } from "./db.ts";
+import { isGraphStale, rebuildFileReferenceGraph } from "./graph-store.ts";
 import { extractSymbols } from "./symbols.ts";
 import type { ScannedFile } from "./scanner.ts";
 
-const INDEX_VERSION = "4";
+const INDEX_VERSION = "5";
 
 export interface IndexStoreResult {
   indexed: number;
@@ -21,6 +22,7 @@ export function applyIndexUpdate(options: {
   const lastIndexedAtKey = pathPrefix ? `last_indexed_at:${pathPrefix}` : "last_indexed_at";
   const indexedHeadKey = pathPrefix ? `indexed_head:${pathPrefix}` : "indexed_head";
   const forceReindex = shouldForceReindex(db, indexVersionKey);
+  const forceGraphRebuild = forceReindex || isGraphStale(db);
   const seen = new Set<string>();
   let indexed = 0;
 
@@ -30,6 +32,7 @@ export function applyIndexUpdate(options: {
     if (upsertIndexedFile(db, file, forceReindex)) indexed++;
   }
   const removed = removeDeletedFiles(db, seen, pathPrefix);
+  if (indexed > 0 || removed > 0 || forceGraphRebuild) rebuildFileReferenceGraph(db);
   writeIndexMetadata(db, indexVersionKey, lastIndexedAtKey, indexedHeadKey, indexedHead);
   db.exec("commit");
   return { indexed, removed };

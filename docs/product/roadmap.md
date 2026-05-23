@@ -20,6 +20,7 @@ When evaluating prior art, CodeMap should combine the strongest compatible ideas
 ## Prior art
 
 - [`qmd` research notes](../developer/qmd-research.md) — lessons from `tobi/qmd` on Markdown/document retrieval, BM25/vector/RRF/reranking, local GGUF models, and what CodeMap should or should not borrow.
+- [`relationship graph plan`](../developer/relationship-graph-plan.md) — deterministic SQLite graph substrate, first hard-scoped to file import/include relationships for `codemap_context`.
 
 ## Completed V1 improvement slices
 
@@ -61,7 +62,7 @@ Hard design rule for future semantic search: **exact path/symbol > lexical FTS >
 | Embeddings/vector adapters | Optional local `EmbeddingProvider`, `VectorStore`, and `HybridRanker`; evaluate LanceDB first for embedded local storage, Qdrant/FastEmbed only if a stronger vector stack is intentionally needed | No cloud requirement; FTS must stay useful without embeddings. Treat model runtimes and vector stores as opt-in. |
 | Ranking | Hybrid lexical/semantic ranking, possibly Reciprocal Rank Fusion | Keep deterministic lexical ranking as the fallback; exact path/symbol matches must not be displaced by semantic similarity. |
 | ast-grep and symbols | Optional query-time structural search plus stronger symbol extraction | Must degrade cleanly when `ast-grep` is unavailable. |
-| Graph and relationships | Small SQLite mini-graph for file/symbol/doc/test relationships, including test/doc relationship extraction | No external graph server. Promote only relationships that improve read-first context enough to justify maintenance. |
+| Graph and relationships | Small SQLite mini-graph, first for exact file import/include relationships in context | See [`relationship graph plan`](../developer/relationship-graph-plan.md). No external graph server. Keep V1.5 to file nodes plus exact `imports`/`includes`; promote broader relationships only when they improve read-first context enough to justify maintenance. |
 | Related context | Better test/dependency/config hints for arbitrary repos | Direct local imports and reverse-import callers are implemented for read-first context; remaining work should focus on measured zero-config gaps such as stronger test/callsite/config relationships and context expansion reasons. Treat Markdown links as opportunistic, not central. |
 | CLI adapter | Add a thin `src/cli/` adapter over `src/core/` | Keep CLI output/argv parsing separate from product logic; see the architecture boundary in [`../developer/architecture.md`](../developer/architecture.md#architecture-boundary). |
 | Memory links | Link CodeMap results to `pi-memory` artifact references | Keep CodeMap rebuildable; durable decisions stay in memory. |

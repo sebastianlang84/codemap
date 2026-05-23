@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add the first relationship-graph slice for `codemap_context`: local file import/include edges are persisted in SQLite and reused for direct/reverse read-first context without changing public tool schemas or search ranking.
 - Replace `○ not indexed` status text with `✗` for a cleaner status bar indicator.
 - Add optional `repoPath` / `--repo-path` targeting to CodeMap status, index, search, and context so agents can query another repo without changing session cwd.
 - Restructure documentation into product, user, and developer sections, with README kept as a concise entry point.
