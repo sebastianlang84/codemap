@@ -13,15 +13,15 @@ Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; s
 Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sondern Misses sichtbar machen und daraus gezielte Verbesserungs-Slices ableiten. Die eigentlichen To-do-Checkboxen stehen im nächsten Abschnitt, damit die Backlog-Liste nicht doppelt gezählt wird.
 
 - **TypeScript-Pfadaliasse — Restgrenzen**: Minimaler `tsconfig.json` / `jsconfig.json` `baseUrl` + `paths`-Support ist umgesetzt; offen bleiben komplexe `extends`-Ketten, Workspace-Aliasse und Budget-Ordering bei vielen Alias-Imports.
-- **Framework-/Konventions-Nachbarn**: relevante Dateien sind teils nicht über direkte Imports verbunden, sondern über Namens-/Framework-Konventionen, z. B. UI-zu-API, Route-Handler, Provider oder Config-Dateien. Source→Test-Budget-Ordering, ein importierter Source→Test-Nachbar und source-first Implementation-Targeting sind als kleine Verticals geschützt; weitere Konventionen brauchen eigene Eval-/Fixture-Belege. Die aktuellen Baseline-Restmisses splitten jetzt vollständig in `context_budget_or_relationship` (3).
+- **Framework-/Konventions-Nachbarn**: relevante Dateien sind teils nicht über direkte Imports verbunden, sondern über Namens-/Framework-Konventionen, z. B. UI-zu-API, Route-Handler, Provider oder Config-Dateien. Source→Test-Budget-Ordering, ein importierter Source→Test-Nachbar, source-first Implementation-Targeting, TypeScript-`.js`-Specifier-Auflösung und stem-affine Reverse-Importer sind als kleine Verticals geschützt; weitere Konventionen brauchen eigene Eval-/Fixture-Belege. Der aktuelle Baseline-Restmiss ist `context_budget_or_relationship` (1).
 - **Natürlichere Bug-/Änderungsanfragen — Restgrenzen**: Real-Repo-Eval enthält jetzt einen kleinen Natural-Language-Holdout ohne exakte Symbolnamen. Offen bleibt ein größerer, stabiler Holdout für beliebige Bugreports; der aktuelle Satz ist noch lokal und klein.
 - **False positives / verbotene Reads**: lexical liest im Real-Repo-Gate häufiger verbotene/noisy Dateien; CodeMap vermeidet sie aktuell, aber neue Heuristiken können Noise zurückbringen.
 
 ## Nächste sinnvolle Slices — vorgeschlagene Reihenfolge
 
-1. [ ] Restmiss-Bucket `context_budget_or_relationship` als getrennten Relationship-/Budget-Slice prüfen.
-   - Aktuelle Fälle: `macrolens` `series-workbench-backtest.ts`, `pi-ext-memory` `src/pi-extension/tag-catalog.ts` und `pi-ext-subagents` `src/execution.ts` fehlen trotz richtigem Entry-Target.
-   - Regel: erst Beziehung/Grundwahrheit prüfen; keine breite Multi-Hop-/Same-Dir-Heuristik ohne messbaren Recall-Gewinn und Noise-Budget.
+1. [ ] Letzten Restmiss `pi-ext-memory` `src/pi-extension/tag-catalog.ts` prüfen.
+   - Befund: `tag-catalog.ts` ist Suchtreffer, aber im `codemap_search_context`-Workflow wird nur der Top-Search-Target-Context gelesen; `codemap_context` kennt die ursprünglichen Query-Terme nicht und priorisiert daher `tools.ts`-Importe/Test/Importer statt den query-relevanten späten Import.
+   - Regel: keine query-aware Context-API oder Eval-Workflow-Änderung ohne eigenen Beleg, dass Agenten Search-Treffer nicht ohnehin lesen und dass Noise/Budget stabil bleiben.
 
 2. [ ] Weitere Konventions-Nachbarn als kleine, getrennte Verticals testen.
    - Kandidaten: Route↔Handler, UI↔API, Provider/Hook↔Consumer, Config-Key↔Nutzung; Source↔Test nur wieder anfassen, wenn ein neuer Eval-Miss nicht durch Entry/Search-Ranking verursacht ist.

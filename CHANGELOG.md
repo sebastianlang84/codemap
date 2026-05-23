@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Resolve TypeScript/JavaScript graph edges for relative `.js` specifiers that point at indexed TypeScript sources, improving reverse-import context and triggering an index-version rebuild.
+- Prioritize stem-affine reverse importers before imported-neighbor tests in small `codemap_context` budgets.
 - Prefer source files over matching tests for generic implementation-intent search queries, reducing real-repo search+context target mismatches.
 - Add navigation-miss reason summaries to the local real-repo navigation eval so remaining taxonomy misses are split by context-target mismatch versus context relationship/budget gaps.
 - Add a natural-language holdout cohort to the local real-repo navigation eval so symbol-heavy navigation gains remain visible separately from symptom-style queries.

@@ -931,6 +931,34 @@ export function runTurnIntake(prompt: string) {
   assert.ok(retrievalTest.reasons?.some((reason) => reason.kind === "sibling_test" && reason.targetPath === "src/pi-extension/retrieval.ts"), JSON.stringify(retrievalTest));
 });
 
+test("context read-first prioritizes stem-affine importers before imported-neighbor tests", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "lib", "__tests__"), { recursive: true });
+
+  writeFileSync(join(root, "src", "lib", "series-workbench-backtest-target.ts"), `
+import { analyzeSeries } from "./series-analysis";
+import { runEngine } from "./series-workbench-engine";
+
+export function buildWorkbenchBacktestTargets() {
+  return [analyzeSeries(), runEngine()];
+}
+`);
+  writeFileSync(join(root, "src", "lib", "series-analysis.ts"), "export function analyzeSeries() { return true; }\n");
+  writeFileSync(join(root, "src", "lib", "series-workbench-engine.ts"), "export function runEngine() { return true; }\n");
+  writeFileSync(join(root, "src", "lib", "series-workbench-backtest.ts"), "import { buildWorkbenchBacktestTargets } from './series-workbench-backtest-target';\nexport const backtest = buildWorkbenchBacktestTargets;\n");
+  writeFileSync(join(root, "src", "lib", "__tests__", "series-workbench-backtest-target.test.ts"), "test('target', () => true);\n");
+  writeFileSync(join(root, "src", "lib", "__tests__", "series-analysis.test.ts"), "test('analysis', () => true);\n");
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/lib/series-workbench-backtest-target.ts", limit: 5 });
+  const paths = result.readFirst.map((item) => item.path);
+  const importer = result.readFirst.find((item) => item.path === "src/lib/series-workbench-backtest.ts");
+
+  assert.ok(paths.includes("src/lib/__tests__/series-workbench-backtest-target.test.ts"), JSON.stringify(paths));
+  assert.ok(importer?.reasons?.some((reason) => reason.kind === "reverse_import"), JSON.stringify(result.readFirst));
+  assert.ok(!paths.includes("src/lib/__tests__/series-analysis.test.ts"), JSON.stringify(paths));
+});
+
 test("context read-first includes Python relative imports with reasons", (t) => {
   const root = fixtureRepo(t);
   mkdirSync(join(root, "src", "pkg"), { recursive: true });
@@ -1068,6 +1096,18 @@ test("reverse importer context uses graph edges when importer chunks are wiped",
   const result = codemapContext({ cwd: root, target: "src/core/validation.ts", limit: 3 });
 
   assert.ok(result.readFirst.map((item) => item.path).includes("src/core/user-service.ts"), JSON.stringify(result.readFirst));
+});
+
+test("context resolves TypeScript relative .js specifiers to indexed .ts files", (t) => {
+  const root = fixtureRepo(t);
+  writeFileSync(join(root, "src", "request.ts"), "export function normalizeRequest() { return true; }\n");
+  writeFileSync(join(root, "src", "execution.ts"), "import { normalizeRequest } from './request.js';\nexport const execute = normalizeRequest;\n");
+  indexRepo({ cwd: root });
+
+  const result = codemapContext({ cwd: root, target: "src/request.ts", limit: 3 });
+  const executionItem = result.readFirst.find((item) => item.path === "src/execution.ts");
+
+  assert.ok(executionItem?.reasons?.some((reason) => reason.kind === "reverse_import" && reason.specifier === "./request.js"), JSON.stringify(result.readFirst));
 });
 
 test("graph rebuild resolves imports from unchanged files when target appears later", (t) => {
@@ -1573,7 +1613,7 @@ export function migratedNeedle() {
     assert.ok(!nodeColumns.has("symbol_id"));
     assert.ok(!edgeColumns.has("scope"));
     assert.ok(!edgeColumns.has("confidence"));
-    assert.equal((migratedDb.prepare("select value from meta where key = 'index_version'").get() as { value: string }).value, "6");
+    assert.equal((migratedDb.prepare("select value from meta where key = 'index_version'").get() as { value: string }).value, "7");
     assert.equal((migratedDb.prepare("select value from meta where key = 'graph_version'").get() as { value: string }).value, "1");
     assert.equal((migratedDb.prepare("select count(*) as count from files where path = 'src/legacy.ts'").get() as { count: number }).count, 1);
   } finally {

@@ -159,21 +159,26 @@ function localReadFirstItems(
   testOf: RelatedPath[],
   limit: number,
 ): CodeMapReadFirstItem[] {
-  const testItems = tests.map((path) => ({ path, reasons: [relatedTestReason(targetItems[0]?.path ?? "", path)] }));
-  const docItems = docs.map((path) => ({ path, reasons: [relatedDocReason(targetItems[0]?.path ?? "", path)] }));
+  const targetPath = targetItems[0]?.path ?? "";
+  const testItems = tests.map((path) => ({ path, reasons: [relatedTestReason(targetPath, path)] }));
+  const docItems = docs.map((path) => ({ path, reasons: [relatedDocReason(targetPath, path)] }));
   const primaryImports = imports.slice(0, 2);
   const laterImports = imports.slice(2);
+  const affineImporters = importers.filter((item) => hasStemAffinity(stemWithoutExtension(targetPath), stemWithoutExtension(item.path)));
+  const otherImporters = importers.filter((item) => !affineImporters.some((affine) => affine.path === item.path));
   const strongRelated = mergeRelatedPaths([
     ...primaryImports,
     ...implementationPairs,
     ...(testItems[0] ? [testItems[0]] : []),
+    ...(affineImporters[0] ? [affineImporters[0]] : []),
     ...importedNeighborTests,
-    ...(importers[0] ? [importers[0]] : []),
+    ...(otherImporters[0] ? [otherImporters[0]] : []),
     ...(testOf[0] ? [testOf[0]] : []),
     ...(configs[0] ? [configs[0]] : []),
     ...(docItems[0] ? [docItems[0]] : []),
     ...laterImports,
-    ...importers.slice(1),
+    ...affineImporters.slice(1),
+    ...otherImporters.slice(1),
     ...testOf.slice(1),
     ...configs.slice(1),
     ...testItems.slice(1),

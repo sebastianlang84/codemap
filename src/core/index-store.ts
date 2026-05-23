@@ -4,7 +4,7 @@ import { isGraphStale, rebuildFileReferenceGraph } from "./graph-store.ts";
 import { extractSymbols } from "./symbols.ts";
 import type { ScannedFile } from "./scanner.ts";
 
-const INDEX_VERSION = "6";
+const INDEX_VERSION = "7";
 
 export interface IndexStoreResult {
   indexed: number;

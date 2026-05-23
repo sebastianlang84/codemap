@@ -132,10 +132,16 @@ function importCandidates(path: string): string[] {
   const hasExtension = /\.[^/.]+$/.test(path);
   return uniqueStrings([
     path,
+    ...tsSourceCandidatesForJsSpecifier(path),
     ...(hasExtension ? [] : extensions.map((extension) => `${path}${extension}`)),
     ...(hasExtension ? [] : [`${path}/__init__.py`]),
-    ...extensions.map((extension) => `${path}/index${extension}`),
+    ...(hasExtension ? [] : extensions.map((extension) => `${path}/index${extension}`)),
   ]);
+}
+
+function tsSourceCandidatesForJsSpecifier(path: string): string[] {
+  if (path.endsWith(".js")) return [path.slice(0, -3) + ".ts", path.slice(0, -3) + ".tsx"];
+  return [];
 }
 
 function pythonImportCandidates(path: string): string[] {
