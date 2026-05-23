@@ -1,0 +1,487 @@
+#!/usr/bin/env node
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { basename, join } from "node:path";
+import { performance } from "node:perf_hooks";
+
+import { codemapContext } from "../src/core/context.ts";
+import { indexRepo } from "../src/core/indexer.ts";
+import { searchCodeMap } from "../src/core/search.ts";
+
+interface RealRepoTask {
+  name: string;
+  query: string;
+  pathPrefix?: string;
+  entry: string;
+  requiredContext: string[];
+  forbidden?: string[];
+}
+
+interface RealRepoSuite {
+  label: string;
+  root: string;
+  tasks: RealRepoTask[];
+}
+
+interface CaseReport {
+  repo: string;
+  root: string;
+  task: string;
+  mode: NavigationMode;
+  query: string;
+  pathPrefix: string;
+  entry: string;
+  expectedFiles: number;
+  foundExpectedFiles: number;
+  expectedRecall: number;
+  missingExpectedFiles: string[];
+  filesRead: string[];
+  entryFound: boolean;
+  requiredContext: number;
+  foundContext: number;
+  contextRecall: number;
+  forbiddenRead: string[];
+  success: boolean;
+  toolCalls: number;
+  latencyMs: number;
+}
+
+interface ModeMetrics {
+  mode: NavigationMode;
+  tasks: number;
+  successRate: number;
+  entryHitRate: number;
+  avgExpectedRecall: number;
+  avgContextRecall: number;
+  avgFilesRead: number;
+  avgToolCalls: number;
+  forbiddenReadRate: number;
+  avgLatencyMs: number;
+  p95LatencyMs: number;
+}
+
+interface RepoReport {
+  label: string;
+  root: string;
+  skipped?: string;
+  indexed?: ReturnType<typeof indexRepo>;
+  modes: ModeMetrics[];
+  cases: CaseReport[];
+}
+
+interface EvalReport {
+  readLimit: number;
+  stateDir: string;
+  repos: RepoReport[];
+  modes: ModeMetrics[];
+  deltas: {
+    searchContextVsLexical: DeltaMetrics;
+    searchContextVsSearch: DeltaMetrics;
+  };
+}
+
+interface DeltaMetrics {
+  successRate: number;
+  avgExpectedRecall: number;
+  avgContextRecall: number;
+  avgFilesRead: number;
+  avgToolCalls: number;
+}
+
+interface ParsedArgs {
+  gateEnabled: boolean;
+  keepState: boolean;
+  requireRepos: boolean;
+  limit: number;
+  maxP95LatencyMs: number;
+  minTasks: number;
+  minSuccessDeltaVsLexical: number;
+  minContextRecallDeltaVsSearch: number;
+}
+
+type NavigationMode = "lexical" | "codemap_search" | "codemap_search_context";
+
+const modes: NavigationMode[] = ["lexical", "codemap_search", "codemap_search_context"];
+const home = homedir();
+const defaultSuites: RealRepoSuite[] = [
+  {
+    label: "macrolens",
+    root: join(home, "macrolens"),
+    tasks: [
+      {
+        name: "FINRA provider parser change",
+        query: "parseFinraMarginWorksheetXml implementation FINRA worksheet debit balances",
+        entry: "apps/web/src/lib/providers/finra.ts",
+        requiredContext: ["apps/web/src/lib/__tests__/finra-provider.test.ts"],
+        forbidden: ["apps/web/package-lock.json", "package-lock.json"],
+      },
+      {
+        name: "dashboard pipeline FINRA derivations",
+        query: "runDashboardPipeline implementation FINRA derivations provider status",
+        entry: "apps/web/src/lib/dashboard-pipeline.ts",
+        requiredContext: ["apps/web/src/lib/__tests__/dashboard-pipeline.test.ts"],
+        forbidden: ["apps/web/package-lock.json", "package-lock.json"],
+      },
+      {
+        name: "workbench backtest target selection",
+        query: "buildWorkbenchBacktestTargets implementation selectedSlotId RSI score target",
+        entry: "apps/web/src/lib/series-workbench-backtest-target.ts",
+        requiredContext: [
+          "apps/web/src/lib/__tests__/series-workbench-backtest-target.test.ts",
+          "apps/web/src/lib/series-workbench-backtest.ts",
+        ],
+        forbidden: ["apps/web/package-lock.json", "package-lock.json", ".agents/memory/daily/2026-03-12-rsi-score-cutover.md"],
+      },
+    ],
+  },
+  {
+    label: "alpha-cycles",
+    root: join(home, "alpha-cycles"),
+    tasks: [
+      {
+        name: "controlled run trigger API",
+        query: "trigger_run implementation confirm true run already in progress FastAPI",
+        entry: "api/app.py",
+        requiredContext: ["docker-compose.webapp.yml", "PRD_webapp.md"],
+        forbidden: ["ui/package-lock.json"],
+      },
+    ],
+  },
+  {
+    label: "pi-ext-memory",
+    root: join(home, ".pi/agent/git/github.com/sebastianlang84/pi-ext-memory"),
+    tasks: [
+      {
+        name: "memory_search empty-result hints",
+        query: "registerMemoryTools implementation memory_search empty_result_hints near canonical keys near tag suggestions",
+        entry: "src/pi-extension/tools.ts",
+        requiredContext: ["test/pi-extension/tools.test.ts", "src/pi-extension/tag-catalog.ts", "src/pi-extension/formatters.ts"],
+        forbidden: ["package-lock.json"],
+      },
+      {
+        name: "turn-intake memory context hint",
+        query: "buildTurnIntake implementation Use memory_search if prior context matters no relevant stored context",
+        entry: "src/pi-extension/retrieval.ts",
+        requiredContext: ["test/pi-extension/retrieval.test.ts", "src/pi-extension/turn-intake.ts"],
+        forbidden: ["package-lock.json"],
+      },
+    ],
+  },
+  {
+    label: "pi-ext-subagents",
+    root: join(home, ".pi/agent/git/github.com/sebastianlang84/pi-ext-subagents"),
+    tasks: [
+      {
+        name: "subagent request validation",
+        query: "normalizeSubagentRequest implementation too many parallel tasks exactly one mode",
+        entry: "src/request.ts",
+        requiredContext: ["tests/request.test.mjs", "src/execution.ts"],
+      },
+    ],
+  },
+  {
+    label: "pi-ext-astgrep",
+    root: join(home, ".pi/agent/git/github.com/sebastianlang84/pi-ext-astgrep"),
+    tasks: [
+      {
+        name: "ast-grep pattern hint rendering",
+        query: "getPatternHint implementation ast-grep rule language support fixer",
+        entry: "src/ast-grep/pattern-hints.ts",
+        requiredContext: ["test/pattern-hints.test.ts"],
+        forbidden: ["package-lock.json", "docs/archive/plans/slim-fork-plan.md"],
+      },
+    ],
+  },
+];
+
+const parsed = parseArgs(process.argv.slice(2));
+const stateDir = join(tmpdir(), `pi-codemap-real-repo-navigation-${process.pid}-${Date.now()}`);
+try {
+  const report = runEval(parsed, stateDir);
+  const gate = evaluateGate(report, parsed);
+  console.log(JSON.stringify({ generatedAt: new Date().toISOString(), report: parsed.keepState ? report : { ...report, stateDir: undefined }, gate }, null, 2));
+  if (parsed.gateEnabled && !gate.passed) process.exitCode = 1;
+} finally {
+  if (!parsed.keepState) rmSync(stateDir, { recursive: true, force: true });
+}
+
+function parseArgs(args: string[]): ParsedArgs {
+  let gateEnabled = false;
+  let keepState = false;
+  let requireRepos = false;
+  let limit = 5;
+  let maxP95LatencyMs = 500;
+  let minTasks = 8;
+  let minSuccessDeltaVsLexical = 0.2;
+  let minContextRecallDeltaVsSearch = 0.2;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const [name, inlineValue] = arg.split("=", 2);
+    const value = inlineValue ?? args[i + 1];
+    if (arg === "--local-repos") {
+      continue;
+    } else if (arg === "--quality-gate") {
+      gateEnabled = true;
+      requireRepos = true;
+    } else if (arg === "--keep-state") {
+      keepState = true;
+    } else if (arg === "--require-repos") {
+      requireRepos = true;
+    } else if (name === "--limit") {
+      limit = parsePositiveInteger(name, value);
+      if (inlineValue === undefined) i++;
+    } else if (name === "--max-p95-ms") {
+      maxP95LatencyMs = parseNonNegativeNumber(name, value);
+      if (inlineValue === undefined) i++;
+      gateEnabled = true;
+    } else if (name === "--min-tasks") {
+      minTasks = parsePositiveInteger(name, value);
+      if (inlineValue === undefined) i++;
+    } else if (name === "--min-success-delta-vs-lexical") {
+      minSuccessDeltaVsLexical = parseNonNegativeNumber(name, value);
+      if (inlineValue === undefined) i++;
+    } else if (name === "--min-context-recall-delta-vs-search") {
+      minContextRecallDeltaVsSearch = parseNonNegativeNumber(name, value);
+      if (inlineValue === undefined) i++;
+    } else if (arg.startsWith("--")) {
+      throw new Error(`Unknown option: ${arg}`);
+    } else {
+      throw new Error(`Unexpected positional argument: ${arg}`);
+    }
+  }
+  return { gateEnabled, keepState, requireRepos, limit, maxP95LatencyMs, minTasks, minSuccessDeltaVsLexical, minContextRecallDeltaVsSearch };
+}
+
+function runEval(options: ParsedArgs, stateDir: string): EvalReport {
+  const repos = defaultSuites.map((suite) => runSuite(suite, options, stateDir));
+  const allCases = repos.flatMap((repo) => repo.cases);
+  const aggregateModes = modes.map((mode) => metricsFor(mode, allCases));
+  const searchContext = metric(aggregateModes, "codemap_search_context");
+  const lexical = metric(aggregateModes, "lexical");
+  const search = metric(aggregateModes, "codemap_search");
+  return {
+    readLimit: options.limit,
+    stateDir,
+    repos,
+    modes: aggregateModes,
+    deltas: {
+      searchContextVsLexical: delta(searchContext, lexical),
+      searchContextVsSearch: delta(searchContext, search),
+    },
+  };
+}
+
+function runSuite(suite: RealRepoSuite, options: ParsedArgs, stateDir: string): RepoReport {
+  if (!existsSync(suite.root)) return { label: suite.label, root: suite.root, skipped: "missing repo", modes: [], cases: [] };
+  const indexed = indexRepo({ cwd: suite.root, approve: true, stateDir });
+  const cases = modes.flatMap((mode) => suite.tasks.map((task) => evaluateTask({ suite, stateDir, mode, task, limit: options.limit })));
+  return { label: suite.label, root: suite.root, indexed, modes: modes.map((mode) => metricsFor(mode, cases)), cases };
+}
+
+function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number }): CaseReport {
+  const { suite, stateDir, mode, task, limit } = options;
+  const [latencyMs, filesRead] = timed(() => navigate({ root: suite.root, stateDir, mode, task, limit }));
+  const uniqueFilesRead = uniqueStrings(filesRead);
+  const found = new Set(uniqueFilesRead);
+  const expected = uniqueStrings([task.entry, ...task.requiredContext]);
+  const missingExpectedFiles = expected.filter((path) => !found.has(path));
+  const missingContext = task.requiredContext.filter((path) => !found.has(path));
+  const forbiddenRead = (task.forbidden ?? []).filter((path) => found.has(path));
+  const entryFound = found.has(task.entry);
+  const foundExpectedFiles = expected.length - missingExpectedFiles.length;
+  const foundContext = task.requiredContext.length - missingContext.length;
+  const contextRecall = rate(foundContext, task.requiredContext.length);
+  return {
+    repo: suite.label,
+    root: suite.root,
+    task: task.name,
+    mode,
+    query: task.query,
+    pathPrefix: task.pathPrefix ?? "",
+    entry: task.entry,
+    expectedFiles: expected.length,
+    foundExpectedFiles,
+    expectedRecall: rate(foundExpectedFiles, expected.length),
+    missingExpectedFiles,
+    filesRead: uniqueFilesRead,
+    entryFound,
+    requiredContext: task.requiredContext.length,
+    foundContext,
+    contextRecall,
+    forbiddenRead,
+    success: entryFound && contextRecall === 1 && forbiddenRead.length === 0,
+    toolCalls: mode === "codemap_search_context" ? 2 : 1,
+    latencyMs: roundMs(latencyMs),
+  };
+}
+
+function navigate(options: { root: string; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number }): string[] {
+  const { root, stateDir, mode, task, limit } = options;
+  if (mode === "lexical") return lexicalSearch(root, task.query, task.pathPrefix, limit).map((hit) => hit.path);
+  const searchResults = searchCodeMap({ cwd: root, query: task.query, pathPrefix: task.pathPrefix, stateDir, limit });
+  const searchPaths = searchResults.map((result) => result.path);
+  if (mode === "codemap_search") return searchPaths;
+  const contextTarget = searchPaths[0] ?? task.query;
+  const context = codemapContext({ cwd: root, target: contextTarget, pathPrefix: task.pathPrefix, stateDir, limit });
+  return [...searchPaths.slice(0, 1), ...context.readFirst.map((item) => item.path)];
+}
+
+function lexicalSearch(root: string, query: string, pathPrefix = "", limit: number): Array<{ path: string; score: number }> {
+  const paths = execFileSync("git", ["ls-files"], { cwd: root, encoding: "utf8" })
+    .split(/\r?\n/)
+    .filter((path) => path && path.startsWith(pathPrefix));
+  const terms = queryTerms(query);
+  return paths
+    .map((path) => {
+      const fullPath = join(root, path);
+      if (!safeTextFile(fullPath)) return { path, score: 0 };
+      const text = readFileSync(fullPath, "utf8");
+      return { path, score: lexicalScore(path, text, terms) };
+    })
+    .filter((hit) => hit.score > 0)
+    .sort((left, right) => right.score - left.score || left.path.localeCompare(right.path))
+    .slice(0, limit);
+}
+
+function safeTextFile(path: string): boolean {
+  try {
+    const stat = statSync(path);
+    if (!stat.isFile() || stat.size > 2_000_000) return false;
+    const lower = basename(path).toLowerCase();
+    if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".ico") || lower.endsWith(".xlsx")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function lexicalScore(path: string, text: string, terms: string[]): number {
+  const normalizedPath = normalizeText(path);
+  const normalizedText = normalizeText(text);
+  let score = 0;
+  for (const term of terms) {
+    const pathMatches = countOccurrences(normalizedPath, term);
+    const textMatches = countOccurrences(normalizedText, term);
+    score += pathMatches * 4 + textMatches;
+  }
+  return score;
+}
+
+function metricsFor(mode: NavigationMode, cases: CaseReport[]): ModeMetrics {
+  const modeCases = cases.filter((item) => item.mode === mode);
+  const latencies = modeCases.map((item) => item.latencyMs);
+  return {
+    mode,
+    tasks: modeCases.length,
+    successRate: rate(modeCases.filter((item) => item.success).length, modeCases.length),
+    entryHitRate: rate(modeCases.filter((item) => item.entryFound).length, modeCases.length),
+    avgExpectedRecall: roundRate(avg(modeCases.map((item) => item.expectedRecall))),
+    avgContextRecall: roundRate(avg(modeCases.map((item) => item.contextRecall))),
+    avgFilesRead: roundRate(avg(modeCases.map((item) => item.filesRead.length))),
+    avgToolCalls: roundRate(avg(modeCases.map((item) => item.toolCalls))),
+    forbiddenReadRate: rate(modeCases.filter((item) => item.forbiddenRead.length > 0).length, modeCases.length),
+    avgLatencyMs: roundMs(avg(latencies)),
+    p95LatencyMs: roundMs(p95(latencies)),
+  };
+}
+
+function evaluateGate(report: EvalReport, options: ParsedArgs): { passed: boolean; issues: Array<{ label: string; metric: string; expected: string; actual: number | string }> } {
+  const issues: Array<{ label: string; metric: string; expected: string; actual: number | string }> = [];
+  const skipped = report.repos.filter((repo) => repo.skipped);
+  if (options.requireRepos) for (const repo of skipped) issues.push({ label: repo.label, metric: "repo", expected: "present", actual: repo.skipped ?? "skipped" });
+  const searchContext = metric(report.modes, "codemap_search_context");
+  const lexical = metric(report.modes, "lexical");
+  const search = metric(report.modes, "codemap_search");
+  const successDelta = searchContext.successRate - lexical.successRate;
+  const contextRecallDelta = searchContext.avgContextRecall - search.avgContextRecall;
+  if (searchContext.tasks < options.minTasks) issues.push({ label: searchContext.mode, metric: "tasks", expected: `>= ${options.minTasks}`, actual: searchContext.tasks });
+  if (successDelta < options.minSuccessDeltaVsLexical) issues.push({ label: searchContext.mode, metric: "successDeltaVsLexical", expected: `>= ${options.minSuccessDeltaVsLexical}`, actual: roundRate(successDelta) });
+  if (contextRecallDelta < options.minContextRecallDeltaVsSearch) issues.push({ label: searchContext.mode, metric: "contextRecallDeltaVsSearch", expected: `>= ${options.minContextRecallDeltaVsSearch}`, actual: roundRate(contextRecallDelta) });
+  if (searchContext.successRate <= search.successRate) issues.push({ label: searchContext.mode, metric: "successRateVsSearch", expected: `> ${search.successRate}`, actual: searchContext.successRate });
+  if (searchContext.avgExpectedRecall <= lexical.avgExpectedRecall) issues.push({ label: searchContext.mode, metric: "expectedRecallVsLexical", expected: `> ${lexical.avgExpectedRecall}`, actual: searchContext.avgExpectedRecall });
+  if (searchContext.forbiddenReadRate > 0) issues.push({ label: searchContext.mode, metric: "forbiddenReadRate", expected: "0", actual: searchContext.forbiddenReadRate });
+  if (searchContext.p95LatencyMs > options.maxP95LatencyMs) issues.push({ label: searchContext.mode, metric: "p95LatencyMs", expected: `<= ${options.maxP95LatencyMs}`, actual: searchContext.p95LatencyMs });
+  return { passed: issues.length === 0, issues };
+}
+
+function metric(metrics: ModeMetrics[], mode: NavigationMode): ModeMetrics {
+  const found = metrics.find((item) => item.mode === mode);
+  if (!found) throw new Error(`Missing mode metrics for ${mode}`);
+  return found;
+}
+
+function delta(left: ModeMetrics, right: ModeMetrics): DeltaMetrics {
+  return {
+    successRate: roundRate(left.successRate - right.successRate),
+    avgExpectedRecall: roundRate(left.avgExpectedRecall - right.avgExpectedRecall),
+    avgContextRecall: roundRate(left.avgContextRecall - right.avgContextRecall),
+    avgFilesRead: roundRate(left.avgFilesRead - right.avgFilesRead),
+    avgToolCalls: roundRate(left.avgToolCalls - right.avgToolCalls),
+  };
+}
+
+function queryTerms(query: string): string[] {
+  return uniqueStrings(normalizeText(query).split(/[^a-z0-9_]+/).filter((term) => term.length > 1));
+}
+
+function normalizeText(value: string): string {
+  return value.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase().replace(/[-./]+/g, " ");
+}
+
+function countOccurrences(text: string, needle: string): number {
+  if (!needle) return 0;
+  let count = 0;
+  let index = text.indexOf(needle);
+  while (index >= 0) {
+    count++;
+    index = text.indexOf(needle, index + needle.length);
+  }
+  return count;
+}
+
+function parsePositiveInteger(name: string, value: string | undefined): number {
+  if (value === undefined || value.trim() === "") throw new Error(`${name} requires a positive integer`);
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) throw new Error(`${name} requires a positive integer`);
+  return parsed;
+}
+
+function parseNonNegativeNumber(name: string, value: string | undefined): number {
+  if (value === undefined || value.trim() === "") throw new Error(`${name} requires a number`);
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) throw new Error(`${name} requires a non-negative number`);
+  return parsed;
+}
+
+function timed<T>(fn: () => T): [number, T] {
+  const started = performance.now();
+  const result = fn();
+  return [performance.now() - started, result];
+}
+
+function rate(numerator: number, denominator: number): number {
+  return denominator === 0 ? 0 : roundRate(numerator / denominator);
+}
+
+function avg(values: number[]): number {
+  return values.length === 0 ? 0 : values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function p95(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((left, right) => left - right);
+  return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)];
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)];
+}
+
+function roundRate(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
+function roundMs(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}

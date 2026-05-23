@@ -84,6 +84,7 @@ Implemented V1 capabilities:
 - [`docs/developer/architecture.md`](docs/developer/architecture.md) — storage, schema, scanner/index/search/context architecture, adapter boundary, testing policy.
 - [`docs/developer/search-quality.md`](docs/developer/search-quality.md) — maintainer notes for ranking/search-quality benchmark usage.
 - [`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md) — deterministic eval comparing lexical, search-only, and search-plus-context navigation.
+- [`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) — local real-repo eval measuring navigation value against rg-like lexical baselines.
 - [`docs/developer/qmd-research.md`](docs/developer/qmd-research.md) — prior-art notes from `tobi/qmd` and implications for chunking, vector search, models, and lightweight defaults.
 - [`docs/archive/brainstorming.md`](docs/archive/brainstorming.md) — original historical brainstorming note, no longer authoritative.
 

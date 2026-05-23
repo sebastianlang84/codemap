@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a local real-repo navigation eval showing CodeMap search+context value against rg-like lexical baselines on Macrolens, Alpha Cycles, and Pi extension repos.
+- Strengthen exact/prefix symbol ranking so implementation symbols beat broad file chunks in real navigation queries.
 - Add a deterministic agent-navigation eval comparing lexical lookup, `codemap_search`, and `codemap_search` + `codemap_context` on fixed fixture tasks.
 - Add a context-quality benchmark gate and fixture to prove graph-backed `codemap_context` returns required imports, reverse imports, includes, tests, docs/config, and path-scoped neighbors without noisy leaks.
 - Add a graph-budget benchmark script and fixture to measure V1.5 relationship-graph index time, SQLite size, and `codemap_context` latency before further graph expansion.

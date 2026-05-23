@@ -52,7 +52,11 @@ export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): 
   const symbolish = row.kind !== "text" && row.kind !== "markdown" && row.kind !== "file";
   const symbolName = row.symbolName?.toLowerCase() ?? "";
   const exactSymbol = symbolName === plan.normalized;
-  const prefixSymbol = plan.terms.some((term) => symbolName.startsWith(term.toLowerCase()));
+  const exactTermSymbol = plan.terms.some((term) => term.length >= 5 && symbolName === term.toLowerCase());
+  const prefixSymbol = !exactTermSymbol && plan.terms.some((term) => {
+    const normalizedTerm = term.toLowerCase();
+    return normalizedTerm.length >= 5 && symbolName.startsWith(normalizedTerm) && normalizedTerm.length / Math.max(symbolName.length, 1) >= 0.55;
+  });
   const lowerPath = row.path.toLowerCase();
   const lowerText = row.text.toLowerCase();
   const pathCoverage = termCoverage(lowerPath, plan.coreTerms);
@@ -72,7 +76,12 @@ export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): 
   const pathScore = (exactPath ? 6 : 0) + (lowerPath.endsWith(plan.normalized) ? 3 : 0) + pathCoverage * 5;
   const filenameScore = basenameCoverage * 4 + exactFilenameScore + exactModuleNameScore;
   const exactTextScore = exactText ? 4 : 0;
-  const symbolScore = (symbolish && exactText ? 3 : 0) + (exactSymbol ? 8 : 0) + (prefixSymbol ? 5 : 0);
+  const routeHandlerSymbol = symbolish
+    && /(?:^|\/)route\.[cm]?[jt]sx?$/.test(lowerPath)
+    && ["get", "post", "put", "patch", "delete"].includes(symbolName)
+    && plan.terms.some((term) => term.toLowerCase() === symbolName)
+    && plan.codeIntent;
+  const symbolScore = (symbolish && exactText ? 3 : 0) + (exactSymbol ? 28 : 0) + (exactTermSymbol ? 20 : 0) + (prefixSymbol ? 10 : 0) + (routeHandlerSymbol ? 20 : 0);
   const textCoverageScore = textCoverage * 3;
   const codeIntentBoost = (plan.codeIntent && codeLike ? 2 : 0) + (plan.codeIntent && sourceLike ? 4 : 0);
   const roleBoost = fileRoleBoost(roles, plan.roleIntents);

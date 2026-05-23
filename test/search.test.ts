@@ -156,6 +156,13 @@ test("prefix symbol queries prefer matching symbols", (t) => {
   assert.equal(results[0]?.kind, "function");
 });
 
+test("symbol queries outrank broad implementation file chunks", (t) => {
+  const root = fixtureRepo(t);
+  const results = searchCodeMap({ cwd: root, query: "approveUser implementation", limit: 5 });
+  assert.equal(results[0]?.path, "src/core/user-service.ts");
+  assert.equal(results[0]?.kind, "function");
+});
+
 test("python class and function symbols are searchable", (t) => {
   const root = fixtureRepo(t);
   assert.ok(searchCodeMap({ cwd: root, query: "DeliveryClient", limit: 5 }).some((result) => result.kind === "class"));
