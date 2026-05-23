@@ -18,12 +18,12 @@ export interface QueryPlan {
 export function planQuery(query: string): QueryPlan {
   const raw = query.trim();
   const phrases = [...raw.matchAll(/"([^"]+)"/g)].map((match) => match[1].trim()).filter(Boolean);
-  const terms = raw.match(/[\p{L}\p{N}_.$/-]+/gu)?.slice(0, 8) ?? [];
+  const terms = raw.match(/[\p{L}\p{N}_.$/-]+/gu)?.slice(0, 12) ?? [];
   if (terms.length === 0 && phrases.length === 0) throw new Error("Search query has no searchable terms.");
 
   const normalized = raw.replace(/^"|"$/g, "").toLowerCase();
   const expandedTerms = expandTerms(terms);
-  const coreTerms = expandedTerms.filter((term) => !stopWords.has(term)).slice(0, 10);
+  const coreTerms = expandedTerms.filter((term) => !stopWords.has(term)).slice(0, 16);
   const pathLike = /[/.\\-]|\.[A-Za-z0-9]{1,8}$/.test(raw);
   const pathNeedle = raw.replace(/^"|"$/g, "");
   const codeIntent = coreTerms.some((term) => codeIntentTerms.has(term));
@@ -61,7 +61,8 @@ function inferRoleIntents(normalized: string, terms: string[]): string[] {
   if (has("what is this project", "project about", "overview", "purpose")) intents.push("overview");
   if (has("agent", "instructions", "program")) intents.push("agent_instructions");
   if (has("edit")) intents.push("overview", "agent_instructions", "implementation/main");
-  if (has("implemented", "implementation", "main", "source", "defined", "architecture", "model", "used", "orchestrator", "pipeline", "run")) intents.push("implementation", "implementation/main");
+  if (has("implemented", "implementation", "source", "defined", "architecture", "model", "used", "orchestrator", "pipeline", "run")) intents.push("implementation");
+  if (has("main", "entry", "entrypoint", "orchestrator")) intents.push("implementation", "implementation/main");
   if (has("config", "configuration")) intents.push("configuration");
   if (has("docs", "doc", "documentation")) intents.push("documentation");
   if (has("tests", "test", "testing")) intents.push("tests");

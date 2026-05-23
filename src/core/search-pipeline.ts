@@ -38,7 +38,8 @@ function pathMatchCandidates(db: ReturnType<typeof openRepoDb>, request: SearchR
 }
 
 function roleIntentCandidates(db: ReturnType<typeof openRepoDb>, request: SearchRetrievalRequest): SearchResult[] {
-  if (request.plan.roleIntents.length === 0) return [];
+  const candidateRoleIntents = request.plan.roleIntents.filter((intent) => intent !== "implementation");
+  if (candidateRoleIntents.length === 0) return [];
   const rows = db.prepare(`
     select f.path, f.language, 1 as startLine, 1 as endLine, 'file' as kind,
            coalesce(c.text, f.path) as text, 0 as rank, f.size as size, null as symbolName
@@ -49,7 +50,7 @@ function roleIntentCandidates(db: ReturnType<typeof openRepoDb>, request: Search
     limit 500
   `).all(request.pathFilter) as unknown as SearchRow[];
   return rows
-    .filter((row) => fileRoleBoost(fileRoles(row.path.toLowerCase(), row.size ?? undefined), request.plan.roleIntents) > 0)
+    .filter((row) => fileRoleBoost(fileRoles(row.path.toLowerCase(), row.size ?? undefined), candidateRoleIntents) > 0)
     .map((row) => toResult(row, request.plan, 18));
 }
 

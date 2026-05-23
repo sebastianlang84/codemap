@@ -289,6 +289,31 @@ test("symbol queries outrank broad implementation file chunks", (t) => {
   assert.equal(results[0]?.kind, "function");
 });
 
+test("generic implementation role intent does not imply main entrypoint intent", () => {
+  assert.deepEqual(planQuery("memory retrieval implementation").roleIntents, ["implementation"]);
+  assert.deepEqual(planQuery("where is the main implementation?").roleIntents, ["implementation", "implementation/main"]);
+  const longPlan = planQuery("buildTurnIntake implementation Use memory_search if prior context matters no relevant stored context");
+  assert.ok(longPlan.coreTerms.includes("relevant"), JSON.stringify(longPlan.coreTerms));
+  assert.ok(longPlan.coreTerms.includes("stored"), JSON.stringify(longPlan.coreTerms));
+});
+
+test("generic implementation search does not seed unrelated main entrypoints", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-generic-implementation-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src"), { recursive: true });
+
+  writeFileSync(join(root, "src", "index.ts"), "export function bootstrapEntrypoint() { return 'main app shell'; }\n");
+  writeFileSync(join(root, "src", "retrieval.ts"), "export const retrievalHint = 'memory retrieval behavior lives here';\n");
+  indexRepo({ cwd: root, approve: true });
+
+  const genericResults = searchCodeMap({ cwd: root, query: "memory retrieval implementation", limit: 5 });
+  assert.equal(genericResults[0]?.path, "src/retrieval.ts", JSON.stringify(genericResults));
+
+  const mainResults = searchCodeMap({ cwd: root, query: "where is the main implementation?", limit: 5 });
+  assert.equal(mainResults[0]?.path, "src/index.ts", JSON.stringify(mainResults));
+});
+
 test("python class and function symbols are searchable", (t) => {
   const root = fixtureRepo(t);
   assert.ok(searchCodeMap({ cwd: root, query: "DeliveryClient", limit: 5 }).some((result) => result.kind === "class"));
