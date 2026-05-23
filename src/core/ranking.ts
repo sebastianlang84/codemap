@@ -159,6 +159,7 @@ function isLockfilePath(path: string, basename: string): boolean {
 function fileRolePenalty(roles: string[], plan: QueryPlan): number {
   const explicit = explicitNoiseIntents(plan);
   let penalty = 0;
+  if (roles.includes("agent_instructions") && !plan.roleIntents.includes("agent_instructions")) penalty += 18;
   if (roles.includes("lockfile")) penalty += explicit.lockfile ? 0 : 60;
   if (roles.includes("generated")) penalty += explicit.generated ? 8 : 60;
   if (roles.includes("build_output") || roles.includes("minified")) penalty += explicit.buildOutput ? 12 : 48;

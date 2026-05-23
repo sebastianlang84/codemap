@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Penalize agent-instruction files for non-agent search queries, resolving the expanded holdout's ambiguous `sg` binary target mismatch without changing public tool schemas.
 - Expand the local real-repo natural-language navigation holdout from 4 to 10 cases and recalibrate its diagnostic gate floor so new symptom-style misses stay visible without weakening the baseline gate.
 - Preserve visible `codemap_search` hits when scripted navigation evaluates search+context read plans, resolving the remaining local real-repo baseline miss without adding prompt-facing API surface.
 - Document CodeMap's positioning as a local Pi-agent context router between grep/ctags and heavier AI/code-search systems.

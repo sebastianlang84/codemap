@@ -59,7 +59,7 @@ function inferRoleIntents(normalized: string, terms: string[]): string[] {
   const intents: string[] = [];
   const has = (...needles: string[]) => needles.some((needle) => needle.includes(" ") ? normalized.includes(needle) : terms.includes(needle));
   if (has("what is this project", "project about", "overview", "purpose")) intents.push("overview");
-  if (has("agent", "instructions", "program")) intents.push("agent_instructions");
+  if (has("agent", "agents", "instructions", "program", "claude")) intents.push("agent_instructions");
   if (has("edit")) intents.push("overview", "agent_instructions", "implementation/main");
   if (has("implemented", "implementation", "source", "defined", "architecture", "model", "used", "orchestrator", "pipeline", "run")) intents.push("implementation");
   if (has("main", "entry", "entrypoint", "orchestrator")) intents.push("implementation", "implementation/main");

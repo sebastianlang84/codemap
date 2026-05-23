@@ -385,6 +385,82 @@ test("implementation-intent ranking penalizes test-only matches", () => {
   assert.ok(sourceDiagnostics.finalScore > testDiagnostics.finalScore, JSON.stringify({ sourceDiagnostics, testDiagnostics }));
 });
 
+test("non-agent queries penalize agent instruction files", () => {
+  const plan = planQuery("ast grep binary path should reject ambiguous sg shadow utils command and show install guidance");
+  const agentDiagnostics = scoreSearchRow({
+    path: "AGENTS.md",
+    language: "markdown",
+    startLine: 1,
+    endLine: 8,
+    kind: "heading",
+    text: "# ast-grep binary guidance\nsg process binary path ambiguous install guidance shadow utils command",
+    rank: -1,
+    size: 200,
+    symbolName: null,
+  }, plan, 4);
+  const sourceDiagnostics = scoreSearchRow({
+    path: "src/ast-grep/binary-path.ts",
+    language: "typescript",
+    startLine: 1,
+    endLine: 8,
+    kind: "function",
+    text: "export function resolveAstGrepBinary() { return validateCandidate('sg'); }",
+    rank: -1,
+    size: 200,
+    symbolName: "resolveAstGrepBinary",
+  }, plan, 4);
+  const agentPlan = planQuery("AGENTS.md");
+  const requestedAgentDiagnostics = scoreSearchRow({
+    path: "AGENTS.md",
+    language: "markdown",
+    startLine: 1,
+    endLine: 8,
+    kind: "heading",
+    text: "# Agent instructions",
+    rank: -1,
+    size: 200,
+    symbolName: null,
+  }, agentPlan, 4);
+
+  assert.equal(agentDiagnostics.noisePenalty, 18, JSON.stringify(agentDiagnostics));
+  assert.ok(sourceDiagnostics.finalScore > agentDiagnostics.finalScore, JSON.stringify({ sourceDiagnostics, agentDiagnostics }));
+  assert.equal(requestedAgentDiagnostics.noisePenalty, 0, JSON.stringify(requestedAgentDiagnostics));
+});
+
+test("natural binary change requests prefer source targets over agent instructions", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-binary-change-source-first-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src", "ast-grep"), { recursive: true });
+  mkdirSync(join(root, "test"), { recursive: true });
+
+  writeFileSync(join(root, "AGENTS.md"), `
+# ast-grep binary guidance
+
+The ast grep binary path may be ambiguous when sg is shadowed by another utils command.
+The ast grep binary path install guidance belongs in source behavior, not this instruction file.
+`);
+  writeFileSync(join(root, "src", "ast-grep", "binary-path.ts"), `
+export function resolveAstGrepBinaryPath(candidate: string) {
+  if (candidate === "sg") throw new Error("ambiguous sg shadow utils command; install ast-grep");
+  return candidate;
+}
+`);
+  writeFileSync(join(root, "test", "binary-path.test.ts"), `
+import { resolveAstGrepBinaryPath } from "../src/ast-grep/binary-path";
+
+test("rejects ambiguous sg shadow utils command", () => resolveAstGrepBinaryPath("sg"));
+`);
+  indexRepo({ cwd: root, approve: true });
+
+  const results = searchCodeMap({ cwd: root, query: "ast grep binary path should reject ambiguous sg shadow utils command and show install guidance", limit: 5 });
+  const sourceIndex = results.findIndex((result) => result.path === "src/ast-grep/binary-path.ts");
+  const agentIndex = results.findIndex((result) => result.path === "AGENTS.md");
+
+  assert.equal(sourceIndex, 0, JSON.stringify(results.map((result) => ({ path: result.path, score: result.score }))));
+  assert.ok(agentIndex === -1 || agentIndex > sourceIndex, JSON.stringify(results.map((result) => ({ path: result.path, score: result.score }))));
+});
+
 test("implementation-intent queries prefer source targets over matching tests", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-implementation-source-first-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
