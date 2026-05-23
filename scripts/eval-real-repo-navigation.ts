@@ -6,7 +6,8 @@ import { basename, join } from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { codemapContext } from "../src/core/context.ts";
-import { indexRepo } from "../src/core/indexer.ts";
+import { classifyMisses, emptyClassCounts, summarizeMissTaxonomy, type MissClass, type MissDiagnostic, type MissTaxonomySummary } from "../src/core/eval-miss-taxonomy.ts";
+import { indexRepo, status as indexStatus } from "../src/core/indexer.ts";
 import { searchCodeMap } from "../src/core/search.ts";
 
 interface RealRepoTask {
@@ -16,6 +17,7 @@ interface RealRepoTask {
   entry: string;
   requiredContext: string[];
   forbidden?: string[];
+  missHints?: Record<string, MissClass | MissClass[]>;
 }
 
 interface RealRepoSuite {
@@ -42,6 +44,7 @@ interface CaseReport {
   foundContext: number;
   contextRecall: number;
   forbiddenRead: string[];
+  misses: MissDiagnostic[];
   success: boolean;
   toolCalls: number;
   latencyMs: number;
@@ -59,6 +62,7 @@ interface ModeMetrics {
   forbiddenReadRate: number;
   avgLatencyMs: number;
   p95LatencyMs: number;
+  missTaxonomy: MissTaxonomySummary;
 }
 
 interface RepoReport {
@@ -68,6 +72,7 @@ interface RepoReport {
   indexed?: ReturnType<typeof indexRepo>;
   modes: ModeMetrics[];
   cases: CaseReport[];
+  missTaxonomy: MissTaxonomySummary;
 }
 
 interface EvalReport {
@@ -75,6 +80,7 @@ interface EvalReport {
   stateDir: string;
   repos: RepoReport[];
   modes: ModeMetrics[];
+  missTaxonomy: MissTaxonomySummary;
   deltas: {
     searchContextVsLexical: DeltaMetrics;
     searchContextVsSearch: DeltaMetrics;
@@ -130,8 +136,10 @@ const defaultSuites: RealRepoSuite[] = [
         requiredContext: [
           "apps/web/src/lib/__tests__/series-workbench-backtest-target.test.ts",
           "apps/web/src/lib/series-workbench-backtest.ts",
+          "apps/web/src/lib/series-analysis.ts",
         ],
         forbidden: ["apps/web/package-lock.json", "package-lock.json", ".agents/memory/daily/2026-03-12-rsi-score-cutover.md"],
+        missHints: { "apps/web/src/lib/series-analysis.ts": "alias" },
       },
     ],
   },
@@ -265,6 +273,7 @@ function runEval(options: ParsedArgs, stateDir: string): EvalReport {
     stateDir,
     repos,
     modes: aggregateModes,
+    missTaxonomy: summarizeMissTaxonomy(allCases.flatMap((item) => item.misses)),
     deltas: {
       searchContextVsLexical: delta(searchContext, lexical),
       searchContextVsSearch: delta(searchContext, search),
@@ -273,14 +282,16 @@ function runEval(options: ParsedArgs, stateDir: string): EvalReport {
 }
 
 function runSuite(suite: RealRepoSuite, options: ParsedArgs, stateDir: string): RepoReport {
-  if (!existsSync(suite.root)) return { label: suite.label, root: suite.root, skipped: "missing repo", modes: [], cases: [] };
+  if (!existsSync(suite.root)) return { label: suite.label, root: suite.root, skipped: "missing repo", modes: [], cases: [], missTaxonomy: summarizeMissTaxonomy([]) };
   const indexed = indexRepo({ cwd: suite.root, approve: true, stateDir });
-  const cases = modes.flatMap((mode) => suite.tasks.map((task) => evaluateTask({ suite, stateDir, mode, task, limit: options.limit })));
-  return { label: suite.label, root: suite.root, indexed, modes: modes.map((mode) => metricsFor(mode, cases)), cases };
+  const currentStatus = indexStatus(suite.root, { stateDir, health: "full" });
+  const indexStale = Boolean(currentStatus.headChanged || currentStatus.changed > 0 || currentStatus.missing > 0 || currentStatus.deleted > 0);
+  const cases = modes.flatMap((mode) => suite.tasks.map((task) => evaluateTask({ suite, stateDir, mode, task, limit: options.limit, indexStale })));
+  return { label: suite.label, root: suite.root, indexed, modes: modes.map((mode) => metricsFor(mode, cases)), cases, missTaxonomy: summarizeMissTaxonomy(cases.flatMap((item) => item.misses)) };
 }
 
-function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number }): CaseReport {
-  const { suite, stateDir, mode, task, limit } = options;
+function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number; indexStale: boolean }): CaseReport {
+  const { suite, stateDir, mode, task, limit, indexStale } = options;
   const [latencyMs, filesRead] = timed(() => navigate({ root: suite.root, stateDir, mode, task, limit }));
   const uniqueFilesRead = uniqueStrings(filesRead);
   const found = new Set(uniqueFilesRead);
@@ -292,6 +303,15 @@ function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: N
   const foundExpectedFiles = expected.length - missingExpectedFiles.length;
   const foundContext = task.requiredContext.length - missingContext.length;
   const contextRecall = rate(foundContext, task.requiredContext.length);
+  const misses = classifyMisses({
+    query: task.query,
+    entry: task.entry,
+    requiredContext: task.requiredContext,
+    missingExpectedFiles,
+    forbiddenRead,
+    indexStale,
+    hints: task.missHints,
+  });
   return {
     repo: suite.label,
     root: suite.root,
@@ -310,6 +330,7 @@ function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: N
     foundContext,
     contextRecall,
     forbiddenRead,
+    misses,
     success: entryFound && contextRecall === 1 && forbiddenRead.length === 0,
     toolCalls: mode === "codemap_search_context" ? 2 : 1,
     latencyMs: roundMs(latencyMs),
@@ -383,6 +404,7 @@ function metricsFor(mode: NavigationMode, cases: CaseReport[]): ModeMetrics {
     forbiddenReadRate: rate(modeCases.filter((item) => item.forbiddenRead.length > 0).length, modeCases.length),
     avgLatencyMs: roundMs(avg(latencies)),
     p95LatencyMs: roundMs(p95(latencies)),
+    missTaxonomy: summarizeMissTaxonomy(modeCases.flatMap((item) => item.misses)),
   };
 }
 

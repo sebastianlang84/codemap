@@ -11,6 +11,7 @@ process.env.HOME = storageHome;
 process.env.USERPROFILE = storageHome;
 after(() => rmSync(storageHome, { recursive: true, force: true }));
 
+const { classifyMisses, summarizeMissTaxonomy } = await import("../src/core/eval-miss-taxonomy.ts");
 const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { planQuery } = await import("../src/core/query-plan.ts");
 const { scoreSearchRow } = await import("../src/core/ranking.ts");
@@ -78,6 +79,41 @@ alpha alpha alpha alpha alpha alpha alpha alpha
   indexRepo({ cwd: root, approve: true });
   return root;
 }
+
+test("real-repo eval miss taxonomy classifies actionable misses", () => {
+  const misses = classifyMisses({
+    query: "registerMemoryTools empty result hints",
+    entry: "src/pi-extension/tools.ts",
+    requiredContext: ["test/pi-extension/tools.test.ts", "src/pi-extension/formatters.ts"],
+    missingExpectedFiles: ["test/pi-extension/tools.test.ts", "src/pi-extension/formatters.ts", "src/lib/series-analysis.ts"],
+    forbiddenRead: ["package-lock.json"],
+    indexStale: false,
+    hints: { "src/pi-extension/formatters.ts": "query_formulation", "src/lib/series-analysis.ts": "alias" },
+  });
+
+  assert.deepEqual(misses.map((item) => [item.kind, item.class, item.file]), [
+    ["forbidden_read", "noise", "package-lock.json"],
+    ["missing_expected", "convention", "test/pi-extension/tools.test.ts"],
+    ["missing_expected", "query_formulation", "src/pi-extension/formatters.ts"],
+    ["missing_expected", "alias", "src/lib/series-analysis.ts"],
+  ]);
+  const staleMiss = classifyMisses({
+    query: "registerMemoryTools empty result hints",
+    entry: "src/pi-extension/tools.ts",
+    requiredContext: ["src/lib/series-analysis.ts"],
+    missingExpectedFiles: ["src/lib/series-analysis.ts"],
+    forbiddenRead: [],
+    indexStale: true,
+    hints: { "src/lib/series-analysis.ts": "alias" },
+  });
+  assert.equal(staleMiss[0]?.class, "staleness");
+  const summary = summarizeMissTaxonomy(misses);
+  assert.equal(summary.total, 4);
+  assert.equal(summary.byClass.noise, 1);
+  assert.equal(summary.byClass.convention, 1);
+  assert.equal(summary.byClass.query_formulation, 1);
+  assert.equal(summary.byClass.alias, 1);
+});
 
 test("agentic E2E smoke test navigates from search to read-first context", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-agentic-e2e-"));

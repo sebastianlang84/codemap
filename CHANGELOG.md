@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add miss-taxonomy diagnostics to the local real-repo navigation eval so missed expected files and noisy reads are classified into actionable improvement buckets.
 - Add a local real-repo navigation eval showing CodeMap search+context value against rg-like lexical baselines on Macrolens, Alpha Cycles, and Pi extension repos.
 - Strengthen exact/prefix symbol ranking so implementation symbols beat broad file chunks in real navigation queries.
 - Add a deterministic agent-navigation eval comparing lexical lookup, `codemap_search`, and `codemap_search` + `codemap_context` on fixed fixture tasks.

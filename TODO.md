@@ -4,9 +4,40 @@ Active offene Arbeit für `pi-ext-codemap`. Abgehakte Punkte werden hier gelösc
 
 ## Active tactical backlog — reviewed order
 
-Aktuell kein nächster Slice ausgewählt. Der V1.5 Relationship-Graph ist implementiert; Budget- und Context-Quality-Baselines sind in [`docs/developer/relationship-graph-plan.md`](docs/developer/relationship-graph-plan.md#v15-budget-baseline) / [`Context-Quality-Gate`](docs/developer/relationship-graph-plan.md#v15-context-quality-gate) dokumentiert. Weiterer Graph-Ausbau bleibt gated: kein Symbol-/Docs-/Config-/Heuristik-/Search-Ranking-Ausbau ohne klaren Context-Gewinn und neue Budget-Entscheidung.
+Der nächste vorgeschlagene Slice steht unten. Der V1.5 Relationship-Graph ist implementiert; Budget- und Context-Quality-Baselines sind in [`docs/developer/relationship-graph-plan.md`](docs/developer/relationship-graph-plan.md#v15-budget-baseline) / [`Context-Quality-Gate`](docs/developer/relationship-graph-plan.md#v15-context-quality-gate) dokumentiert. Weiterer Graph-Ausbau bleibt gated: kein Symbol-/Docs-/Config-/Heuristik-/Search-Ranking-Ausbau ohne klaren Context-Gewinn und neue Budget-Entscheidung.
 
 Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; siehe [`docs/developer/agent-refresh-eval.md`](docs/developer/agent-refresh-eval.md#current-finding). Deterministische Navigation-Evals gegen Baselines sind in [`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md) und [`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) dokumentiert. Ein zusätzlicher Live-LLM-Navigation-Eval ist noch nicht als aktiver Slice ausgewählt.
+
+## Eval-discovered gaps / Verbesserungspotential
+
+Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sondern Misses sichtbar machen und daraus gezielte Verbesserungs-Slices ableiten. Die eigentlichen To-do-Checkboxen stehen im nächsten Abschnitt, damit die Backlog-Liste nicht doppelt gezählt wird.
+
+- **TypeScript-Pfadaliasse**: Real-Repo-Eval findet Search+Context klar besser als lexical, verpasst aber relevante Nachbarn bei Imports wie `@/lib/...`.
+- **Framework-/Konventions-Nachbarn**: relevante Dateien sind teils nicht über direkte Imports verbunden, sondern über Namens-/Framework-Konventionen, z. B. UI-zu-API, Route-Handler, Provider, Tests oder Config-Dateien.
+- **Natürlichere Bug-/Änderungsanfragen**: aktueller Real-Repo-Gate ist symbol-/entrypoint-lastig und beweist nicht beliebige natürliche Bugreports.
+- **False positives / verbotene Reads**: lexical liest im Real-Repo-Gate häufiger verbotene/noisy Dateien; CodeMap vermeidet sie aktuell, aber neue Heuristiken können Noise zurückbringen.
+
+## Nächste sinnvolle Slices — vorgeschlagene Reihenfolge
+
+1. [ ] TS-/JS-Pfadalias-Slice minimal umsetzen.
+   - Scope: `tsconfig.json` / `jsconfig.json` `baseUrl` + `paths` lesen und nur exakte lokale Alias-Imports wie `@/lib/foo` in Graph-Nachbarn auflösen.
+   - Gate: Real-Repo- und Context-Quality-Eval müssen Recall verbessern, Forbidden-/Noise-Rate stabil halten und Budget nicht sprengen.
+
+2. [ ] Konventions-Nachbarn als kleine, getrennte Verticals testen.
+   - Kandidaten: Source↔Test, Route↔Handler, UI↔API, Provider/Hook↔Consumer, Config-Key↔Nutzung.
+   - Regel: pro Konvention ein Fixture/Real-Repo-Case, eigene Metrik, keine breite Heuristik ohne messbaren Gewinn.
+
+3. [ ] ast-grep/AST-gestützten Structural-Analyzer als Prototyp evaluieren.
+   - Ziel: prüfen, ob AST-Beziehungen CodeMap-Context verbessern, ohne CodeMap zu einem vollständigen ast-grep-Ersatz zu machen.
+   - Scope: zuerst eval-/index-intern und optional; keine harte Runtime-Abhängigkeit und kein neues prompt-facing Tool, bevor Recall/Budget/Noise klar besser sind.
+
+4. [ ] Natural-language Navigation Holdout ergänzen.
+   - Ziel: Fälle ohne exakten Symbolnamen, z. B. “Newsletter-Dashboard lädt FINRA Snapshot falsch”, gegen `rg/find`, `codemap_search`, `codemap_search+context` messen.
+   - Gate: verhindert Overfitting auf symbol-/entrypoint-lastige Queries.
+
+5. [ ] Ranking-/Context-Diagnostik für Evals verbessern.
+   - Ziel: Reports sollen zeigen, warum Dateien gewählt oder verpasst wurden: symbol hit, path hit, import edge, alias edge, convention edge, noise penalty.
+   - Grenze: zuerst nur eval-/debug-intern; keine Tool-Schema-/Prompt-Erweiterung ohne klaren Nutzen.
 
 ## Parked / später
 
@@ -14,15 +45,11 @@ Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; s
    - Scope: kleiner CLI-Adapter, zuerst `status --json` und maximal ein Such-/Context-Befehl.
    - Test: CLI-Integration nutzt temp `stateDir`, dupliziert keine State-Logik und gibt stabiles JSON aus.
 
-2. [ ] TypeScript-Pfadalias- und Konventions-Nachbarn nur nach Real-Repo-Eval-Miss-Analyse ausbauen.
-   - Befund: Der lokale Real-Repo-Navigation-Eval zeigt Mehrwert für Search+Context, aber auch Lücken bei `@/lib/...`-Alias-Imports und Framework-/UI-zu-API-Konventionen.
-   - Scope: erst Misses klassifizieren, dann minimalen Alias-/Konventions-Slice mit Budget- und Context-Gate bauen.
-
-3. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
+2. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
    - Voraussetzungen: stabile maschinenlesbare Metriken, feste Trainings-/Validierungs-Cases, Holdout-Guardrails und keine Optimierung nur auf ein privates lokales Repo.
    - Kandidaten: File-Rollen-Boosts, Noise-Penalties, Symbol-/Path-/Filename-/FTS-Gewichte, Token-Coverage-Bonus, Intent-Heuristiken, Context-Nachbarschaftsbudget.
 
-4. [ ] Refresh-Automation nur bei breiterem Eval-/Praxisbedarf wieder aufnehmen.
+3. [ ] Refresh-Automation nur bei breiterem Eval-/Praxisbedarf wieder aufnehmen.
    - Befund: Agent-Refresh-Eval mit `openai-codex/gpt-5.4-mini`, Baseline + Hint je 3 Runs, bestand 6/6; Agent sah stale Signale, rief `codemap_index`, suchte erneut und nannte `src/calculator.ts`.
    - Entscheidung: LLM-gesteuertes Refresh über bestehende stale Warnungen genügt vorerst; kein Command/Hook als nächster Slice.
    - Wieder aufnehmen, wenn breitere Modelle/Runs scheitern oder Praxis zeigt, dass Agenten stale Warnungen übersehen.
