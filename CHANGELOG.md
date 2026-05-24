@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.6.0 - 2026-05-25
+
 - Link Next.js-style route adapter files with convention-named `*handler*` sources and their tests in `codemap_context` read-first output without adding new reason kinds or public tool schema.
 
 ## 0.5.5 - 2026-05-24
