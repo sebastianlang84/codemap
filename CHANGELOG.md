@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.5.2 - 2026-05-24
+
 - Prioritize Next.js API route adapters that import a context target, keeping newsletter endpoint handlers visible in small search+context read plans without changing public tool schemas.
 - Expand the local real-repo natural-language navigation holdout to cover a Macrolens newsletter macro endpoint route-adapter case.
 
