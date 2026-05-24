@@ -166,9 +166,12 @@ function localReadFirstItems(
   const docItems = docs.map((path) => ({ path, reasons: [relatedDocReason(targetPath, path)] }));
   const primaryImports = imports.slice(0, 2);
   const laterImports = imports.slice(2);
-  const affineImporters = importers.filter((item) => hasStemAffinity(stemWithoutExtension(targetPath), stemWithoutExtension(item.path)));
-  const otherImporters = importers.filter((item) => !affineImporters.some((affine) => affine.path === item.path));
+  const routeAdapterImporters = importers.filter((item) => isRouteAdapterPath(item.path));
+  const nonRouteImporters = importers.filter((item) => !routeAdapterImporters.some((route) => route.path === item.path));
+  const affineImporters = nonRouteImporters.filter((item) => hasStemAffinity(stemWithoutExtension(targetPath), stemWithoutExtension(item.path)));
+  const otherImporters = nonRouteImporters.filter((item) => !affineImporters.some((affine) => affine.path === item.path));
   const strongRelated = mergeRelatedPaths([
+    ...(routeAdapterImporters[0] ? [routeAdapterImporters[0]] : []),
     ...primaryImports,
     ...implementationPairs,
     ...(testItems[0] ? [testItems[0]] : []),
@@ -180,6 +183,7 @@ function localReadFirstItems(
     ...(configs[0] ? [configs[0]] : []),
     ...(docItems[0] ? [docItems[0]] : []),
     ...laterImports,
+    ...routeAdapterImporters.slice(1),
     ...affineImporters.slice(1),
     ...otherImporters.slice(1),
     ...testOf.slice(1),
@@ -293,6 +297,10 @@ function sameDirSourcePaths(base: string, rows: Array<{ path: string; size: numb
   return rows
     .filter((row) => isSameDirSourceNeighbor(base, row.path, row.size))
     .map((row) => row.path);
+}
+
+function isRouteAdapterPath(path: string): boolean {
+  return /(?:^|\/)app\/api\/.+\/route\.[cm]?[jt]sx?$/i.test(path);
 }
 
 function isSameDirSourceNeighbor(base: string, path: string, size: number): boolean {

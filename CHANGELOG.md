@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Prioritize Next.js API route adapters that import a context target, keeping newsletter endpoint handlers visible in small search+context read plans without changing public tool schemas.
+- Expand the local real-repo natural-language navigation holdout to cover a Macrolens newsletter macro endpoint route-adapter case.
+
 ## 0.5.1 - 2026-05-24
 
 - Keep tests for visible imported neighbors in the scripted search+context read plan, resolving the remaining `pi-ext-memory` baseline retrieval-test miss and bringing local baseline plus natural holdout `codemap_search_context` recall to full coverage without changing public tool schemas.

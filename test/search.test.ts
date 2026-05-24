@@ -948,6 +948,88 @@ test("rejects ambiguous sg shadow utils command", () => resolveAstGrepBinaryPath
   }
 });
 
+test("natural API endpoint requests keep route adapters in the search plus context read plan", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-route-adapter-read-plan-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "apps", "web", "src", "app", "api", "newsletter", "macro"), { recursive: true });
+  mkdirSync(join(root, "apps", "web", "src", "lib", "__tests__"), { recursive: true });
+  mkdirSync(join(root, "apps", "web", "src", "types"), { recursive: true });
+  mkdirSync(join(root, "docs", "plans"), { recursive: true });
+
+  writeFileSync(join(root, "apps", "web", "tsconfig.json"), JSON.stringify({ compilerOptions: { baseUrl: "src", paths: { "@/*": ["*"] } } }, null, 2));
+  writeFileSync(join(root, "apps", "web", "src", "app", "api", "newsletter", "macro", "route.ts"), `
+import { NextResponse } from "next/server";
+import { buildNewsletterMacroSnapshot } from "@/lib/newsletter-macro-snapshot";
+
+export async function GET() {
+  return NextResponse.json(buildNewsletterMacroSnapshot({ generatedAt: new Date().toISOString(), series: [], warnings: [] }));
+}
+`);
+  writeFileSync(join(root, "apps", "web", "src", "lib", "newsletter-macro-snapshot.ts"), `
+import { latestPercentChange } from "@/lib/series-derivations";
+import type { DashboardData, MacroSeries } from "@/types/macro";
+
+type NewsletterMacroStatus = "ok" | "stale" | "unavailable" | "error";
+
+const INDICATORS = [
+  { key: "ism_manufacturing_pmi", source: "source_decision_needed", warning: "No verified source configured yet." },
+  { key: "inflation_yoy", sourceKey: "cpi", derivation: "yoy" },
+];
+
+export function buildNewsletterMacroSnapshot(dashboard: DashboardData) {
+  const generatedAt = dashboard.generatedAt;
+  latestPercentChange([] as MacroSeries["points"], "yoy");
+  return { schemaVersion: 1, generatedAt, indicators: INDICATORS, warnings: ["stale unavailable source decision warnings"] };
+}
+`);
+  writeFileSync(join(root, "apps", "web", "src", "lib", "series-derivations.ts"), `
+export function latestPercentChange(points: Array<{ date: string; value: number }>, period: "mom" | "qoq" | "yoy") {
+  return points.at(-1) ?? null;
+}
+`);
+  writeFileSync(join(root, "apps", "web", "src", "types", "macro.ts"), `
+export interface MacroSeries { points: Array<{ date: string; value: number }> }
+export interface DashboardData { generatedAt: string; series: MacroSeries[]; warnings: string[] }
+`);
+  writeFileSync(join(root, "apps", "web", "src", "lib", "__tests__", "newsletter-macro-snapshot.test.ts"), `
+import { buildNewsletterMacroSnapshot } from "../newsletter-macro-snapshot";
+
+test("surfaces stale unavailable source decision warnings", () => {
+  expect(buildNewsletterMacroSnapshot({ generatedAt: "2025-01-01T00:00:00.000Z", series: [], warnings: [] }).warnings).toContain("stale unavailable source decision warnings");
+});
+`);
+  writeFileSync(join(root, "apps", "web", "src", "lib", "__tests__", "series-derivations.test.ts"), `
+import { latestPercentChange } from "../series-derivations";
+
+test("computes latest percent changes", () => {
+  expect(latestPercentChange([{ date: "2025-01-01", value: 1 }], "yoy")).toMatchObject({ value: 1 });
+});
+`);
+  writeFileSync(join(root, "docs", "plans", "newsletter-macro-data-integration.md"), `
+# Newsletter Macro Data Integration
+
+The newsletter macro endpoint returns stale and unavailable source-decision warnings for missing indicators.
+`);
+  indexRepo({ cwd: root, approve: true });
+
+  const targetContext = codemapContext({ cwd: root, target: "apps/web/src/lib/newsletter-macro-snapshot.ts", limit: 5 });
+  assert.ok(targetContext.readFirst.some((item) => item.path === "apps/web/src/app/api/newsletter/macro/route.ts"), JSON.stringify(targetContext.readFirst.map((item) => ({ path: item.path, reasons: item.reasons?.map((reason) => reason.kind) }))));
+
+  const query = "newsletter macro endpoint should return stale unavailable source decision warnings for missing macro indicators";
+  const searchPaths = searchCodeMap({ cwd: root, query, limit: 5 }).map((result) => result.path);
+  const contextResult = codemapContext({ cwd: root, target: searchPaths[0] ?? query, limit: 5 });
+  const readPlan = mergeSearchContextReadPlan(searchPaths, contextResult.readFirst, 5);
+
+  for (const expectedPath of [
+    "apps/web/src/lib/newsletter-macro-snapshot.ts",
+    "apps/web/src/app/api/newsletter/macro/route.ts",
+    "apps/web/src/lib/__tests__/newsletter-macro-snapshot.test.ts",
+  ]) {
+    assert.ok(readPlan.includes(expectedPath), JSON.stringify({ searchPaths, readFirst: contextResult.readFirst.map((item) => ({ path: item.path, reasons: item.reasons?.map((reason) => reason.kind) })), readPlan }));
+  }
+});
+
 test("natural identifier pairs keep compact code terms without prose compounds", () => {
   const plan = planQuery("workbench chart interval and x range settings should survive reload from local storage");
 

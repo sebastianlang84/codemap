@@ -198,6 +198,18 @@ const defaultSuites: RealRepoSuite[] = [
         forbidden: ["apps/web/package-lock.json", "package-lock.json"],
       },
       {
+        name: "NL holdout newsletter macro endpoint warnings",
+        cohort: "natural_holdout",
+        query: "newsletter macro endpoint should return stale unavailable source decision warnings for missing macro indicators",
+        entry: "apps/web/src/app/api/newsletter/macro/route.ts",
+        requiredContext: [
+          "apps/web/src/lib/newsletter-macro-snapshot.ts",
+          "apps/web/src/lib/__tests__/newsletter-macro-snapshot.test.ts",
+          "docs/plans/20260502-newsletter-macro-data-integration.md",
+        ],
+        forbidden: ["apps/web/package-lock.json", "package-lock.json"],
+      },
+      {
         name: "NL holdout partial provider outage",
         cohort: "natural_holdout",
         query: "dashboard provider no data diagnostics should keep FRED and Yahoo series when one market source is empty",
@@ -348,7 +360,7 @@ function parseArgs(args: string[]): ParsedArgs {
   let limit = 5;
   let maxP95LatencyMs = 500;
   let minTasks = 8;
-  let minNaturalHoldoutTasks = 10;
+  let minNaturalHoldoutTasks = 11;
   let minNaturalHoldoutExpectedRecall = 0.55;
   let minNaturalHoldoutContextRecall = 0.55;
   let minSuccessDeltaVsLexical = 0.2;
