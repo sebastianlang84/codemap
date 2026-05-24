@@ -14,10 +14,10 @@ after(() => rmSync(storageHome, { recursive: true, force: true }));
 const { explainNavigationMisses, summarizeNavigationMissReasons } = await import("../src/core/eval-navigation-diagnostics.ts");
 const { classifyMisses, summarizeMissTaxonomy } = await import("../src/core/eval-miss-taxonomy.ts");
 const { indexRepo, status } = await import("../src/core/indexer.ts");
-const { mergeSearchContextReadPlan } = await import("../src/core/navigation-read-plan.ts");
+const { explainSearchContextReadPlan, mergeSearchContextReadPlan } = await import("../src/core/navigation-read-plan.ts");
 const { planQuery } = await import("../src/core/query-plan.ts");
 const { scoreSearchRow } = await import("../src/core/ranking.ts");
-const { searchCodeMap, searchCodeMapWithDiagnostics } = await import("../src/core/search.ts");
+const { searchCodeMap, searchCodeMapDebug, searchCodeMapWithDiagnostics } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
 const { getRepoInfo, repoKey } = await import("../src/core/repo.ts");
 const { registerCodeMapTools } = await import("../src/pi-extension/tools.ts");
@@ -177,6 +177,10 @@ test("agent navigation eval report includes stable miss taxonomy summaries", () 
   assert.equal(typeof parsed.report.modes[0].missTaxonomy.byClass.unknown, "number");
   assert.equal(typeof parsed.report.cases[0].expectedRecall, "number");
   assert.ok(Array.isArray(parsed.report.cases[0].misses));
+  const searchContextCase = parsed.report.cases.find((item: { mode: string }) => item.mode === "codemap_search_context");
+  assert.ok(Array.isArray(searchContextCase.navigationDiagnostics.searchTop));
+  const missedSearchCase = parsed.report.cases.find((item: { mode: string; missingExpectedFiles: string[] }) => item.mode === "codemap_search" && item.missingExpectedFiles.length > 0);
+  assert.ok(Array.isArray(missedSearchCase.navigationDiagnostics.searchCandidates));
 });
 
 test("search+context read plan preserves visible search hits within the read budget", () => {
@@ -187,6 +191,33 @@ test("search+context read plan preserves visible search hits within the read bud
       5,
     ),
     ["src/pi-extension/tools.ts", "test/pi-extension/tools.test.ts", "src/pi-extension/tag-catalog.ts", "src/pi-extension/formatters.ts", "src/core/index.ts"],
+  );
+});
+
+test("search+context read plan diagnostics explain budgeted selections", () => {
+  const diagnostics = explainSearchContextReadPlan(
+    ["src/pi-extension/tools.ts", "test/pi-extension/tools.test.ts", "src/pi-extension/tag-catalog.ts", "src/pi-extension/formatters.ts"],
+    [
+      { path: "src/pi-extension/tools.ts", reasons: [{ kind: "target" }] },
+      { path: "src/core/index.ts", reasons: [{ kind: "import" }] },
+      { path: "src/pi-extension/formatters.ts", reasons: [{ kind: "import" }] },
+      { path: "test/pi-extension/tools.test.ts", reasons: [{ kind: "reverse_test" }] },
+      { path: "src/pi-extension/index.ts", reasons: [{ kind: "import" }] },
+    ],
+    3,
+  );
+
+  assert.deepEqual(diagnostics.selected, ["src/pi-extension/tools.ts", "test/pi-extension/tools.test.ts", "src/core/index.ts"]);
+  assert.equal(diagnostics.budget.available, 6);
+  assert.equal(diagnostics.budget.dropped, 3);
+  assert.deepEqual(
+    diagnostics.decisions.slice(0, 4).map((item) => [item.path, item.bucket, item.selected, item.rank]),
+    [
+      ["src/pi-extension/tools.ts", "first_search", true, 1],
+      ["test/pi-extension/tools.test.ts", "context_backed_search", true, 2],
+      ["src/core/index.ts", "direct_import", true, 3],
+      ["src/pi-extension/tag-catalog.ts", "active_search", false, undefined],
+    ],
   );
 });
 
@@ -1471,6 +1502,22 @@ test("ranking diagnostics expose score components without search API explain fie
   assert.ok(diagnostics.tokenCoverage > 0, JSON.stringify(diagnostics));
   assert.deepEqual(diagnostics.matchedTokens.sort(), ["dependencies", "leftpad", "package"]);
   assert.ok(diagnostics.noisePenalty >= 60, JSON.stringify(diagnostics));
+});
+
+test("internal search debug report shows score components and candidate decisions", (t) => {
+  const root = fixtureRepo(t);
+  const publicResults = searchCodeMap({ cwd: root, query: "alpha beta", limit: 1 });
+  const debug = searchCodeMapDebug({ cwd: root, query: "alpha beta", limit: 1 });
+
+  assert.deepEqual(Object.keys(publicResults[0] ?? {}).sort(), ["endLine", "kind", "language", "path", "score", "snippet", "startLine"]);
+  assert.deepEqual(debug.results, publicResults);
+  assert.equal(debug.limit, 1);
+  assert.ok(debug.candidates.some((candidate) => candidate.decision === "selected" && candidate.selectedRank === 1), JSON.stringify(debug.candidates));
+  assert.ok(debug.candidates.some((candidate) => candidate.decision === "outside_limit" || candidate.decision === "deduped_lower_score"), JSON.stringify(debug.candidates));
+  const selectedCandidate = debug.candidates.find((candidate) => candidate.decision === "selected");
+  assert.ok(selectedCandidate, JSON.stringify(debug.candidates));
+  assert.equal(typeof selectedCandidate.scoreDiagnostics.pathScore, "number");
+  assert.ok(Array.isArray(selectedCandidate.scoreDiagnostics.matchedTokens));
 });
 
 test("natural module queries rank exact basename files above sibling config matches", (t) => {

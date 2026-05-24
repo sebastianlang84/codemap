@@ -9,8 +9,8 @@ import { codemapContext } from "../src/core/context.ts";
 import { explainNavigationMisses, summarizeNavigationMissReasons, type NavigationMissExplanation, type NavigationMissReasonSummary } from "../src/core/eval-navigation-diagnostics.ts";
 import { classifyMisses, emptyClassCounts, summarizeMissTaxonomy, type MissClass, type MissDiagnostic, type MissTaxonomySummary } from "../src/core/eval-miss-taxonomy.ts";
 import { indexRepo, status as indexStatus } from "../src/core/indexer.ts";
-import { mergeSearchContextReadPlan } from "../src/core/navigation-read-plan.ts";
-import { searchCodeMap } from "../src/core/search.ts";
+import { explainSearchContextReadPlan, mergeSearchContextReadPlan, type ReadPlanDiagnostics } from "../src/core/navigation-read-plan.ts";
+import { searchCodeMapDebug, type SearchCandidateDebugDiagnostic } from "../src/core/search.ts";
 
 type TaskCohort = "baseline" | "natural_holdout";
 
@@ -64,21 +64,54 @@ interface FileSelectionDiagnostic {
   score?: number;
   kind?: string;
   reasons?: string[];
+  scoreComponents?: ScoreComponentDiagnostics;
+}
+
+interface SearchCandidateSelectionDiagnostic {
+  path: string;
+  source: string;
+  rank?: number;
+  score: number;
+  decision: string;
+  kind: string;
+  scoreComponents: ScoreComponentDiagnostics;
+}
+
+interface ScoreComponentDiagnostics {
+  retrievalBoost: number;
+  ftsScore: number;
+  pathScore: number;
+  filenameScore: number;
+  exactTextScore: number;
+  symbolScore: number;
+  textCoverageScore: number;
+  tokenCoverage: number;
+  matchedTokens: string[];
+  codeIntentBoost: number;
+  roleBoost: number;
+  testPenalty: number;
+  docPenalty: number;
+  noisePenalty: number;
+  roles: string[];
 }
 
 interface NavigationDiagnostics {
   searchTop: FileSelectionDiagnostic[];
+  searchCandidates?: SearchCandidateSelectionDiagnostic[];
   contextTarget?: string;
   readFirst?: FileSelectionDiagnostic[];
   readPlan?: string[];
+  readPlanDebug?: ReadPlanDiagnostics;
   missingExpected: NavigationMissExplanation[];
 }
 
 interface NavigationResult {
   filesRead: string[];
   searchTop: FileSelectionDiagnostic[];
+  searchCandidates?: SearchCandidateSelectionDiagnostic[];
   contextTarget?: string;
   readFirst?: FileSelectionDiagnostic[];
+  readPlanDebug?: ReadPlanDiagnostics;
 }
 
 interface ModeMetrics {
@@ -504,11 +537,14 @@ function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: N
     indexStale,
     hints: task.missHints,
   });
+  const includeDebugDetails = missingExpectedFiles.length > 0 || forbiddenRead.length > 0;
   const navigationDiagnostics: NavigationDiagnostics = {
-    searchTop: navigation.searchTop,
+    searchTop: includeDebugDetails ? navigation.searchTop : stripScoreComponents(navigation.searchTop),
     contextTarget: navigation.contextTarget,
+    searchCandidates: includeDebugDetails ? navigation.searchCandidates : undefined,
     readFirst: navigation.readFirst,
     readPlan: uniqueFilesRead,
+    readPlanDebug: includeDebugDetails ? navigation.readPlanDebug : undefined,
     missingExpected: explainNavigationMisses({
       mode,
       entry: task.entry,
@@ -557,16 +593,23 @@ function navigate(options: { root: string; stateDir: string; mode: NavigationMod
       searchTop: uniqueSelections(hits.map((hit, index) => ({ path: hit.path, source: "lexical", rank: index + 1, score: hit.score }))),
     };
   }
-  const searchResults = searchCodeMap({ cwd: root, query: task.query, pathPrefix: task.pathPrefix, stateDir, limit });
+  const searchDebug = searchCodeMapDebug({ cwd: root, query: task.query, pathPrefix: task.pathPrefix, stateDir, limit });
+  const searchResults = searchDebug.results;
   const searchPaths = searchResults.map((result) => result.path);
-  const searchTop: FileSelectionDiagnostic[] = uniqueSelections(searchResults.map((result, index) => ({
-    path: result.path,
-    source: "search",
-    rank: index + 1,
-    score: roundRate(result.score),
-    kind: result.kind,
-  })));
-  if (mode === "codemap_search") return { filesRead: searchPaths, searchTop };
+  const searchCandidateBySelectedRank = new Map(searchDebug.candidates.filter((candidate) => candidate.selectedRank !== undefined).map((candidate) => [candidate.selectedRank, candidate]));
+  const searchTop: FileSelectionDiagnostic[] = uniqueSelections(searchResults.map((result, index) => {
+    const candidate = searchCandidateBySelectedRank.get(index + 1);
+    return {
+      path: result.path,
+      source: "search",
+      rank: index + 1,
+      score: roundRate(result.score),
+      kind: result.kind,
+      scoreComponents: candidate ? scoreComponents(candidate) : undefined,
+    };
+  }));
+  const searchCandidates = compactSearchCandidates(searchDebug.candidates, limit);
+  if (mode === "codemap_search") return { filesRead: searchPaths, searchTop, searchCandidates };
   const contextTarget = searchPaths[0] ?? task.query;
   const context = codemapContext({ cwd: root, target: contextTarget, pathPrefix: task.pathPrefix, stateDir, limit });
   const readFirst: FileSelectionDiagnostic[] = uniqueSelections(context.readFirst.map((item, index) => ({
@@ -578,7 +621,48 @@ function navigate(options: { root: string; stateDir: string; mode: NavigationMod
     reasons: item.reasons?.map((reason) => reason.kind),
   })));
   const filesRead = mergeSearchContextReadPlan(searchPaths, context.readFirst, limit);
-  return { filesRead, searchTop, contextTarget, readFirst };
+  const readPlanDebug = explainSearchContextReadPlan(searchPaths, context.readFirst, limit);
+  return { filesRead, searchTop, searchCandidates, contextTarget, readFirst, readPlanDebug };
+}
+
+function compactSearchCandidates(candidates: SearchCandidateDebugDiagnostic[], limit: number): SearchCandidateSelectionDiagnostic[] {
+  return candidates
+    .filter((candidate) => candidate.decision !== "non_positive_score")
+    .sort((left, right) => (left.selectedRank ?? Number.MAX_SAFE_INTEGER) - (right.selectedRank ?? Number.MAX_SAFE_INTEGER) || right.score - left.score || left.path.localeCompare(right.path))
+    .slice(0, Math.max(limit * 4, limit))
+    .map((candidate) => ({
+      path: candidate.path,
+      source: candidate.source,
+      rank: candidate.selectedRank,
+      score: roundRate(candidate.score),
+      decision: candidate.decision,
+      kind: candidate.kind,
+      scoreComponents: scoreComponents(candidate),
+    }));
+}
+
+function scoreComponents(candidate: SearchCandidateDebugDiagnostic): ScoreComponentDiagnostics {
+  return {
+    retrievalBoost: roundRate(candidate.scoreDiagnostics.retrievalBoost),
+    ftsScore: roundRate(candidate.scoreDiagnostics.ftsScore),
+    pathScore: roundRate(candidate.scoreDiagnostics.pathScore),
+    filenameScore: roundRate(candidate.scoreDiagnostics.filenameScore),
+    exactTextScore: roundRate(candidate.scoreDiagnostics.exactTextScore),
+    symbolScore: roundRate(candidate.scoreDiagnostics.symbolScore),
+    textCoverageScore: roundRate(candidate.scoreDiagnostics.textCoverageScore),
+    tokenCoverage: roundRate(candidate.scoreDiagnostics.tokenCoverage),
+    matchedTokens: candidate.scoreDiagnostics.matchedTokens,
+    codeIntentBoost: roundRate(candidate.scoreDiagnostics.codeIntentBoost),
+    roleBoost: roundRate(candidate.scoreDiagnostics.roleBoost),
+    testPenalty: roundRate(candidate.scoreDiagnostics.testPenalty),
+    docPenalty: roundRate(candidate.scoreDiagnostics.docPenalty),
+    noisePenalty: roundRate(candidate.scoreDiagnostics.noisePenalty),
+    roles: candidate.scoreDiagnostics.roles,
+  };
+}
+
+function stripScoreComponents(items: FileSelectionDiagnostic[]): FileSelectionDiagnostic[] {
+  return items.map(({ scoreComponents: _scoreComponents, ...item }) => item);
 }
 
 function uniqueSelections(items: FileSelectionDiagnostic[]): FileSelectionDiagnostic[] {

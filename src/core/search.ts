@@ -2,8 +2,8 @@ import { openRepoDb } from "./db.ts";
 import { getRepoInfo, type StateOptions } from "./repo.ts";
 import { status } from "./indexer.ts";
 import { planQuery } from "./query-plan.ts";
-import { rankAndSlice } from "./ranking.ts";
-import { collectSearchCandidates, pathFilterForPrefix } from "./search-pipeline.ts";
+import { rankAndSlice, type SearchScoreDiagnostics } from "./ranking.ts";
+import { collectSearchCandidateDiagnostics, collectSearchCandidates, pathFilterForPrefix, type SearchCandidateDiagnostic, type SearchCandidateSource } from "./search-pipeline.ts";
 import { normalizePathPrefix } from "./scanner.ts";
 import type { SearchResult } from "./types.ts";
 
@@ -29,6 +29,30 @@ export interface CodeMapSearchPackage {
   results: SearchResult[];
 }
 
+export type SearchCandidateDecision = "selected" | "outside_limit" | "deduped_lower_score" | "non_positive_score";
+
+export interface SearchCandidateDebugDiagnostic {
+  path: string;
+  language: string;
+  startLine: number;
+  endLine: number;
+  kind: string;
+  source: SearchCandidateSource;
+  score: number;
+  decision: SearchCandidateDecision;
+  selectedRank?: number;
+  scoreDiagnostics: SearchScoreDiagnostics;
+}
+
+export interface CodeMapSearchDebugReport {
+  query: string;
+  root: string;
+  pathPrefix: string;
+  limit: number;
+  results: SearchResult[];
+  candidates: SearchCandidateDebugDiagnostic[];
+}
+
 export function searchCodeMapWithDiagnostics(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string } & StateOptions): CodeMapSearchPackage {
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const diagnostics = status(options.cwd, { health: "full", pathPrefix, stateDir: options.stateDir }) as SearchDiagnostics & { root: string };
@@ -50,7 +74,7 @@ export function searchCodeMap(options: { query: string; cwd?: string; limit?: nu
   const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
   if (!info.approved) throw new Error("Repository is not approved/indexed yet.");
   const db = openRepoDb(info.dbPath);
-  const limit = Math.min(Math.max(options.limit ?? 10, 1), 50);
+  const limit = normalizedLimit(options.limit);
   const plan = planQuery(options.query);
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
 
@@ -60,4 +84,70 @@ export function searchCodeMap(options: { query: string; cwd?: string; limit?: nu
   } finally {
     db.close();
   }
+}
+
+export function searchCodeMapDebug(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string } & StateOptions): CodeMapSearchDebugReport {
+  const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
+  if (!info.approved) throw new Error("Repository is not approved/indexed yet.");
+  const db = openRepoDb(info.dbPath);
+  const limit = normalizedLimit(options.limit);
+  const plan = planQuery(options.query);
+  const pathPrefix = normalizePathPrefix(options.pathPrefix);
+
+  try {
+    const candidates = collectSearchCandidateDiagnostics(db, { plan, limit, pathFilter: pathFilterForPrefix(pathPrefix) });
+    const results = rankAndSlice(candidates.map((candidate) => candidate.result), limit);
+    const bestCandidateByPath = bestCandidateMap(candidates);
+    const selectedRanks = selectedCandidateRanks(results, bestCandidateByPath);
+    return {
+      query: options.query,
+      root: info.root,
+      pathPrefix,
+      limit,
+      results,
+      candidates: candidates.map((candidate) => ({
+        path: candidate.result.path,
+        language: candidate.result.language,
+        startLine: candidate.result.startLine,
+        endLine: candidate.result.endLine,
+        kind: candidate.result.kind,
+        source: candidate.source,
+        score: candidate.result.score,
+        decision: candidateDecision(candidate, selectedRanks, bestCandidateByPath),
+        selectedRank: selectedRanks.get(candidate),
+        scoreDiagnostics: candidate.scoreDiagnostics,
+      })),
+    };
+  } finally {
+    db.close();
+  }
+}
+
+function normalizedLimit(limit: number | undefined): number {
+  return Math.min(Math.max(limit ?? 10, 1), 50);
+}
+
+function selectedCandidateRanks(results: SearchResult[], bestCandidateByPath: Map<string, SearchCandidateDiagnostic>): Map<SearchCandidateDiagnostic, number> {
+  const ranks = new Map<SearchCandidateDiagnostic, number>();
+  results.forEach((result, index) => {
+    const candidate = bestCandidateByPath.get(result.path);
+    if (candidate) ranks.set(candidate, index + 1);
+  });
+  return ranks;
+}
+
+function bestCandidateMap(candidates: SearchCandidateDiagnostic[]): Map<string, SearchCandidateDiagnostic> {
+  const byPath = new Map<string, SearchCandidateDiagnostic>();
+  for (const candidate of candidates) {
+    const previous = byPath.get(candidate.result.path);
+    if (!previous || candidate.result.score > previous.result.score) byPath.set(candidate.result.path, candidate);
+  }
+  return byPath;
+}
+
+function candidateDecision(candidate: SearchCandidateDiagnostic, selectedRanks: Map<SearchCandidateDiagnostic, number>, bestCandidateByPath: Map<string, SearchCandidateDiagnostic>): SearchCandidateDecision {
+  if (selectedRanks.has(candidate)) return "selected";
+  if (candidate.result.score <= 0) return "non_positive_score";
+  if (bestCandidateByPath.get(candidate.result.path) !== candidate) return "deduped_lower_score";
+  return "outside_limit";
 }

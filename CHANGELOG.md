@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add eval-only ranking/context debug traces with score components, selected/rejected search candidates, and read-plan budget decisions while keeping public search results compact.
+
 ## 0.6.1 - 2026-05-25
 
 - Add `npm run verify` as a local closeout gate that chains existing typecheck, tests, quality gates, and token-injection checks.

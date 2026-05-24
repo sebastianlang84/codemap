@@ -33,16 +33,28 @@ export interface SearchScoreDiagnostics {
   roles: string[];
 }
 
+export interface ScoredSearchCandidate {
+  result: SearchResult;
+  diagnostics: SearchScoreDiagnostics;
+}
+
 export function toResult(row: SearchRow, plan: QueryPlan, boost: number): SearchResult {
+  return toScoredCandidate(row, plan, boost).result;
+}
+
+export function toScoredCandidate(row: SearchRow, plan: QueryPlan, boost: number): ScoredSearchCandidate {
   const diagnostics = scoreSearchRow(row, plan, boost);
   return {
-    path: row.path,
-    language: row.language,
-    startLine: row.startLine,
-    endLine: row.endLine,
-    kind: row.kind,
-    snippet: matchSnippet(row.text, plan),
-    score: diagnostics.finalScore,
+    result: {
+      path: row.path,
+      language: row.language,
+      startLine: row.startLine,
+      endLine: row.endLine,
+      kind: row.kind,
+      snippet: matchSnippet(row.text, plan),
+      score: diagnostics.finalScore,
+    },
+    diagnostics,
   };
 }
 

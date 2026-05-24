@@ -36,6 +36,7 @@ Per mode, the eval reports:
 - `forbiddenReadRate`: tasks where generated/build/lockfile/cross-prefix noise was read.
 - `avgLatencyMs` and `p95LatencyMs`.
 - `missTaxonomy`: aggregate `byClass` counts and bounded examples for missing expected files plus forbidden/noisy reads. Classes match the real-repo eval: `alias`, `convention`, `missing_symbol`, `noise`, `staleness`, `query_formulation`, and `unknown`.
+- `navigationDiagnostics`: per-case maintainer trace with selected search hits, context target, `readFirst` reasons, and final read plan. Miss/forbidden-read cases additionally include bounded selected/rejected search candidates with score components and read-plan budget decisions. This is eval-only; public `codemap_search` results stay compact.
 
 The gate currently requires `codemap_search_context` to reach full success/entry/context recall, avoid forbidden reads, stay under the latency threshold, and improve context recall over plain `codemap_search` with the same read budget. The taxonomy is diagnostic, not a gate by itself.
 

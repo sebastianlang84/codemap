@@ -2,18 +2,91 @@
 // keep the top search hit, then let high-confidence context neighbors displace lower hits.
 type ContextPathInput = string | { path: string; reasons?: Array<{ kind: string; targetPath?: string }> };
 
+type ReadPlanBucket =
+  | "first_search"
+  | "route_direct_import"
+  | "route_direct_import_test"
+  | "prioritized_config"
+  | "prioritized_test"
+  | "context_backed_search"
+  | "direct_import"
+  | "direct_import_test"
+  | "active_search"
+  | "remaining_context"
+  | "archived_search";
+
 interface ContextEntry {
   path: string;
   reasons: string[];
   siblingTestTargetPaths: string[];
+  contextRank: number;
+}
+
+interface ReadPlanEntry {
+  path: string;
+  bucket: ReadPlanBucket;
+}
+
+export interface ReadPlanDecisionDiagnostic {
+  path: string;
+  bucket: ReadPlanBucket;
+  selected: boolean;
+  rank?: number;
+  searchRank?: number;
+  contextRank?: number;
+  contextReasons?: string[];
+}
+
+export interface ReadPlanDiagnostics {
+  limit: number;
+  selected: string[];
+  budget: {
+    requested: number;
+    available: number;
+    selected: number;
+    dropped: number;
+  };
+  decisions: ReadPlanDecisionDiagnostic[];
 }
 
 export function mergeSearchContextReadPlan(searchPaths: string[], contextPaths: ContextPathInput[], limit: number): string[] {
+  return buildSearchContextReadPlan(searchPaths, contextPaths, limit).selected;
+}
+
+export function explainSearchContextReadPlan(searchPaths: string[], contextPaths: ContextPathInput[], limit: number): ReadPlanDiagnostics {
+  const plan = buildSearchContextReadPlan(searchPaths, contextPaths, limit);
+  return {
+    limit: plan.limit,
+    selected: plan.selected,
+    budget: {
+      requested: plan.limit,
+      available: plan.entries.length,
+      selected: plan.selected.length,
+      dropped: Math.max(0, plan.entries.length - plan.selected.length),
+    },
+    decisions: plan.entries.map((entry, index) => {
+      const rank = index < plan.limit ? index + 1 : undefined;
+      const contextEntry = plan.contextByPath.get(entry.path);
+      return {
+        path: entry.path,
+        bucket: entry.bucket,
+        selected: rank !== undefined,
+        rank,
+        searchRank: plan.searchRankByPath.get(entry.path),
+        contextRank: contextEntry?.contextRank,
+        contextReasons: contextEntry?.reasons,
+      };
+    }),
+  };
+}
+
+function buildSearchContextReadPlan(searchPaths: string[], contextPaths: ContextPathInput[], limit: number): { limit: number; selected: string[]; entries: ReadPlanEntry[]; contextByPath: Map<string, ContextEntry>; searchRankByPath: Map<string, number> } {
   const cappedLimit = Math.max(0, Math.floor(limit));
-  if (cappedLimit === 0) return [];
-  const contextEntries = contextPaths.map(toContextEntry).filter((item) => item.path);
+  if (cappedLimit === 0) return { limit: cappedLimit, selected: [], entries: [], contextByPath: new Map(), searchRankByPath: rankedPathMap(searchPaths) };
+  const contextEntries = contextPaths.map((item, index) => toContextEntry(item, index + 1)).filter((item) => item.path);
   const [firstSearchPath, ...laterSearchPaths] = searchPaths;
   const searchPathSet = new Set(searchPaths);
+  const searchRankByPath = rankedPathMap(searchPaths);
   const routeAdapterEntry = isRouteAdapterPath(firstSearchPath ?? "");
   const prioritizedConfigs = contextEntries.filter((item) => isRelatedConfig(item) && !searchPathSet.has(item.path));
   const prioritizedTests = contextEntries.filter((item) => isRelatedTest(item, searchPathSet) && !searchPathSet.has(item.path));
@@ -35,31 +108,37 @@ export function mergeSearchContextReadPlan(searchPaths: string[], contextPaths: 
   const remainingSearchPaths = laterSearchPaths.filter((path) => !contextBackedSearchPaths.includes(path));
   const activeSearchPaths = remainingSearchPaths.filter((path) => !isArchivedDocumentationPath(path));
   const archivedSearchPaths = remainingSearchPaths.filter(isArchivedDocumentationPath);
-  return uniquePaths([
-    firstSearchPath,
-    ...(routeAdapterEntry ? prioritizedDirectImports.map((item) => item.path) : []),
-    ...(routeAdapterEntry ? prioritizedDirectImportTests.map((item) => item.path) : []),
-    ...(routeAdapterEntry ? [] : prioritizedConfigs.map((item) => item.path)),
-    ...prioritizedTests.map((item) => item.path),
-    ...contextBackedSearchPaths,
-    ...(routeAdapterEntry ? [] : prioritizedDirectImports.map((item) => item.path)),
-    ...(routeAdapterEntry ? [] : prioritizedDirectImportTests.map((item) => item.path)),
-    ...activeSearchPaths,
-    ...(routeAdapterEntry ? prioritizedConfigs.map((item) => item.path) : []),
-    ...remainingContext.map((item) => item.path),
-    ...archivedSearchPaths,
-  ]).slice(0, cappedLimit);
+  const entries = uniqueEntries([
+    entry(firstSearchPath, "first_search"),
+    ...(routeAdapterEntry ? prioritizedDirectImports.map((item) => entry(item.path, "route_direct_import")) : []),
+    ...(routeAdapterEntry ? prioritizedDirectImportTests.map((item) => entry(item.path, "route_direct_import_test")) : []),
+    ...(routeAdapterEntry ? [] : prioritizedConfigs.map((item) => entry(item.path, "prioritized_config"))),
+    ...prioritizedTests.map((item) => entry(item.path, "prioritized_test")),
+    ...contextBackedSearchPaths.map((path) => entry(path, "context_backed_search")),
+    ...(routeAdapterEntry ? [] : prioritizedDirectImports.map((item) => entry(item.path, "direct_import"))),
+    ...(routeAdapterEntry ? [] : prioritizedDirectImportTests.map((item) => entry(item.path, "direct_import_test"))),
+    ...activeSearchPaths.map((path) => entry(path, "active_search")),
+    ...(routeAdapterEntry ? prioritizedConfigs.map((item) => entry(item.path, "prioritized_config")) : []),
+    ...remainingContext.map((item) => entry(item.path, "remaining_context")),
+    ...archivedSearchPaths.map((path) => entry(path, "archived_search")),
+  ]);
+  return { limit: cappedLimit, selected: entries.slice(0, cappedLimit).map((item) => item.path), entries, contextByPath, searchRankByPath };
 }
 
-function toContextEntry(input: ContextPathInput): ContextEntry {
+function entry(path: string | undefined, bucket: ReadPlanBucket): ReadPlanEntry {
+  return { path: path ?? "", bucket };
+}
+
+function toContextEntry(input: ContextPathInput, contextRank: number): ContextEntry {
   if (typeof input === "string") {
-    return { path: input, reasons: [], siblingTestTargetPaths: [] };
+    return { path: input, reasons: [], siblingTestTargetPaths: [], contextRank };
   }
 
   return {
     path: input.path,
     reasons: input.reasons?.map((reason) => reason.kind) ?? [],
     siblingTestTargetPaths: input.reasons?.filter((reason) => reason.kind === "sibling_test" && reason.targetPath).map((reason) => reason.targetPath as string) ?? [],
+    contextRank,
   };
 }
 
@@ -117,13 +196,21 @@ function pathTerms(path: string): Set<string> {
 
 const pathTermNoise = new Set(["app", "api", "src", "lib", "route", "test", "tests", "web"]);
 
-function uniquePaths(paths: string[]): string[] {
+function rankedPathMap(paths: string[]): Map<string, number> {
+  const ranked = new Map<string, number>();
+  paths.forEach((path, index) => {
+    if (path && !ranked.has(path)) ranked.set(path, index + 1);
+  });
+  return ranked;
+}
+
+function uniqueEntries(entries: ReadPlanEntry[]): ReadPlanEntry[] {
   const seen = new Set<string>();
-  const result: string[] = [];
-  for (const path of paths) {
-    if (!path || seen.has(path)) continue;
-    seen.add(path);
-    result.push(path);
+  const result: ReadPlanEntry[] = [];
+  for (const item of entries) {
+    if (!item.path || seen.has(item.path)) continue;
+    seen.add(item.path);
+    result.push(item);
   }
   return result;
 }

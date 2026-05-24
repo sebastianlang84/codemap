@@ -19,10 +19,11 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
 
 ## Nächste sinnvolle Slices — vorgeschlagene Reihenfolge
 
-1. [ ] Internen Ranking-/Context-Debug-Report für Eval-Misses ergänzen.
-   - Scope: nur Bench-/Eval-/Testpfad; Score-Komponenten, ausgewählte/verworfene Search-Hits, Context-Target, `readFirst`-Reasons und Read-Plan-Budget sichtbar machen.
-   - Nutzen: Ranking-/Context-Änderungen werden nachvollziehbar, ohne `codemap_search`-Resultate aufzublähen.
-   - Verifikation: gezielte Tests/Bench-Ausgabe zeigen die erwarteten Komponenten; Public `SearchResult` bleibt kompakt.
+1. [ ] Architektur-Review für Test-/Script-Monolithen durchführen und Deepening-Slices ableiten.
+   - Dringend: `test/*.test.ts` und `scripts/*.ts` sind inzwischen teils riesige Monolithen; Review mit `improve-codebase-architecture` führen.
+   - Scope: erst Inventar nach Größe/Verantwortung, dann Kandidaten für tiefere Module/Seams benennen; keine breite Umstrukturierung ohne ausgewählten Slice.
+   - Ziel: bessere Locality und Leverage für Eval-/Bench-/Testlogik, kleinere testbare Interfaces, weniger Copy/Paste zwischen Agent-/Real-Repo-Evals.
+   - Verifikation: Review dokumentiert priorisierte Deepening-Kandidaten; erster Refactor-Slice erhält eigene Tests und hält `npm run typecheck`/`npm test` grün.
 
 2. [ ] Nächsten Expanded-Natural-Holdout-Fix-Slice nur bei neuem konkretem Miss auswählen.
    - Aktueller Release-Stand: Baseline und Natural-Holdout waren vor `0.5.3` voll grün; alte Miss-Listen nicht als aktive Defekte behandeln.
