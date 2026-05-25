@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Split internal search diagnostics contract tests out of the large search test suite without changing public CodeMap behavior.
+- Split context relationship and graph contract tests out of the large search test suite without changing public CodeMap behavior.
+
 ## 0.6.4 - 2026-05-25
 
 - Split eval diagnostics/report and pure query-plan/ranking contracts out of the large search test suite, shrinking the remaining monolith while keeping public CodeMap behavior unchanged.
