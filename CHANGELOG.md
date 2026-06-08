@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.6.8 - 2026-06-09
+
+- Split stale-index diagnostics, status/pathPrefix, refresh, and safety/ignore-policy contracts out of the large search test suite without changing public CodeMap behavior.
+
 ## 0.6.7 - 2026-06-09
 
 - Preserve import/include line evidence when rebuilding relationship graphs from overlapping indexed chunks, bumping the internal graph version and sharing overlap-safe source reconstruction with legacy relationship lookups.
