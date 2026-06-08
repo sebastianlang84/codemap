@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.6.7 - 2026-06-09
+
+- Preserve import/include line evidence when rebuilding relationship graphs from overlapping indexed chunks, bumping the internal graph version and sharing overlap-safe source reconstruction with legacy relationship lookups.
+- Clarify PRD wording that public graph/explain tools remain out of scope while the internal file-relationship graph supports read-first context hints.
+
 ## 0.6.6 - 2026-06-09
 
 - Add internal graph-neighborhood diagnostics, an internal relationship path helper, and a developer-only architecture report script without adding public Pi tool schemas or Graphify dependencies.

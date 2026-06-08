@@ -271,6 +271,23 @@ test("graph schema stores file import edges without symbol or heuristic columns"
   }
 });
 
+test("graph rebuild preserves import line numbers after fixed chunk overlap", (t) => {
+  const root = fixtureRepo(t);
+  const filler = Array.from({ length: 85 }, (_, index) => `// filler ${index + 1}`).join("\n");
+  writeFileSync(join(root, "src", "core", "late-importer.ts"), `${filler}\nimport { lateTarget } from './late-target';\nexport const usesLateTarget = lateTarget;\n`);
+  writeFileSync(join(root, "src", "core", "late-target.ts"), "export const lateTarget = true;\n");
+  indexRepo({ cwd: root });
+
+  const db = new DatabaseSync(getRepoInfo(root).dbPath, { readOnly: true });
+  try {
+    const row = db.prepare("select count(*) as count, line_start as lineStart from graph_edges where kind = 'imports' and specifier = './late-target'").get() as { count: number; lineStart: number };
+    assert.equal(row.count, 1);
+    assert.equal(row.lineStart, 86);
+  } finally {
+    db.close();
+  }
+});
+
 test("reverse importer context uses graph edges when importer chunks are wiped", (t) => {
   const root = fixtureRepo(t);
   writeFileSync(join(root, "src", "core", "validation.ts"), "export function validateUser(id: string) { return Boolean(id); }\n");

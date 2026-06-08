@@ -165,7 +165,7 @@ V1 includes:
 V1 explicitly excludes:
 
 - forced embeddings;
-- graph features;
+- public graph/explain tools beyond read-first relationship hints;
 - ast-grep as a required dependency;
 - memory linking;
 - daemon or watcher;
@@ -245,7 +245,7 @@ Search-result objects remain compact. Internal score diagnostics may decompose r
 - Implement only cheap, reliable symbol extraction in V1; defer full AST/callgraph behavior.
 - Rank by exact path/name, symbol matches, FTS matches, query-term coverage, file-role intent boosts, and noise penalties for lockfiles/generated/build/minified files.
 - Return warnings instead of silently auto-refreshing stale indexes.
-- Treat embeddings, ast-grep, persisted graph relationships, and memory artifact linking as V1.5/V2 work.
+- Treat embeddings, ast-grep, public graph/explain tools, and memory artifact linking as V1.5/V2 work; the implemented internal file-relationship graph remains scoped to lightweight read-first context hints.
 
 ## 14. Success metrics
 

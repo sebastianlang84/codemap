@@ -1,5 +1,6 @@
 import { openRepoDb } from "./db.ts";
 import { hasGraphMetadata, incomingGraphDependencies, outgoingGraphDependencies } from "./graph-store.ts";
+import { readIndexedSourceText } from "./indexed-source.ts";
 import { extractLocalReferences, resolveIndexedReference } from "./local-references.ts";
 import { fileRoles } from "./ranking.ts";
 
@@ -237,7 +238,7 @@ function importingLocalPaths(db: ReturnType<typeof openRepoDb>, targetPath: stri
 }
 
 function legacyImportedLocalPaths(db: ReturnType<typeof openRepoDb>, fromPath: string, pathFilter: string): RelatedPath[] {
-  const source = readIndexedSource(db, fromPath);
+  const source = readIndexedSourceText(db, fromPath);
   if (!source) return [];
   const resolved = extractLocalReferences(source.text, source.language, source.path)
     .map((reference) => {
@@ -268,7 +269,7 @@ function legacyImportingLocalPaths(db: ReturnType<typeof openRepoDb>, targetPath
 }
 
 function indexedFileReferencesTarget(db: ReturnType<typeof openRepoDb>, fromPath: string, targetPath: string, pathFilter: string): RelatedPath[] {
-  const source = readIndexedSource(db, fromPath);
+  const source = readIndexedSourceText(db, fromPath);
   if (!source) return [];
   return extractLocalReferences(source.text, source.language, source.path)
     .map((reference) => {
@@ -479,15 +480,6 @@ function addPathStep(adjacency: Map<string, RelationshipPathStep[]>, step: Relat
 function boundedLimit(value: number, min: number, max: number): number {
   const integer = Number.isFinite(value) ? Math.trunc(value) : min;
   return Math.min(Math.max(integer, min), max);
-}
-
-function readIndexedSource(db: ReturnType<typeof openRepoDb>, path: string): { path: string; language: string; text: string } | undefined {
-  const rows = db.prepare(`
-    select f.path, f.language, c.text from files f join chunks c on c.file_id = f.id
-    where f.path = ?
-    order by c.ordinal
-  `).all(path) as Array<{ path: string; language: string; text: string }>;
-  return rows.length > 0 ? { path: rows[0].path, language: rows[0].language, text: rows.map((row) => row.text).join("\n") } : undefined;
 }
 
 function sortRelatedByLocality(base: string, paths: RelatedPath[]): RelatedPath[] {

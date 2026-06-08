@@ -14,6 +14,7 @@ const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodeMap } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
 const { getRepoInfo, repoKey } = await import("../src/core/repo.ts");
+const { GRAPH_VERSION } = await import("../src/core/graph-store.ts");
 
 test("stateDir isolates approval registry and repo index DBs", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-state-seam-repo-"));
@@ -107,7 +108,7 @@ export function migratedNeedle() {
     assert.ok(!edgeColumns.has("scope"));
     assert.ok(!edgeColumns.has("confidence"));
     assert.equal((migratedDb.prepare("select value from meta where key = 'index_version'").get() as { value: string }).value, "7");
-    assert.equal((migratedDb.prepare("select value from meta where key = 'graph_version'").get() as { value: string }).value, "1");
+    assert.equal((migratedDb.prepare("select value from meta where key = 'graph_version'").get() as { value: string }).value, GRAPH_VERSION);
     assert.equal((migratedDb.prepare("select count(*) as count from files where path = 'src/legacy.ts'").get() as { count: number }).count, 1);
   } finally {
     migratedDb.close();

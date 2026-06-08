@@ -1,7 +1,8 @@
 import { openRepoDb } from "./db.ts";
+import { readAllIndexedSourceTexts } from "./indexed-source.ts";
 import { extractLocalReferences, resolveIndexedReference } from "./local-references.ts";
 
-export const GRAPH_VERSION = "1";
+export const GRAPH_VERSION = "2";
 const GRAPH_VERSION_KEY = "graph_version";
 
 export interface GraphDependency {
@@ -9,13 +10,6 @@ export interface GraphDependency {
   sourcePath: string;
   targetPath: string;
   specifier: string;
-}
-
-interface IndexedSource {
-  id: number;
-  path: string;
-  language: string;
-  text: string;
 }
 
 export function hasGraphMetadata(db: ReturnType<typeof openRepoDb>): boolean {
@@ -34,7 +28,7 @@ export function rebuildFileReferenceGraph(db: ReturnType<typeof openRepoDb>): vo
   db.prepare("delete from graph_edges where kind in ('imports', 'includes')").run();
 
   const nodeIds = new Map((db.prepare("select id, path from graph_nodes where kind = 'file'").all() as Array<{ id: number; path: string }>).map((row) => [row.path, row.id]));
-  for (const source of readIndexedSources(db)) {
+  for (const source of readAllIndexedSourceTexts(db)) {
     const fromNodeId = nodeIds.get(source.path);
     if (!fromNodeId) continue;
     for (const reference of extractLocalReferences(source.text, source.language, source.path)) {
@@ -98,24 +92,6 @@ function ensureFileNodes(db: ReturnType<typeof openRepoDb>, now: string): void {
       on conflict(ref) do update set name = excluded.name, file_id = excluded.file_id, path = excluded.path, updated_at = excluded.updated_at
     `).run(`file:${file.path}`, file.path, file.id, file.path, now, now);
   }
-}
-
-function readIndexedSources(db: ReturnType<typeof openRepoDb>): IndexedSource[] {
-  const rows = db.prepare(`
-    select f.id, f.path, f.language, c.text
-    from files f join chunks c on c.file_id = f.id
-    order by f.path, c.ordinal
-  `).all() as Array<{ id: number; path: string; language: string; text: string }>;
-  const byPath = new Map<string, IndexedSource>();
-  for (const row of rows) {
-    const existing = byPath.get(row.path);
-    if (!existing) {
-      byPath.set(row.path, { id: row.id, path: row.path, language: row.language, text: row.text });
-    } else {
-      existing.text += `\n${row.text}`;
-    }
-  }
-  return [...byPath.values()];
 }
 
 function extractorFor(language: string, path: string, kind: "import" | "include"): string {

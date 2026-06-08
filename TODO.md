@@ -4,7 +4,7 @@ Active offene Arbeit für `pi-ext-codemap`. Abgehakte Punkte werden hier gelösc
 
 ## Active tactical backlog — reviewed order
 
-Der nächste vorgeschlagene Slice steht unten. Der V1.5 Relationship-Graph ist implementiert; Budget- und Context-Quality-Baselines sind in [`docs/developer/relationship-graph-plan.md`](docs/developer/relationship-graph-plan.md#v15-budget-baseline) / [`Context-Quality-Gate`](docs/developer/relationship-graph-plan.md#v15-context-quality-gate) dokumentiert. Weiterer Graph-Ausbau bleibt gated: kein Symbol-/Docs-/Config-/Heuristik-/Search-Ranking-Ausbau ohne klaren Context-Gewinn und neue Budget-Entscheidung.
+Der nächste vorgeschlagene Slice steht unten. Der V1.5 Relationship-Graph ist implementiert; Budget- und Context-Quality-Baselines sind in [`docs/developer/relationship-graph-plan.md`](docs/developer/relationship-graph-plan.md#v15-budget-baseline) / [`Context-Quality-Gate`](docs/developer/relationship-graph-plan.md#v15-context-quality-gate) dokumentiert. Graph-Rebuild/Legacy-Relationship-Lookups rekonstruieren Indexed-Source-Text overlap-sicher aus Chunk-Line-Ranges, damit Import-/Include-Line-Evidence stabil bleibt. Weiterer Graph-Ausbau bleibt gated: kein Symbol-/Docs-/Config-/Heuristik-/Search-Ranking-Ausbau ohne klaren Context-Gewinn und neue Budget-Entscheidung.
 
 Refresh-Automation bleibt nach dem Agent-Refresh-Eval bewusst zurückgestellt; siehe [`docs/developer/agent-refresh-eval.md`](docs/developer/agent-refresh-eval.md#current-finding). Deterministische Navigation-Evals gegen Baselines sind in [`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md) und [`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) dokumentiert. Ein zusätzlicher Live-LLM-Navigation-Eval ist noch nicht als aktiver Slice ausgewählt.
 
@@ -53,6 +53,11 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
    - **Symbol-Gate:** Symbol-Ziele, callers/callees, Symbol-Containment und Symbol-Level-Reports erst nach separatem Slice für stabile Symbol-Identitäten.
    - **Broad-Architecture-Query-Gate:** Ranking nur als Eval-/Autoresearch-Loop anfassen; zuerst festen failing Eval-Case definieren, z. B. `core search context modules`, mit erwarteten Module-Dateien (`search.ts`, `search-pipeline.ts`, `context-builder.ts`) vor TODO/docs noise.
    - Guardrails: keine generelle Doc-Abwertung; canonical docs bleiben auffindbar; Tests/TODOs bleiben sichtbar, wenn Query sie verlangt; bestehende Natural-Holdout-/Search-Gates dürfen nicht regressieren.
+
+6. [ ] Review-Cleanup ohne Produktverhalten ändern.
+   - Package-Entscheidung: `package.json` packt Tests, Fixtures und Eval-Skripte mit ein; aktuell klein und nützlich für Maintainer, aber bei Release-Cleanup bewusst entscheiden, ob Runtime-Package-Leanness oder installierbare Evalbarkeit wichtiger ist.
+   - Token-Budget: `codemap_context` und Gesamtbudget sind nahe am Gate; neue Parameter, Guidelines oder öffentliche Tools nur mit `npm run check:token-injection` und expliziter Budgetentscheidung.
+   - Verifikation: Doku-/Package-Änderungen mit `npm pack --dry-run --json`, `npm run audit:lightweight`, `npm run check:token-injection` prüfen.
 
 ## Parked / später
 
