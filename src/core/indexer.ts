@@ -27,7 +27,15 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
 export function status(cwd = process.cwd(), options: { health?: "cheap" | "full"; pathPrefix?: string } & StateOptions = {}) {
   const healthMode = options.health ?? "cheap";
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
-  const info = getRepoInfo(cwd, { stateDir: options.stateDir });
+  let info: ReturnType<typeof getRepoInfo>;
+  try {
+    info = getRepoInfo(cwd, { stateDir: options.stateDir });
+  } catch (err) {
+    if (!(err instanceof Error && err.message.startsWith("Not inside a Git repository"))) {
+      throw err;
+    }
+    return { readiness: "not_git", root: cwd, key: "", remote: undefined, approved: false, dbPath: "", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] };
+  }
   if (!info.approved) {
     return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] };
   }

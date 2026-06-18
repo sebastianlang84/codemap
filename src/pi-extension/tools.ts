@@ -1,4 +1,4 @@
-import type { AgentToolResult, ExtensionAPI, Theme, ToolRenderResultOptions } from "@earendil-works/pi-coding-agent";
+import type { AgentToolResult, ExtensionAPI, ExtensionContext, Theme, ToolRenderResultOptions } from "@earendil-works/pi-coding-agent";
 import { keyHint } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { codeMapOperations } from "./operations.ts";
@@ -85,7 +85,10 @@ export function registerCodeMapTools(pi: ExtensionAPI): void {
       promptSnippet: operation.promptSnippet,
       promptGuidelines: operation.promptGuidelines,
       parameters: operation.parameters,
-      async execute(_id: string, params: unknown) {
+      async execute(_id: string, params: unknown, _signal: AbortSignal | undefined, _onUpdate: unknown, ctx: ExtensionContext) {
+        if (operation.toolName === "codemap_index" && (params as Record<string, unknown>).approveRepo === true && !ctx.hasUI) {
+          return textResult("approveRepo requires an interactive session. Pre-approve the repository in a UI session first, then re-run indexing.");
+        }
         return textResult(operation.execute(process.cwd(), params));
       },
       renderResult: renderCodeMapResult,
