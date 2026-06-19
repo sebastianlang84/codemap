@@ -135,7 +135,7 @@ test("session start shows neutral status for an unapproved repo", async (t) => {
     process.chdir(cwd);
   }
 
-  assert.deepEqual(statuses, [{ key: "codemap", text: "CodeMap ✗" }]);
+  assert.deepEqual(statuses, [{ key: "codemap", text: "[CodeMap ✗]" }]);
 });
 
 test("registers only codemap tools with compact complete prompt guidance", () => {

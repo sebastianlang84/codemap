@@ -5,9 +5,9 @@ import { registerCodeMapTools } from "./tools.ts";
 import { registerCodeMapCommands } from "./commands.ts";
 
 const STATUS_KEY = "codemap";
-const STATUS_OK_TEXT = "CodeMap ✓";
-const STATUS_NOT_INDEXED_TEXT = "CodeMap ✗";
-const STATUS_ERROR_TEXT = "CodeMap ✗";
+const STATUS_OK_TEXT = "[CodeMap ✓]";
+const STATUS_NOT_INDEXED_TEXT = "[CodeMap ✗]";
+const STATUS_ERROR_TEXT = "[CodeMap ✗]";
 
 function isSearchCommand(command: string): boolean {
   const segments = command.split(/[|;&]/);

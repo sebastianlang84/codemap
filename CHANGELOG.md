@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Render the CodeMap footer status as a self-contained pill (`[CodeMap ✓]` / `[CodeMap ✗]`) so it stays readable when Pi composes adjacent extension statuses with single spaces.
+
 ## 0.6.8 - 2026-06-09
 
 - Split stale-index diagnostics, status/pathPrefix, refresh, and safety/ignore-policy contracts out of the large search test suite without changing public CodeMap behavior.
