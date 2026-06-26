@@ -64,6 +64,7 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
 1. [ ] **tool_result-Nudge: Codemap-Nutzung bei grep/rg/find fördern**
    - Beobachtung: LLM-Agenten (inkl. Subagents) greifen konsistent zu `bash`/`grep`/`find` statt zu `codemap_search`/`codemap_context`, auch wenn ein Index vorhanden ist. `promptGuidelines` ändern das Verhalten nicht zuverlässig — sie konkurrieren als undifferenzierte Bullets im System-Prompt gegen starke Base-Model-Priors.
    - Idee: `tool_result`-Hook in pi-ext-codemap: wenn `bash` mit `rg`/`grep`/`find` aufgerufen wird und ein frischer Codemap-Index für das cwd existiert, wird ans Tool-Result ein einzeiliger Hinweis angehängt: *„codemap ist für dieses Repo indexiert — für Navigations-Queries bevorzuge codemap_search statt grep/rg.
+   - Live-Issue 2026-06-26: Der Nudge warnt auch bei gezieltem `grep`/`find` in bereits bekannten/konkret gelesenen Dateien, nachdem Navigation vorher korrekt über CodeMap lief. Das erzeugt noisy Tool-Results. Prüfen: Nudge nur für erkennbare Navigations-/Discovery-Patterns laut ausgeben; bei konkreten bekannten Pfaden/Symbol-Checks stiller Hinweis, Downgrade oder keine Warnung.
 
 1. [ ] Thin CLI Adapter über `src/core/` ergänzen.
    - Scope: kleiner CLI-Adapter, zuerst `status --json` und maximal ein Such-/Context-Befehl.
