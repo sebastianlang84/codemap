@@ -4,7 +4,7 @@ Read this file when you want to understand what CodeMap can do, which features e
 
 ## What CodeMap is
 
-CodeMap is a local repository map for Pi coding agents. It indexes the current or explicitly targeted Git repo into SQLite/FTS and gives agents a small set of tools for finding the right files before reading or editing code.
+CodeMap is a local repository map for coding agents. It indexes the current or explicitly targeted Git repo into SQLite/FTS and gives agents a small set of tools for finding the right files before reading or editing code. It runs as a Pi extension (tools + `/codemap-*` commands) and as a standalone `codemap` CLI for non-Pi agents such as Claude Code and Codex.
 
 Use CodeMap when you want to answer:
 
@@ -31,6 +31,8 @@ CodeMap is not a semantic memory system. `pi-memory` stores durable decisions an
 
 ## Install
 
+As a Pi extension:
+
 ```bash
 pi install git:github.com/sebastianlang84/pi-ext-codemap
 ```
@@ -41,6 +43,14 @@ For local development:
 cd /path/to/pi-ext-codemap
 pi install .
 ```
+
+As a standalone CLI for non-Pi agents (Claude Code, Codex, any shell agent), requires Node ≥ 24:
+
+```bash
+npm install -g github:sebastianlang84/pi-ext-codemap   # provides a `codemap` command
+```
+
+The CLI mirrors the four operations (`codemap search|context|status|index`, all accepting `--json`, `--repo`, `--path-prefix`). See the [README CLI reference](../../README.md#cli-reference) for wiring it into `CLAUDE.md` / `AGENTS.md`.
 
 ## First use in a repo
 
@@ -223,4 +233,4 @@ Future/non-V1 ideas are tracked in [`../product/roadmap.md`](../product/roadmap.
 
 ## Compatibility
 
-Use the `codemap_*` tools and `/codemap-*` commands.
+In Pi, use the `codemap_*` tools and `/codemap-*` commands. Outside Pi, use the `codemap` CLI (`codemap search|context|status|index`); it wraps the same core and emits text or `--json`. Both require a Git repository and per-repo approval before indexing.

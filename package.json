@@ -9,8 +9,12 @@
     "codemap"
   ],
   "license": "MIT",
+  "bin": {
+    "codemap": "bin/codemap.ts"
+  },
   "files": [
     "index.ts",
+    "bin/",
     "src/",
     "migrations/",
     "docs/product/",

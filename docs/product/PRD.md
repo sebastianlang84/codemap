@@ -2,9 +2,9 @@
 
 ## 1. Summary
 
-`pi-ext-codemap` is a lightweight local codebase search and context extension for Pi/Coding Agents.
+`pi-ext-codemap` is a lightweight local codebase search and context extension for coding agents.
 
-It indexes the current or explicitly targeted repository state into a local SQLite/FTS5 database and provides agent-friendly tools for finding relevant files, line ranges, snippets, docs, tests, and entry points.
+It indexes the current or explicitly targeted repository state into a local SQLite/FTS5 database and provides agent-friendly tools for finding relevant files, line ranges, snippets, docs, tests, and entry points. It ships two adapters over one Pi-independent core: a Pi extension (tools + slash commands) and a standalone `codemap` CLI for non-Pi agents such as Claude Code and Codex.
 
 It complements `pi-memory` but is not part of it.
 
@@ -38,7 +38,7 @@ Current options are either too primitive, too broad, or too heavy:
 
 ## 3. Solution
 
-From the user's perspective, `pi-ext-codemap` provides a small set of Pi-native commands and tools that can approve, index, search, and explain a repository locally. The agent can ask for a query, file, or symbol and receive a compact read-first context package with paths, line ranges, snippets, related tests/docs/imports/callers, and index health warnings.
+From the user's perspective, `pi-ext-codemap` provides a small set of commands and tools — as Pi-native slash commands/tools and as a standalone `codemap` CLI — that can approve, index, search, and explain a repository locally. The agent can ask for a query, file, or symbol and receive a compact read-first context package with paths, line ranges, snippets, related tests/docs/imports/callers, and index health warnings.
 
 The V1 solution is intentionally lexical/local-first: SQLite + FTS5 + cheap symbol extraction + deterministic ranking. Embeddings, graph expansion, and ast-grep integrations remain later enhancements unless they can be added without making V1 heavier.
 
@@ -47,7 +47,8 @@ The V1 solution is intentionally lexical/local-first: SQLite + FTS5 + cheap symb
 Primary users:
 
 - Pi coding agents
-- Human users operating Pi inside a repo
+- Coding agents outside Pi (Claude Code, Codex, and other shell-driven agents) via the `codemap` CLI
+- Human users operating an agent inside a repo
 
 Secondary users:
 

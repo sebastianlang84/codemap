@@ -9,7 +9,7 @@ CodeMap is split into a Pi adapter layer and a Pi-independent core.
 - `src/core/` owns product logic: repo detection, approval, DB paths, indexing, search, context building, and structured result objects.
 - `src/core/` must stay independent of Pi extension APIs: no `ExtensionAPI`, `ctx`, `pi`, slash-command parsing, tool rendering, or `console.log()` output behavior.
 - `src/pi-extension/` owns tool/command registration, TypeBox schemas, prompt snippets/guidelines, command parsing, UI notifications, and TUI rendering.
-- Future adapters, especially `src/cli/`, should call the same core APIs instead of duplicating status/index/search/context behavior.
+- `src/cli/` is the standalone-CLI adapter (`bin/codemap.ts` entrypoint, `codemap` bin) for non-Pi agents such as Claude Code and Codex. It parses argv, calls the same core APIs, and formats text/JSON output; `runCli` returns `{ code, out, err }` instead of writing/exiting so it stays testable. It must not duplicate status/index/search/context behavior or import `src/pi-extension/`.
 - Core state and execution context should be injectable where practical (`cwd`, `stateDir`) so tests and future adapters can choose output/state behavior without changing product logic.
 - The root `index.ts` remains a thin package entrypoint shim for the Pi manifest.
 
@@ -34,9 +34,12 @@ pi-ext-codemap/
   migrations/
     001_init.sql
     002_fts.sql
+  bin/
+    codemap.ts
   src/
     core/
     pi-extension/
+    cli/
   tests/
   scripts/
   package.json

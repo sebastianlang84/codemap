@@ -71,9 +71,9 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
 
 ## Diskussionspunkte / offen
 
-1. [ ] Thin CLI Adapter über `src/core/` ergänzen.
-   - Scope: kleiner CLI-Adapter, zuerst `status --json` und maximal ein Such-/Context-Befehl.
-   - Test: CLI-Integration nutzt temp `stateDir`, dupliziert keine State-Logik und gibt stabiles JSON aus.
+1. [x] Thin CLI Adapter über `src/core/` ergänzt.
+   - Erledigt: `bin/codemap.ts` + `src/cli/main.ts` (`runCli` gibt `{ code, out, err }` zurück), `codemap` bin in `package.json`; Befehle `search|context|status|index` mit `--json`/`--repo`/`--path-prefix`. Adapter ruft nur Core, importiert kein `src/pi-extension/`; Verträge in `tests/cli.test.ts`. README/usage/PRD/architecture dokumentieren den CLI-Weg für Nicht-Pi-Agenten.
+   - Offen (nur bei Bedarf): npm-Publish/`npx`-Pfad statt Git-Install; MCP-Server-Wrapper als separate Produktentscheidung.
 
 2. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
    - Voraussetzungen: stabile maschinenlesbare Metriken, feste Trainings-/Validierungs-Cases, Holdout-Guardrails und keine Optimierung nur auf ein privates lokales Repo.
