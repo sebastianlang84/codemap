@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.8.0 - 2026-07-05
+
+- Add an MCP server (`bin/codemap-mcp.ts`, `src/mcp/`, `codemap-mcp` bin) so MCP hosts such as Claude Code, Codex, and Cursor can expose the same four `codemap_*` tools natively instead of shelling out to the CLI via an `AGENTS.md`/`CLAUDE.md` note. It speaks newline-delimited JSON-RPC 2.0 over stdio (`initialize`/`tools/list`/`tools/call`/`ping`, protocol revision `2025-11-25`) with no added runtime dependency; `dispatch()` is a pure, testable handler. Token-lean per call: `content` is a compact ranked summary with the full object in `structuredContent` (no duplicated JSON dump). Read tools declare `readOnlyHint` annotations, and unknown-tool/execution failures return as Tool Execution Errors (`isError`, SEP-1303) so the model self-corrects.
+- Move the Pi-free operation surface into core: tool metadata/TypeBox schemas to `src/core/operation-metadata.ts` and the `codeMapStatus/Index/Search/Context` executors (plus `operationCwd`) to `src/core/operations.ts`, so the Pi, CLI, and MCP adapters share one description and one execution path. No behavior change; the Pi adapter re-exports the executors.
+
 ## 0.7.1 - 2026-07-05
 
 - Store the FTS indexes as contentless FTS5 (`content='', contentless_delete=1`) instead of duplicating chunk/symbol text in the FTS shadow tables. Search reads only use the FTS index for `MATCH`/`bm25()` and join back to the base tables, so matching is unchanged while the on-disk index shrinks (~40% smaller on a code-heavy repo). Legacy content-owning FTS databases are converted in place and repopulated from the base tables on next open, so no reindex is required.

@@ -1,6 +1,6 @@
 {
   "name": "pi-ext-codemap",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Lightweight local SQLite/FTS repo map for Pi coding agents: code, docs, config search, and read-first context.",
   "type": "module",
   "keywords": [
@@ -10,7 +10,8 @@
   ],
   "license": "MIT",
   "bin": {
-    "codemap": "bin/codemap.ts"
+    "codemap": "bin/codemap.ts",
+    "codemap-mcp": "bin/codemap-mcp.ts"
   },
   "files": [
     "index.ts",
