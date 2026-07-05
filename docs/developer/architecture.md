@@ -4,13 +4,16 @@ This document is the canonical maintainer reference for CodeMap internals. Produ
 
 ## Architecture boundary
 
-CodeMap is split into a Pi adapter layer and a Pi-independent core.
+CodeMap is split into thin adapter layers (Pi extension, CLI, MCP server) over a Pi-independent core.
 
 - `src/core/` owns product logic: repo detection, approval, DB paths, indexing, search, context building, and structured result objects.
 - `src/core/` must stay independent of Pi extension APIs: no `ExtensionAPI`, `ctx`, `pi`, slash-command parsing, tool rendering, or `console.log()` output behavior.
-- `src/pi-extension/` owns tool/command registration, TypeBox schemas, prompt snippets/guidelines, command parsing, UI notifications, and TUI rendering.
-- `src/cli/` is the standalone-CLI adapter (`bin/codemap.ts` entrypoint, `codemap` bin) for non-Pi agents such as Claude Code and Codex. It parses argv, calls the same core APIs, and formats text/JSON output; `runCli` returns `{ code, out, err }` instead of writing/exiting so it stays testable. It must not duplicate status/index/search/context behavior or import `src/pi-extension/`.
-- Core state and execution context should be injectable where practical (`cwd`, `stateDir`) so tests and future adapters can choose output/state behavior without changing product logic.
+- `src/core/operation-metadata.ts` (tool names, descriptions, prompt snippets/guidelines, TypeBox parameter schemas) and `src/core/operations.ts` (the Pi-free `codeMapStatus/Index/Search/Context` executors plus `operationCwd` repoPath resolution) are the shared operation surface every adapter reuses, so the four `codemap_*` operations are described and executed identically everywhere.
+- `src/pi-extension/` owns tool/command registration, command parsing, UI notifications, and TUI rendering; it re-exports the core executors and wraps the shared metadata.
+- `src/cli/` is the standalone-CLI adapter (`bin/codemap.ts` entrypoint, `codemap` bin) for shell-driven agents. It parses argv, calls the same core APIs, and formats text/JSON output; `runCli` returns `{ code, out, err }` instead of writing/exiting so it stays testable.
+- `src/mcp/` is the Model Context Protocol adapter (`bin/codemap-mcp.ts` entrypoint, `codemap-mcp` bin, protocol revision `2025-11-25`) for MCP hosts such as Claude Code, Codex, and Cursor. `dispatch()` is a pure, synchronous JSON-RPC 2.0 handler (`initialize` / `tools/list` / `tools/call` / `ping` / notifications) that exposes the shared metadata as MCP tools and calls the core executors; the bin only frames newline-delimited JSON over stdio. No SDK/runtime dependency is added. Token-lean by design: tool-call `content` is a compact ranked summary (the full object rides in `structuredContent` once, never duplicated as pretty JSON text); read tools carry `readOnlyHint` annotations; unknown-tool and execution failures are returned as Tool Execution Errors (`isError`, per SEP-1303) so the model can self-correct, while only unknown JSON-RPC methods are protocol errors.
+- No adapter imports another adapter (`src/pi-extension/`, `src/cli/`, `src/mcp/` only depend on `src/core/`), and none duplicates status/index/search/context behavior.
+- Core state and execution context should be injectable where practical (`cwd`, `stateDir`) so tests and adapters can choose output/state behavior without changing product logic.
 - The root `index.ts` remains a thin package entrypoint shim for the Pi manifest.
 
 Key current structure:
@@ -36,10 +39,12 @@ pi-ext-codemap/
     002_fts.sql
   bin/
     codemap.ts
+    codemap-mcp.ts
   src/
     core/
     pi-extension/
     cli/
+    mcp/
   tests/
   scripts/
   package.json

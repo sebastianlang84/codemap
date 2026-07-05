@@ -67,8 +67,9 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
 ## Diskussionspunkte / offen
 
 1. [ ] CLI-Distribution/-Reichweite nur bei Bedarf ausbauen.
-   - Kontext: `codemap` CLI ist da (Git-Install `npm install -g github:…`). Offen bleibt npm-Publish/`npx`-Pfad statt Git-Install und ein MCP-Server-Wrapper als native Integration für Claude Code/Codex.
-   - Regel: erst bei konkretem Nutzerwunsch; MCP ist eine eigene Produktentscheidung (Server-Prozess/Dependency vs. Lightweight-Ethos).
+   - Kontext: `codemap` CLI und `codemap-mcp` MCP-Server sind da (Git-Install `npm install -g github:…`; MCP über stdio ohne neue Dependency). Native Integration für Claude Code/Codex/Cursor ist damit abgedeckt.
+   - Offen bleibt nur der npm-Publish/`npx codemap`-Pfad statt Git-Install (kurzer Paketname gegen npm-Account/Registry-Pflege) — erst bei konkretem Nutzerwunsch; kleiner Mehrwert.
+   - MCP-Verbesserung (gated): Der Server nutzt aktuell den Prozess-cwd als Repo-Root; Hosts, die MCP-Server nicht im Projektverzeichnis starten (z. B. manche Cursor-Versionen), brauchen `repoPath` im Tool-Call. Native Auflösung über die MCP-`roots`-Capability erst umsetzen, wenn ein konkreter Host-Miss auftaucht.
 
 2. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
    - Voraussetzungen: stabile maschinenlesbare Metriken, feste Trainings-/Validierungs-Cases, Holdout-Guardrails und keine Optimierung nur auf ein privates lokales Repo.

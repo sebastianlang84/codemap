@@ -4,7 +4,7 @@
 
 CodeMap indexes code and plain-text project files into a local SQLite/FTS database. An agent then asks *"where is this feature/symbol/endpoint/config, and what should I read first?"* and gets a ranked answer plus the related files (imports, callers, tests, docs, config) — instead of running many broad `grep`/`find` passes and reading whole files to orient itself.
 
-It runs anywhere a coding agent can run a shell command: as a **Pi extension** (tools + slash commands) or as a **standalone `codemap` CLI** for Claude Code, Codex, Cursor, or any shell-driven agent.
+It runs anywhere a coding agent can run: as a **Pi extension** (tools + slash commands), a **native MCP server** (Claude Code, Codex, Cursor, or any MCP host), or a **standalone `codemap` CLI** for any shell-driven agent.
 
 ## Why it's worth using
 
@@ -70,6 +70,28 @@ Use `--json` when you want to parse results. Staleness is advisory.
 ```
 
 Everything is local-only and never leaves your machine; the first index requires `--approve`.
+
+### As an MCP server (native tools in Claude Code, Codex, Cursor)
+
+Installing the package (above) also puts a `codemap-mcp` command on your PATH. It speaks the Model Context Protocol over stdio, so an MCP host can expose the same four `codemap_*` tools **natively** — the agent sees them in its tool list and calls them itself, with no `CLAUDE.md`/`AGENTS.md` note and no shell parsing. It adds **no runtime dependency** (plain JSON-RPC over stdin/stdout).
+
+Claude Code:
+
+```bash
+claude mcp add codemap -- codemap-mcp
+```
+
+Any MCP host (Codex, Cursor, …) via config:
+
+```json
+{
+  "mcpServers": {
+    "codemap": { "command": "codemap-mcp" }
+  }
+}
+```
+
+The server operates on the directory it is launched in. Most hosts (e.g. Claude Code) start MCP servers in the project directory; if yours does not, pass `repoPath` in the tool call (or the agent will see `readiness: not a git repository`). The agent gets `codemap_status`, `codemap_search`, `codemap_context`, and `codemap_index` (call `codemap_index` with `approveRepo: true` once to approve local indexing). This is the alternative to the CLI-plus-`AGENTS.md` route: use MCP when you want first-class, self-served tools; use the CLI when you want an explicit, scriptable command.
 
 ### As a Pi extension
 
