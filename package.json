@@ -53,6 +53,7 @@
     "eval:real-repo-navigation:gate": "node --experimental-strip-types scripts/eval-real-repo-navigation.ts --local-repos --quality-gate",
     "eval:agent-refresh": "node --experimental-strip-types scripts/eval-agent-refresh.ts",
     "check:token-injection": "node --experimental-strip-types scripts/check-token-injection.ts --budget-gate",
+    "gc:state": "node --experimental-strip-types scripts/gc-state.ts",
     "audit:lightweight": "node scripts/audit.mjs"
   },
   "dependencies": {

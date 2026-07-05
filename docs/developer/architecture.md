@@ -61,6 +61,8 @@ Rationale:
 - avoids committing DBs into repos;
 - keeps registry separate from rebuildable index content.
 
+Because per-repo DBs and registry approvals outlive the repos they mirror, `src/core/state-gc.ts` provides `collectStateGcCandidates` (read-only plan) and `pruneState` (apply). They reclaim two classes of leftover state: orphan `<key>.sqlite` files with no registry row, and DBs/registry rows for repo roots that no longer exist on disk. The `gc:state` script is a thin adapter (dry-run by default, `--apply` to delete, `--json` for machine output). Index DBs are rebuildable, so pruning only clears cached content and stale approvals; it never touches DBs whose repo root still exists.
+
 ## Database design
 
 Use Node.js `node:sqlite` `DatabaseSync` plus raw SQL migrations. Do not introduce Prisma or an ORM.

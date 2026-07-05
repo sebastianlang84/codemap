@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a state garbage-collector (`npm run gc:state`, core `pruneState`/`collectStateGcCandidates`) that reclaims orphaned per-repo index DBs (no registry row) and DBs for deleted/moved repo roots, and drops their leftover registry approval rows. Dry-run by default; `--apply` deletes and `--json` emits machine output. Index DBs are rebuildable, so pruning only clears cached data and stale approvals.
+
 ## 0.6.10 - 2026-07-05
 
 - Make `codemap_search` use cheap (Git HEAD-based) health instead of a full working-tree scan, so every search no longer re-hashes the entire repository; search staleness stays advisory (HEAD changes still flagged) and the file-level stale scan remains behind `codemap_status --full`.

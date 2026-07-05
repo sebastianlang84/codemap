@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -14,8 +14,12 @@ function defaultStateDir(): string {
   return join(homedir(), ".pi", "agent", "state", "codemap");
 }
 
-function resolveStateDir(stateDir?: string): string {
+export function resolveStateDir(stateDir?: string): string {
   return stateDir ? resolve(stateDir) : defaultStateDir();
+}
+
+export function getReposDir(options: StateOptions = {}): string {
+  return join(resolveStateDir(options.stateDir), "repos");
 }
 
 export function getRegistryPath(options: StateOptions = {}): string {
@@ -98,4 +102,39 @@ export function approveRepo(cwd = process.cwd(), source = "tool", options: State
   `).run(info.key, info.root, info.remote ?? null, now, source, now);
   db.close();
   return { ...info, approved: true };
+}
+
+export interface RegistryRepo {
+  key: string;
+  rootPath: string;
+}
+
+/** Read approved repos from the registry without creating it. Returns [] when no registry exists yet. */
+export function listRegistryRepos(options: StateOptions = {}): RegistryRepo[] {
+  const registryPath = join(resolveStateDir(options.stateDir), "registry.sqlite");
+  if (!existsSync(registryPath)) return [];
+  const db = new DatabaseSync(registryPath);
+  try {
+    return db.prepare("select key, root_path as rootPath from repos").all() as unknown as RegistryRepo[];
+  } catch {
+    return [];
+  } finally {
+    db.close();
+  }
+}
+
+/** Delete registry rows by key. Returns the number of rows removed. No-op when no registry exists. */
+export function removeRegistryRepos(keys: string[], options: StateOptions = {}): number {
+  if (keys.length === 0) return 0;
+  const registryPath = join(resolveStateDir(options.stateDir), "registry.sqlite");
+  if (!existsSync(registryPath)) return 0;
+  const db = new DatabaseSync(registryPath);
+  try {
+    const stmt = db.prepare("delete from repos where key = ?");
+    let removed = 0;
+    for (const key of keys) removed += Number(stmt.run(key).changes);
+    return removed;
+  } finally {
+    db.close();
+  }
 }

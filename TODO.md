@@ -64,9 +64,9 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
    - Bekannte Symbol-Grenzen: anonyme `typedef struct { … } Name;` (Name auf der Schluss-Zeile) und Makros werden noch nicht als Symbole erfasst; nur bei konkretem Miss ergänzen.
    - Später (nicht aktuell relevant): Go/Rust/Java/Ruby/PHP-Symbole nur bei konkretem Bedarf als weitere Verticals.
 
-8. [ ] DB-Hygiene: FTS-Duplikat und State-GC (Review 2026-07-05).
-   - Befund: Chunk-Text liegt doppelt (`chunks` + `chunks_fts`, `migrations/002_fts.sql` / `src/core/index-store.ts`); FTS5 external-content würde die DB ~halbieren. Zusätzlich fehlt Registry-GC für gelöschte Repos (lokal ~692 MB State beobachtet, davon ein Repo ~674 MB).
-   - Scope: als gated Migration/Slice; external-content-FTS und ein GC-/Prune-Befehl für verwaiste Repo-DBs getrennt bewerten.
+8. [ ] DB-Hygiene: FTS-Duplikat (Review 2026-07-05).
+   - Erledigt (State-GC): `pruneState`/`collectStateGcCandidates` in `src/core/state-gc.ts` plus `npm run gc:state` (dry-run default, `--apply`, `--json`) räumen verwaiste Repo-DBs (kein Registry-Eintrag) und DBs gelöschter/verschobener Repo-Roots auf und entfernen die zugehörigen Registry-Approval-Rows; Registry-Read/Delete-Helfer liegen in `src/core/repo.ts`, Verträge in `tests/storage.test.ts`.
+   - Offen (FTS-Duplikat): Chunk-Text liegt doppelt (`chunks` + `chunks_fts`, `migrations/002_fts.sql` / `src/core/index-store.ts`); FTS5 external-content würde die DB ~halbieren. Als gated Migration bauen.
    - Verifikation: Storage-/Migration-Verträge in `tests/storage.test.ts` erweitern; Re-Index-Roundtrip und Suchtreffer identisch vor/nach Migration.
 
 ## Diskussionspunkte / offen

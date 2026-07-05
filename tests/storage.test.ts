@@ -13,7 +13,8 @@ const storageHome = useIsolatedHome();
 const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodeMap } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
-const { getRepoInfo, repoKey } = await import("../src/core/repo.ts");
+const { getRepoInfo, repoKey, listRegistryRepos } = await import("../src/core/repo.ts");
+const { collectStateGcCandidates, pruneState } = await import("../src/core/state-gc.ts");
 const { GRAPH_VERSION } = await import("../src/core/graph-store.ts");
 
 test("stateDir isolates approval registry and repo index DBs", (t) => {
@@ -113,6 +114,64 @@ export function migratedNeedle() {
   } finally {
     migratedDb.close();
   }
+});
+
+test("state GC reclaims deleted-repo and orphan index DBs without touching live repos", (t) => {
+  const stateDir = mkdtempSync(join(tmpdir(), "pi-codemap-gc-state-"));
+  const liveRoot = mkdtempSync(join(tmpdir(), "pi-codemap-gc-live-"));
+  const goneRoot = mkdtempSync(join(tmpdir(), "pi-codemap-gc-gone-"));
+  t.after(() => rmSync(stateDir, { recursive: true, force: true }));
+  t.after(() => rmSync(liveRoot, { recursive: true, force: true }));
+  t.after(() => rmSync(goneRoot, { recursive: true, force: true }));
+
+  for (const root of [liveRoot, goneRoot]) {
+    execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+    mkdirSync(join(root, "src"), { recursive: true });
+    writeFileSync(join(root, "src", "keep.ts"), "export function keepFeature() {\n  return true;\n}\n");
+    indexRepo({ cwd: root, approve: true, stateDir });
+  }
+
+  // An orphan DB: a repo DB file with no registry row (approval was dropped but the index lingered).
+  const orphanKey = "0".repeat(24);
+  writeFileSync(join(stateDir, "repos", `${orphanKey}.sqlite`), "not-a-real-db");
+
+  // Simulate a deleted repo: remove the working tree, keep its index DB + registry row.
+  const goneKey = repoKey(goneRoot);
+  rmSync(goneRoot, { recursive: true, force: true });
+
+  const plan = collectStateGcCandidates({ stateDir });
+  assert.equal(plan.applied, false);
+  assert.equal(plan.repoDbCount, 3);
+  assert.equal(plan.registryRepoCount, 2);
+  const byKey = new Map(plan.candidates.map((candidate) => [candidate.key, candidate]));
+  assert.equal(byKey.get(orphanKey)?.reason, "orphan_db");
+  assert.equal(byKey.get(goneKey)?.reason, "missing_root");
+  assert.equal(byKey.get(goneKey)?.rootPath, goneRoot);
+  assert.ok((byKey.get(goneKey)?.bytes ?? 0) > 0);
+  assert.equal(byKey.has(repoKey(liveRoot)), false, "live repo DB must not be a candidate");
+  assert.equal(plan.reclaimableBytes, plan.candidates.reduce((sum, candidate) => sum + candidate.bytes, 0));
+
+  const applied = pruneState({ stateDir, apply: true });
+  assert.equal(applied.applied, true);
+  assert.equal(applied.removedRegistryRows, 1);
+  assert.equal(existsSync(join(stateDir, "repos", `${orphanKey}.sqlite`)), false);
+  assert.equal(existsSync(join(stateDir, "repos", `${goneKey}.sqlite`)), false);
+
+  // The live repo keeps its DB, registry approval, and searchability.
+  assert.ok(existsSync(getRepoInfo(liveRoot, { stateDir }).dbPath));
+  assert.deepEqual(listRegistryRepos({ stateDir }).map((repo) => repo.key), [repoKey(liveRoot)]);
+  assert.equal(searchCodeMap({ cwd: liveRoot, query: "keepFeature", stateDir })[0]?.path, "src/keep.ts");
+  assert.equal(collectStateGcCandidates({ stateDir }).candidates.length, 0);
+});
+
+test("state GC is a no-op when no state directory exists yet", (t) => {
+  const stateDir = join(mkdtempSync(join(tmpdir(), "pi-codemap-gc-empty-")), "never-created");
+  t.after(() => rmSync(stateDir, { recursive: true, force: true }));
+  const plan = collectStateGcCandidates({ stateDir });
+  assert.equal(plan.repoDbCount, 0);
+  assert.equal(plan.registryRepoCount, 0);
+  assert.deepEqual(plan.candidates, []);
+  assert.equal(pruneState({ stateDir, apply: true }).removedRegistryRows, 0);
 });
 
 test("CodeMap uses state storage for registry and repo DBs", (t) => {
