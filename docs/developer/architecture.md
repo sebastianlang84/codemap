@@ -121,12 +121,14 @@ symbols(
 );
 ```
 
-FTS tables:
+FTS tables are contentless FTS5 (`content='', contentless_delete=1`):
 
 ```sql
-chunks_fts(path, language, kind, text);
-symbols_fts(path, name, kind, signature);
+chunks_fts(path, language, kind, text)   using fts5(..., content='', contentless_delete=1);
+symbols_fts(path, name, kind, signature) using fts5(..., content='', contentless_delete=1);
 ```
+
+The search read path uses the FTS tables only for `MATCH`/`bm25()` and joins back to `chunks`/`symbols`/`files` (by `rowid = chunks.id` / `symbols.id`) for display, so no FTS-stored column text is ever read. Contentless FTS therefore drops the duplicated `%_content` shadow (~40% smaller DB on a code-heavy repo) with identical matching. Index maintenance deletes FTS rows by rowid (contentless tables cannot filter by column), so `src/core/index-store.ts` clears FTS entries before the base rows they reference are removed. Legacy content-owning FTS databases are converted in place and repopulated from the base tables by `normalizeFtsSchema` in `src/core/db.ts`, so upgrades need no reindex.
 
 ## Scanner and indexing policy
 

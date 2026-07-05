@@ -64,16 +64,11 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
    - Bekannte Symbol-Grenzen: anonyme `typedef struct { … } Name;` (Name auf der Schluss-Zeile) und Makros werden noch nicht als Symbole erfasst; nur bei konkretem Miss ergänzen.
    - Später (nicht aktuell relevant): Go/Rust/Java/Ruby/PHP-Symbole nur bei konkretem Bedarf als weitere Verticals.
 
-8. [ ] DB-Hygiene: FTS-Duplikat (Review 2026-07-05).
-   - Erledigt (State-GC): `pruneState`/`collectStateGcCandidates` in `src/core/state-gc.ts` plus `npm run gc:state` (dry-run default, `--apply`, `--json`) räumen verwaiste Repo-DBs (kein Registry-Eintrag) und DBs gelöschter/verschobener Repo-Roots auf und entfernen die zugehörigen Registry-Approval-Rows; Registry-Read/Delete-Helfer liegen in `src/core/repo.ts`, Verträge in `tests/storage.test.ts`.
-   - Offen (FTS-Duplikat): Chunk-Text liegt doppelt (`chunks` + `chunks_fts`, `migrations/002_fts.sql` / `src/core/index-store.ts`); FTS5 external-content würde die DB ~halbieren. Als gated Migration bauen.
-   - Verifikation: Storage-/Migration-Verträge in `tests/storage.test.ts` erweitern; Re-Index-Roundtrip und Suchtreffer identisch vor/nach Migration.
-
 ## Diskussionspunkte / offen
 
-1. [x] Thin CLI Adapter über `src/core/` ergänzt.
-   - Erledigt: `bin/codemap.ts` + `src/cli/main.ts` (`runCli` gibt `{ code, out, err }` zurück), `codemap` bin in `package.json`; Befehle `search|context|status|index` mit `--json`/`--repo`/`--path-prefix`. Adapter ruft nur Core, importiert kein `src/pi-extension/`; Verträge in `tests/cli.test.ts`. README/usage/PRD/architecture dokumentieren den CLI-Weg für Nicht-Pi-Agenten.
-   - Offen (nur bei Bedarf): npm-Publish/`npx`-Pfad statt Git-Install; MCP-Server-Wrapper als separate Produktentscheidung.
+1. [ ] CLI-Distribution/-Reichweite nur bei Bedarf ausbauen.
+   - Kontext: `codemap` CLI ist da (Git-Install `npm install -g github:…`). Offen bleibt npm-Publish/`npx`-Pfad statt Git-Install und ein MCP-Server-Wrapper als native Integration für Claude Code/Codex.
+   - Regel: erst bei konkretem Nutzerwunsch; MCP ist eine eigene Produktentscheidung (Server-Prozess/Dependency vs. Lightweight-Ethos).
 
 2. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.
    - Voraussetzungen: stabile maschinenlesbare Metriken, feste Trainings-/Validierungs-Cases, Holdout-Guardrails und keine Optimierung nur auf ein privates lokales Repo.

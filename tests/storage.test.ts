@@ -13,7 +13,7 @@ const storageHome = useIsolatedHome();
 const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodeMap } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
-const { getRepoInfo, repoKey, listRegistryRepos } = await import("../src/core/repo.ts");
+const { getRepoInfo, repoKey, listRegistryRepos, approveRepo } = await import("../src/core/repo.ts");
 const { collectStateGcCandidates, pruneState } = await import("../src/core/state-gc.ts");
 const { GRAPH_VERSION } = await import("../src/core/graph-store.ts");
 
@@ -113,6 +113,62 @@ export function migratedNeedle() {
     assert.equal((migratedDb.prepare("select count(*) as count from files where path = 'src/legacy.ts'").get() as { count: number }).count, 1);
   } finally {
     migratedDb.close();
+  }
+});
+
+test("legacy content-owning FTS converts to contentless and stays searchable without reindex", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-legacy-fts-repo-"));
+  const stateDir = mkdtempSync(join(tmpdir(), "pi-codemap-legacy-fts-state-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => rmSync(stateDir, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+
+  const info = getRepoInfo(root, { stateDir });
+  approveRepo(root, "test", { stateDir });
+  mkdirSync(join(stateDir, "repos"), { recursive: true });
+
+  const chunkText = "export function needleForFts() {\n  return 1;\n}\n";
+  const legacyDb = new DatabaseSync(info.dbPath);
+  try {
+    legacyDb.exec(`
+      create table meta (key text primary key, value text not null);
+      create table files (id integer primary key, path text not null unique, language text not null, size integer not null, hash text not null, mtime_ms real not null, indexed_at text not null);
+      create table chunks (id integer primary key, file_id integer not null references files(id) on delete cascade, ordinal integer not null, start_line integer not null, end_line integer not null, kind text not null, text text not null, unique(file_id, ordinal));
+      create table symbols (id integer primary key, file_id integer not null references files(id) on delete cascade, name text not null, kind text not null, start_line integer not null, end_line integer, signature text);
+      create virtual table chunks_fts using fts5(path, language, kind, text);
+      create virtual table symbols_fts using fts5(path, name, kind, signature);
+    `);
+    for (const [key, value] of [["index_version", "7"], ["last_indexed_at", "2026-01-01T00:00:00.000Z"], ["indexed_head", ""]] as const) {
+      legacyDb.prepare("insert into meta(key, value) values (?, ?)").run(key, value);
+    }
+    legacyDb.prepare("insert into files(id, path, language, size, hash, mtime_ms, indexed_at) values (?, ?, ?, ?, ?, ?, ?)")
+      .run(1, "src/legacy-fts.ts", "typescript", chunkText.length, "legacy-hash", 1, "2026-01-01T00:00:00.000Z");
+    legacyDb.prepare("insert into chunks(id, file_id, ordinal, start_line, end_line, kind, text) values (?, ?, ?, ?, ?, ?, ?)")
+      .run(1, 1, 0, 1, 3, "chunk", chunkText);
+    legacyDb.prepare("insert into chunks_fts(rowid, path, language, kind, text) values (?, ?, ?, ?, ?)")
+      .run(1, "src/legacy-fts.ts", "typescript", "chunk", chunkText);
+    legacyDb.prepare("insert into symbols(id, file_id, name, kind, start_line, end_line, signature) values (?, ?, ?, ?, ?, ?, ?)")
+      .run(1, 1, "needleForFts", "function", 1, 3, "needleForFts()");
+    legacyDb.prepare("insert into symbols_fts(rowid, path, name, kind, signature) values (?, ?, ?, ?, ?)")
+      .run(1, "src/legacy-fts.ts", "needleForFts", "function", "needleForFts()");
+  } finally {
+    legacyDb.close();
+  }
+
+  // Opening through search triggers migrate() -> contentless conversion + repopulate; no reindex runs.
+  const results = searchCodeMap({ cwd: root, query: "needleForFts", stateDir, limit: 5 });
+  assert.equal(results[0]?.path, "src/legacy-fts.ts");
+
+  const migrated = new DatabaseSync(info.dbPath, { readOnly: true });
+  try {
+    for (const name of ["chunks_fts", "symbols_fts"]) {
+      const sql = (migrated.prepare("select sql from sqlite_master where name = ?").get(name) as { sql: string }).sql;
+      assert.match(sql, /contentless_delete/, `${name} should be contentless`);
+      const shadow = migrated.prepare("select name from sqlite_master where name = ?").get(`${name}_content`);
+      assert.equal(shadow, undefined, `${name}_content shadow (duplicated text) should be gone`);
+    }
+  } finally {
+    migrated.close();
   }
 });
 

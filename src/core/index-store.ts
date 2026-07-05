@@ -63,10 +63,10 @@ function writeFileRow(db: ReturnType<typeof openRepoDb>, file: ScannedFile, exis
   if (existingId) {
     db.prepare("update files set language=?, size=?, hash=?, mtime_ms=?, indexed_at=? where id=?")
       .run(file.language, file.size, file.hash, file.mtimeMs, new Date().toISOString(), existingId);
+    // Contentless FTS deletes by rowid, so clear index rows before the base rows they reference go away.
+    clearFileFts(db, existingId);
     db.prepare("delete from chunks where file_id=?").run(existingId);
     db.prepare("delete from symbols where file_id=?").run(existingId);
-    db.prepare("delete from chunks_fts where path=?").run(file.relPath);
-    db.prepare("delete from symbols_fts where path=?").run(file.relPath);
     return existingId;
   }
 
@@ -94,16 +94,22 @@ function replaceSymbols(db: ReturnType<typeof openRepoDb>, fileId: number, file:
 }
 
 function removeDeletedFiles(db: ReturnType<typeof openRepoDb>, seen: Set<string>, pathPrefix: string): number {
-  const rows = db.prepare("select path from files").all() as Array<{ path: string }>;
+  const rows = db.prepare("select id, path from files").all() as Array<{ id: number; path: string }>;
   let removed = 0;
   for (const row of rows) {
     if (pathPrefix && !row.path.startsWith(pathPrefix)) continue;
     if (!seen.has(row.path)) {
-      db.prepare("delete from chunks_fts where path=?").run(row.path);
-      db.prepare("delete from symbols_fts where path=?").run(row.path);
+      // Clear FTS by rowid before the cascade drops the chunks/symbols those rowids point to.
+      clearFileFts(db, row.id);
       db.prepare("delete from files where path=?").run(row.path);
       removed++;
     }
   }
   return removed;
+}
+
+// Delete a file's contentless-FTS index rows by rowid (chunks_fts.rowid = chunks.id, likewise symbols).
+function clearFileFts(db: ReturnType<typeof openRepoDb>, fileId: number): void {
+  db.prepare("delete from chunks_fts where rowid in (select id from chunks where file_id = ?)").run(fileId);
+  db.prepare("delete from symbols_fts where rowid in (select id from symbols where file_id = ?)").run(fileId);
 }
