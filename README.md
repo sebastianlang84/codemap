@@ -105,7 +105,7 @@ Then use the `/codemap-*` slash commands and `codemap_*` tools — see the [Pi q
 
 ## CLI reference
 
-All commands default to the current directory and accept `--json`, `--repo <path>` (target another repo), and `--path-prefix <dir>` (scope to a subtree).
+All commands default to the current directory and accept `--json`, `--repo <path>` (target another repo), `--path-prefix <dir>` (scope to a subtree), and `--state-dir <path>` (override where indexes and the approval registry are stored).
 
 | Command | Purpose |
 |---|---|
@@ -113,6 +113,10 @@ All commands default to the current directory and accept `--json`, `--repo <path
 | `codemap context <path\|query> [--limit N]` | Read-first target file plus related imports, callers, tests, docs, config. |
 | `codemap status [--full]` | Approval, index counts, and staleness (`--full` does a working-tree scan). |
 | `codemap index [--approve]` | Build or refresh the index (`--approve` required the first time). |
+
+### State location
+
+Indexes and the approval registry live under `~/.pi/agent/state/codemap` by default (one SQLite file per repo, plus `registry.sqlite`). Point `--state-dir` elsewhere to relocate them — useful for standalone CLI/MCP use outside a Pi install. Prune indexes for repositories that no longer exist with `npm run gc:state`.
 
 ## Pi quick start
 

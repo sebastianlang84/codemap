@@ -1,4 +1,5 @@
 import { snippet } from "./chunker.ts";
+import { escapeRegExp, uniqueStrings } from "./text-util.ts";
 import type { QueryPlan } from "./query-plan.ts";
 import type { SearchResult } from "./types.ts";
 
@@ -209,13 +210,18 @@ function matchedQueryTokens(text: string, terms: string[]): string[] {
   return terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}($|[^\\p{L}\\p{N}])`, "u").test(text));
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+// NOTE: bm25() returns a small negative number for any FTS match (more-negative = more relevant).
+// `Math.abs(rank) * 1_000_000` saturates at the `Math.min(5, …)` cap for essentially every real
+// match, so this deliberately collapses to a near-binary "matched (~15) vs. not" signal: raw bm25
+// magnitude does not differentiate candidates here. FTS relevance instead enters ranking via the
+// per-source `boost`/`tierBoost` and the SQL `order by rank limit ?` cutoff in search-pipeline.
+// Revisit via bench:search-quality if finer bm25 weighting is wanted (see TODO §2).
+const FTS_MATCH_BASE = 10;
+const FTS_MATCH_BONUS_CAP = 5;
 
 function rankScore(rank: number): number {
-  if (rank < 0) return 10 + Math.min(5, Math.abs(rank) * 1_000_000);
-  return Math.max(0, 10 - rank);
+  if (rank < 0) return FTS_MATCH_BASE + Math.min(FTS_MATCH_BONUS_CAP, Math.abs(rank) * 1_000_000);
+  return Math.max(0, FTS_MATCH_BASE - rank);
 }
 
 function matchSnippet(text: string, plan: QueryPlan): string {
@@ -237,8 +243,4 @@ function dedupe(results: SearchResult[]): SearchResult[] {
     if (!previous || result.score > previous.score) byKey.set(key, result);
   }
   return [...byKey.values()];
-}
-
-function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values)];
 }

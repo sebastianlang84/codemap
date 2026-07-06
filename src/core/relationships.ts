@@ -3,6 +3,7 @@ import { hasGraphMetadata, incomingGraphDependencies, outgoingGraphDependencies 
 import { readIndexedSourceText } from "./indexed-source.ts";
 import { extractLocalReferences, resolveIndexedReference } from "./local-references.ts";
 import { fileRoles } from "./ranking.ts";
+import { localityScore, uniqueStrings } from "./text-util.ts";
 
 export type CodeMapContextReasonKind =
   | "target"
@@ -484,20 +485,6 @@ function boundedLimit(value: number, min: number, max: number): number {
 
 function sortRelatedByLocality(base: string, paths: RelatedPath[]): RelatedPath[] {
   return paths.filter((path) => path.path !== base).sort((left, right) => localityScore(base, right.path) - localityScore(base, left.path) || left.path.localeCompare(right.path));
-}
-
-function localityScore(base: string, path: string): number {
-  const baseDir = base.split("/").slice(0, -1);
-  const pathDir = path.split("/").slice(0, -1);
-  let shared = 0;
-  while (shared < baseDir.length && shared < pathDir.length && baseDir[shared] === pathDir[shared]) shared++;
-  const sameDir = baseDir.length === pathDir.length && shared === baseDir.length;
-  const depthPenalty = Math.abs(baseDir.length - pathDir.length);
-  return shared * 10 + (sameDir ? 5 : 0) - depthPenalty;
-}
-
-function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values)];
 }
 
 function dedupeReasons(reasons: CodeMapContextReason[]): CodeMapContextReason[] {

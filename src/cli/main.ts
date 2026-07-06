@@ -38,12 +38,15 @@ Options:
   --limit <n>            Max results (search/context)
   --approve              Allow first-time local indexing (index only)
   --full                 Full working-tree stale scan (status only)
+  --state-dir <path>     Index/registry location (default: ~/.pi/agent/state/codemap)
   --json                 Emit machine-readable JSON
   --version, --help
 
 Notes:
   Indexing is local-only and never leaves your machine. First index needs --approve.
-  Staleness is advisory; refresh with 'codemap index' when it matters.`;
+  Staleness is advisory; refresh with 'codemap index' when it matters.
+  Indexes and the approval registry live under ~/.pi/agent/state/codemap (override with
+  --state-dir); prune indexes for repos that no longer exist with 'npm run gc:state'.`;
 
 function packageVersion(): string {
   try {

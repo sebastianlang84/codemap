@@ -1,6 +1,6 @@
 import { snippet } from "./chunker.ts";
 import { openRepoDb } from "./db.ts";
-import { status } from "./indexer.ts";
+import { fullIndexHealth, readIndexStatusCounts } from "./index-health.ts";
 import {
   findIndexedRelationships,
   isConfigReadFirstPath,
@@ -21,6 +21,7 @@ import {
 import { getRepoInfo, type StateOptions } from "./repo.ts";
 import { searchCodeMap } from "./search.ts";
 import { normalizePathPrefix } from "./scanner.ts";
+import { escapeLike, localityScore, uniqueStrings } from "./text-util.ts";
 import type { SearchResult } from "./types.ts";
 
 export interface CodeMapContextOptions extends StateOptions {
@@ -73,7 +74,20 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
   const db = openRepoDb(info.dbPath);
   try {
     const request = normalizeContextRequest(options);
-    const diagnostics = status(options.cwd, { health: "full", pathPrefix: request.pathPrefix, stateDir: options.stateDir }) as ContextDiagnostics;
+    // Full (content-hashing) health, because context returns read-first file *content* and must warn
+    // when that content has drifted (unlike search, where path staleness is only advisory). Computed
+    // on the already-open db handle + resolved repo root instead of calling status(), which would
+    // re-resolve repo info and open a second db connection for the same work.
+    const counts = readIndexStatusCounts(db, request.pathPrefix);
+    const health = fullIndexHealth(db, info.root, request.pathPrefix);
+    const diagnostics: ContextDiagnostics = {
+      lastIndexedAt: counts.lastIndexedAt,
+      stale: health.stale,
+      changed: health.changed,
+      missing: health.missing,
+      deleted: health.deleted,
+      warnings: health.warnings,
+    };
     const warnings: string[] = [...(diagnostics.warnings ?? [])];
     const readFirst = readFirstItems(db, request, warnings, options.cwd, options.stateDir);
     const related = relatedPaths(db, readFirst.base, request.pathFilter);
@@ -82,7 +96,21 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
     const importerNeighborTests = readFirst.direct ? importerNeighborTestPaths(db, relationships.importers, request.pathFilter) : [];
     const implementationPairNeighborTests = readFirst.direct ? implementationPairNeighborTestPaths(db, relationships.implementationPairs, request.pathFilter) : [];
     const items = readFirst.direct
-      ? localReadFirstItems(db, readFirst.items, relationships.imports, importedNeighborTests, importerNeighborTests, implementationPairNeighborTests, relationships.implementationPairs, relationships.importers, related.configs, related.tests, related.docs, related.sameDir, related.testOf, request.limit)
+      ? localReadFirstItems(db, {
+          targetItems: readFirst.items,
+          imports: relationships.imports,
+          importedNeighborTests,
+          importerNeighborTests,
+          implementationPairNeighborTests,
+          implementationPairs: relationships.implementationPairs,
+          importers: relationships.importers,
+          configs: related.configs,
+          tests: related.tests,
+          docs: related.docs,
+          sameDir: related.sameDir,
+          testOf: related.testOf,
+          limit: request.limit,
+        })
       : readFirst.items;
     const lastIndexedAt = diagnostics.lastIndexedAt ?? null;
 
@@ -147,22 +175,27 @@ function readFirstItems(
   };
 }
 
-function localReadFirstItems(
-  db: ReturnType<typeof openRepoDb>,
-  targetItems: CodeMapReadFirstItem[],
-  imports: RelatedPath[],
-  importedNeighborTests: RelatedPath[],
-  importerNeighborTests: RelatedPath[],
-  implementationPairNeighborTests: RelatedPath[],
-  implementationPairs: RelatedPath[],
-  importers: RelatedPath[],
-  configs: RelatedPath[],
-  tests: string[],
-  docs: string[],
-  sameDir: RelatedPath[],
-  testOf: RelatedPath[],
-  limit: number,
-): CodeMapReadFirstItem[] {
+interface LocalReadFirstInput {
+  targetItems: CodeMapReadFirstItem[];
+  imports: RelatedPath[];
+  importedNeighborTests: RelatedPath[];
+  importerNeighborTests: RelatedPath[];
+  implementationPairNeighborTests: RelatedPath[];
+  implementationPairs: RelatedPath[];
+  importers: RelatedPath[];
+  configs: RelatedPath[];
+  tests: string[];
+  docs: string[];
+  sameDir: RelatedPath[];
+  testOf: RelatedPath[];
+  limit: number;
+}
+
+function localReadFirstItems(db: ReturnType<typeof openRepoDb>, input: LocalReadFirstInput): CodeMapReadFirstItem[] {
+  const {
+    targetItems, imports, importedNeighborTests, importerNeighborTests, implementationPairNeighborTests,
+    implementationPairs, importers, configs, tests, docs, sameDir, testOf, limit,
+  } = input;
   const targetPath = targetItems[0]?.path ?? "";
   const testItems = tests.map((path) => ({ path, reasons: [relatedTestReason(targetPath, path)] }));
   const docItems = docs.map((path) => ({ path, reasons: [relatedDocReason(targetPath, path)] }));
@@ -362,23 +395,5 @@ function hasStemAffinity(baseStem: string, candidateStem: string): boolean {
 
 function sortByLocality(base: string, paths: string[]): string[] {
   return paths.filter((path) => path !== base).sort((left, right) => localityScore(base, right) - localityScore(base, left) || left.localeCompare(right));
-}
-
-function localityScore(base: string, path: string): number {
-  const baseDir = base.split("/").slice(0, -1);
-  const pathDir = path.split("/").slice(0, -1);
-  let shared = 0;
-  while (shared < baseDir.length && shared < pathDir.length && baseDir[shared] === pathDir[shared]) shared++;
-  const sameDir = baseDir.length === pathDir.length && shared === baseDir.length;
-  const depthPenalty = Math.abs(baseDir.length - pathDir.length);
-  return shared * 10 + (sameDir ? 5 : 0) - depthPenalty;
-}
-
-function escapeLike(value: string): string {
-  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
-}
-
-function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values)];
 }
 

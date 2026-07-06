@@ -2,6 +2,7 @@ import { posix } from "node:path";
 
 import { openRepoDb } from "./db.ts";
 import { tsJsPathAliasCandidates } from "./tsconfig-paths.ts";
+import { uniqueStrings } from "./text-util.ts";
 
 export interface LocalReference {
   kind: "import" | "include";
@@ -166,8 +167,4 @@ function uniqueReferences(references: LocalReference[]): LocalReference[] {
     seen.add(key);
     return true;
   });
-}
-
-function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values)];
 }

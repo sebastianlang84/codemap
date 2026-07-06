@@ -28,6 +28,10 @@ export function rebuildFileReferenceGraph(db: ReturnType<typeof openRepoDb>): vo
   db.prepare("delete from graph_edges where kind in ('imports', 'includes')").run();
 
   const nodeIds = new Map((db.prepare("select id, path from graph_nodes where kind = 'file'").all() as Array<{ id: number; path: string }>).map((row) => [row.path, row.id]));
+  const insertEdge = db.prepare(`
+    insert into graph_edges(from_node_id, to_node_id, kind, source_file_id, extractor, line_start, line_end, specifier, evidence_key, created_at, updated_at)
+    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
   for (const source of readAllIndexedSourceTexts(db)) {
     const fromNodeId = nodeIds.get(source.path);
     if (!fromNodeId) continue;
@@ -37,10 +41,7 @@ export function rebuildFileReferenceGraph(db: ReturnType<typeof openRepoDb>): vo
       const toNodeId = nodeIds.get(targetPath);
       if (!toNodeId) continue;
       const edgeKind = reference.kind === "include" ? "includes" : "imports";
-      db.prepare(`
-        insert into graph_edges(from_node_id, to_node_id, kind, source_file_id, extractor, line_start, line_end, specifier, evidence_key, created_at, updated_at)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
+      insertEdge.run(
         fromNodeId,
         toNodeId,
         edgeKind,
@@ -85,12 +86,13 @@ export function incomingGraphDependencies(db: ReturnType<typeof openRepoDb>, tar
 function ensureFileNodes(db: ReturnType<typeof openRepoDb>, now: string): void {
   db.prepare("delete from graph_nodes where kind <> 'file' or file_id not in (select id from files)").run();
   const files = db.prepare("select id, path from files order by path").all() as Array<{ id: number; path: string }>;
+  const upsertNode = db.prepare(`
+    insert into graph_nodes(kind, ref, name, file_id, path, created_at, updated_at)
+    values ('file', ?, ?, ?, ?, ?, ?)
+    on conflict(ref) do update set name = excluded.name, file_id = excluded.file_id, path = excluded.path, updated_at = excluded.updated_at
+  `);
   for (const file of files) {
-    db.prepare(`
-      insert into graph_nodes(kind, ref, name, file_id, path, created_at, updated_at)
-      values ('file', ?, ?, ?, ?, ?, ?)
-      on conflict(ref) do update set name = excluded.name, file_id = excluded.file_id, path = excluded.path, updated_at = excluded.updated_at
-    `).run(`file:${file.path}`, file.path, file.id, file.path, now, now);
+    upsertNode.run(`file:${file.path}`, file.path, file.id, file.path, now, now);
   }
 }
 

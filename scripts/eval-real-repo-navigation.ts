@@ -16,6 +16,7 @@ import {
   parsePositiveInteger,
   queryTerms,
   roundMs,
+  roundRate,
   stripScoreComponents,
   summarizeModeMetrics,
   timed,
@@ -140,7 +141,7 @@ const home = homedir();
 const defaultSuites: RealRepoSuite[] = [
   {
     label: "macrolens",
-    root: join(home, "macrolens"),
+    root: join(home, "dev", "macrolens"),
     tasks: [
       {
         name: "FINRA provider parser change",

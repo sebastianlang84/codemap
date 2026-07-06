@@ -1,7 +1,25 @@
+import { uniqueStrings } from "./text-util.ts";
+
 interface FtsQuery {
   query: string;
   tierBoost: number;
 }
+
+// --- Eval-tuned lexicon -------------------------------------------------------------------------
+// The tables below were derived from specific navigation/search eval cases, not from general
+// language rules. They are intentionally isolated here (rather than inlined into the planning logic)
+// with provenance so they are revisited deliberately as the holdout set grows, per TODO §"Query-/
+// Threshold-Änderung als Ersatz für Systemverbesserung". Prefer a general mechanism over adding rows.
+
+// Compounds that should be treated as a single identifier when two adjacent terms are joined
+// (e.g. "local storage" -> "localstorage"). See adjacentCompounds().
+const knownIdentifierCompounds = new Set(["localstorage"]);
+
+// Query term -> extra basename path terms to look for. Seeded from the "preload" navigation case,
+// where the relevant module is named "retrieval". Consumed by basenameTermCandidates in search-pipeline.
+const evalTunedPathTerms = new Map<string, string[]>([
+  ["preload", ["retrieval"]],
+]);
 
 export interface QueryPlan {
   normalized: string;
@@ -62,8 +80,6 @@ const codeIntentTerms = new Set([
   "aggregator", "class", "delivery", "endpoint", "function", "handler", "implemented", "lock", "macro", "method", "orchestrator", "pipeline", "service",
 ]);
 
-const knownIdentifierCompounds = new Set(["localstorage"]);
-
 function inferRoleIntents(normalized: string, terms: string[]): string[] {
   const intents: string[] = [];
   const has = (...needles: string[]) => needles.some((needle) => needle.includes(" ") ? normalized.includes(needle) : terms.includes(needle));
@@ -85,7 +101,7 @@ function inferRoleIntents(normalized: string, terms: string[]): string[] {
 }
 
 function inferPathTerms(terms: string[]): string[] {
-  return terms.includes("preload") ? ["retrieval"] : [];
+  return uniqueStrings(terms.flatMap((term) => evalTunedPathTerms.get(term) ?? []));
 }
 
 function inferEndpointPathTerms(terms: string[]): string[] {
@@ -112,6 +128,7 @@ function expandTerms(terms: string[], compoundSourceTerms = terms): string[] {
     }
   }
   const lowered = new Set(expanded.map((term) => term.toLowerCase()));
+  // Eval-tuned: "session" + "repo" queries target scope-resolution code (see eval-tuned lexicon note).
   if (lowered.has("session") && lowered.has("repo")) expanded.push("scope");
   for (const compound of adjacentCompounds(compoundSourceTerms)) expanded.push(compound);
   return uniqueStrings(expanded).slice(0, 16);
@@ -144,10 +161,6 @@ function splitTerm(value: string): string[] {
 function toPrefixTerm(value: string): string {
   const token = value.match(/[\p{L}\p{N}_]+/u)?.[0];
   return token && token.length > 2 ? `${token}*` : "";
-}
-
-function uniqueStrings(values: string[]): string[] {
-  return [...new Set(values)];
 }
 
 function uniqueFtsQueries(values: FtsQuery[]): FtsQuery[] {

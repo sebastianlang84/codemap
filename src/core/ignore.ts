@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { escapeRegExp } from "./text-util.ts";
 
 const ignoredDirs = new Set([
   ".git", "node_modules", "dist", "build", "target", ".next", "coverage", "vendor", ".turbo", ".cache", ".idea", ".vscode", ".pi/npm", ".pi/git",
@@ -34,7 +35,8 @@ function loadIgnoreFile(path: string): string[] {
   return readFileSync(path, "utf8")
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("#") && !line.startsWith("!"));
+    // Keep `!` negation lines: they re-include a previously-ignored path (last matching rule wins).
+    .filter((line) => line && !line.startsWith("#"));
 }
 
 export function shouldSkip(relPath: string, isDir: boolean, rules: IgnoreRules): string | undefined {
@@ -51,20 +53,43 @@ export function shouldSkip(relPath: string, isDir: boolean, rules: IgnoreRules):
   return undefined;
 }
 
+// Evaluate ignore rules with gitignore-style last-match-wins semantics: a later `!pattern` line can
+// re-include a path that an earlier pattern ignored.
 function matchPatterns(relPath: string, name: string, patterns: string[]): boolean {
+  let ignored = false;
   for (const raw of patterns) {
-    const pattern = raw.replace(/^\//, "");
-    if (pattern.endsWith("/") && (relPath === pattern.slice(0, -1) || relPath.startsWith(pattern))) return true;
-    if (pattern.includes("*")) {
-      const rx = new RegExp("^" + pattern.split("*").map(escapeRegExp).join(".*") + "$" );
-      if (rx.test(relPath) || rx.test(name)) return true;
-    } else if (relPath === pattern || relPath.startsWith(pattern + "/") || name === pattern) {
-      return true;
-    }
+    const negated = raw.startsWith("!");
+    const body = negated ? raw.slice(1) : raw;
+    if (patternMatches(relPath, name, body)) ignored = !negated;
   }
-  return false;
+  return ignored;
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function patternMatches(relPath: string, name: string, rawPattern: string): boolean {
+  const pattern = rawPattern.replace(/^\//, "");
+  if (!pattern) return false;
+  if (pattern.endsWith("/")) return relPath === pattern.slice(0, -1) || relPath.startsWith(pattern);
+  if (/[*?]/.test(pattern)) {
+    const rx = globToRegExp(pattern);
+    return rx.test(relPath) || rx.test(name);
+  }
+  return relPath === pattern || relPath.startsWith(pattern + "/") || name === pattern;
+}
+
+// Translate a gitignore glob to an anchored RegExp. `*`/`?` do not cross `/` (unlike the previous
+// `*`->`.*` translation); `**` matches across directories.
+function globToRegExp(glob: string): RegExp {
+  let source = "";
+  for (let i = 0; i < glob.length; i++) {
+    const char = glob[i];
+    if (char === "*") {
+      if (glob[i + 1] === "*") { source += ".*"; i++; }
+      else source += "[^/]*";
+    } else if (char === "?") {
+      source += "[^/]";
+    } else {
+      source += escapeRegExp(char);
+    }
+  }
+  return new RegExp(`^${source}$`);
 }
