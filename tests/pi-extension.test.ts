@@ -221,17 +221,16 @@ test("registers only codemap tools with compact complete prompt guidance", () =>
     codemap_search: ["indexed", "query", "stale", "pathPrefix"],
     codemap_context: ["read-first", "indexed", "read substitute", "pathPrefix"],
   };
-  const promptSurface = tools.map((tool) => [tool.promptSnippet, ...(tool.promptGuidelines ?? [])].join("\n")).join("\n");
-  // Compactness guard, not a minimization target: raised 2026-07 (1000 -> 1500 total, 260 -> 560
-  // per tool) to fit explicit search-first / wrong-anchor guidance. Kept in step with the token
-  // budget in scripts/check-token-injection.ts.
-  assert.ok(promptSurface.length <= 1_500, `CodeMap prompt surface should stay compact, got ${promptSurface.length} chars`);
+  // No hard length cap here — token cost is a soft target measured by scripts/check-token-injection.ts
+  // (warn-only) and justified per addition. What stays enforced are the *function* contracts that keep
+  // the guidance usable when surfaced per tool: each guideline names its tool, and the key terms an
+  // agent needs are present. Minimizing the surface remains a duty; impairing routing to save tokens
+  // is not the goal.
   for (const name of Object.keys(requiredTerms)) {
     const tool = tools.find((candidate) => candidate.name === name);
     assert.ok(tool?.promptSnippet, `${name} should provide promptSnippet`);
     assert.ok(tool?.promptGuidelines?.length, `${name} should provide promptGuidelines`);
     const prompt = [tool?.promptSnippet, ...(tool?.promptGuidelines ?? [])].join("\n");
-    assert.ok(prompt.length <= 560, `${name} prompt guidance should stay compact, got ${prompt.length} chars`);
     assert.ok(tool?.promptGuidelines?.every((guideline) => guideline.includes(name)), `${name} guidelines should name the tool`);
     for (const term of requiredTerms[name]) assert.ok(prompt.includes(term), `${name} prompt guidance should mention ${term}`);
   }

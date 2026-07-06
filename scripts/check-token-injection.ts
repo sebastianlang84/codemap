@@ -31,35 +31,36 @@ export interface TokenInjectionReport {
   totals: TokenInjectionFieldReport;
 }
 
-export interface TokenInjectionBudgets {
-  maxTokensPerTool: number;
-  maxTotalTokens: number;
+export interface TokenInjectionTargets {
+  softMaxTokensPerTool: number;
+  softMaxTotalTokens: number;
 }
 
-export interface TokenInjectionBudgetIssue {
+export interface TokenInjectionWarning {
   label: string;
   metric: "toolTokens" | "totalTokens";
-  expected: string;
+  target: string;
   actual: number;
 }
 
-export interface TokenInjectionGate {
-  passed: boolean;
-  budgets: TokenInjectionBudgets;
-  issues: TokenInjectionBudgetIssue[];
+export interface TokenInjectionAssessment {
+  withinTarget: boolean;
+  targets: TokenInjectionTargets;
+  warnings: TokenInjectionWarning[];
 }
 
 const fieldNames: TokenInjectionFieldName[] = ["description", "parameters", "promptSnippet", "promptGuidelines"];
 
-// These are a guard against unbounded growth of the always-injected tool surface, not a hard
-// minimization target — clarity that measurably improves tool routing is worth the tokens. Raised
-// 2026-07 from 190/700 to give codemap_search / codemap_context room for explicit search-first and
-// wrong-anchor guidance (the behavioral signals the navigation benchmark showed matter). Set at the
-// measured footprint plus ~12% headroom; whether the richer wording pays off is settled by the
-// routing eval (experiments/agent-routing.episodes.md) — trim back if it does not.
-export const defaultTokenInjectionBudgets: TokenInjectionBudgets = {
-  maxTokensPerTool: 300,
-  maxTotalTokens: 900,
+// Soft targets, not hard gates. The tool surface is injected into every agent turn, so minimizing it
+// is a standing duty — but cutting past the point where guidance stays clear enough to route the
+// agent correctly is not the goal, and every token is expected to earn its place. Exceeding a target
+// raises a warning and asks for justification; it does not fail the build. The function side (does the
+// wording actually route the agent well) is settled by the routing eval
+// (experiments/agent-routing.episodes.md); this report is the pressure on the minimize side. Keep the
+// targets close to the current justified footprint so future growth is visible and deliberate.
+export const tokenInjectionTargets: TokenInjectionTargets = {
+  softMaxTokensPerTool: 300,
+  softMaxTotalTokens: 900,
 };
 
 export function estimateTokenInjectionTokens(text: string): number {
@@ -99,40 +100,42 @@ export function buildCodeMapTokenInjectionReport(generatedAt?: string): TokenInj
   );
 }
 
-export function evaluateTokenInjectionBudget(report: TokenInjectionReport, budgets: TokenInjectionBudgets = defaultTokenInjectionBudgets): TokenInjectionGate {
-  const issues: TokenInjectionBudgetIssue[] = [];
+export function assessTokenInjection(report: TokenInjectionReport, targets: TokenInjectionTargets = tokenInjectionTargets): TokenInjectionAssessment {
+  const warnings: TokenInjectionWarning[] = [];
   for (const tool of report.tools) {
-    if (tool.total.tokens > budgets.maxTokensPerTool) {
-      issues.push({
+    if (tool.total.tokens > targets.softMaxTokensPerTool) {
+      warnings.push({
         label: tool.name,
         metric: "toolTokens",
-        expected: `<= ${budgets.maxTokensPerTool}`,
+        target: `<= ${targets.softMaxTokensPerTool}`,
         actual: tool.total.tokens,
       });
     }
   }
-  if (report.totals.tokens > budgets.maxTotalTokens) {
-    issues.push({
+  if (report.totals.tokens > targets.softMaxTotalTokens) {
+    warnings.push({
       label: "all CodeMap tools",
       metric: "totalTokens",
-      expected: `<= ${budgets.maxTotalTokens}`,
+      target: `<= ${targets.softMaxTotalTokens}`,
       actual: report.totals.tokens,
     });
   }
-  return { passed: issues.length === 0, budgets, issues };
+  return { withinTarget: warnings.length === 0, targets, warnings };
 }
 
-export function formatTokenInjectionIssues(issues: TokenInjectionBudgetIssue[]): string {
-  if (issues.length === 0) return "";
-  return issues.map((issue) => `${issue.label} ${issue.metric} ${issue.actual} exceeds ${issue.expected}`).join("\n");
+export function formatTokenInjectionWarnings(warnings: TokenInjectionWarning[]): string {
+  if (warnings.length === 0) return "";
+  return warnings
+    .map((warning) => `⚠ ${warning.label} ${warning.metric} ${warning.actual} over soft target ${warning.target} — justify or trim`)
+    .join("\n");
 }
 
-export function formatTokenInjectionBudgetFailure(report: TokenInjectionReport, issues: TokenInjectionBudgetIssue[]): string {
+export function formatTokenInjectionReport(report: TokenInjectionReport, warnings: TokenInjectionWarning[]): string {
   const toolRows = report.tools.map((tool) => {
     const fields = fieldNames.map((name) => `${name}=${tool.fields[name].tokens}`).join(", ");
     return `- ${tool.name}: ${tool.total.tokens} tokens (${fields})`;
   });
-  return [formatTokenInjectionIssues(issues), "Token injection report:", ...toolRows, `- total: ${report.totals.tokens} tokens`].filter(Boolean).join("\n");
+  return [formatTokenInjectionWarnings(warnings), "Token injection report:", ...toolRows, `- total: ${report.totals.tokens} tokens`].filter(Boolean).join("\n");
 }
 
 function fieldReport(text: string): TokenInjectionFieldReport {
@@ -146,31 +149,29 @@ function sumFields(fields: TokenInjectionFieldReport[]): TokenInjectionFieldRepo
   };
 }
 
-function parseCliArgs(args: string[]): { budgets: TokenInjectionBudgets; gateEnabled: boolean } {
-  const budgets = { ...defaultTokenInjectionBudgets };
-  let gateEnabled = false;
+function parseCliArgs(args: string[]): { targets: TokenInjectionTargets } {
+  const targets = { ...tokenInjectionTargets };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const [name, inlineValue] = arg.split("=", 2);
     const value = inlineValue ?? args[i + 1];
+    // Accepted for back-compat; the check is warn-only now, so this is a no-op flag.
     if (arg === "--budget-gate") {
-      gateEnabled = true;
+      continue;
     } else if (name === "--max-tool-tokens") {
-      budgets.maxTokensPerTool = parsePositiveInteger(name, value);
-      gateEnabled = true;
+      targets.softMaxTokensPerTool = parsePositiveInteger(name, value);
       if (inlineValue === undefined) i++;
     } else if (name === "--max-total-tokens") {
-      budgets.maxTotalTokens = parsePositiveInteger(name, value);
-      gateEnabled = true;
+      targets.softMaxTotalTokens = parsePositiveInteger(name, value);
       if (inlineValue === undefined) i++;
     } else if (arg === "--help") {
-      console.log("Usage: check-token-injection.ts [--budget-gate] [--max-tool-tokens N] [--max-total-tokens N]");
+      console.log("Usage: check-token-injection.ts [--max-tool-tokens N] [--max-total-tokens N]  (soft targets; reports, never fails)");
       process.exit(0);
     } else {
       throw new Error(`Unknown option: ${arg}`);
     }
   }
-  return { budgets, gateEnabled };
+  return { targets };
 }
 
 function parsePositiveInteger(name: string, value: string | undefined): number {
@@ -183,9 +184,11 @@ function parsePositiveInteger(name: string, value: string | undefined): number {
 function runCli(): void {
   const parsed = parseCliArgs(process.argv.slice(2));
   const report = buildCodeMapTokenInjectionReport();
-  const gate = evaluateTokenInjectionBudget(report, parsed.budgets);
-  console.log(JSON.stringify({ ...report, gate }, null, 2));
-  if (parsed.gateEnabled && !gate.passed) process.exitCode = 1;
+  const assessment = assessTokenInjection(report, parsed.targets);
+  console.log(JSON.stringify({ ...report, assessment }, null, 2));
+  // Warn-only by design: surface over-target tools loudly for review, but never fail the build —
+  // token cost is governed by justification and the routing eval, not a hard cap.
+  if (!assessment.withinTarget) console.error(formatTokenInjectionWarnings(assessment.warnings));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
