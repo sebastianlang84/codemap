@@ -1,4 +1,5 @@
 import { fileRoleBoost, fileRoles, toScoredCandidate, type SearchRow, type SearchScoreDiagnostics } from "./ranking.ts";
+import { escapeLike, escapeRegExp } from "./text-util.ts";
 import type { QueryPlan } from "./query-plan.ts";
 import type { SearchResult } from "./types.ts";
 import { openRepoDb } from "./db.ts";
@@ -54,14 +55,24 @@ function pathMatchCandidates(db: ReturnType<typeof openRepoDb>, request: SearchR
 function basenameTermCandidates(db: ReturnType<typeof openRepoDb>, request: SearchRetrievalRequest): SearchCandidateDiagnostic[] {
   const terms = request.plan.pathTerms.filter((term) => /^[\p{L}\p{N}_-]{4,}$/u.test(term));
   if (terms.length === 0) return [];
+  const termSet = new Set(terms.map((term) => term.toLowerCase()));
+  // Pre-filter to files whose basename plausibly carries one of the terms directly in SQL, then keep
+  // only exact basename-stem matches in JS. Previously this scanned the 500 shortest paths and stem-
+  // filtered afterwards, so on repos with >500 files an exact-basename match on a long path was
+  // silently dropped. The per-term LIKE set is selective, so no row cap is needed.
+  const likeClauses: string[] = [];
+  const params: string[] = [request.pathFilter];
+  for (const term of termSet) {
+    const esc = escapeLike(term);
+    likeClauses.push("lower(path) like ? escape '\\'", "lower(path) like ? escape '\\'", "lower(path) like ? escape '\\'", "lower(path) = ?");
+    params.push(`%/${esc}.%`, `${esc}.%`, `%/${esc}`, esc);
+  }
   const rows = db.prepare(`
     select path, language, 1 as startLine, 1 as endLine, 'file' as kind, path as text, 0 as rank, size, null as symbolName
     from files
-    where path like ? escape '\\'
+    where path like ? escape '\\' and (${likeClauses.join(" or ")})
     order by length(path), path
-    limit 500
-  `).all(request.pathFilter) as unknown as SearchRow[];
-  const termSet = new Set(terms.map((term) => term.toLowerCase()));
+  `).all(...params) as unknown as SearchRow[];
   return rows
     .filter((row) => termSet.has(fileStem(row.path)))
     .map((row) => toSearchCandidate(row, request.plan, 42, "basename_term"));
@@ -148,12 +159,4 @@ function matchedTermCount(text: string, terms: string[]): number {
 
 function fileStem(path: string): string {
   return (path.split("/").pop() ?? path).toLowerCase().replace(/(?:\.[^.]+)+$/, "");
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function escapeLike(value: string): string {
-  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }

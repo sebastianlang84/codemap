@@ -1,6 +1,7 @@
 import { openRepoDb } from "./db.ts";
 import { readGitHead, readGitWorkingTreeStatus, type GitDirtyFile } from "./git-status.ts";
 import { scanRepo } from "./scanner.ts";
+import { escapeLike } from "./text-util.ts";
 
 export interface IndexStatusCounts {
   indexed: boolean;
@@ -102,8 +103,4 @@ function readPathAwareMeta(db: ReturnType<typeof openRepoDb>, baseKey: string, p
 function readMeta(db: ReturnType<typeof openRepoDb>, key: string): string | null {
   const value = (db.prepare("select value from meta where key=?").get(key) as { value: string } | undefined)?.value ?? null;
   return value || null;
-}
-
-function escapeLike(value: string): string {
-  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }

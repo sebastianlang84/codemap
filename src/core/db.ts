@@ -11,7 +11,13 @@ export function openRepoDb(dbPath: string): DatabaseSync {
   return db;
 }
 
+// Bump whenever the migration files or the normalize steps below change so already-stamped databases
+// re-run the full migration once. openRepoDb calls migrate() on every open, so the fast path avoids
+// re-reading 3 migration files + probing sqlite_master/pragma on every codemap_* operation.
+const SCHEMA_VERSION = "1";
+
 export function migrate(db: DatabaseSync): void {
+  if (schemaIsCurrent(db)) return;
   const here = dirname(fileURLToPath(import.meta.url));
   const migrationsDir = join(here, "..", "..", "migrations");
   const files = ["001_init.sql", "002_fts.sql", "003_graph.sql"];
@@ -22,6 +28,20 @@ export function migrate(db: DatabaseSync): void {
   }
   normalizeFtsSchema(db);
   normalizeGraphSchema(db);
+  db.prepare("insert or replace into meta(key, value) values ('schema_version', ?)").run(SCHEMA_VERSION);
+}
+
+// True when this database has already been migrated to the current schema. Guards against a missing
+// `meta` table (brand-new database) so the first open always runs the full migration.
+function schemaIsCurrent(db: DatabaseSync): boolean {
+  try {
+    const hasMeta = db.prepare("select 1 from sqlite_master where type = 'table' and name = 'meta'").get();
+    if (!hasMeta) return false;
+    const row = db.prepare("select value from meta where key = 'schema_version'").get() as { value: string } | undefined;
+    return row?.value === SCHEMA_VERSION;
+  } catch {
+    return false;
+  }
 }
 
 // Convert legacy content-owning FTS tables (which duplicate chunk/symbol text) to contentless

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Check, Errors } from "typebox/value";
 
 import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../core/operations.ts";
 import { codeMapOperationMetadata, type CodeMapOperationId } from "../core/operation-metadata.ts";
@@ -89,9 +90,11 @@ function toolResult(text: string, structured?: Record<string, unknown>, isError 
   return payload;
 }
 
-// Validate required arguments against the tool's TypeBox schema so a bad call yields a message the
-// model can act on ("Missing required argument: query") instead of a downstream TypeError. Returns
-// an error string, or null when the arguments satisfy the schema's required/typing.
+// Validate arguments against the tool's full TypeBox schema so a bad call yields a message the model
+// can act on instead of a downstream TypeError. The explicit required-field pass keeps the friendly
+// "Missing required argument: query" wording; the TypeBox Check then enforces types plus constraints
+// (e.g. limit range, object-vs-string). Extra properties are allowed (schemas are open objects).
+// Returns an error string, or null when the arguments satisfy the schema.
 function validateArgs(name: string, args: Record<string, unknown>): string | null {
   const schema = parametersByTool.get(name);
   if (!isRecord(schema)) return null;
@@ -105,7 +108,14 @@ function validateArgs(name: string, args: Record<string, unknown>): string | nul
       return `Argument ${key} must be of type ${expectedType}`;
     }
   }
-  return null;
+  // Backstop: full-schema validation catches what the required-field pass above does not — optional
+  // arguments with the wrong type (e.g. limit as a string or object) and numeric range violations.
+  if (Check(schema, args)) return null;
+  const firstError = [...Errors(schema, args)][0];
+  if (!firstError) return "Invalid arguments.";
+  const path = (firstError as { path?: string }).path ?? "";
+  const location = path ? `${path.replace(/^\//, "").replace(/\//g, ".")}: ` : "";
+  return `Invalid argument: ${location}${firstError.message}`;
 }
 
 function callTool(request: JsonRpcRequest, cwd: string): JsonRpcResponse {

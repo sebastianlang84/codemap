@@ -89,7 +89,7 @@ export function registerCodeMapTools(pi: ExtensionAPI): void {
         if (operation.toolName === "codemap_index" && (params as Record<string, unknown>).approveRepo === true && !ctx.hasUI) {
           return textResult("approveRepo requires an interactive session. Pre-approve the repository in a UI session first, then re-run indexing.");
         }
-        return textResult(operation.execute(process.cwd(), params));
+        return textResult(operation.execute(ctx.cwd, params));
       },
       renderResult: renderCodeMapResult,
       name: operation.toolName,

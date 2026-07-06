@@ -7,8 +7,8 @@ export interface ExtractedSymbol {
 }
 
 const patterns: Array<{ kind: string; rx: RegExp }> = [
-  { kind: "class", rx: /^\s*(?:export\s+)?class\s+([A-Za-z_$][\w$]*)/ },
-  { kind: "function", rx: /^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/ },
+  { kind: "class", rx: /^\s*(?:export\s+)?(?:default\s+)?(?:abstract\s+)?class\s+([A-Za-z_$][\w$]*)/ },
+  { kind: "function", rx: /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function(?:\s+|\s*\*\s*)([A-Za-z_$][\w$]*)/ },
   { kind: "function", rx: /^\s*(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(/ },
   { kind: "interface", rx: /^\s*(?:export\s+)?interface\s+([A-Za-z_$][\w$]*)/ },
   { kind: "type", rx: /^\s*(?:export\s+)?type\s+([A-Za-z_$][\w$]*)/ },
@@ -66,7 +66,7 @@ export function extractSymbols(text: string, language: string): ExtractedSymbol[
       const match = line.match(pattern.rx);
       if (!match) continue;
       const name = (match[1] ?? "").trim();
-      if (!name || ["if", "for", "while", "switch"].includes(name)) continue;
+      if (!name || ["if", "for", "while", "switch", "catch", "return"].includes(name)) continue;
       symbols.push({ name, kind: pattern.kind, startLine: i + 1, signature: line.trim().slice(0, 240) });
       break;
     }

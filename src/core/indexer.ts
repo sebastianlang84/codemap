@@ -1,7 +1,7 @@
 import { openRepoDb } from "./db.ts";
 import { readGitHead } from "./git-status.ts";
 import { cheapIndexHealth, fullIndexHealth, readIndexStatusCounts } from "./index-health.ts";
-import { applyIndexUpdate } from "./index-store.ts";
+import { applyIndexUpdate, isReindexForced, readIndexedFileStats } from "./index-store.ts";
 import { getRepoInfo, approveRepo, type StateOptions } from "./repo.ts";
 import { normalizePathPrefix, scanRepo } from "./scanner.ts";
 import type { IndexStats } from "./types.ts";
@@ -12,9 +12,12 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
   if (!info.approved) throw new Error("Repository is not approved. Run codemap_index with approveRepo: true first.");
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const db = openRepoDb(info.dbPath);
-  const scan = scanRepo(info.root, { pathPrefix });
+  // Skip re-reading+hashing unchanged files (mtime+size match) unless an index-version bump forces a
+  // full rewrite, in which case every file needs its real content re-chunked.
+  const knownFiles = isReindexForced(db, pathPrefix) ? undefined : readIndexedFileStats(db);
+  const scan = scanRepo(info.root, { pathPrefix, knownFiles });
   try {
-    const update = applyIndexUpdate({ db, files: scan.files, pathPrefix, indexedHead: readGitHead(info.root) });
+    const update = applyIndexUpdate({ db, files: scan.files, pathPrefix, indexedHead: readGitHead(info.root), allowDeletions: !scan.incomplete });
     return { scanned: scan.files.length, indexed: update.indexed, skipped: scan.skipped, skippedReasons: scan.skippedReasons, removed: update.removed, warnings: scan.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
   } catch (error) {
     try { db.exec("rollback"); } catch { /* already closed or not in transaction */ }
