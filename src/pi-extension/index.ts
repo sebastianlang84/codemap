@@ -4,22 +4,13 @@ import { status } from "../core/indexer.ts";
 import { CODEMAP_BASH_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } from "./bash-nudge.ts";
 import { registerCodeMapTools } from "./tools.ts";
 import { registerCodeMapCommands } from "./commands.ts";
-
-const STATUS_KEY = "codemap";
-const STATUS_OK_TEXT = "[CodeMap ✓]";
-const STATUS_NOT_INDEXED_TEXT = "[CodeMap ✗]";
-const STATUS_ERROR_TEXT = "[CodeMap ✗]";
+import { computeStatusText, STATUS_KEY } from "./status-bar.ts";
 
 export default function codeMapExtension(pi: ExtensionAPI): void {
   const nudgedRepoRoots = new Set<string>();
   pi.on("session_start", async (_event, ctx) => {
     if (!ctx.hasUI) return;
-    try {
-      const currentStatus = status(ctx.cwd, { health: "cheap" });
-      ctx.ui.setStatus(STATUS_KEY, currentStatus.readiness === "ready" ? STATUS_OK_TEXT : STATUS_NOT_INDEXED_TEXT);
-    } catch {
-      ctx.ui.setStatus(STATUS_KEY, STATUS_ERROR_TEXT);
-    }
+    ctx.ui.setStatus(STATUS_KEY, computeStatusText(ctx.cwd));
   });
 
   registerCodeMapTools(pi);

@@ -204,6 +204,52 @@ test("bash CodeMap nudge appends once for broad fresh indexed searches", async (
   assert.equal(targeted, undefined);
 });
 
+test("codemap_index tool refreshes the footer status pill mid-session", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-status-refresh-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  writeFileSync(join(root, "target.ts"), "export const statusRefreshNeedle = true;\n");
+
+  const tools: Array<{ name: string; execute: (id: string, params: unknown, signal: unknown, onUpdate: unknown, ctx: unknown) => Promise<unknown> }> = [];
+  registerCodeMapTools({ registerTool: (tool: (typeof tools)[number]) => tools.push(tool) } as never);
+
+  const statuses: Array<{ key: string; text: string }> = [];
+  const ctx = { cwd: root, hasUI: true, ui: { setStatus: (key: string, text: string) => statuses.push({ key, text }) } };
+
+  const indexTool = tools.find((tool) => tool.name === "codemap_index")!;
+  await indexTool.execute("1", { approveRepo: true }, undefined, undefined, ctx);
+
+  assert.deepEqual(statuses, [{ key: "codemap", text: "[CodeMap \u2713]" }]);
+
+  const statusTool = tools.find((tool) => tool.name === "codemap_status")!;
+  await statusTool.execute("2", {}, undefined, undefined, ctx);
+
+  // codemap_status must not touch the pill - only codemap_index refreshes it.
+  assert.deepEqual(statuses, [{ key: "codemap", text: "[CodeMap \u2713]" }]);
+});
+
+test("codemap-index command refreshes the footer status pill mid-session", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-command-status-refresh-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  writeFileSync(join(root, "target.ts"), "export const commandStatusRefreshNeedle = true;\n");
+
+  const commands: Array<{ name: string; handler: (args: string, ctx: unknown) => Promise<void> }> = [];
+  registerCodeMapCommands({ registerCommand: (name: string, command: (typeof commands)[number]) => commands.push({ name, handler: command.handler }) } as never);
+
+  const statuses: Array<{ key: string; text: string }> = [];
+  const ctx = { ui: { notify() {}, setStatus: (key: string, text: string) => statuses.push({ key, text }) } };
+  const cwd = process.cwd();
+  try {
+    process.chdir(root);
+    await commands.find((command) => command.name === "codemap-index")!.handler("--approve-repo", ctx);
+  } finally {
+    process.chdir(cwd);
+  }
+
+  assert.deepEqual(statuses, [{ key: "codemap", text: "[CodeMap \u2713]" }]);
+});
+
 test("registers only codemap tools with compact complete prompt guidance", () => {
   const tools: Array<{ name: string; label?: string; description?: string; promptSnippet?: string; promptGuidelines?: string[] }> = [];
   registerCodeMapTools({ registerTool: (tool: { name: string; label?: string; description?: string; promptSnippet?: string; promptGuidelines?: string[] }) => tools.push(tool) } as never);

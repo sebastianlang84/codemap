@@ -2,6 +2,7 @@ import type { AgentToolResult, ExtensionAPI, ExtensionContext, Theme, ToolRender
 import { keyHint } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { codeMapOperations } from "./operations.ts";
+import { computeStatusText, STATUS_KEY } from "./status-bar.ts";
 
 function textResult(value: unknown) {
   return { content: [{ type: "text" as const, text: typeof value === "string" ? value : JSON.stringify(value, null, 2) }], details: value };
@@ -89,7 +90,11 @@ export function registerCodeMapTools(pi: ExtensionAPI): void {
         if (operation.toolName === "codemap_index" && (params as Record<string, unknown>).approveRepo === true && !ctx.hasUI) {
           return textResult("approveRepo requires an interactive session. Pre-approve the repository in a UI session first, then re-run indexing.");
         }
-        return textResult(operation.execute(ctx.cwd, params));
+        const result = textResult(operation.execute(ctx.cwd, params));
+        if (operation.toolName === "codemap_index" && ctx.hasUI) {
+          ctx.ui.setStatus(STATUS_KEY, computeStatusText(ctx.cwd));
+        }
+        return result;
       },
       renderResult: renderCodeMapResult,
       name: operation.toolName,
