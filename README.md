@@ -34,6 +34,50 @@ pi-memory stores durable decisions and handoffs.
 CodeMap indexes the current (rebuildable) repo state and helps you navigate it.
 ```
 
+## Benchmarks
+
+The claims above are measured, not asserted. The strongest evidence is the local **real-repo navigation eval**: it indexes five real repositories, gives every mode the *same* budget of 5 files to read, and checks whether the mode actually found the right entry file plus its required read-first neighbors. Three modes are compared:
+
+- **`lexical`** — a stand-in for raw `grep`/`rg`: score tracked files by keyword match and read the top ones.
+- **`codemap_search`** — read only CodeMap's top ranked search hits.
+- **`codemap_search_context`** — the intended workflow: search for an entry point, then call `codemap_context` on the top hit to pull in its related files, all within the same 5-file budget.
+
+Baseline cohort (2026-05-24):
+
+| Mode | Success | Expected recall | Context recall | Avg files read |
+|---|---:|---:|---:|---:|
+| `lexical` (grep/rg-like) | 0.125 | 0.521 | 0.563 | 5.0 |
+| `codemap_search` | 0.375 | 0.781 | 0.646 | 4.9 |
+| `codemap_search_context` | **1.000** | **1.000** | **1.000** | 5.0 |
+
+- *Success* = found the right entry file **and** all required neighbors **and** read no forbidden/noisy file.
+- *Expected recall* = share of the entry + required context files actually read.
+- *Context recall* = share of just the required neighboring files (tests, config, docs, imports) read.
+
+### What this means in plain terms
+
+Give an agent five files' worth of attention and point it at a real task:
+
+- **Plain grep-style search gets it fully right about 1 in 8 times** (success 0.125). It often lands somewhere in the neighborhood — roughly half the right files (recall ~0.52–0.56) — but rarely assembles the *complete* picture, and it wastes part of the budget on noisy hits.
+- **CodeMap's ranked search alone triples that** (success 0.375) and reads fewer files to do it, because the ranking pushes the real target up instead of burying it under keyword matches.
+- **The full search-then-context workflow gets it right every time on this set** (success 1.000) using the *same* five-file budget — it doesn't read *more*, it reads the *right* files: the entry point plus the tests, config, and imports you'd otherwise have to hunt down by hand.
+
+Put differently: against a grep-like baseline, the intended workflow turns "found roughly half of what I needed, and only rarely everything" into "found exactly what I needed" — **without spending a larger reading budget**. That is the concrete payoff for an agent: fewer speculative reads and tool calls before it can start real work.
+
+The gain holds on a deliberately harder **natural-language holdout** (symptom-style queries with no function/class names to grep for), where grep-style search succeeds on ~1 in 16 tasks (0.063) and the full workflow on ~3 in 4 (0.750) — smaller, but the same direction, and honest about where lexical search falls off hardest.
+
+These numbers are reproducible locally and gated in CI-style checks:
+
+```bash
+npm run eval:real-repo-navigation       # real repos vs rg-like baseline
+npm run eval:agent-navigation           # deterministic checked-in fixture
+npm run bench:search-quality            # ranking / top-1 / recall benchmark
+```
+
+Full methodology, per-cohort tables, miss taxonomy, and known limitations live in
+[`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) and
+[`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md).
+
 ## Install
 
 ### As a standalone CLI (Claude Code, Codex, any shell agent)

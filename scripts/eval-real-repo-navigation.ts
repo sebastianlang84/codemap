@@ -70,6 +70,7 @@ interface CaseReport {
   navigationDiagnostics: NavigationDiagnostics;
   success: boolean;
   toolCalls: number;
+  bytesRead: number;
   latencyMs: number;
 }
 
@@ -538,8 +539,23 @@ function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: N
     navigationDiagnostics,
     success,
     toolCalls: mode === "codemap_search_context" ? 2 : 1,
+    bytesRead: sumBytesRead(suite.root, uniqueFilesRead),
     latencyMs: roundMs(latencyMs),
   };
+}
+
+// On-disk byte cost of the files a mode read, a model-independent proxy for the tokens an agent
+// would spend loading them. Missing/unreadable files contribute 0.
+function sumBytesRead(root: string, paths: string[]): number {
+  let bytes = 0;
+  for (const path of paths) {
+    try {
+      bytes += statSync(join(root, path)).size;
+    } catch {
+      // File not present in the working tree; counts as no read cost.
+    }
+  }
+  return bytes;
 }
 
 function navigate(options: { root: string; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number }): NavigationEvalLookupResult {

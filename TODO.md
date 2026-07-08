@@ -84,3 +84,8 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
    - Befund: Agent-Refresh-Eval mit `openai-codex/gpt-5.4-mini`, Baseline + Hint je 3 Runs, bestand 6/6; Agent sah stale Signale, rief `codemap_index`, suchte erneut und nannte `src/calculator.ts`.
    - Entscheidung: LLM-gesteuertes Refresh über bestehende stale Warnungen genügt vorerst; kein Command/Hook als nächster Slice.
    - Wieder aufnehmen, wenn breitere Modelle/Runs scheitern oder Praxis zeigt, dass Agenten stale Warnungen übersehen.
+
+5. [ ] Kanonische Token-Read-Zahlen in die README-Benchmarks aufnehmen.
+   - Befund: `avgBytesRead`/`estTokensRead` sind in beiden Navigation-Evals implementiert; ein Full-Suite-Lauf braucht aber alle fünf lokalen Real-Repos, die nicht auf jeder Maschine vorhanden sind.
+   - Aufgabe: `eval:real-repo-navigation:gate` auf einer Maschine mit vollständigem Suite-Satz laufen lassen und die kanonische Token-Ersparnis (search+context vs. lexical) als Spalte/Zeile in die README-Benchmark-Tabelle übernehmen.
+   - Regel: keine Token-Zahlen aus Teilmengen in die README schreiben.

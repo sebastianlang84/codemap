@@ -32,6 +32,8 @@ Per mode, the eval reports:
 - `avgExpectedRecall`: recall over entry + required context files.
 - `avgContextRecall`: fraction of required neighbors read.
 - `avgFilesRead`: unique files read by the mode.
+- `avgBytesRead`: total on-disk bytes of the files read by the mode — a read-cost proxy that captures reading fewer *or smaller* right files, which `avgFilesRead` alone hides.
+- `estTokensRead`: coarse token estimate of `avgBytesRead` (≈ bytes / 4, model-independent). Approximates the tokens an agent spends loading its read plan; not tokenizer-accurate.
 - `avgToolCalls`: scripted tool-call count for the mode.
 - `forbiddenReadRate`: tasks where generated/build/lockfile/cross-prefix noise was read.
 - `avgLatencyMs` and `p95LatencyMs`.

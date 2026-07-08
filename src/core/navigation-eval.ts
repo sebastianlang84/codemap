@@ -76,6 +76,9 @@ export interface BaseNavigationCaseMetrics {
   expectedRecall: number;
   contextRecall: number;
   filesRead: string[];
+  // Total on-disk bytes of the files this mode read for the task. Optional so pure-metric
+  // callers/tests can omit it; the eval scripts fill it from the read plan.
+  bytesRead?: number;
   toolCalls: number;
   forbiddenRead: string[];
   latencyMs: number;
@@ -90,6 +93,8 @@ export interface BaseModeMetrics {
   avgExpectedRecall: number;
   avgContextRecall: number;
   avgFilesRead: number;
+  avgBytesRead: number;
+  estTokensRead: number;
   avgToolCalls: number;
   forbiddenReadRate: number;
   avgLatencyMs: number;
@@ -102,6 +107,8 @@ export interface DeltaMetrics {
   avgExpectedRecall: number;
   avgContextRecall: number;
   avgFilesRead: number;
+  avgBytesRead: number;
+  estTokensRead: number;
   avgToolCalls: number;
 }
 
@@ -171,6 +178,7 @@ export function summarizeModeMetrics<T extends BaseNavigationCaseMetrics>(mode: 
   const modeCases = cases.filter((item) => item.mode === mode);
   const latencies = modeCases.map((item) => item.latencyMs);
   const emptyRate = options.emptyRate ?? 0;
+  const avgBytes = avg(modeCases.map((item) => item.bytesRead ?? 0));
   return {
     mode,
     tasks: modeCases.length,
@@ -179,6 +187,8 @@ export function summarizeModeMetrics<T extends BaseNavigationCaseMetrics>(mode: 
     avgExpectedRecall: roundRate(avg(modeCases.map((item) => item.expectedRecall))),
     avgContextRecall: roundRate(avg(modeCases.map((item) => item.contextRecall))),
     avgFilesRead: roundRate(avg(modeCases.map((item) => item.filesRead.length))),
+    avgBytesRead: Math.round(avgBytes),
+    estTokensRead: estimateTokensFromBytes(avgBytes),
     avgToolCalls: roundRate(avg(modeCases.map((item) => item.toolCalls))),
     forbiddenReadRate: rate(modeCases.filter((item) => item.forbiddenRead.length > 0).length, modeCases.length, emptyRate),
     avgLatencyMs: roundMs(avg(latencies)),
@@ -193,6 +203,8 @@ export function deltaMetrics(left: BaseModeMetrics, right: BaseModeMetrics): Del
     avgExpectedRecall: roundRate(left.avgExpectedRecall - right.avgExpectedRecall),
     avgContextRecall: roundRate(left.avgContextRecall - right.avgContextRecall),
     avgFilesRead: roundRate(left.avgFilesRead - right.avgFilesRead),
+    avgBytesRead: left.avgBytesRead - right.avgBytesRead,
+    estTokensRead: left.estTokensRead - right.estTokensRead,
     avgToolCalls: roundRate(left.avgToolCalls - right.avgToolCalls),
   };
 }
@@ -354,6 +366,14 @@ export function p95(values: number[]): number {
 
 export function uniqueStrings(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+// Rough bytes-per-token ratio for English source/text. Deliberately coarse: the eval reports a
+// read-cost proxy, not a tokenizer-accurate count, so the estimate stays model-independent and cheap.
+export const APPROX_BYTES_PER_TOKEN = 4;
+
+export function estimateTokensFromBytes(bytes: number): number {
+  return Math.round(bytes / APPROX_BYTES_PER_TOKEN);
 }
 
 export function roundRate(value: number): number {

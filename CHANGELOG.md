@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add a read-cost metric (`avgBytesRead` / `estTokensRead`, ≈ bytes / 4) to the agent-navigation and real-repo-navigation evals, quantifying the tokens an agent spends loading each mode's read plan instead of only counting files read. On the locally available real repos, `codemap_search_context` reads far fewer estimated tokens than the rg-like lexical baseline at the same file budget.
+- Add a `Benchmarks` section to the README that surfaces the navigation-eval numbers (success/recall at a fixed read budget) with a plain-language interpretation, so CodeMap's navigation value is stated as measured evidence rather than a claim.
+
 ## 0.8.1 - 2026-07-07
 
 - Fix the footer status pill (`[CodeMap ✓]` / `[CodeMap ✗]`) not refreshing after `codemap_index` runs mid-session (e.g. an interactive `approveRepo`); the pill now updates immediately instead of staying stale until the next session start.

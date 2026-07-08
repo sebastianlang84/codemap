@@ -46,6 +46,7 @@ test("navigation eval summarizes mode metrics and deltas with stable rounding", 
       expectedRecall: 1,
       contextRecall: 1,
       filesRead: ["src/a.ts", "src/a.test.ts"],
+      bytesRead: 100,
       toolCalls: 2,
       forbiddenRead: [],
       latencyMs: 10,
@@ -58,6 +59,7 @@ test("navigation eval summarizes mode metrics and deltas with stable rounding", 
       expectedRecall: 0.5,
       contextRecall: 0,
       filesRead: ["src/b.ts"],
+      bytesRead: 300,
       toolCalls: 2,
       forbiddenRead: ["package-lock.json"],
       latencyMs: 20,
@@ -73,16 +75,20 @@ test("navigation eval summarizes mode metrics and deltas with stable rounding", 
   assert.equal(summary.avgExpectedRecall, 0.75);
   assert.equal(summary.avgContextRecall, 0.5);
   assert.equal(summary.avgFilesRead, 1.5);
+  assert.equal(summary.avgBytesRead, 200);
+  assert.equal(summary.estTokensRead, 50);
   assert.equal(summary.avgToolCalls, 2);
   assert.equal(summary.forbiddenReadRate, 0.5);
   assert.equal(summary.avgLatencyMs, 15);
   assert.equal(summary.p95LatencyMs, 20);
 
-  assert.deepEqual(deltaMetrics(summary, { ...summary, successRate: 0.25, avgContextRecall: 0.25, avgFilesRead: 1, avgToolCalls: 1 }), {
+  assert.deepEqual(deltaMetrics(summary, { ...summary, successRate: 0.25, avgContextRecall: 0.25, avgFilesRead: 1, avgBytesRead: 120, estTokensRead: 30, avgToolCalls: 1 }), {
     successRate: 0.25,
     avgExpectedRecall: 0,
     avgContextRecall: 0.25,
     avgFilesRead: 0.5,
+    avgBytesRead: 80,
+    estTokensRead: 20,
     avgToolCalls: 1,
   });
 });

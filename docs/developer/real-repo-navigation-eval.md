@@ -49,6 +49,8 @@ Per mode, metrics are:
 - `avgExpectedRecall`: recall over entry + required context files.
 - `avgContextRecall`: recall over required neighboring files only.
 - `avgFilesRead`: unique files read within the budget.
+- `avgBytesRead`: total on-disk bytes of the files read within the budget — a read-cost proxy that captures a mode reading fewer *or smaller* right files, which `avgFilesRead` alone hides.
+- `estTokensRead`: coarse token estimate of `avgBytesRead` (≈ bytes / 4, model-independent). Approximates the tokens an agent spends loading its read plan; not tokenizer-accurate.
 - `avgToolCalls`: scripted navigation calls.
 - `forbiddenReadRate`: noisy or explicitly forbidden files read, such as lockfiles or stale planning/archive files.
 - `avgLatencyMs` / `p95LatencyMs`.
