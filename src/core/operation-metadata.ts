@@ -64,11 +64,11 @@ export const codeMapOperationMetadataById = {
     label: "CodeMap Search",
     toolName: "codemap_search",
     commandName: "codemap-search",
-    description: "Search indexed paths, symbols, and chunks. The primary navigation tool — prefer it over grep/find, and reach for it before codemap_context.",
+    description: "Ranked search over indexed paths, symbols, and chunks. Best when the target file/symbol is unknown or the query is conceptual ('where does X live', 'what handles Y'). For every occurrence of a known literal or regex, grep/rg is the right tool. Precedes codemap_context.",
     commandDescription: "Search the CodeMap index: /codemap-search [--repo-path <path>] <query>",
-    promptSnippet: "Primary navigation: search indexed paths, symbols, and chunks.",
+    promptSnippet: "Ranked search over indexed paths, symbols, and chunks.",
     promptGuidelines: [
-      "Use codemap_search first for navigation when the target path or symbol is unknown; prefer it over grep/find.",
+      "Use codemap_search when the target path/symbol is unknown or the query is conceptual; use grep/rg for exhaustive literal/regex matches.",
       "If codemap_search omits the expected result, re-query with new terms or a higher limit before calling codemap_context.",
       "Give codemap_search query terms; add pathPrefix in monorepos; treat stale warnings as advisory.",
     ],
@@ -84,7 +84,7 @@ export const codeMapOperationMetadataById = {
     label: "CodeMap Context",
     toolName: "codemap_context",
     commandName: "codemap-context",
-    description: "Read-first neighbors (tests, imports, docs) of a known target. A follow-up to codemap_search, not a replacement — feed it a target you already trust.",
+    description: "Read-first neighbors (tests, imports, docs) of a known target — graph relationships grep won't surface. Follow-up to codemap_search; feed it a target you already trust, not a broad query.",
     commandDescription: "Get CodeMap read-first context: /codemap-context [--repo-path <path>] <target>",
     promptSnippet: "Read-first neighbors (tests, imports, docs) of a known target.",
     promptGuidelines: [

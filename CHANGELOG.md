@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Reframe the `codemap_search` / `codemap_context` tool descriptions and the MCP server instructions from a blanket "prefer over grep/find" to an explicit decision boundary — ranked/conceptual navigation and relationship neighbors go to CodeMap, exhaustive literal/regex matches stay with grep/rg — so an agent routes between the tools by task shape instead of being told to always prefer CodeMap. Drops the unsupported "relationship-aware" wording from search (relationship edges come from `codemap_context`) and aligns the Pi prompt guidelines with the same framing. Description token surface stays within the soft budget.
 - Add a read-cost metric (`avgBytesRead` / `estTokensRead`, ≈ bytes / 4) to the agent-navigation and real-repo-navigation evals, quantifying the tokens an agent spends loading each mode's read plan instead of only counting files read. On the locally available real repos, `codemap_search_context` reads far fewer estimated tokens than the rg-like lexical baseline at the same file budget.
 - Add a `Benchmarks` section to the README that surfaces the navigation-eval numbers (success/recall at a fixed read budget) with a plain-language interpretation, so CodeMap's navigation value is stated as measured evidence rather than a claim.
 
