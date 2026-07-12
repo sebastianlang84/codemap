@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "noEmitOnError": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": [
+    "src/application/**/*.ts",
+    "src/core/**/*.ts",
+    "src/cli/**/*.ts",
+    "src/mcp/**/*.ts"
+  ]
+}

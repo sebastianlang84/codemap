@@ -1,6 +1,6 @@
 import type { ExtensionAPI, ToolResultEvent } from "@earendil-works/pi-coding-agent";
 import { isBashToolResult } from "@earendil-works/pi-coding-agent";
-import { status } from "../core/indexer.ts";
+import { codeMapStatus } from "../application/operations.ts";
 import { CODEMAP_BASH_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } from "./bash-nudge.ts";
 import { registerCodeMapTools } from "./tools.ts";
 import { registerCodeMapCommands } from "./commands.ts";
@@ -21,9 +21,9 @@ export default function codeMapExtension(pi: ExtensionAPI): void {
     const command = typeof event.input.command === "string" ? event.input.command : "";
     if (!shouldNudgeForCodeMapNavigationCommand(command, { cwd: ctx.cwd })) return;
 
-    let repoStatus: ReturnType<typeof status>;
+    let repoStatus: ReturnType<typeof codeMapStatus>;
     try {
-      repoStatus = status(ctx.cwd, { health: "cheap" });
+      repoStatus = codeMapStatus(ctx.cwd, {});
     } catch {
       return;
     }

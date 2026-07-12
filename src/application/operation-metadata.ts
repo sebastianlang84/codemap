@@ -1,12 +1,7 @@
 import { Type } from "typebox";
 
-// Token-injection principle for everything below (description / promptSnippet / promptGuidelines /
-// parameter descriptions): this surface is injected into every agent turn, so keeping it small is a
-// standing duty and every token must earn its place — but do not cut past the point where the
-// guidance still routes the agent correctly. Function is the floor, minimization is the pressure.
-// Cost is measured warn-only by scripts/check-token-injection.ts (soft targets, no hard gate); the
-// function side is judged by the routing eval (experiments/agent-routing.episodes.md). Prefer the
-// fewest words that keep each guideline clear and self-contained.
+// This metadata is shared only by adapters that expose agent tools (Pi and MCP). Keep it compact:
+// descriptions and schemas consume model context on every turn.
 export type CodeMapOperationId = "status" | "index" | "search" | "context";
 
 export interface CodeMapOperationMetadata {

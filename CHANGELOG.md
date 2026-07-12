@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.9.0 - 2026-07-12
+
+- Reframe the project from Pi-first `pi-ext-codemap` to CLI-first CodeMap at `sebastianlang84/codemap`: rename the package to `@sebastianlang84/codemap`, ship versioned built JavaScript for compiler-free `codemap` and `codemap-mcp` installs, and keep MCP and Pi as adapters over the shared operations. Pi peer dependencies are optional for CLI/MCP users.
+- Move the default approval/index state to platform-neutral user data resolution (`CODEMAP_HOME`, then `$XDG_DATA_HOME/codemap`, then `~/.local/share/codemap`) while continuing to use an existing `~/.pi/agent/state/codemap` automatically until the user deliberately migrates it. The CLI `--state-dir` override remains highest priority.
+- Add an existing-user migration guide covering the renamed Git/npm/Pi sources, MCP restart, a canonical `~/dev/codemap` development checkout, guarded state migration, and post-move verification.
+- Lower the supported runtime floor from Node 24 to Node 22.13 now that CLI/MCP ship built JavaScript and `node:sqlite` is available without an opt-in flag; refresh Pi development peers to 0.80.6 and clear the prior dev-only audit findings.
+- Make `npm run verify` reproducible from checked-in fixtures; retain the maintainer-machine real-repo cohort as the explicit `npm run verify:local` extension so external repository drift is not mistaken for a product regression.
 - Reframe the `codemap_search` / `codemap_context` tool descriptions and the MCP server instructions from a blanket "prefer over grep/find" to an explicit decision boundary — ranked/conceptual navigation and relationship neighbors go to CodeMap, exhaustive literal/regex matches stay with grep/rg — so an agent routes between the tools by task shape instead of being told to always prefer CodeMap. Drops the unsupported "relationship-aware" wording from search (relationship edges come from `codemap_context`) and aligns the Pi prompt guidelines with the same framing. Description token surface stays within the soft budget.
 - Add a read-cost metric (`avgBytesRead` / `estTokensRead`, ≈ bytes / 4) to the agent-navigation and real-repo-navigation evals, quantifying the tokens an agent spends loading each mode's read plan instead of only counting files read. On the locally available real repos, `codemap_search_context` reads far fewer estimated tokens than the rg-like lexical baseline at the same file budget.
 - Add a `Benchmarks` section to the README that surfaces the navigation-eval numbers (success/recall at a fixed read budget) with a plain-language interpretation, so CodeMap's navigation value is stated as measured evidence rather than a claim.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-import { codeMapOperationMetadata } from "../src/core/operation-metadata.ts";
+import { codeMapOperationMetadata } from "../src/application/operation-metadata.ts";
 
 export type TokenInjectionFieldName = "description" | "parameters" | "promptSnippet" | "promptGuidelines";
 

@@ -1,10 +1,10 @@
 # CodeMap user guide
 
-Read this file when you want to understand what CodeMap can do, which features exist today, and how to use them in Pi.
+Read this file when you want to understand what CodeMap can do and how to use its CLI, MCP server, or Pi adapter.
 
 ## What CodeMap is
 
-CodeMap is a local repository map for coding agents. It indexes the current or explicitly targeted Git repo into SQLite/FTS and gives agents a small set of tools for finding the right files before reading or editing code. It runs as a Pi extension (tools + `/codemap-*` commands) and as a standalone `codemap` CLI for non-Pi agents such as Claude Code and Codex.
+CodeMap is a local repository map for coding agents. It indexes the current or explicitly targeted Git repo into SQLite/FTS and helps find the right files before reading or editing code. The standalone `codemap` CLI is the primary interface; the `codemap-mcp` server and Pi extension adapt the same four operations for native agent tools and Pi slash commands.
 
 Use CodeMap when you want to answer:
 
@@ -19,81 +19,117 @@ CodeMap is not a semantic memory system. `pi-memory` stores durable decisions an
 
 | Feature | What it does | How to use it |
 |---|---|---|
-| Repo approval | Requires explicit approval before indexing a Git repo. | `/codemap-index --approve-repo` |
-| Local indexing | Stores a rebuildable SQLite index under `~/.pi/agent/state/codemap/`. | `/codemap-index` |
-| Status diagnostics | Shows approval, index counts, DB path, and optional stale diagnostics. | `/codemap-status --full` |
-| Code/text search | Searches paths, chunks, and cheap symbols with SQLite FTS. | `/codemap-search <query>` |
-| Read-first context | Returns the target file plus likely imports, callers, nearby config, tests, and docs. | `/codemap-context <path-or-query>` |
-| Repo targeting | Runs status/index/search/context for another repo path without changing the session cwd. | `--repo-path /path/to/repo` or `repoPath` |
+| Repo approval | Requires explicit approval before indexing a Git repo. | `codemap index --approve` |
+| Local indexing | Stores a rebuildable SQLite index in a user data directory. | `codemap index` |
+| Status diagnostics | Shows approval, index counts, DB path, and optional stale diagnostics. | `codemap status --full` |
+| Code/text search | Searches paths, chunks, and cheap symbols with SQLite FTS. | `codemap search <query>` |
+| Read-first context | Returns the target file plus likely imports, callers, nearby config, tests, and docs. | `codemap context <path-or-query>` |
+| Repo targeting | Runs status/index/search/context for another repo path without changing the session cwd. | `--repo /path/to/repo` or `repoPath` |
 | Monorepo scoping | Limits status/index/search/context to a subtree. | `--path-prefix services/api` |
-| Stale warnings | Warns instead of silently refreshing old results. | Refresh with `/codemap-index` |
+| Stale warnings | Warns instead of silently refreshing old results. | Refresh with `codemap index` |
 | Noise handling | Keeps lockfiles/generated/build/minified files from dominating ordinary results. | Automatic; explicit lockfile queries still work. |
 
 ## Install
 
-As a Pi extension:
+### CLI
+
+CodeMap requires Node ≥ 22.13:
 
 ```bash
-pi install git:github.com/sebastianlang84/pi-ext-codemap
+npm install -g github:sebastianlang84/codemap
+codemap --help
 ```
 
-For local development:
+This installs both `codemap` and `codemap-mcp` from the GitHub repository. A registry-published npm package is not available yet.
+
+### MCP server
+
+After installing the CLI package, configure an MCP host to start `codemap-mcp`. For example:
 
 ```bash
-cd /path/to/pi-ext-codemap
-pi install .
+claude mcp add codemap -- codemap-mcp
 ```
 
-As a standalone CLI for non-Pi agents (Claude Code, Codex, any shell agent), requires Node ≥ 24:
+Other hosts can use the equivalent command-based MCP configuration shown in the [README](../../README.md#as-an-mcp-server-native-tools-in-claude-code-codex-cursor).
+
+### Pi extension
 
 ```bash
-npm install -g github:sebastianlang84/pi-ext-codemap   # provides a `codemap` command
+pi install git:github.com/sebastianlang84/codemap
 ```
 
-The CLI mirrors the four operations (`codemap search|context|status|index`, all accepting `--json`, `--repo`, `--path-prefix`). See the [README CLI reference](../../README.md#cli-reference) for wiring it into `CLAUDE.md` / `AGENTS.md`.
+### Local development checkout
+
+Keep the canonical clone outside Pi-managed package storage:
+
+```bash
+git clone git@github.com:sebastianlang84/codemap.git ~/dev/codemap
+cd ~/dev/codemap
+npm install
+npm run build
+npm link
+pi install ~/dev/codemap   # optional Pi adapter
+```
+
+The CLI supports `--json`, `--repo`, `--path-prefix`, and `--state-dir`. See the [README CLI reference](../../README.md#cli-reference) for wiring it into `CLAUDE.md` or `AGENTS.md`. Existing `pi-ext-codemap` users should follow the [migration guide](migrating-from-pi-extension.md), especially before changing their state directory.
+
+## State location
+
+CodeMap resolves its index and approval-registry directory in this order:
+
+1. CLI `--state-dir <path>`;
+2. `CODEMAP_HOME`;
+3. `$XDG_DATA_HOME/codemap`;
+4. `~/.local/share/codemap`.
+
+`CODEMAP_HOME` names the state root; it is unrelated to the CodeMap source-checkout directory.
+
+For backward compatibility, `~/.pi/agent/state/codemap` remains active automatically when that legacy directory exists, neither environment variable selects another location, and `~/.local/share/codemap` does not yet exist. Once the new default directory exists, it wins. Do not create an empty new directory or merge SQLite files by hand; use the [state migration procedure](migrating-from-pi-extension.md#move-state-to-the-platform-neutral-location).
 
 ## First use in a repo
 
 Approve and index the current Git repository:
 
-```text
-/codemap-index --approve-repo
+```bash
+codemap index --approve
 ```
 
 After that, refresh the same repo without re-approving:
 
-```text
-/codemap-index
+```bash
+codemap index
 ```
 
 Check whether the index is ready:
 
-```text
-/codemap-status
+```bash
+codemap status
 ```
 
 Run full stale diagnostics when freshness matters:
 
-```text
-/codemap-status --full
+```bash
+codemap status --full
 ```
+
+Pi equivalents are `/codemap-index --approve-repo`, `/codemap-index`, and `/codemap-status [--full]`. MCP clients call `codemap_index` and `codemap_status` with the matching structured parameters.
 
 ## Typical workflows
 
 ### Find where something is implemented
 
-```text
-/codemap-search auth middleware
-/codemap-search parsePathPrefix
-/codemap-search package.json dependencies
+```bash
+codemap search auth middleware
+codemap search parsePathPrefix
+codemap search package.json dependencies
 ```
 
-Then read the best matching file with Pi's normal file-reading tools.
+Then read the best matching file with your normal file-reading tools. Use `rg` instead when you need every exact literal or regex match.
 
 ### Build context before editing a file
 
-```text
-/codemap-context src/core/search.ts
+```bash
+codemap context src/core/search.ts
 ```
 
 For direct file targets, CodeMap may return:
@@ -111,11 +147,11 @@ Treat this as a read-first list, not as a replacement for reading the files.
 
 All CodeMap tools and commands default to the current working directory. To target another repo, pass a repo root, a directory inside a repo, or a file inside a repo:
 
-```text
-/codemap-status --repo-path /path/to/repo --full
-/codemap-index --repo-path /path/to/repo --approve-repo
-/codemap-search --repo-path /path/to/repo repoPathNeedle
-/codemap-context --repo-path /path/to/repo src/core/search.ts
+```bash
+codemap status --repo /path/to/repo --full
+codemap index --repo /path/to/repo --approve
+codemap search --repo /path/to/repo repoPathNeedle
+codemap context --repo /path/to/repo src/core/search.ts
 ```
 
 Equivalent tool params:
@@ -129,11 +165,11 @@ Approval is still per repo. If the target repo is not approved, ask before runni
 
 ### Work inside a monorepo subtree
 
-```text
-/codemap-index --path-prefix services/api
-/codemap-search --path-prefix services/api auth middleware
-/codemap-context --path-prefix services/api src/auth/middleware.ts
-/codemap-status --full --path-prefix services/api
+```bash
+codemap index --path-prefix services/api
+codemap search --path-prefix services/api auth middleware
+codemap context --path-prefix services/api src/auth/middleware.ts
+codemap status --full --path-prefix services/api
 ```
 
 `pathPrefix` is normalized to a repository-relative POSIX path and is supported by all four operations.
@@ -144,26 +180,28 @@ Search and context include stale warnings when the index no longer matches the w
 
 If results are stale and freshness matters:
 
-```text
-/codemap-index
+```bash
+codemap index
 ```
 
 For scoped refreshes:
 
-```text
-/codemap-index --path-prefix services/api
+```bash
+codemap index --path-prefix services/api
 ```
 
 ## Commands and tools
 
-Pi commands are for humans in the TUI. LLM tools expose the same operations as structured JSON.
+The CLI is the scriptable interface. MCP and Pi expose the same operations as structured tools; Pi also adds slash commands for humans in the TUI.
 
-| Operation | Command | Tool params | Result shape |
+| Operation | CLI | MCP/Pi tool | Result shape |
 |---|---|---|---|
-| Status | `/codemap-status [--repo-path <path>] [--full] [--path-prefix <subtree>]` | `codemap_status({ repoPath?, full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, and full Git/index diagnostics (`currentHead`, `indexedHead`, `headChanged`, `dirty`, `dirtyFiles`, stale counts) when `full=true` |
-| Index | `/codemap-index [--repo-path <path>] [--approve-repo] [--path-prefix <subtree>]` | `codemap_index({ repoPath?, approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
-| Search | `/codemap-search [--repo-path <path>] [--path-prefix <subtree>] <query>` | `codemap_search({ repoPath?, query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
-| Context | `/codemap-context [--repo-path <path>] [--path-prefix <subtree>] <target>` | `codemap_context({ repoPath?, target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
+| Status | `codemap status [--repo <path>] [--full] [--path-prefix <subtree>]` | `codemap_status({ repoPath?, full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, and full Git/index diagnostics (`currentHead`, `indexedHead`, `headChanged`, `dirty`, `dirtyFiles`, stale counts) when `full=true` |
+| Index | `codemap index [--repo <path>] [--approve] [--path-prefix <subtree>]` | `codemap_index({ repoPath?, approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
+| Search | `codemap search [--repo <path>] [--path-prefix <subtree>] <query>` | `codemap_search({ repoPath?, query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
+| Context | `codemap context [--repo <path>] [--path-prefix <subtree>] <target>` | `codemap_context({ repoPath?, target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
+
+The Pi slash-command forms are `/codemap-status`, `/codemap-index`, `/codemap-search`, and `/codemap-context`; they use `--repo-path` and `--approve-repo` instead of the shorter CLI flags.
 
 `codemap_context` reason kinds are best-effort navigation hints such as `target`, `search_result`, `import`, `reverse_import`, `include`, `reverse_include`, `implementation_pair`, `near_config`, `same_dir`, `test_of`, `sibling_test`, `reverse_test`, and `related_doc`. They are derived from indexed content and path/name heuristics; TypeScript/JavaScript imports, Python relative imports, nearby config files, same-directory source neighbors, test/source roles, and C/C++ quoted includes/header-source pairs are supported without building a full language graph.
 
@@ -233,4 +271,4 @@ Future/non-V1 ideas are tracked in [`../product/roadmap.md`](../product/roadmap.
 
 ## Compatibility
 
-In Pi, use the `codemap_*` tools and `/codemap-*` commands. Outside Pi, use the `codemap` CLI (`codemap search|context|status|index`); it wraps the same core and emits text or `--json`. Both require a Git repository and per-repo approval before indexing.
+Use `codemap search|context|status|index` in a shell, `codemap_*` tools in MCP or Pi, and `/codemap-*` commands in the Pi TUI. Every adapter executes the same shared operations. All require a Git repository and per-repo approval before indexing.

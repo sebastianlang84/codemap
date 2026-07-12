@@ -1,16 +1,16 @@
-# PRD: pi-ext-codemap
+# PRD: CodeMap
 
 ## 1. Summary
 
-`pi-ext-codemap` is a lightweight local codebase search and context extension for coding agents.
+CodeMap is a lightweight local codebase search and context product for coding agents.
 
-It indexes the current or explicitly targeted repository state into a local SQLite/FTS5 database and provides agent-friendly tools for finding relevant files, line ranges, snippets, docs, tests, and entry points. It ships two adapters over one Pi-independent core: a Pi extension (tools + slash commands) and a standalone `codemap` CLI for non-Pi agents such as Claude Code and Codex.
+It indexes the current or explicitly targeted repository state into a local SQLite/FTS5 database and provides agent-friendly operations for finding relevant files, line ranges, snippets, docs, tests, and entry points. The standalone `codemap` CLI is the primary interface. The native MCP server and Pi extension are adapters over the same shared application operations and Pi-independent core.
 
 It complements `pi-memory` but is not part of it.
 
 ```text
 pi-memory stores durable decisions.
-pi-ext-codemap indexes current or explicitly targeted repo state.
+CodeMap indexes current or explicitly targeted repo state.
 ```
 
 Canonical detailed docs:
@@ -38,7 +38,7 @@ Current options are either too primitive, too broad, or too heavy:
 
 ## 3. Solution
 
-From the user's perspective, `pi-ext-codemap` provides a small set of commands and tools — as Pi-native slash commands/tools and as a standalone `codemap` CLI — that can approve, index, search, and explain a repository locally. The agent can ask for a query, file, or symbol and receive a compact read-first context package with paths, line ranges, snippets, related tests/docs/imports/callers, and index health warnings.
+From the user's perspective, CodeMap provides four local operations to approve/index, search, build read-first context, and inspect repository status. They are scriptable through the `codemap` CLI and available as native tools through MCP or Pi; Pi additionally provides slash commands. The agent can ask for a query, file, or symbol and receive a compact package with paths, line ranges, snippets, related tests/docs/imports/callers, and index health warnings.
 
 The V1 solution is intentionally lexical/local-first: SQLite + FTS5 + cheap symbol extraction + deterministic ranking. Embeddings, graph expansion, and ast-grep integrations remain later enhancements unless they can be added without making V1 heavier.
 
@@ -46,24 +46,25 @@ The V1 solution is intentionally lexical/local-first: SQLite + FTS5 + cheap symb
 
 Primary users:
 
-- Pi coding agents
-- Coding agents outside Pi (Claude Code, Codex, and other shell-driven agents) via the `codemap` CLI
-- Human users operating an agent inside a repo
+- Coding agents and human operators using the `codemap` CLI in a repository
+- MCP-capable agent hosts such as Claude Code, Codex, and Cursor
+- Privacy-conscious users who need deterministic local repository navigation
 
 Secondary users:
 
-- Future Pi extensions that need compact code context
+- Pi coding agents using the optional extension and TUI commands
+- Future adapters that need compact code context
 - Handoff/memory workflows that want to reference files, symbols, or line ranges
 
 ## 5. User stories
 
-1. As a Pi coding agent, I want to search a repo by feature, symbol, or phrase, so that I can find relevant files before editing.
-2. As a Pi coding agent, I want line-bounded snippets, so that I can read targeted ranges instead of whole files.
-3. As a Pi coding agent, I want a read-first context package for a file or symbol, so that I can inspect likely dependencies, callers, tests, and docs in the right order.
-4. As a Pi coding agent, I want stale-index warnings, so that I do not rely on outdated search results.
-5. As a human Pi user, I want explicit repo approval before indexing, so that the tool never scans arbitrary private folders.
-6. As a human Pi user, I want status diagnostics, so that I can see whether a repo is approved, indexed, stale, or partially skipped.
-7. As a future extension author, I want a simple local index API, so that other Pi workflows can reuse file, chunk, symbol, and context results.
+1. As a coding agent, I want to search a repo by feature, symbol, or phrase, so that I can find relevant files before editing.
+2. As a coding agent, I want line-bounded snippets, so that I can read targeted ranges instead of whole files.
+3. As a coding agent, I want a read-first context package for a file or symbol, so that I can inspect likely dependencies, callers, tests, and docs in the right order.
+4. As a coding agent, I want stale-index warnings, so that I do not rely on outdated search results.
+5. As a human user, I want explicit repo approval before indexing, so that the tool never scans arbitrary private folders.
+6. As a human user, I want status diagnostics, so that I can see whether a repo is approved, indexed, stale, or partially skipped.
+7. As an adapter author, I want stable shared operations, so that another host can reuse status, index, search, and context without duplicating product logic.
 8. As an agent resuming work from a handoff, I want stable file and line references, so that I can quickly reopen the relevant code context.
 9. As a privacy-conscious user, I want local-only storage, so that no repository content leaves the machine.
 10. As a maintainer, I want cheap incremental indexing, so that repeated searches do not require full rescans.
@@ -72,10 +73,11 @@ Secondary users:
 
 ### Product goals
 
-- Provide a small local repo navigation tool for Pi agents.
+- Provide a small, scriptable local repo navigation tool for coding agents.
+- Keep the CLI as the primary product interface while MCP and Pi remain thin adapters.
 - Return compact, useful context packages with minimal token waste.
 - Keep all indexing local and rebuildable.
-- Avoid daemon, server, cloud, or heavy graph dependencies.
+- Avoid a background daemon, remote/cloud service, or heavy graph dependencies.
 - Make FTS/path/symbol/doc search useful before adding embeddings.
 
 ### V1 technical goals
@@ -86,7 +88,8 @@ Secondary users:
 - Hash/mtime-based incremental indexing.
 - Chunking for code, Markdown, and text.
 - Search results with paths, line ranges, snippets, and ranking scores.
-- `codemap_context` tool that answers: “What should the agent read first?”
+- Read-first context operation that answers: “What should the agent read first?”
+- Standalone `codemap` commands for status, index, search, and context.
 
 ## 7. Out of scope / non-goals
 
@@ -195,20 +198,20 @@ Indexing must use whitelist-first file inclusion and conservative skips for bina
 
 Lockfiles are intentionally different from generated binaries: supported text lockfiles may be indexed so explicit lockfile queries work. They are treated as noisy files in ranking and read-first context and should not displace source/config/docs/tests for ordinary agent navigation queries.
 
-Detailed scanner/storage behavior is maintained in [`../user/usage.md#indexed-file-policy`](../user/usage.md#indexed-file-policy) and [`../developer/architecture.md`](../developer/architecture.md).
+Detailed scanner/storage behavior is maintained in [`../user/usage.md#what-gets-indexed`](../user/usage.md#what-gets-indexed) and [`../developer/architecture.md`](../developer/architecture.md).
 
-## 11. Tool API contract
+## 11. Operation contract
 
-V1 exposes four primary tools and matching slash commands:
+V1 exposes four shared operations through matching CLI commands and MCP/Pi tools:
 
-| Tool | Command | Purpose |
-|---|---|---|
-| `codemap_status` | `/codemap-status` | Show approval/index status; `full=true` / `--full` runs stale diagnostics. |
-| `codemap_index` | `/codemap-index` | Approve once and/or refresh the local index. |
-| `codemap_search` | `/codemap-search` | Search indexed paths, chunks, and cheap symbols. |
-| `codemap_context` | `/codemap-context` | Return read-first context for a file path, symbol, feature, or query. |
+| Operation | CLI | MCP/Pi tool | Purpose |
+|---|---|---|---|
+| Status | `codemap status` | `codemap_status` | Show approval/index status; `full=true` / `--full` runs stale diagnostics. |
+| Index | `codemap index` | `codemap_index` | Approve once and/or refresh the local index. |
+| Search | `codemap search` | `codemap_search` | Search indexed paths, chunks, and cheap symbols. |
+| Context | `codemap context` | `codemap_context` | Return read-first context for a file path, symbol, feature, or query. |
 
-All four operations accept optional `repoPath` / `--repo-path` to target a repo root, directory inside a repo, or file inside a repo without changing session cwd. They also accept optional `pathPrefix` / `--path-prefix` where applicable to scope monorepos and nested services.
+All four operations can target a repo root, directory inside a repo, or file inside a repo without changing session cwd (`--repo` in the CLI; `repoPath` in tools; `--repo-path` in Pi commands). They also accept optional `pathPrefix` / `--path-prefix` where applicable to scope monorepos and nested services.
 
 Public result contracts are documented in [`../user/usage.md#commands-and-tools`](../user/usage.md#commands-and-tools). Adapter/core boundaries are documented in [`../developer/architecture.md`](../developer/architecture.md).
 
@@ -237,9 +240,11 @@ Search-result objects remain compact. Internal score diagnostics may decompose r
 
 ## 13. Packaging and implementation decisions
 
-- Build a Pi extension/package with four V1 tools: status, index, search, and context.
-- Keep the core product logic Pi-API-free and expose Pi tools/commands as adapters over shared core functions.
+- Ship the CLI-first package as `@sebastianlang84/codemap`, with `codemap` and `codemap-mcp` binaries plus the optional Pi adapter.
+- Keep product logic host-API-free and expose CLI, MCP, and Pi as adapters over shared application operations.
+- Ship built JavaScript for the CLI and MCP binaries; keep Pi-specific dependencies optional for CLI/MCP users.
 - Keep V1 local-only, on-demand, and explicitly approved per repository.
+- Resolve state through explicit CLI override, `CODEMAP_HOME`, XDG user data, then `~/.local/share/codemap`; retain the old Pi path as a compatibility fallback until a user deliberately migrates it.
 - Use a global registry plus one SQLite database per approved repo.
 - Use Node.js `node:sqlite` `DatabaseSync` with raw SQL migrations; do not introduce Prisma or an ORM.
 - Use SQLite FTS5 as the primary V1 search engine across file paths, symbols, and chunks.
@@ -272,7 +277,9 @@ The canonical maintainer testing policy lives in [`../developer/architecture.md#
 
 ## 16. Resolved defaults
 
-- The package uses a `package.json` `pi.extensions` manifest pointing at `./index.ts`.
+- The package uses a `package.json` `pi.extensions` manifest pointing at the TypeScript Pi adapter source.
+- The CLI is the primary interface; MCP and Pi expose the same four shared operations as adapters.
+- Default state resolution is `--state-dir` → `CODEMAP_HOME` → `$XDG_DATA_HOME/codemap` → `~/.local/share/codemap`, with legacy Pi-state fallback for existing users.
 - V1 exposes four primary tools: `codemap_status`, `codemap_index`, `codemap_search`, and `codemap_context`.
 - Indexing is manual/on-demand.
 - Stale search/context results warn instead of silently reindexing.

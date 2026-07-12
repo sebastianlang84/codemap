@@ -3,8 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Check, Errors } from "typebox/value";
 
-import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../core/operations.ts";
-import { codeMapOperationMetadata, type CodeMapOperationId } from "../core/operation-metadata.ts";
+import { codeMapOperationMetadata, type CodeMapOperationId } from "../application/operation-metadata.ts";
+import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.ts";
 
 // Minimal Model Context Protocol server exposing the same codemap_* tools as the Pi extension to
 // non-Pi hosts (Claude Code, Codex, ...). MCP over stdio is newline-delimited JSON-RPC 2.0, so no

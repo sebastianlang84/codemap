@@ -1,8 +1,8 @@
-import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../core/operations.ts";
-import { codeMapOperationMetadataById, type CodeMapOperationMetadata } from "../core/operation-metadata.ts";
+import { codeMapOperationMetadataById, type CodeMapOperationMetadata } from "../application/operation-metadata.ts";
+import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.ts";
 
 // Re-export the Pi-free execution surface so existing importers keep a single entrypoint.
-export { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../core/operations.ts";
+export { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.ts";
 
 export type CommandNotifyLevel = "info" | "warning" | "error";
 

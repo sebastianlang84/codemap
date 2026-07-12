@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 
@@ -13,9 +13,73 @@ const storageHome = useIsolatedHome();
 const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodeMap } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
-const { getRepoInfo, repoKey, listRegistryRepos, approveRepo } = await import("../src/core/repo.ts");
+const { getRepoInfo, repoKey, listRegistryRepos, approveRepo, resolveStateDir } = await import("../src/core/repo.ts");
 const { collectStateGcCandidates, pruneState } = await import("../src/core/state-gc.ts");
 const { GRAPH_VERSION } = await import("../src/core/graph-store.ts");
+
+function withStateEnv(
+  values: Partial<Record<"HOME" | "USERPROFILE" | "CODEMAP_HOME" | "XDG_DATA_HOME", string | undefined>>,
+  run: () => void,
+): void {
+  const previous = new Map(Object.keys(values).map((key) => [key, process.env[key]]));
+  try {
+    for (const [key, value] of Object.entries(values)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+    run();
+  } finally {
+    for (const [key, value] of previous) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+}
+
+test("state directory priority is explicit path, CODEMAP_HOME, then XDG_DATA_HOME", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "codemap-state-priority-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const explicit = join(root, "explicit");
+  const codemapHome = join(root, "codemap-home");
+  const xdgDataHome = join(root, "xdg-data");
+  withStateEnv({ CODEMAP_HOME: codemapHome, XDG_DATA_HOME: xdgDataHome }, () => {
+    assert.equal(resolveStateDir(explicit), resolve(explicit));
+    assert.equal(resolveStateDir(), resolve(codemapHome));
+  });
+
+  withStateEnv({ CODEMAP_HOME: undefined, XDG_DATA_HOME: xdgDataHome }, () => {
+    assert.equal(resolveStateDir(), join(resolve(xdgDataHome), "codemap"));
+  });
+});
+
+test("state directory defaults to the platform-neutral user data path", (t) => {
+  const home = mkdtempSync(join(tmpdir(), "codemap-state-default-"));
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+
+  withStateEnv({ HOME: home, USERPROFILE: home, CODEMAP_HOME: undefined, XDG_DATA_HOME: undefined }, () => {
+    assert.equal(resolveStateDir(), join(home, ".local", "share", "codemap"));
+  });
+});
+
+test("state directory keeps using existing Pi state until the new default exists", (t) => {
+  const home = mkdtempSync(join(tmpdir(), "codemap-state-legacy-"));
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+  const legacyStateDir = join(home, ".pi", "agent", "state", "codemap");
+  const newStateDir = join(home, ".local", "share", "codemap");
+  const xdgDataHome = join(home, "xdg-data");
+  mkdirSync(legacyStateDir, { recursive: true });
+
+  withStateEnv({ HOME: home, USERPROFILE: home, CODEMAP_HOME: undefined, XDG_DATA_HOME: xdgDataHome }, () => {
+    assert.equal(resolveStateDir(), join(xdgDataHome, "codemap"));
+  });
+
+  withStateEnv({ HOME: home, USERPROFILE: home, CODEMAP_HOME: undefined, XDG_DATA_HOME: undefined }, () => {
+    assert.equal(resolveStateDir(), legacyStateDir);
+    mkdirSync(newStateDir, { recursive: true });
+    assert.equal(resolveStateDir(), newStateDir);
+  });
+});
 
 test("stateDir isolates approval registry and repo index DBs", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-state-seam-repo-"));
@@ -29,8 +93,8 @@ export function isolatedFeature() {
   return true;
 }
 `);
-  const defaultRegistryPath = join(storageHome, ".pi", "agent", "state", "codemap", "registry.sqlite");
-  const defaultDbPath = join(storageHome, ".pi", "agent", "state", "codemap", "repos", `${repoKey(root)}.sqlite`);
+  const defaultRegistryPath = join(storageHome, ".local", "share", "codemap", "registry.sqlite");
+  const defaultDbPath = join(storageHome, ".local", "share", "codemap", "repos", `${repoKey(root)}.sqlite`);
   const defaultRegistryBefore = existsSync(defaultRegistryPath) ? statSync(defaultRegistryPath) : undefined;
   assert.equal(existsSync(defaultDbPath), false);
 
@@ -234,7 +298,7 @@ test("CodeMap uses state storage for registry and repo DBs", (t) => {
   const root = fixtureRepo(t);
   const info = getRepoInfo(root);
 
-  assert.match(info.dbPath, /\.pi\/agent\/state\/codemap\/repos\//);
-  assert.ok(existsSync(join(storageHome, ".pi", "agent", "state", "codemap", "registry.sqlite")));
+  assert.match(info.dbPath, /\.local\/share\/codemap\/repos\//);
+  assert.ok(existsSync(join(storageHome, ".local", "share", "codemap", "registry.sqlite")));
   assert.ok(existsSync(info.dbPath));
 });

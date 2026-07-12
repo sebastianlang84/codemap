@@ -8,7 +8,7 @@ import test from "node:test";
 
 // Exercises the real stdio bin end to end (framing + stdout purity), which the pure dispatch() tests
 // cannot cover. Runs the process in a throwaway HOME/cwd so it never touches real CodeMap state.
-const binPath = join(dirname(fileURLToPath(import.meta.url)), "..", "bin", "codemap-mcp.ts");
+const binPath = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "mcp", "bin.ts");
 
 function runTransport(lines: string[], cwd?: string): { stdout: string; parsed: any[] } {
   const home = mkdtempSync(join(tmpdir(), "pi-codemap-mcp-home-"));

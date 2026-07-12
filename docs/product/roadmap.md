@@ -9,11 +9,11 @@ Do not duplicate the full V1 contract here. Use the PRD as the authoritative sou
 - V1 scope and explicit non-goals: [`PRD.md#9-v1-scope`](PRD.md#9-v1-scope)
 - safety and privacy requirements: [`PRD.md#10-safety-and-privacy-requirements`](PRD.md#10-safety-and-privacy-requirements)
 - storage and database design: [`../developer/architecture.md#storage`](../developer/architecture.md#storage), [`../developer/architecture.md#database-design`](../developer/architecture.md#database-design)
-- tool and command contracts: [`PRD.md#11-tool-api-contract`](PRD.md#11-tool-api-contract), [`../user/usage.md#commands-and-tools`](../user/usage.md#commands-and-tools)
+- operation and adapter contracts: [`PRD.md#11-operation-contract`](PRD.md#11-operation-contract), [`../user/usage.md#commands-and-tools`](../user/usage.md#commands-and-tools)
 - packaging and core/adapter boundary: [`PRD.md#13-packaging-and-implementation-decisions`](PRD.md#13-packaging-and-implementation-decisions), [`../developer/architecture.md#architecture-boundary`](../developer/architecture.md#architecture-boundary)
 - implementation decisions and resolved defaults: [`PRD.md#13-packaging-and-implementation-decisions`](PRD.md#13-packaging-and-implementation-decisions), [`PRD.md#16-resolved-defaults`](PRD.md#16-resolved-defaults)
 
-Roadmap items must preserve the V1 baseline constraints unless the PRD is explicitly changed first: laptop/notebook-friendly defaults, low RAM use, local SQLite/FTS5 indexing under `~/.pi/agent/state/codemap/`, no mandatory model downloads, no daemon or heavyweight runtime in ordinary agent loops, explicit per-repo approval, incremental scanning with conservative ignore/secret/binary/generated-file exclusions, line-bounded chunks for code/Markdown/text, broad code/plain-file coverage, cheap symbol extraction, status/index/search/context tools and commands, and stale-index warnings instead of automatic background refreshes.
+Roadmap items must preserve the V1 baseline constraints unless the PRD is explicitly changed first: laptop/notebook-friendly defaults, low RAM use, local SQLite/FTS5 indexing in the resolved CodeMap user-data directory, no mandatory model downloads, no daemon or heavyweight runtime in ordinary agent loops, explicit per-repo approval, incremental scanning with conservative ignore/secret/binary/generated-file exclusions, line-bounded chunks for code/Markdown/text, broad code/plain-file coverage, cheap symbol extraction, status/index/search/context operations, and stale-index warnings instead of automatic background refreshes.
 
 When evaluating prior art, CodeMap should combine the strongest compatible ideas from other repos with its existing strengths, but never blindly copy designs that would make the default path heavy or less predictable.
 
@@ -36,7 +36,7 @@ The previous prioritized TDD slices are complete and kept here as delivery histo
 | Keep ranking explain out of the product surface | Search pipeline/ranking Modules | `SearchResult` remains compact | Decision: do not add user-facing explain fields; use quality gates for ranking guardrails instead | n/a |
 | Expand deterministic search-quality gates | Search quality metrics Module and benchmark script | `npm run bench:search-quality:gate` | New regression cases cover implementation entrypoints, related tests/docs, and lockfile/generated-file noise | `npm run bench:search-quality:gate -- /path/to/repo` |
 
-Architecture rule for future slices: preserve Depth by keeping product logic in `src/core/` and Pi/TUI concerns in `src/pi-extension/`; add a Seam only when it improves Locality or enables a real Adapter. TDD rule: one behavior test through the public Interface, minimal Implementation to green, then refactor.
+Architecture rule for future slices: keep host-neutral use cases in `src/application/`, retrieval/storage mechanics in `src/core/`, and host concerns in the CLI/MCP/Pi adapters. Add a seam only when it improves locality or enables a real adapter.
 
 Do not start embeddings, vector stores, graph work, or broad AST integration until existing search-quality gates show the lexical/structural baseline is insufficient for a concrete use case.
 
@@ -44,7 +44,7 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Positioning and improvement plan
 
-CodeMap's intended sweet spot is narrower than a full AI IDE or code-search server: it sits between `rg`/`ctags` and systems like Cursor, Cody, Sourcegraph, or OpenGrok. `rg` gives fast text hits; CodeMap should turn those hits into an agent read plan. `ctags` gives symbols; CodeMap combines symbols with tests, docs, configs, imports, staleness, and read-budget ordering. LSP/IDEs remain better for interactive rename/diagnostics; CodeMap should stay headless, local, and Pi-agent optimized.
+CodeMap's intended sweet spot is narrower than a full AI IDE or code-search server: it sits between `rg`/`ctags` and systems like Cursor, Cody, Sourcegraph, or OpenGrok. `rg` gives fast text hits; CodeMap should turn those hits into an agent read plan. `ctags` gives symbols; CodeMap combines symbols with tests, docs, configs, imports, staleness, and read-budget ordering. LSP/IDEs remain better for interactive rename/diagnostics; CodeMap should stay headless, local, and host-neutral.
 
 Near-term improvement priorities:
 
@@ -78,7 +78,6 @@ Hard design rule for future semantic search: **exact path/symbol > lexical FTS >
 | ast-grep and symbols | Optional query-time structural search or stronger structural extraction, only if a new eval miss justifies it | A prior opt-in symbol-indexing prototype was removed after no quality gain and measurable index cost; any future use must degrade cleanly when `ast-grep` is unavailable. |
 | Graph and relationships | Small SQLite mini-graph, first for exact file import/include relationships in context | See [`relationship graph plan`](../developer/relationship-graph-plan.md). No external graph server. Keep V1.5 to file nodes plus exact `imports`/`includes`; promote broader relationships only when they improve read-first context enough to justify maintenance. |
 | Related context | Better test/dependency/config hints for arbitrary repos | Direct local imports and reverse-import callers are implemented for read-first context; remaining work should focus on measured zero-config gaps such as stronger test/callsite/config relationships and context expansion reasons. Treat Markdown links as opportunistic, not central. |
-| CLI adapter | Add a thin `src/cli/` adapter over `src/core/` | Keep CLI output/argv parsing separate from product logic; see the architecture boundary in [`../developer/architecture.md`](../developer/architecture.md#architecture-boundary). |
 | Memory links | Link CodeMap results to `pi-memory` artifact references | Keep CodeMap rebuildable; durable decisions stay in memory. |
 | Automation | Optional hooks or commands for refresh workflows | Avoid daemon/background crawling as a default. |
 
@@ -89,7 +88,6 @@ Hard design rule for future semantic search: **exact path/symbol > lexical FTS >
 - Which concrete eval miss, if any, would justify revisiting optional `ast-grep` after the removed symbol-indexing prototype showed no net gain?
 - How much query-time structural search should come from `ast-grep`, and what should remain lexical/FTS-only?
 - After direct/reverse import hints, which zero-config test/callsite/config relationships are useful enough for V1.5/V2?
-- When should a CLI adapter become worth adding, and which output modes besides JSON are needed?
 - Should refresh automation be an explicit command, hook, or remain manual-only?
 
 ## Historical MVP build order

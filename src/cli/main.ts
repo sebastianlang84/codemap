@@ -1,11 +1,8 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { codemapContext } from "../core/context.ts";
-import { indexRepo, status } from "../core/indexer.ts";
-import { searchCodeMapWithDiagnostics } from "../core/search.ts";
-import type { StateOptions } from "../core/repo.ts";
+import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.ts";
 
 export interface CliResult {
   code: number;
@@ -38,23 +35,28 @@ Options:
   --limit <n>            Max results (search/context)
   --approve              Allow first-time local indexing (index only)
   --full                 Full working-tree stale scan (status only)
-  --state-dir <path>     Index/registry location (default: ~/.pi/agent/state/codemap)
+  --state-dir <path>     Index/registry location (overrides CODEMAP_HOME/XDG default)
   --json                 Emit machine-readable JSON
   --version, --help
 
 Notes:
   Indexing is local-only and never leaves your machine. First index needs --approve.
   Staleness is advisory; refresh with 'codemap index' when it matters.
-  Indexes and the approval registry live under ~/.pi/agent/state/codemap (override with
-  --state-dir); prune indexes for repos that no longer exist with 'npm run gc:state'.`;
+  New installs store state under CODEMAP_HOME, XDG_DATA_HOME/codemap, or
+  ~/.local/share/codemap. Existing ~/.pi/agent/state/codemap data remains in use until migrated.
+  Override with --state-dir; prune deleted-repo indexes with 'npm run gc:state' in a clone.`;
 
 function packageVersion(): string {
-  try {
-    const pkgPath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "package.json");
-    return JSON.parse(readFileSync(pkgPath, "utf8")).version ?? "0.0.0";
-  } catch {
-    return "0.0.0";
+  const here = dirname(fileURLToPath(import.meta.url));
+  for (const pkgPath of [join(here, "..", "..", "package.json"), join(here, "..", "..", "..", "package.json")]) {
+    if (!existsSync(pkgPath)) continue;
+    try {
+      return JSON.parse(readFileSync(pkgPath, "utf8")).version ?? "0.0.0";
+    } catch {
+      // Keep looking: source and compiled layouts place package.json at different depths.
+    }
   }
+  return "0.0.0";
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -81,13 +83,6 @@ function parseArgs(argv: string[]): ParsedArgs {
   return parsed;
 }
 
-function resolveRepoCwd(cwd: string, repo?: string): string {
-  if (!repo) return cwd;
-  const target = isAbsolute(repo) ? repo : resolve(cwd, repo);
-  if (!existsSync(target)) throw new Error(`--repo path does not exist: ${target}`);
-  return statSync(target).isDirectory() ? target : dirname(target);
-}
-
 function ok(out: string): CliResult {
   return { code: 0, out, err: "" };
 }
@@ -101,8 +96,12 @@ function staleNote(pkg: { stale: boolean }): string {
 }
 
 function runStatus(parsed: ParsedArgs, cwd: string): CliResult {
-  const stateOptions: StateOptions = { stateDir: parsed.stateDir };
-  const result = status(resolveRepoCwd(cwd, parsed.repo), { health: parsed.full ? "full" : "cheap", pathPrefix: parsed.pathPrefix, ...stateOptions });
+  const result = codeMapStatus(cwd, {
+    full: parsed.full,
+    repoPath: parsed.repo,
+    pathPrefix: parsed.pathPrefix,
+    stateDir: parsed.stateDir,
+  });
   if (parsed.json) return ok(JSON.stringify(result, null, 2));
   const lines = [
     `readiness: ${result.readiness}`,
@@ -115,8 +114,12 @@ function runStatus(parsed: ParsedArgs, cwd: string): CliResult {
 }
 
 function runIndex(parsed: ParsedArgs, cwd: string): CliResult {
-  const stateOptions: StateOptions = { stateDir: parsed.stateDir };
-  const result = indexRepo({ cwd: resolveRepoCwd(cwd, parsed.repo), approve: parsed.approve, pathPrefix: parsed.pathPrefix, ...stateOptions });
+  const result = codeMapIndex(cwd, {
+    approveRepo: parsed.approve,
+    repoPath: parsed.repo,
+    pathPrefix: parsed.pathPrefix,
+    stateDir: parsed.stateDir,
+  });
   if (parsed.json) return ok(JSON.stringify(result, null, 2));
   const warnings = result.warnings.length > 0 ? `\n${result.warnings.map((w) => `(!) ${w}`).join("\n")}` : "";
   return ok(`Indexed ${result.indexed}/${result.scanned} files (${result.skipped} skipped, ${result.removed} removed)${warnings}`);
@@ -125,8 +128,13 @@ function runIndex(parsed: ParsedArgs, cwd: string): CliResult {
 function runSearch(parsed: ParsedArgs, cwd: string): CliResult {
   const query = parsed.positionals.join(" ").trim();
   if (!query) return fail("search needs a query, e.g. codemap search auth middleware", 2);
-  const stateOptions: StateOptions = { stateDir: parsed.stateDir };
-  const pkg = searchCodeMapWithDiagnostics({ query, cwd: resolveRepoCwd(cwd, parsed.repo), limit: parsed.limit, pathPrefix: parsed.pathPrefix, ...stateOptions });
+  const pkg = codeMapSearch(cwd, {
+    query,
+    repoPath: parsed.repo,
+    limit: parsed.limit,
+    pathPrefix: parsed.pathPrefix,
+    stateDir: parsed.stateDir,
+  });
   if (parsed.json) return ok(JSON.stringify(pkg, null, 2));
   const rows = pkg.results.map((r) => `${r.path}:${r.startLine}-${r.endLine} [${r.kind}]`);
   const confidenceNote = pkg.topHitConfidence.level === "low"
@@ -138,8 +146,13 @@ function runSearch(parsed: ParsedArgs, cwd: string): CliResult {
 function runContext(parsed: ParsedArgs, cwd: string): CliResult {
   const target = parsed.positionals.join(" ").trim();
   if (!target) return fail("context needs a path or query, e.g. codemap context src/core/search.ts", 2);
-  const stateOptions: StateOptions = { stateDir: parsed.stateDir };
-  const pkg = codemapContext({ target, cwd: resolveRepoCwd(cwd, parsed.repo), limit: parsed.limit, pathPrefix: parsed.pathPrefix, ...stateOptions });
+  const pkg = codeMapContext(cwd, {
+    target,
+    repoPath: parsed.repo,
+    limit: parsed.limit,
+    pathPrefix: parsed.pathPrefix,
+    stateDir: parsed.stateDir,
+  });
   if (parsed.json) return ok(JSON.stringify(pkg, null, 2));
   const rows = pkg.readFirst.map((item) => {
     const reasons = item.reasons && item.reasons.length > 0 ? ` (${item.reasons.map((reason) => reason.kind).join(", ")})` : "";

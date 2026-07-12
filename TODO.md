@@ -1,6 +1,6 @@
 # TODO
 
-Active offene Arbeit für `pi-ext-codemap`. Abgehakte Punkte werden hier gelöscht; release-relevante Historie steht im [`CHANGELOG.md`](CHANGELOG.md). Produkt-/Architekturkontext steht in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
+Active offene Arbeit für CodeMap. Abgehakte Punkte werden hier gelöscht; release-relevante Historie steht im [`CHANGELOG.md`](CHANGELOG.md). Produkt-/Architekturkontext steht in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
 ## Active tactical backlog — reviewed order
 
@@ -54,7 +54,6 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
    - Guardrails: keine generelle Doc-Abwertung; canonical docs bleiben auffindbar; Tests/TODOs bleiben sichtbar, wenn Query sie verlangt; bestehende Natural-Holdout-/Search-Gates dürfen nicht regressieren.
 
 6. [ ] Review-Cleanup ohne Produktverhalten ändern.
-   - Package-Entscheidung: `package.json` packt Tests, Fixtures und Eval-Skripte mit ein; aktuell klein und nützlich für Maintainer, aber bei Release-Cleanup bewusst entscheiden, ob Runtime-Package-Leanness oder installierbare Evalbarkeit wichtiger ist.
    - Token-Budget: `codemap_context` und Gesamtbudget sind nahe am Gate; neue Parameter, Guidelines oder öffentliche Tools nur mit `npm run check:token-injection` und expliziter Budgetentscheidung.
    - Verifikation: Doku-/Package-Änderungen mit `npm pack --dry-run --json`, `npm run audit:lightweight`, `npm run check:token-injection` prüfen.
 
@@ -66,9 +65,9 @@ Diese Lücken sind bewusst festgehalten: Evals sollen nicht nur bestehen, sonder
 
 ## Diskussionspunkte / offen
 
-1. [ ] CLI-Distribution/-Reichweite nur bei Bedarf ausbauen.
-   - Kontext: `codemap` CLI und `codemap-mcp` MCP-Server sind da (Git-Install `npm install -g github:…`; MCP über stdio ohne neue Dependency). Native Integration für Claude Code/Codex/Cursor ist damit abgedeckt.
-   - Offen bleibt nur der npm-Publish/`npx codemap`-Pfad statt Git-Install (kurzer Paketname gegen npm-Account/Registry-Pflege) — erst bei konkretem Nutzerwunsch; kleiner Mehrwert.
+1. [ ] npm-Registry-Veröffentlichung nur bei Bedarf aufnehmen.
+   - Kontext: CodeMap ist CLI-first; `codemap` und `codemap-mcp` werden bis zu einer Registry-Veröffentlichung kanonisch mit `npm install -g github:sebastianlang84/codemap` installiert. Pi bleibt ein optionaler Adapter aus demselben Repo.
+   - Offen bleibt nur der npm-Publish/`npx`-Pfad statt Git-Install (`@sebastianlang84/codemap` gegen Registry-/Release-Pflege) — erst bei konkretem Nutzerwunsch.
    - MCP-Verbesserung (gated): Der Server nutzt aktuell den Prozess-cwd als Repo-Root; Hosts, die MCP-Server nicht im Projektverzeichnis starten (z. B. manche Cursor-Versionen), brauchen `repoPath` im Tool-Call. Native Auflösung über die MCP-`roots`-Capability erst umsetzen, wenn ein konkreter Host-Miss auftaucht.
 
 2. [ ] Später: Autoresearch als Parameter-Tuning-Schleife prüfen.

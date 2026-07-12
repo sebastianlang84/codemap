@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runCli } from "../src/cli/main.ts";
+import { runCli } from "./main.ts";
 
 const result = runCli(process.argv.slice(2));
 if (result.out) process.stdout.write(result.out.endsWith("\n") ? result.out : `${result.out}\n`);

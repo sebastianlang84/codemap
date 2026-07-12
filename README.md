@@ -4,7 +4,7 @@
 
 CodeMap indexes code and plain-text project files into a local SQLite/FTS database. An agent then asks *"where is this feature/symbol/endpoint/config, and what should I read first?"* and gets a ranked answer plus the related files (imports, callers, tests, docs, config) — instead of running many broad `grep`/`find` passes and reading whole files to orient itself.
 
-It runs anywhere a coding agent can run: as a **Pi extension** (tools + slash commands), a **native MCP server** (Claude Code, Codex, Cursor, or any MCP host), or a **standalone `codemap` CLI** for any shell-driven agent.
+The **standalone `codemap` CLI is the primary interface**. The same operations are also available through a native MCP server (Claude Code, Codex, Cursor, or any MCP host) and an optional Pi extension (tools + slash commands).
 
 ## Why it's worth using
 
@@ -80,17 +80,18 @@ Full methodology, per-cohort tables, miss taxonomy, and known limitations live i
 
 ## Install
 
-### As a standalone CLI (Claude Code, Codex, any shell agent)
+### Standalone CLI (recommended)
 
-Requires **Node ≥ 24** (CodeMap uses the built-in `node:sqlite` and runs TypeScript directly — no build step).
+Requires **Node ≥ 22.13** (CodeMap uses the built-in `node:sqlite`; this release is the first Node 22 version where it is available without an opt-in flag).
 
 ```bash
 # Installs a `codemap` command on your PATH
-npm install -g github:sebastianlang84/pi-ext-codemap
+npm install -g github:sebastianlang84/codemap
 
-# …or from a local clone
-git clone https://github.com/sebastianlang84/pi-ext-codemap
-cd pi-ext-codemap && npm link
+# …or link a development checkout
+git clone https://github.com/sebastianlang84/codemap ~/dev/codemap
+cd ~/dev/codemap
+npm install && npm run build && npm link
 ```
 
 Then, inside any Git repository:
@@ -102,15 +103,16 @@ codemap context src/app/auth.ts # read-first files + related tests/docs/imports
 codemap status                  # approval / index / staleness (add --json anywhere)
 ```
 
-**Wire it into an agent.** Add a note to the repo's `CLAUDE.md` (Claude Code) or `AGENTS.md` (Codex) so the agent reaches for CodeMap before grepping:
+**Wire it into an agent.** Add a note to the repo's `CLAUDE.md` (Claude Code) or `AGENTS.md` (Codex) so the agent chooses CodeMap for ranked navigation and `rg` for exhaustive literal matching:
 
 ```markdown
 ## Code navigation
-Prefer CodeMap over raw grep/find to locate code in this repo:
+Use CodeMap for ranked code navigation and related-file discovery:
 - `codemap search <terms>` — ranked files, symbols, and chunks
 - `codemap context <path|query>` — read-first files plus related tests/docs/imports
 Run `codemap index --approve` once, then `codemap index` to refresh after changes.
 Use `--json` when you want to parse results. Staleness is advisory.
+Use `rg` when the task requires every exact literal or regex match.
 ```
 
 Everything is local-only and never leaves your machine; the first index requires `--approve`.
@@ -140,12 +142,14 @@ The server operates on the directory it is launched in. Most hosts (e.g. Claude 
 ### As a Pi extension
 
 ```bash
-pi install git:github.com/sebastianlang84/pi-ext-codemap
+pi install git:github.com/sebastianlang84/codemap
 # local development:
-cd /path/to/pi-ext-codemap && pi install .
+pi install ~/dev/codemap
 ```
 
 Then use the `/codemap-*` slash commands and `codemap_*` tools — see the [Pi quick start](#pi-quick-start).
+
+Upgrading from `pi-ext-codemap` or moving an existing local installation? Follow the [migration guide](docs/user/migrating-from-pi-extension.md) for the Git source, Pi package, development checkout, and state directory.
 
 ## CLI reference
 
@@ -160,7 +164,7 @@ All commands default to the current directory and accept `--json`, `--repo <path
 
 ### State location
 
-Indexes and the approval registry live under `~/.pi/agent/state/codemap` by default (one SQLite file per repo, plus `registry.sqlite`). Point `--state-dir` elsewhere to relocate them — useful for standalone CLI/MCP use outside a Pi install. Prune indexes for repositories that no longer exist with `npm run gc:state`.
+State resolution is `--state-dir` → `CODEMAP_HOME` → `$XDG_DATA_HOME/codemap` → `~/.local/share/codemap`. Existing users keep using `~/.pi/agent/state/codemap` automatically when no environment override is set, that legacy directory exists, and the new default does not. See the [migration guide](docs/user/migrating-from-pi-extension.md#move-state-to-the-platform-neutral-location) before moving it; do not merge SQLite directories by hand. A source checkout also provides `npm run gc:state` to prune indexes for repositories that no longer exist.
 
 ## Pi quick start
 
@@ -177,13 +181,14 @@ Indexes and the approval registry live under `~/.pi/agent/state/codemap` by defa
 
 **Strengths:** fast lexical/FTS search; symbol-aware for TypeScript, JavaScript, Python, C, and C++; relationship-aware read-first context; deterministic and reproducible; zero infrastructure and a tiny dependency footprint; monorepo scoping and cross-repo targeting; explicit stale-index warnings.
 
-**Limitations:** no semantic/NL search; heuristic (non-AST) symbols and relationships; language support is tiered (C/C++ have symbols but not yet structured chunking; many languages are indexed as text only); manual re-index; per-repo approval and Node ≥ 24 required.
+**Limitations:** no semantic/NL search; heuristic (non-AST) symbols and relationships; language support is tiered (C/C++ have symbols but not yet structured chunking; many languages are indexed as text only); manual re-index; per-repo approval and Node ≥ 22.13 required.
 
 The full, current capability list lives in [`docs/user/usage.md`](docs/user/usage.md).
 
 ## Documentation map
 
 - [`docs/user/usage.md`](docs/user/usage.md) — features, workflows, commands/tools, examples, compatibility.
+- [`docs/user/migrating-from-pi-extension.md`](docs/user/migrating-from-pi-extension.md) — upgrade existing Git, npm, Pi, local-development, and state installations.
 - [`docs/product/PRD.md`](docs/product/PRD.md) — product contract, scope, goals, constraints, success metrics.
 - [`docs/product/roadmap.md`](docs/product/roadmap.md) — future/non-V1 ideas, deferred questions, delivery history.
 - [`docs/developer/architecture.md`](docs/developer/architecture.md) — storage, schema, scanner/index/search/context architecture, adapter boundary, testing policy.

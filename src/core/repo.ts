@@ -10,12 +10,26 @@ export interface StateOptions {
   stateDir?: string;
 }
 
+function configuredStateDir(): string | undefined {
+  const codemapHome = process.env.CODEMAP_HOME?.trim();
+  if (codemapHome) return resolve(codemapHome);
+
+  const xdgDataHome = process.env.XDG_DATA_HOME?.trim();
+  if (xdgDataHome) return resolve(xdgDataHome, "codemap");
+
+  return undefined;
+}
+
 function defaultStateDir(): string {
-  return join(homedir(), ".pi", "agent", "state", "codemap");
+  const home = homedir();
+  const stateDir = join(home, ".local", "share", "codemap");
+  const legacyStateDir = join(home, ".pi", "agent", "state", "codemap");
+  return !existsSync(stateDir) && existsSync(legacyStateDir) ? legacyStateDir : stateDir;
 }
 
 export function resolveStateDir(stateDir?: string): string {
-  return stateDir ? resolve(stateDir) : defaultStateDir();
+  if (stateDir) return resolve(stateDir);
+  return configuredStateDir() ?? defaultStateDir();
 }
 
 export function getReposDir(options: StateOptions = {}): string {

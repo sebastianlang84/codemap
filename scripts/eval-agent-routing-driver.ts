@@ -9,7 +9,7 @@
 // not whether the wording steers routing. Pi presents the tools (and their descriptions) directly.
 //
 // Two arms, held constant except for the CodeMap tool surface (descriptions + topHitConfidence note):
-//   - treatment: this repo's index.ts (search-first wording + low-confidence flag)
+//   - treatment: this repo's Pi adapter entry (search-first wording + low-confidence flag)
 //   - baseline : a git worktree at fdfa5e5~1 (pre-"steer agents" metadata), via --baseline-worktree
 // `-ne` disables extension discovery so only the arm's `-e` CodeMap loads (no double-registration);
 // `-ns -np` drop skills/prompt-templates to cut variance; bash is disabled (read-only, safe): the
@@ -104,7 +104,7 @@ function parseArgs(argv: string[]): Options {
 }
 
 function extensionEntryFor(arm: Arm, opts: Options): string {
-  if (arm === "treatment") return join(repoRoot, "index.ts");
+  if (arm === "treatment") return join(repoRoot, "src", "pi-extension", "index.ts");
   if (!opts.baselineWorktree) throw new Error("--baseline-worktree is required for the baseline arm");
   const entry = join(opts.baselineWorktree, "index.ts");
   if (!existsSync(entry)) throw new Error(`baseline worktree missing index.ts: ${entry}`);

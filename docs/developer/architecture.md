@@ -4,30 +4,29 @@ This document is the canonical maintainer reference for CodeMap internals. Produ
 
 ## Architecture boundary
 
-CodeMap is split into thin adapter layers (Pi extension, CLI, MCP server) over a Pi-independent core.
+CodeMap is a CLI-first product with thin CLI, MCP, and Pi adapters over one host-neutral application surface and core.
 
-- `src/core/` owns product logic: repo detection, approval, DB paths, indexing, search, context building, and structured result objects.
-- `src/core/` must stay independent of Pi extension APIs: no `ExtensionAPI`, `ctx`, `pi`, slash-command parsing, tool rendering, or `console.log()` output behavior.
-- `src/core/operation-metadata.ts` (tool names, descriptions, prompt snippets/guidelines, TypeBox parameter schemas) and `src/core/operations.ts` (the Pi-free `codeMapStatus/Index/Search/Context` executors plus `operationCwd` repoPath resolution) are the shared operation surface every adapter reuses, so the four `codemap_*` operations are described and executed identically everywhere.
-- `src/pi-extension/` owns tool/command registration, command parsing, UI notifications, and TUI rendering; it re-exports the core executors and wraps the shared metadata.
-- `src/cli/` is the standalone-CLI adapter (`bin/codemap.ts` entrypoint, `codemap` bin) for shell-driven agents. It parses argv, calls the same core APIs, and formats text/JSON output; `runCli` returns `{ code, out, err }` instead of writing/exiting so it stays testable.
-- `src/mcp/` is the Model Context Protocol adapter (`bin/codemap-mcp.ts` entrypoint, `codemap-mcp` bin, protocol revision `2025-11-25`) for MCP hosts such as Claude Code, Codex, and Cursor. `dispatch()` is a pure, synchronous JSON-RPC 2.0 handler (`initialize` / `tools/list` / `tools/call` / `ping` / notifications) that exposes the shared metadata as MCP tools and calls the core executors; the bin only frames newline-delimited JSON over stdio. No SDK/runtime dependency is added. Token-lean by design: tool-call `content` is a compact ranked summary (the full object rides in `structuredContent` once, never duplicated as pretty JSON text); read tools carry `readOnlyHint` annotations; unknown-tool and execution failures are returned as Tool Execution Errors (`isError`, per SEP-1303) so the model can self-correct, while only unknown JSON-RPC methods are protocol errors.
-- No adapter imports another adapter (`src/pi-extension/`, `src/cli/`, `src/mcp/` only depend on `src/core/`), and none duplicates status/index/search/context behavior.
-- Core state and execution context should be injectable where practical (`cwd`, `stateDir`) so tests and adapters can choose output/state behavior without changing product logic.
-- The root `index.ts` remains a thin package entrypoint shim for the Pi manifest.
+- `src/core/` owns repository and retrieval mechanics: repo detection, approval, DB paths, indexing, search, context building, and structured result objects. It imports neither application nor adapter code.
+- `src/application/operations.ts` is the use-case boundary shared by every adapter. It owns `repoPath` resolution and the four `codeMapStatus/Index/Search/Context` executors.
+- `src/application/operation-metadata.ts` owns the compact TypeBox schemas and agent-facing metadata shared by MCP and Pi. CLI help/output stays adapter-specific and is not injected into agent context.
+- `src/cli/` is the primary standalone adapter. It parses argv, calls only the application operations, and formats text/JSON output; `runCli` returns `{ code, out, err }` for tests. `src/cli/bin.ts` compiles to the published `dist/cli/bin.js` executable.
+- `src/mcp/` wraps the same operations as MCP tools (`dist/mcp/bin.js`, protocol revision `2025-11-25`). `dispatch()` is a pure JSON-RPC handler; the bin only frames newline-delimited stdio. Compact text goes in `content`, while the full object appears once in `structuredContent`.
+- `src/pi-extension/` owns Pi registration, slash-command parsing, UI notifications, status rendering, and bash nudges. The package manifest points directly at its TypeScript entrypoint; Pi dependencies are optional peers for CLI/MCP-only installs.
+- No adapter imports another adapter or bypasses `src/application/` to call `src/core/` directly. `scripts/audit.mjs` enforces this one-way boundary.
+- State and execution context remain injectable (`cwd`, `stateDir`) so adapters and tests choose paths without changing product behavior.
 
 Key current structure:
 
 ```text
-pi-ext-codemap/
+codemap/
   README.md
-  index.ts
   docs/
     product/
       PRD.md
       roadmap.md
     user/
       usage.md
+      migrating-from-pi-extension.md
     developer/
       architecture.md
       qmd-research.md
@@ -37,14 +36,13 @@ pi-ext-codemap/
   migrations/
     001_init.sql
     002_fts.sql
-  bin/
-    codemap.ts
-    codemap-mcp.ts
   src/
+    application/
     core/
     pi-extension/
     cli/
     mcp/
+  dist/                 # versioned CLI/MCP/application/core JavaScript for compiler-free installs
   tests/
   scripts/
   package.json
@@ -52,14 +50,16 @@ pi-ext-codemap/
 
 ## Storage
 
-CodeMap uses local per-repo SQLite databases plus a global registry:
+CodeMap uses local per-repo SQLite databases plus a global registry. Resolution order is explicit `stateDir`, `CODEMAP_HOME`, `$XDG_DATA_HOME/codemap`, then `~/.local/share/codemap`:
 
 ```text
-~/.pi/agent/state/codemap/
+~/.local/share/codemap/
   registry.sqlite
   repos/
     <repo-hash>.sqlite
 ```
+
+For compatibility, an existing `~/.pi/agent/state/codemap` remains active when no override is set and the platform-neutral default does not yet exist. CodeMap never moves or merges SQLite state automatically; the user migration procedure is documented in [`../user/migrating-from-pi-extension.md`](../user/migrating-from-pi-extension.md).
 
 Rationale:
 
@@ -211,18 +211,18 @@ Related imports/reverse-imports/includes are resolved from indexed content, so c
 
 Noisy related paths — lockfiles, generated files, build output, minified files — are filtered out of `readFirst`, while an explicitly requested noisy target may still be returned directly.
 
-## Tool API contracts
+## Operation contracts
 
-The public Pi tool/command surface is intentionally small:
+The public operation surface is intentionally small:
 
 - `codemap_status`
 - `codemap_index`
 - `codemap_search`
 - `codemap_context`
 
-All four tools/commands default to cwd and optionally accept `repoPath` / `--repo-path`. The Pi adapter resolves repoPath to a directory cwd before calling core APIs, so core stays cwd-oriented and adapter-independent.
+All four operations default to cwd and can target another repository (`--repo` in the CLI, `repoPath` in MCP/Pi tools, `--repo-path` in Pi commands). The application layer resolves that target before invoking cwd-oriented core functions.
 
-Detailed user-facing command usage is in [`../user/usage.md`](../user/usage.md). Product-level contracts are in [`../product/PRD.md#11-tool-api-contract`](../product/PRD.md#11-tool-api-contract).
+Detailed user-facing command usage is in [`../user/usage.md`](../user/usage.md). Product-level contracts are in [`../product/PRD.md#11-operation-contract`](../product/PRD.md#11-operation-contract).
 
 ## Testing policy
 
@@ -237,24 +237,25 @@ Coverage expectations:
 - Search tests: path matches, symbol matches, FTS chunk matches, doc matches, test boosts, limits, empty results, ranking/noise behavior.
 - Context tests: read-first ordering, relationship reasons, related tests/docs/imports/includes/callers, budget limits, stale warnings, missing target behavior, `pathPrefix` scoping.
 - Safety tests: unapproved repos cannot be indexed; paths outside the repo root are rejected.
-- Package/integration tests: the Pi extension loads and each V1 tool validates inputs and returns the documented contract.
+- Package/integration tests: built CLI/MCP bins ship, the Pi extension loads, adapter boundaries remain one-way, and each public surface returns the documented contract.
 
-Run the closeout gate when local real-repo eval dependencies are available:
+Run the deterministic closeout gate:
 
 ```bash
 npm run verify
 ```
 
-`npm run verify` chains typechecking, the test suite, search/context/navigation quality gates, and the token-injection budget check. Because the real-repo navigation gate depends on local repositories, use the individual scripts when that local gate is unavailable.
+`npm run verify` chains typechecking, the production build, test suite, checked-in search/context/navigation quality gates, and token-injection check. It is reproducible without maintainer-specific repositories. `npm run verify:local` adds the live real-repo navigation gate; its external cohort can drift independently and should be compared against unchanged `main` before attributing a failure to a patch.
 
 Useful individual checks:
 
 ```bash
 npm run typecheck
+npm run build
 npm test
 npm run check:token-injection
 npm run audit:lightweight
 npm run bench:search-quality:gate
 ```
 
-`npm run check:token-injection` reports the estimated agent-context cost of registered Pi tools (`description`, `parameters`, `promptSnippet`, and `promptGuidelines`) and fails when the default budgets are exceeded: 190 estimated tokens per tool and 700 estimated tokens total. Slash commands are not counted because they are not injected as tool prompt/schema context.
+`npm run check:token-injection` reports the estimated agent-context cost of registered agent tools (`description`, `parameters`, `promptSnippet`, and `promptGuidelines`) against soft warning targets of 300 estimated tokens per tool and 900 total. Slash commands are not counted because they are not injected as tool prompt/schema context.

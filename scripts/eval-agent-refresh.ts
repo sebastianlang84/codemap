@@ -41,7 +41,7 @@ interface ScenarioResult {
 
 const originalHome = homedir();
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const extensionPath = join(repoRoot, "index.ts");
+const extensionPath = join(repoRoot, "src", "pi-extension", "index.ts");
 const args = parseArgs(process.argv.slice(2));
 
 if (args.help) {

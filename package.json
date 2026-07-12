@@ -1,49 +1,44 @@
 {
-  "name": "pi-ext-codemap",
-  "version": "0.8.1",
-  "description": "Lightweight local SQLite/FTS repo map for Pi coding agents: code, docs, config search, and read-first context.",
+  "name": "@sebastianlang84/codemap",
+  "version": "0.9.0",
+  "description": "Fast local repository navigation for coding agents, with CLI, MCP, and Pi adapters.",
   "type": "module",
   "keywords": [
-    "pi-package",
-    "pi-extension",
-    "codemap"
+    "codemap",
+    "code-search",
+    "cli",
+    "mcp",
+    "pi-package"
   ],
   "license": "MIT",
   "bin": {
-    "codemap": "bin/codemap.ts",
-    "codemap-mcp": "bin/codemap-mcp.ts"
+    "codemap": "dist/cli/bin.js",
+    "codemap-mcp": "dist/mcp/bin.js"
   },
   "files": [
-    "index.ts",
-    "bin/",
+    "dist/",
     "src/",
     "migrations/",
     "docs/product/",
     "docs/user/",
     "docs/developer/architecture.md",
     "docs/developer/search-quality.md",
-    "docs/developer/agent-refresh-eval.md",
-    "docs/developer/agent-navigation-eval.md",
-    "docs/developer/real-repo-navigation-eval.md",
-    "docs/developer/qmd-research.md",
-    "docs/developer/relationship-graph-plan.md",
-    "docs/archive/brainstorming.md",
-    "scripts/",
-    "tests/",
-    "TODO.md",
+    "scripts/gc-state.ts",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
   ],
   "pi": {
     "extensions": [
-      "./index.ts"
+      "./src/pi-extension/index.ts"
     ]
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "verify": "npm run typecheck && npm test && npm run bench:search-quality:gate && npm run bench:context-quality:gate && npm run eval:agent-navigation:gate && npm run eval:real-repo-navigation:gate && npm run check:token-injection",
+    "verify": "npm run typecheck && npm run build && npm test && npm run bench:search-quality:gate && npm run bench:context-quality:gate && npm run eval:agent-navigation:gate && npm run check:token-injection",
+    "verify:local": "npm run verify && npm run eval:real-repo-navigation:gate",
     "bench:search-quality": "node --experimental-strip-types scripts/bench-search-quality.ts --fixtures",
     "bench:search-quality:gate": "node --experimental-strip-types scripts/bench-search-quality.ts --quality-gate --fixtures",
     "bench:search-quality:local": "node --experimental-strip-types scripts/bench-search-quality.ts --local-repos",
@@ -68,13 +63,21 @@
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
   },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "@earendil-works/pi-tui": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.74.0",
-    "@earendil-works/pi-tui": "^0.74.0",
-    "@types/node": "^24.0.0",
+    "@earendil-works/pi-coding-agent": "^0.80.6",
+    "@earendil-works/pi-tui": "^0.80.6",
+    "@types/node": "^22.13.0",
     "typescript": "^5.9.0"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=22.13.0"
   }
 }
