@@ -97,7 +97,9 @@ Baseline deltas:
 
 The kept read-plan experiment protects visible source↔test pairs and uncovered visible test hits before context-only neighbors consume the budget. Against the frozen pre-change baseline, paired losses fell from 2 to 0, ties rose from 16 to 18, and wins stayed at 6. Natural-holdout search+context success improved from 0.625 to 0.688, expected recall from 0.771 to 0.823, and context recall from 0.719 to 0.812, with no new forbidden reads. Deterministic regression cases cover both the pi-ext-memory source/test-pair loss and the Macrolens uncovered-test loss.
 
-Interpretation: under a realistic small read budget, CodeMap's intended search-then-context workflow remains materially better in aggregate and avoids forbidden reads in both cohorts. Preserving query-visible evidence prevents context around a wrong top hit from making the search-only read plan worse. The remaining Macrolens macro-signal entry miss is a separate ranking problem, not a reason to suppress context globally.
+Interpretation: under a realistic small read budget, CodeMap's intended search-then-context workflow remains materially better in aggregate and avoids forbidden reads in both cohorts. Preserving query-visible evidence prevents context around a wrong top hit from making the search-only read plan worse.
+
+The 2026-07-14 ranking slice resolved the remaining Macrolens macro-signal search-entry miss: `macro-signal-rules.ts` moved from outside the search Top 5 to rank 5. The kept change scales the symbol-FTS source preference with actual query coverage for signature-only hits and aggregates additional text coverage only to rescue files below the already-visible result limit. The fixed search-quality, agent-navigation, and real-repo gates stayed green; the real-repo comparison remained at `6` wins, `0` losses, and `18` ties. No query terms or gate thresholds changed.
 
 ### Rejected experiment: suppress context on low-confidence hits
 

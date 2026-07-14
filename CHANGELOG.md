@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Rank text-covered source files ahead of weak signature-only symbol hits by scaling the symbol-source preference with actual query coverage and using cross-chunk file coverage only to rescue results below the visible limit. The Macrolens threshold-boundary entry now reaches the search Top 5 without changing query terms or regressing the fixed search/navigation gates.
 - Point `codemap` CLI users to `codemap index --approve` in the not-approved / not-indexed errors (search, context, index, and the architecture report) instead of the stale MCP `codemap_index` / `approveRepo` wording, and state that indexing is local-only and never modifies the repo.
 - Show the first matched line and score of each hit in `codemap search` human output (one line per hit; JSON output unchanged) so ranked results carry the same at-a-glance signal as a grep line.
 - Silence the one-line `node:sqlite` `ExperimentalWarning` on the `codemap` CLI (via a `--disable-warning=ExperimentalWarning` shebang flag) so shell/agent callers get clean stderr; stdout JSON is unaffected and the `codemap-mcp` server keeps its default shebang.

@@ -39,6 +39,8 @@ export interface ScoredSearchCandidate {
   diagnostics: SearchScoreDiagnostics;
 }
 
+export const TEXT_COVERAGE_WEIGHT = 3;
+
 export function toResult(row: SearchRow, plan: QueryPlan, boost: number): SearchResult {
   return toScoredCandidate(row, plan, boost).result;
 }
@@ -74,6 +76,8 @@ export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): 
   const lowerText = row.text.toLowerCase();
   const pathCoverage = termCoverage(lowerPath, plan.coreTerms);
   const textCoverage = termCoverage(lowerText, plan.coreTerms);
+  const matchedTokens = matchedQueryTokens([lowerPath, lowerText, symbolName].join("\n"), plan.coreTerms);
+  const tokenCoverage = plan.coreTerms.length > 0 ? matchedTokens.length / plan.coreTerms.length : 0;
   const basename = lowerPath.split("/").pop() ?? lowerPath;
   const basenameCoverage = termCoverage(basename, plan.coreTerms);
   const basenameDepth = lowerPath.split("/").length - 1;
@@ -85,7 +89,6 @@ export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): 
   const docLike = /(^|\/)(?:readme|architecture|changelog|todo)(?:\.|$)|\.(?:md|mdx|rst|txt)$/.test(lowerPath);
   const roles = fileRoles(lowerPath, row.size ?? undefined);
   const implementationIntent = plan.roleIntents.includes("implementation") && !plan.roleIntents.includes("tests");
-  const retrievalBoost = boost;
   const ftsScore = rankScore(row.rank);
   const pathScore = (exactPath ? 6 : 0) + (lowerPath.endsWith(plan.normalized) ? 3 : 0) + pathCoverage * 5;
   const filenameScore = basenameCoverage * 4 + exactFilenameScore + exactModuleNameScore;
@@ -96,14 +99,16 @@ export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): 
     && plan.codeIntent
     && (plan.terms.some((term) => term.toLowerCase() === symbolName) || matchedQueryTokens(lowerPath, plan.endpointPathTerms).length > 0);
   const symbolScore = (symbolish && exactText ? 3 : 0) + (exactSymbol ? 28 : 0) + (exactTermSymbol ? 20 : 0) + (prefixSymbol ? 10 : 0) + (routeHandlerSymbol ? 20 : 0);
-  const textCoverageScore = textCoverage * 3;
+  // Symbol FTS has a +3 source preference over chunk FTS. Signature-only matches earn that
+  // preference in proportion to their query coverage; exact module/symbol evidence keeps it whole.
+  const weakSignatureOnlySymbol = row.symbolName && symbolScore === 0 && exactModuleNameScore === 0;
+  const retrievalBoost = weakSignatureOnlySymbol ? Math.max(0, boost - 3 * (1 - tokenCoverage)) : boost;
+  const textCoverageScore = textCoverage * TEXT_COVERAGE_WEIGHT;
   const codeIntentBoost = (plan.codeIntent && codeLike ? 2 : 0) + (plan.codeIntent && sourceLike ? 4 : 0);
   const roleBoost = fileRoleBoost(roles, plan.roleIntents);
   const testPenalty = testLike ? (implementationIntent ? 8 : plan.codeIntent ? 3 : 0) : 0;
   const docPenalty = plan.codeIntent && docLike ? 6 : 0;
   const noisePenalty = fileRolePenalty(roles, plan);
-  const matchedTokens = matchedQueryTokens([lowerPath, lowerText, symbolName].join("\n"), plan.coreTerms);
-  const tokenCoverage = plan.coreTerms.length > 0 ? matchedTokens.length / plan.coreTerms.length : 0;
   const finalScore = retrievalBoost + ftsScore + pathScore + filenameScore + exactTextScore + symbolScore + textCoverageScore + codeIntentBoost + roleBoost - testPenalty - docPenalty - noisePenalty;
 
   return {

@@ -57,6 +57,35 @@ test("implementation-intent ranking penalizes test-only matches", () => {
   assert.ok(sourceDiagnostics.finalScore > testDiagnostics.finalScore, JSON.stringify({ sourceDiagnostics, testDiagnostics }));
 });
 
+test("text-covered source chunks outrank weak signature-only symbol hits", () => {
+  const plan = planQuery("market regime cards show neutral tone at threshold values for VIX oil CPI payrolls yield curve and credit");
+  const weakSymbolDiagnostics = scoreSearchRow({
+    path: "apps/web/src/lib/regime-score.ts",
+    language: "typescript",
+    startLine: 100,
+    endLine: 100,
+    kind: "function",
+    text: "function volatilitySub(vix: number): number",
+    rank: -1,
+    size: 10_000,
+    symbolName: "volatilitySub",
+  }, plan, 12);
+  const sourceChunkDiagnostics = scoreSearchRow({
+    path: "apps/web/src/lib/macro-signal-rules.ts",
+    language: "typescript",
+    startLine: 120,
+    endLine: 180,
+    kind: "text",
+    text: "market cards show a neutral tone at threshold values for VIX and oil",
+    rank: -1,
+    size: 10_000,
+    symbolName: null,
+  }, plan, 9);
+
+  assert.ok(sourceChunkDiagnostics.tokenCoverage > weakSymbolDiagnostics.tokenCoverage, JSON.stringify({ sourceChunkDiagnostics, weakSymbolDiagnostics }));
+  assert.ok(sourceChunkDiagnostics.finalScore > weakSymbolDiagnostics.finalScore, JSON.stringify({ sourceChunkDiagnostics, weakSymbolDiagnostics }));
+});
+
 test("non-agent queries penalize agent instruction files", () => {
   const plan = planQuery("ast grep binary path should reject ambiguous sg shadow utils command and show install guidance");
   const agentDiagnostics = scoreSearchRow({

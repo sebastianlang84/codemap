@@ -1,4 +1,4 @@
-import { fileRoleBoost, fileRoles, toScoredCandidate, type SearchRow, type SearchScoreDiagnostics } from "./ranking.ts";
+import { TEXT_COVERAGE_WEIGHT, fileRoleBoost, fileRoles, rankAndSlice, toScoredCandidate, type SearchRow, type SearchScoreDiagnostics } from "./ranking.ts";
 import { escapeLike, escapeRegExp } from "./text-util.ts";
 import type { QueryPlan } from "./query-plan.ts";
 import type { SearchResult } from "./types.ts";
@@ -37,7 +37,40 @@ export function collectSearchCandidateDiagnostics(db: ReturnType<typeof openRepo
     candidates.push(...symbolFtsCandidates(db, { ...request, ftsQuery, remaining }));
     candidates.push(...chunkFtsCandidates(db, { ...request, ftsQuery, remaining }));
   }
-  return candidates;
+  return applyFileTextCoverage(candidates, request.plan, request.limit);
+}
+
+function applyFileTextCoverage(candidates: SearchCandidateDiagnostic[], plan: QueryPlan, limit: number): SearchCandidateDiagnostic[] {
+  if (plan.coreTerms.length === 0) return candidates;
+  const matchedByPath = new Map<string, Set<string>>();
+  for (const candidate of candidates) {
+    const matched = matchedByPath.get(candidate.result.path) ?? new Set<string>();
+    for (const term of candidate.scoreDiagnostics.matchedTokens) matched.add(term);
+    matchedByPath.set(candidate.result.path, matched);
+  }
+
+  const visiblePaths = new Set(rankAndSlice(candidates.map((candidate) => candidate.result), limit).map((result) => result.path));
+
+  return candidates.map((candidate) => {
+    if (candidate.source !== "chunk_fts" || visiblePaths.has(candidate.result.path)) return candidate;
+    const matched = matchedByPath.get(candidate.result.path) ?? new Set<string>();
+    const matchedTokens = plan.coreTerms.filter((term) => matched.has(term));
+    const tokenCoverage = matchedTokens.length / plan.coreTerms.length;
+    const coverageBonus = Math.max(0, tokenCoverage - candidate.scoreDiagnostics.tokenCoverage) * TEXT_COVERAGE_WEIGHT;
+    if (coverageBonus === 0) return candidate;
+    const scoreDiagnostics = {
+      ...candidate.scoreDiagnostics,
+      finalScore: candidate.scoreDiagnostics.finalScore + coverageBonus,
+      textCoverageScore: candidate.scoreDiagnostics.textCoverageScore + coverageBonus,
+      tokenCoverage,
+      matchedTokens,
+    };
+    return {
+      ...candidate,
+      result: { ...candidate.result, score: candidate.result.score + coverageBonus },
+      scoreDiagnostics,
+    };
+  });
 }
 
 function pathMatchCandidates(db: ReturnType<typeof openRepoDb>, request: SearchRetrievalRequest): SearchCandidateDiagnostic[] {

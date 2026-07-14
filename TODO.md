@@ -4,12 +4,7 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 ## Nächster Slice
 
-1. [ ] Macro-Signal-Entry-Ranking nur als separaten gemessenen Slice angehen.
-   - Der Real-Repo-Gate ist seit dem sichtbaren Search-Evidence-Schutz wieder grün (`6` Wins, `0` Losses, `18` Ties). Beim Macrolens-Threshold-Fall bleibt `macro-signal-rules.ts` aber außerhalb der Search-Top-5; der Readplan bewahrt nur den bereits sichtbaren `macro-derivations.test.ts`.
-   - Vor einer Ranking-Änderung einen deterministischen Fixture-Case für schwache Symbol-Hits gegen textlich besser gedeckte Source-Chunks hinzufügen. Danach genau eine Coverage-/Ranking-Komponente ändern.
-   - Keep-Regel: besserer Entry-Hit ohne Regression in `bench:search-quality:gate`, `eval:agent-navigation:gate` oder `eval:real-repo-navigation:gate`; keine Query-/Threshold-Anpassung als Ersatz.
-
-2. [ ] Weitere Konventions-/Targeting-Slices nur bei einem neuen konkreten Eval-Miss auswählen.
+1. [ ] Weitere Konventions-/Targeting-Slices nur bei einem neuen konkreten Eval-Miss auswählen.
    - Kandidaten: UI↔API, Provider/Hook↔Consumer, Config-Key↔Nutzung und ADR-Nachbarn.
    - Pro Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik; keine breite Heuristik ohne messbaren Context-Gewinn.
 
