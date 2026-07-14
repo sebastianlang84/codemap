@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-navigation-semantic-v1",
+    "version": 1
+  },
+  "splits": {
+    "development": [
+      {
+        "id": "login-throttling",
+        "query": "where are repeated sign-in failures blocked",
+        "expectedPaths": ["src/security/login-guard.ts"],
+        "excludedPaths": ["docs/security/login-protection.md"]
+      },
+      {
+        "id": "currency-conversion-de",
+        "query": "wo wird ein Rechnungsbetrag in eine andere Waehrung umgerechnet",
+        "expectedPaths": ["src/billing/currency-converter.ts"]
+      },
+      {
+        "id": "risk-limit-config-de",
+        "query": "welche Konfiguration begrenzt den maximalen Portfolio Drawdown",
+        "expectedPaths": ["config/risk-policy.json"]
+      },
+      {
+        "id": "stale-snapshot-decision",
+        "query": "why do stale market snapshots stop publication",
+        "expectedPaths": ["docs/decisions/0007-snapshot-freshness.md"],
+        "excludedPaths": ["docs/runbooks/newsletter-recovery.md"]
+      },
+      {
+        "id": "deployment-health-grace",
+        "query": "startup grace period for the service health probe",
+        "expectedPaths": ["config/deployment.yaml"]
+      }
+    ],
+    "holdout": [
+      {
+        "id": "newsletter-stale-error",
+        "query": "ERR_NEWSLETTER_INPUT_STALE",
+        "expectedPaths": ["src/newsletter/freshness.ts"],
+        "excludedPaths": ["docs/runbooks/newsletter-recovery.md"]
+      },
+      {
+        "id": "portfolio-rebalancing-de",
+        "query": "wo werden Portfolio Positionen wieder auf ihre Zielgewichte gebracht",
+        "expectedPaths": ["src/portfolio/rebalance.ts"]
+      },
+      {
+        "id": "recovery-runbook-de",
+        "query": "Anleitung zur Wiederaufnahme nach einer teilweise versendeten Ausgabe",
+        "expectedPaths": ["docs/runbooks/newsletter-recovery.md"]
+      },
+      {
+        "id": "audit-retention",
+        "query": "how long are compliance audit events retained",
+        "expectedPaths": ["config/audit-policy.yaml"]
+      },
+      {
+        "id": "session-security-decision",
+        "query": "decision record for rotating authenticated browser sessions",
+        "expectedPaths": ["docs/decisions/0012-session-rotation.md"],
+        "excludedPaths": ["docs/security/login-protection.md"]
+      }
+    ]
+  },
+  "holdoutThresholds": {
+    "minTop1Accuracy": 0.8,
+    "minRecallAt5": 0.8,
+    "minMrrAt5": 0.8,
+    "maxFalsePositiveRate": 0.2,
+    "maxColdIndexLatencyMs": 500,
+    "maxColdSearchLatencyMs": 100,
+    "maxWarmP95LatencyMs": 100,
+    "maxIndexBytes": 5242880,
+    "maxPeakRssBytes": 536870912
+  }
+}

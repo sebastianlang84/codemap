@@ -156,22 +156,37 @@ Relevant tests in `tests/search.test.ts` include:
 5. Add a natural-language case when a real agent query should have found a specific file or avoided a known noise file.
 6. Correct expected paths only when the query is genuinely ambiguous or multi-target; do not relax thresholds after seeing a worse score.
 
-## Future semantic benchmark track
+## Semantic comparison track
 
-The default benchmark intentionally stays deterministic and model-free. If CodeMap later evaluates optional semantic search, keep it as a separate profile rather than mixing it into the default quality gate.
+`npm run bench:semantic-quality` is a separate, machine-readable comparison track for optional semantic retrieval. It does not add embeddings to CodeMap or change the default quality gate. The checked-in `agent-navigation-semantic-v1` corpus mixes English and German queries across source, Markdown decisions/runbooks, YAML/JSON config, and exact error lookups.
 
-A semantic evaluation should include:
+The versioned manifest lives outside the indexed corpus at `tests/fixtures/semantic-quality/agent-navigation-v1.json`, so ground-truth query text cannot leak into search results. Its development split is available for tuning; the holdout split and thresholds are frozen guardrails. Changing cases, expected/excluded paths, or thresholds requires a corpus-version bump and a documented new baseline rather than relaxing the current holdout after a result is known.
 
-- German and English mixed queries.
-- Code, Markdown docs, YAML/JSON config, project-decision docs, and error-message lookups.
-- Candidate stacks such as BM25 only, BM25 + `embeddinggemma-300M`, BM25 + `multilingual-e5-small`, BM25 + `Qwen3-Embedding-0.6B`, and optional reranker variants.
-- Additional runtime metrics: cold/warm latency, peak RAM, index size, re-embedding time, model download size, and semantic false positives.
+Run the development report while iterating, and reserve the holdout gate for promotion checks:
 
-Do not promote an embedder or reranker to a default path unless it beats the lexical baseline on the local corpus without unacceptable compute or reliability cost.
+```bash
+npm run bench:semantic-quality
+npm run bench:semantic-quality:gate
+```
+
+The first command emits only the development split. The gate command emits and evaluates both splits, which keeps routine tuning loops from seeing holdout results.
+
+The schema records Top-1, Recall@5, MRR@5, misses, and `falsePositiveRate` per split. Resource fields record cold index/search latency, warm per-query average/P95 latency, process peak RSS, SQLite index bytes, embedding latency, and model bytes. The lexical profile reports zero for the final two fields by design.
+
+Frozen lexical baseline on 2026-07-14:
+
+| Split | Cases | Top-1 | Recall@5 | MRR@5 | False-positive rate |
+|---|---:|---:|---:|---:|---:|
+| Development | 5 | 0.4 | 0.6 | 0.5 | 0.4 |
+| Holdout | 5 | 0.8 | 0.8 | 0.8 | 0.2 |
+
+The development misses expose vocabulary mismatch intentionally; the holdout includes one German paraphrase miss. The gate freezes the holdout quality values above, caps cold indexing at 500 ms, cold search and warm P95 at 100 ms, SQLite size at 5 MiB, and peak RSS at 512 MiB. Latency and memory values are environment-sensitive guardrails, not cross-machine performance claims.
+
+Future candidates such as BM25 plus an embedder or reranker must emit the same schema against the same corpus. Use development cases to form and tune one hypothesis at a time; inspect the holdout only for promotion. Do not promote an embedder or reranker unless it beats the lexical baseline without weakening exact path/symbol precedence or imposing unacceptable compute, index, model-download, or reliability cost.
 
 ## Current limitations
 
 - Structural ground truth depends on optional local `ast-grep`; without it, only natural cases run.
 - Natural cases are hard-coded in `scripts/bench-search-quality.ts` for checked-in fixtures and optional known local repos.
 - Metrics judge file-path retrieval, not whether the returned snippet is the best possible line range.
-- The benchmark is designed for local tuning and regression checks, not as a universal search benchmark across arbitrary projects.
+- Both benchmark tracks are designed for local tuning and regression checks, not as universal retrieval benchmarks across arbitrary projects.

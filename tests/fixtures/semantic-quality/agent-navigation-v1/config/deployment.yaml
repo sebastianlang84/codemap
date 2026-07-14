@@ -1,0 +1,4 @@
+service:
+  health_probe:
+    path: /healthz
+    startup_grace_period_seconds: 45

@@ -35,6 +35,7 @@ The previous prioritized TDD slices are complete and kept here as delivery histo
 | Improve chunking around structure | Chunker Module behind indexing/search Interfaces | `indexRepo` → `searchCodeMap` / `codemapContext` snippets | Markdown fenced code blocks are not split, and function/class-sized code chunks keep stable line ranges | `npm test -- --test-name-pattern='chunk|snippet'` |
 | Keep ranking explain out of the product surface | Search pipeline/ranking Modules | `SearchResult` remains compact | Decision: do not add user-facing explain fields; use quality gates for ranking guardrails instead | n/a |
 | Expand deterministic search-quality gates | Search quality metrics Module and benchmark script | `npm run bench:search-quality:gate` | New regression cases cover implementation entrypoints, related tests/docs, and lockfile/generated-file noise | `npm run bench:search-quality:gate -- /path/to/repo` |
+| Freeze a semantic-retrieval comparison track | Versioned dev/holdout corpus and semantic benchmark script | `npm run bench:semantic-quality:gate` | The lexical profile records quality, false positives, latency, RAM, and index size without adding embeddings to production | `npm run bench:semantic-quality:gate` |
 
 Architecture rule for future slices: keep host-neutral use cases in `src/application/`, retrieval/storage mechanics in `src/core/`, and host concerns in the CLI/MCP/Pi adapters. Add a seam only when it improves locality or enables a real adapter.
 

@@ -1,0 +1,3 @@
+compliance:
+  audit_event_retention_days: 2555
+  storage: immutable-archive

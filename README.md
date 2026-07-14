@@ -86,6 +86,7 @@ These numbers are reproducible locally and gated in CI-style checks:
 npm run eval:real-repo-navigation       # real repos vs rg-like baseline
 npm run eval:agent-navigation           # deterministic checked-in fixture
 npm run bench:search-quality            # ranking / top-1 / recall benchmark
+npm run bench:semantic-quality          # fixed lexical development split for semantic variants
 ```
 
 Full methodology, per-cohort tables, miss taxonomy, and known limitations live in

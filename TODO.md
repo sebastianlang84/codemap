@@ -4,9 +4,7 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 ## Nächster Slice
 
-1. [ ] Weitere Konventions-/Targeting-Slices nur bei einem neuen konkreten Eval-Miss auswählen.
-   - Kandidaten: UI↔API, Provider/Hook↔Consumer, Config-Key↔Nutzung und ADR-Nachbarn.
-   - Pro Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik; keine breite Heuristik ohne messbaren Context-Gewinn.
+Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik, keine breite Heuristik ohne messbaren Context-Gewinn.
 
 ## Opportunistisch oder gated
 
@@ -33,6 +31,4 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 - [ ] npm-Registry-Veröffentlichung erst bei konkretem Nutzerbedarf entscheiden; bis dahin bleibt `npm install -g github:sebastianlang84/codemap` kanonisch.
 - [ ] Native MCP-`roots`-Auflösung erst bei einem belegten Host-Miss ergänzen; `repoPath` bleibt der Fallback für Hosts mit falschem Prozess-cwd.
-- [ ] Einen separaten Semantic-Benchmark-Track vor optionalen Embeddings/Rerankern definieren; Qualität, Latenz, RAM, Indexgröße und False Positives gegen feste Holdouts messen.
-- [ ] Autoresearch erst mit stabilen maschinenlesbaren Metriken, getrennten Trainings-/Validierungs-Cases und festen Holdout-Guardrails einsetzen.
 - [ ] Refresh-Automation erst wieder aufnehmen, wenn breitere Agent-Evals oder Praxisfälle zeigen, dass Agenten bestehende stale Warnungen übersehen.

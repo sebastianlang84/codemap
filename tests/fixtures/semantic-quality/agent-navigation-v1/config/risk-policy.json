@@ -1,0 +1,4 @@
+{
+  "portfolioMaxDrawdownPercent": 12,
+  "breachAction": "freeze-new-orders"
+}
