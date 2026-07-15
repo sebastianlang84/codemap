@@ -1,10 +1,15 @@
-import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { getReposDir, listRegistryRepos, removeRegistryRepos, resolveStateDir, type StateOptions } from "./repo.ts";
 
 const DB_EXTENSION = ".sqlite";
 // SQLite may leave sidecar files (WAL journal, shared-memory) next to a repo DB.
 const DB_SIDECAR_SUFFIXES = ["", "-wal", "-shm", "-journal"] as const;
+
+// Usage telemetry log (docs/developer/telemetry-phase1-schema.md). Size-capped with a single rotated
+// generation: on overflow `usage.jsonl` becomes `usage.jsonl.1`, dropping any previous `.1`.
+const USAGE_LOG_NAME = "usage.jsonl";
+export const USAGE_LOG_MAX_BYTES = 32 * 1024 * 1024;
 
 export type StateGcReason = "orphan_db" | "missing_root";
 
@@ -17,6 +22,21 @@ export interface StateGcCandidate {
   reason: StateGcReason;
   /** Registry root for `missing_root` candidates; absent for orphan DBs with no registry row. */
   rootPath?: string;
+}
+
+export interface UsageLogRotation {
+  /** Absolute path to `usage.jsonl`. */
+  path: string;
+  /** Current size of `usage.jsonl` in bytes. */
+  bytes: number;
+  /** Size cap that triggers rotation. */
+  maxBytes: number;
+  /** True when the log exceeds the cap and should rotate (plan) or did rotate (apply). */
+  overCap: boolean;
+  /** True when the rotation was performed (apply only). */
+  rotated: boolean;
+  /** Bytes freed by dropping the previous `usage.jsonl.1` when rotating (0 when not over cap). */
+  reclaimedBytes: number;
 }
 
 export interface StateGcResult {
@@ -32,6 +52,8 @@ export interface StateGcResult {
   applied: boolean;
   /** Registry rows removed on apply. */
   removedRegistryRows: number;
+  /** Usage-telemetry log size/rotation status. */
+  usageLog: UsageLogRotation;
 }
 
 function dbGroupBytes(dbPath: string): number {
@@ -52,12 +74,39 @@ function removeDbGroup(dbPath: string): void {
   for (const suffix of DB_SIDECAR_SUFFIXES) rmSync(`${dbPath}${suffix}`, { force: true });
 }
 
+function fileBytes(path: string): number {
+  try {
+    return statSync(path).size;
+  } catch {
+    return 0;
+  }
+}
+
+function collectUsageLogRotation(stateDir: string, maxBytes: number): UsageLogRotation {
+  const path = join(stateDir, USAGE_LOG_NAME);
+  const bytes = fileBytes(path);
+  const overCap = bytes > maxBytes;
+  // Rotation renames the current log over any existing `.1`, so the reclaimable bytes are that old `.1`.
+  const reclaimedBytes = overCap ? fileBytes(`${path}.1`) : 0;
+  return { path, bytes, maxBytes, overCap, rotated: false, reclaimedBytes };
+}
+
+function rotateUsageLog(rotation: UsageLogRotation): UsageLogRotation {
+  if (!rotation.overCap) return rotation;
+  try {
+    renameSync(rotation.path, `${rotation.path}.1`);
+  } catch {
+    return rotation;
+  }
+  return { ...rotation, rotated: true };
+}
+
 /**
  * Read-only scan for reclaimable per-repo index DBs:
  * - `orphan_db`: a `<key>.sqlite` with no registry row (approval was removed but the index lingered).
  * - `missing_root`: an approved repo whose root path no longer exists on disk (repo was deleted/moved).
  */
-export function collectStateGcCandidates(options: StateOptions = {}): StateGcResult {
+export function collectStateGcCandidates(options: StateOptions & { maxUsageLogBytes?: number } = {}): StateGcResult {
   const stateDir = resolveStateDir(options.stateDir);
   const reposDir = getReposDir(options);
   const registry = listRegistryRepos(options);
@@ -96,6 +145,7 @@ export function collectStateGcCandidates(options: StateOptions = {}): StateGcRes
     reclaimableBytes,
     applied: false,
     removedRegistryRows: 0,
+    usageLog: collectUsageLogRotation(stateDir, options.maxUsageLogBytes ?? USAGE_LOG_MAX_BYTES),
   };
 }
 
@@ -103,11 +153,11 @@ export function collectStateGcCandidates(options: StateOptions = {}): StateGcRes
  * Plan reclaimable repo DBs and, when `apply` is set, delete them plus their registry rows.
  * Index DBs are rebuildable, so pruning only affects cached data and stale approvals.
  */
-export function pruneState(options: StateOptions & { apply?: boolean } = {}): StateGcResult {
+export function pruneState(options: StateOptions & { apply?: boolean; maxUsageLogBytes?: number } = {}): StateGcResult {
   const plan = collectStateGcCandidates(options);
   if (!options.apply) return plan;
   for (const candidate of plan.candidates) removeDbGroup(candidate.dbPath);
   const missingRootKeys = plan.candidates.filter((candidate) => candidate.reason === "missing_root").map((candidate) => candidate.key);
   const removedRegistryRows = removeRegistryRepos(missingRootKeys, options);
-  return { ...plan, applied: true, removedRegistryRows };
+  return { ...plan, applied: true, removedRegistryRows, usageLog: rotateUsageLog(plan.usageLog) };
 }

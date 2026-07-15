@@ -158,13 +158,31 @@ case, so one 32 MB cap + one rotated generation is ample headroom.
 - Harness-side `shadow_search` hook (#3/#4) — separate phase-4 mini-project.
 - Redaction machinery.
 
-## Open / to confirm
+## Implementation status (phase 1 — done)
 
-- Lift `packageVersion()` into a shared util both `main.ts` and the seam can call.
-- Add a stable `code` to the not-approved throw ([search.ts:81,97](../../src/core/search.ts)) so
-  outcome detection doesn't match English prose.
-- Second Fable pass on this schema before implementation.
+Implemented per this schema. Files: `src/application/telemetry.ts` (the seam wrapper),
+`src/core/errors.ts` (`NotApprovedError` with stable `code`), `src/core/package-version.ts`
+(shared util), with the write-point wired into `src/application/operations.ts` and rotation into
+`src/core/state-gc.ts`. Both prior open items are resolved:
 
-Confirmed against code: `SearchResult` exposes `path`/`language`/`kind`/`score`
-([src/core/types.ts:26](../../src/core/types.ts)) — the trimmed `results[]` set needs no new
-extraction.
+- `packageVersion()` lifted into `src/core/package-version.ts` (shared by CLI and the seam). ✓
+- The not-approved throw now carries a stable `code = "not_approved"` via `NotApprovedError`, applied
+  at all three throw sites (search, context, indexer); the human message is preserved verbatim. ✓
+
+Verified against code: `SearchResult` exposes `path`/`language`/`kind`/`score`
+([src/core/types.ts:26](../../src/core/types.ts)) — the trimmed `results[]` set needs no new extraction.
+
+### Known limitations of the shipped fingerprint (caveat F)
+
+- `adapter` is `"unknown"` at the operations seam (it can't cheaply know its caller without changing
+  the adapter-facing signatures MCP/Pi consume).
+- `ppid_chain` is Linux-only (`/proc`), starts at the parent pid (the ephemeral codemap pid is excluded
+  so the hash is stable across an agent's invocations), and is defeated by an intermediate shell wrapper
+  that gets a fresh pid per call. Validate against a known parallel-sub-agent run before trusting the
+  join during fan-out.
+- The free `query_id` in `--json` was deferred (out of phase-1 scope).
+
+## Open / next
+
+- Second Fable pass on the shipped implementation (optional).
+- Phase 2: the offline analyzer / `codemap telemetry report` — see the phased plan above.

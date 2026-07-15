@@ -1,7 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.js";
+import { packageVersion } from "../core/package-version.js";
 const USAGE = `codemap — local SQLite/FTS repo map for coding agents
 
 Usage:
@@ -26,20 +24,6 @@ Notes:
   New installs store state under CODEMAP_HOME, XDG_DATA_HOME/codemap, or
   ~/.local/share/codemap. Existing ~/.pi/agent/state/codemap data remains in use until migrated.
   Override with --state-dir; prune deleted-repo indexes with 'npm run gc:state' in a clone.`;
-function packageVersion() {
-    const here = dirname(fileURLToPath(import.meta.url));
-    for (const pkgPath of [join(here, "..", "..", "package.json"), join(here, "..", "..", "..", "package.json")]) {
-        if (!existsSync(pkgPath))
-            continue;
-        try {
-            return JSON.parse(readFileSync(pkgPath, "utf8")).version ?? "0.0.0";
-        }
-        catch {
-            // Keep looking: source and compiled layouts place package.json at different depths.
-        }
-    }
-    return "0.0.0";
-}
 function parseArgs(argv) {
     const parsed = { json: false, full: false, approve: false, positionals: [] };
     for (let i = 0; i < argv.length; i++) {

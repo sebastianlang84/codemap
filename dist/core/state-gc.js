@@ -1,9 +1,13 @@
-import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { getReposDir, listRegistryRepos, removeRegistryRepos, resolveStateDir } from "./repo.js";
 const DB_EXTENSION = ".sqlite";
 // SQLite may leave sidecar files (WAL journal, shared-memory) next to a repo DB.
 const DB_SIDECAR_SUFFIXES = ["", "-wal", "-shm", "-journal"];
+// Usage telemetry log (docs/developer/telemetry-phase1-schema.md). Size-capped with a single rotated
+// generation: on overflow `usage.jsonl` becomes `usage.jsonl.1`, dropping any previous `.1`.
+const USAGE_LOG_NAME = "usage.jsonl";
+export const USAGE_LOG_MAX_BYTES = 32 * 1024 * 1024;
 function dbGroupBytes(dbPath) {
     let total = 0;
     for (const suffix of DB_SIDECAR_SUFFIXES) {
@@ -22,6 +26,33 @@ function dbGroupBytes(dbPath) {
 function removeDbGroup(dbPath) {
     for (const suffix of DB_SIDECAR_SUFFIXES)
         rmSync(`${dbPath}${suffix}`, { force: true });
+}
+function fileBytes(path) {
+    try {
+        return statSync(path).size;
+    }
+    catch {
+        return 0;
+    }
+}
+function collectUsageLogRotation(stateDir, maxBytes) {
+    const path = join(stateDir, USAGE_LOG_NAME);
+    const bytes = fileBytes(path);
+    const overCap = bytes > maxBytes;
+    // Rotation renames the current log over any existing `.1`, so the reclaimable bytes are that old `.1`.
+    const reclaimedBytes = overCap ? fileBytes(`${path}.1`) : 0;
+    return { path, bytes, maxBytes, overCap, rotated: false, reclaimedBytes };
+}
+function rotateUsageLog(rotation) {
+    if (!rotation.overCap)
+        return rotation;
+    try {
+        renameSync(rotation.path, `${rotation.path}.1`);
+    }
+    catch {
+        return rotation;
+    }
+    return { ...rotation, rotated: true };
 }
 /**
  * Read-only scan for reclaimable per-repo index DBs:
@@ -66,6 +97,7 @@ export function collectStateGcCandidates(options = {}) {
         reclaimableBytes,
         applied: false,
         removedRegistryRows: 0,
+        usageLog: collectUsageLogRotation(stateDir, options.maxUsageLogBytes ?? USAGE_LOG_MAX_BYTES),
     };
 }
 /**
@@ -80,5 +112,5 @@ export function pruneState(options = {}) {
         removeDbGroup(candidate.dbPath);
     const missingRootKeys = plan.candidates.filter((candidate) => candidate.reason === "missing_root").map((candidate) => candidate.key);
     const removedRegistryRows = removeRegistryRepos(missingRootKeys, options);
-    return { ...plan, applied: true, removedRegistryRows };
+    return { ...plan, applied: true, removedRegistryRows, usageLog: rotateUsageLog(plan.usageLog) };
 }

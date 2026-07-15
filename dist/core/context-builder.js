@@ -3,13 +3,14 @@ import { openRepoDb } from "./db.js";
 import { fullIndexHealth, readIndexStatusCounts } from "./index-health.js";
 import { findIndexedRelationships, isConfigReadFirstPath, isNoisyIndexedPath, isNoisyReadFirstPath, isTestReadFirstPath, mergeRelatedPaths, nearConfigReason, relatedDocReason, relatedTestReason, sameDirReason, searchResultReason, targetReason, testOfReason, } from "./relationships.js";
 import { getRepoInfo } from "./repo.js";
+import { NotApprovedError } from "./errors.js";
 import { searchCodeMap } from "./search.js";
 import { normalizePathPrefix } from "./scanner.js";
 import { escapeLike, localityScore, uniqueStrings } from "./text-util.js";
 export function buildCodeMapContext(options) {
     const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
     if (!info.approved)
-        throw new Error("Repository is not approved/indexed yet. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
+        throw new NotApprovedError();
     const db = openRepoDb(info.dbPath);
     try {
         const request = normalizeContextRequest(options);

@@ -5,6 +5,7 @@ import { planQuery } from "./query-plan.ts";
 import { rankAndSlice, topHitConfidence, type SearchScoreDiagnostics, type TopHitConfidence } from "./ranking.ts";
 import { collectSearchCandidateDiagnostics, collectSearchCandidates, pathFilterForPrefix, type SearchCandidateDiagnostic, type SearchCandidateSource } from "./search-pipeline.ts";
 import { normalizePathPrefix } from "./scanner.ts";
+import { NotApprovedError } from "./errors.ts";
 import type { SearchResult } from "./types.ts";
 
 interface SearchDiagnostics {
@@ -78,7 +79,7 @@ export function searchCodeMapWithDiagnostics(options: { query: string; cwd?: str
 
 export function searchCodeMap(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string } & StateOptions): SearchResult[] {
   const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
-  if (!info.approved) throw new Error("Repository is not approved/indexed yet. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
+  if (!info.approved) throw new NotApprovedError();
   const db = openRepoDb(info.dbPath);
   const limit = normalizedLimit(options.limit);
   const plan = planQuery(options.query);
@@ -94,7 +95,7 @@ export function searchCodeMap(options: { query: string; cwd?: string; limit?: nu
 
 export function searchCodeMapDebug(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string } & StateOptions): CodeMapSearchDebugReport {
   const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
-  if (!info.approved) throw new Error("Repository is not approved/indexed yet. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
+  if (!info.approved) throw new NotApprovedError();
   const db = openRepoDb(info.dbPath);
   const limit = normalizedLimit(options.limit);
   const plan = planQuery(options.query);

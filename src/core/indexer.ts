@@ -3,13 +3,14 @@ import { readGitHead } from "./git-status.ts";
 import { cheapIndexHealth, fullIndexHealth, readIndexStatusCounts } from "./index-health.ts";
 import { applyIndexUpdate, isReindexForced, readIndexedFileStats } from "./index-store.ts";
 import { getRepoInfo, approveRepo, type StateOptions } from "./repo.ts";
+import { NotApprovedError } from "./errors.ts";
 import { normalizePathPrefix, scanRepo } from "./scanner.ts";
 import type { IndexStats } from "./types.ts";
 
 export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix?: string } & StateOptions = {}): IndexStats & { dbPath: string; root: string; pathPrefix: string } {
   const stateOptions = { stateDir: options.stateDir };
   const info = options.approve ? approveRepo(options.cwd, "codemap_index", stateOptions) : getRepoInfo(options.cwd, stateOptions);
-  if (!info.approved) throw new Error("Repository is not approved. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
+  if (!info.approved) throw new NotApprovedError("Repository is not approved. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
   const db = openRepoDb(info.dbPath);
   // Skip re-reading+hashing unchanged files (mtime+size match) unless an index-version bump forces a

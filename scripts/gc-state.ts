@@ -35,9 +35,23 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(1)} ${units[unit]}`;
 }
 
+function reportUsageLog(result: StateGcResult, apply: boolean): void {
+  const { bytes, overCap, rotated, reclaimedBytes } = result.usageLog;
+  if (bytes === 0 && !overCap) return;
+  const state = rotated
+    ? `rotated (reclaimed ${formatBytes(reclaimedBytes)})`
+    : overCap
+      ? apply
+        ? "over cap"
+        : `over cap (rotate on --apply, reclaims ${formatBytes(reclaimedBytes)})`
+      : "within cap";
+  console.log(`Usage log: ${formatBytes(bytes)} ${state}`);
+}
+
 function reportHuman(result: StateGcResult, apply: boolean): void {
   console.log(`State dir: ${result.stateDir}`);
   console.log(`Repo DBs: ${result.repoDbCount} | Registry repos: ${result.registryRepoCount}`);
+  reportUsageLog(result, apply);
   if (result.candidates.length === 0) {
     console.log("Nothing to reclaim; state is clean.");
     return;

@@ -19,6 +19,7 @@ import {
   type RelatedPath,
 } from "./relationships.ts";
 import { getRepoInfo, type StateOptions } from "./repo.ts";
+import { NotApprovedError } from "./errors.ts";
 import { searchCodeMap } from "./search.ts";
 import { normalizePathPrefix } from "./scanner.ts";
 import { escapeLike, localityScore, uniqueStrings } from "./text-util.ts";
@@ -70,7 +71,7 @@ interface ContextDiagnostics {
 
 export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapContextPackage {
   const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
-  if (!info.approved) throw new Error("Repository is not approved/indexed yet. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
+  if (!info.approved) throw new NotApprovedError();
   const db = openRepoDb(info.dbPath);
   try {
     const request = normalizeContextRequest(options);

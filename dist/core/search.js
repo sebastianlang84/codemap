@@ -5,6 +5,7 @@ import { planQuery } from "./query-plan.js";
 import { rankAndSlice, topHitConfidence } from "./ranking.js";
 import { collectSearchCandidateDiagnostics, collectSearchCandidates, pathFilterForPrefix } from "./search-pipeline.js";
 import { normalizePathPrefix } from "./scanner.js";
+import { NotApprovedError } from "./errors.js";
 export function searchCodeMapWithDiagnostics(options) {
     const pathPrefix = normalizePathPrefix(options.pathPrefix);
     // Cheap (HEAD-based) health only: a full scan hashes the entire repo on every
@@ -29,7 +30,7 @@ export function searchCodeMapWithDiagnostics(options) {
 export function searchCodeMap(options) {
     const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
     if (!info.approved)
-        throw new Error("Repository is not approved/indexed yet. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
+        throw new NotApprovedError();
     const db = openRepoDb(info.dbPath);
     const limit = normalizedLimit(options.limit);
     const plan = planQuery(options.query);
@@ -45,7 +46,7 @@ export function searchCodeMap(options) {
 export function searchCodeMapDebug(options) {
     const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
     if (!info.approved)
-        throw new Error("Repository is not approved/indexed yet. Run 'codemap index --approve' first (indexing is local-only; your repo is never modified).");
+        throw new NotApprovedError();
     const db = openRepoDb(info.dbPath);
     const limit = normalizedLimit(options.limit);
     const plan = planQuery(options.query);

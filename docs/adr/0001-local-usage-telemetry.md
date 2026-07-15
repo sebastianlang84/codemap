@@ -1,6 +1,6 @@
 # ADR 0001 — Local usage telemetry for codemap
 
-Status: **Proposed** (design fixed; implementation not started)
+Status: **Accepted** (phase 1 implemented)
 Date: 2026-07-15
 
 ## Context
