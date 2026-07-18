@@ -122,6 +122,14 @@ snapshotted for the telemetry before/after (ADR 0001). Reconciled on merge with 
 (weak-symbol / file-coverage ranking), which touched the same `scoreSearchRow`/`collectSearchCandidateDiagnostics`
 seams; full `verify` is green on the combined tree.
 
+**Author-local advisory (2026-07-18):** the complete five-repo cohort was available. Its first run
+exposed one Macrolens provider-outage loss: search-only kept both query-named provider files, while
+the merged search+context plan displaced `providers/fred.ts` with a test belonging only to a newly
+added direct-import neighbor (`6` wins / `1` loss / `17` ties; maximum single loss `0.333`). A
+fixed regression test plus a narrow read-plan change now reserves direct-import-test promotion for
+route-adapter pairs; the repeated 24-case comparison passes at `6` wins / `0` losses / `18` ties,
+and `npm run verify:local` plus `npm run bench:search-quality:local` are green.
+
 **Follow-up:** make the harness honest — drive the eval suites from config/env
 (`CODEMAP_EVAL_REPOS`) instead of hardcoded paths, and decouple "repo missing" (skip + warn) from
 "quality regressed" (hard fail on the repos that *are* present), so the advisory runs meaningfully

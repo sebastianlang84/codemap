@@ -169,6 +169,35 @@ test("search+context read plan keeps imported-neighbor tests before lower doc hi
   );
 });
 
+test("search+context read plan keeps higher-ranked visible source hits ahead of an imported-neighbor test", () => {
+  assert.deepEqual(
+    mergeSearchContextReadPlan(
+      [
+        "apps/web/src/lib/dashboard-pipeline.ts",
+        "apps/web/src/lib/providers/yahoo.ts",
+        "apps/web/src/lib/providers/fred.ts",
+        "apps/web/src/types/macro.ts",
+        "apps/web/src/lib/__tests__/dashboard-pipeline.test.ts",
+      ],
+      [
+        { path: "apps/web/src/lib/dashboard-pipeline.ts", reasons: [{ kind: "target" }] },
+        { path: "apps/web/src/lib/macro-derivations.ts", reasons: [{ kind: "import" }] },
+        { path: "apps/web/src/lib/macro-inflation-derivations.ts", reasons: [{ kind: "import" }] },
+        { path: "apps/web/src/lib/__tests__/dashboard-pipeline.test.ts", reasons: [{ kind: "sibling_test" }, { kind: "reverse_import" }, { kind: "reverse_test" }] },
+        { path: "apps/web/src/lib/__tests__/macro-derivations.test.ts", reasons: [{ kind: "sibling_test", targetPath: "apps/web/src/lib/macro-derivations.ts" }] },
+      ],
+      5,
+    ),
+    [
+      "apps/web/src/lib/dashboard-pipeline.ts",
+      "apps/web/src/lib/__tests__/dashboard-pipeline.test.ts",
+      "apps/web/src/lib/macro-derivations.ts",
+      "apps/web/src/lib/providers/yahoo.ts",
+      "apps/web/src/lib/providers/fred.ts",
+    ],
+  );
+});
+
 test("search+context read plan does not promote sibling tests for non-search import targets", () => {
   assert.deepEqual(
     mergeSearchContextReadPlan(

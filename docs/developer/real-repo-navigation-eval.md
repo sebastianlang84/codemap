@@ -72,30 +72,30 @@ The gate applies the success/recall/latency thresholds to the `baseline` cohort 
 
 ## Current local result
 
-On 2026-07-14, `npm run eval:real-repo-navigation:gate` evaluated 8 baseline tasks plus 16 natural-language holdout tasks with the default 5-file read budget. The local gate **passed**: across all 24 paired cases, search+context had 6 wins, 0 losses, and 18 ties against search-only.
+On 2026-07-18, `npm run eval:real-repo-navigation:gate` evaluated 8 baseline tasks plus 16 natural-language holdout tasks with the default 5-file read budget. The local gate **passed**: across all 24 paired cases, search+context had 6 wins, 0 losses, and 18 ties against search-only.
 
 Baseline cohort:
 
 | Mode | Success | Entry hit | Expected recall | Context recall | Avg files | p95 latency |
 |---|---:|---:|---:|---:|---:|---:|
-| `lexical` | 0.125 | 0.375 | 0.448 | 0.521 | 5.000 | 30.051 ms |
-| `codemap_search` | 0.500 | 1.000 | 0.823 | 0.708 | 4.875 | 34.231 ms |
-| `codemap_search_context` | 0.750 | 1.000 | 0.927 | 0.896 | 5.000 | 44.367 ms |
+| `lexical` | 0.125 | 0.375 | 0.448 | 0.521 | 5.000 | 28.388 ms |
+| `codemap_search` | 0.500 | 1.000 | 0.844 | 0.771 | 4.875 | 49.187 ms |
+| `codemap_search_context` | 0.750 | 1.000 | 0.927 | 0.896 | 5.000 | 54.295 ms |
 
 Natural-language holdout cohort:
 
 | Mode | Success | Entry hit | Expected recall | Context recall | Avg files | p95 latency |
 |---|---:|---:|---:|---:|---:|---:|
-| `lexical` | 0.125 | 0.438 | 0.375 | 0.365 | 5.000 | 21.725 ms |
-| `codemap_search` | 0.438 | 0.875 | 0.724 | 0.667 | 4.875 | 30.699 ms |
-| `codemap_search_context` | 0.688 | 0.875 | 0.823 | 0.812 | 5.000 | 42.991 ms |
+| `lexical` | 0.125 | 0.438 | 0.375 | 0.365 | 5.000 | 21.796 ms |
+| `codemap_search` | 0.438 | 1.000 | 0.724 | 0.594 | 4.875 | 43.762 ms |
+| `codemap_search_context` | 0.500 | 0.813 | 0.755 | 0.729 | 5.000 | 58.841 ms |
 
 Baseline deltas:
 
 - Search+context vs lexical: `+0.625` success, `+0.479` expected recall, `+0.375` context recall, with the same average files read.
-- Search+context vs search-only: `+0.250` success, `+0.104` expected recall, `+0.188` context recall.
+- Search+context vs search-only: `+0.250` success, `+0.083` expected recall, `+0.125` context recall.
 
-The kept read-plan experiment protects visible source↔test pairs and uncovered visible test hits before context-only neighbors consume the budget. Against the frozen pre-change baseline, paired losses fell from 2 to 0, ties rose from 16 to 18, and wins stayed at 6. Natural-holdout search+context success improved from 0.625 to 0.688, expected recall from 0.771 to 0.823, and context recall from 0.719 to 0.812, with no new forbidden reads. Deterministic regression cases cover both the pi-ext-memory source/test-pair loss and the Macrolens uncovered-test loss.
+The latest kept read-plan experiment addresses drift exposed by the full local cohort: the Macrolens provider-outage query named both Yahoo and FRED, but search+context displaced the visible `providers/fred.ts` hit with a test belonging only to a newly added direct-import neighbor. Before the change, the comparison was 6 wins, 1 loss, and 17 ties with a maximum single loss of `0.333`; natural-holdout search+context success was `0.438`, expected recall `0.740`, and context recall `0.708`. Restricting that imported-neighbor-test promotion to route-adapter pairs restores the FRED hit: 6 wins, 0 losses, and 18 ties; natural-holdout success rises to `0.500`, expected recall to `0.755`, and context recall to `0.729`, with no forbidden reads. The case is fixed in a deterministic read-plan regression test.
 
 Interpretation: under a realistic small read budget, CodeMap's intended search-then-context workflow remains materially better in aggregate and avoids forbidden reads in both cohorts. Preserving query-visible evidence prevents context around a wrong top hit from making the search-only read plan worse.
 

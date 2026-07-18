@@ -51,7 +51,8 @@ function buildSearchContextReadPlan(searchPaths, contextPaths, limit) {
             ? directImportCandidates.slice(0, 1)
             : [];
     const directImportPathSet = new Set([...searchPaths, ...prioritizedDirectImports.map((item) => item.path)]);
-    const prioritizedDirectImportTests = prioritizedDirectImports.length > 0
+    // Outside route adapters, a test for a newly promoted import must not displace query-visible source hits.
+    const prioritizedDirectImportTests = routeAdapterEntry && prioritizedDirectImports.length > 0
         ? contextEntries.filter((item) => isRelatedTest(item, directImportPathSet) && !searchPathSet.has(item.path) && !prioritizedDirectImports.some((priority) => priority.path === item.path)).slice(0, 1)
         : [];
     const prioritizedContext = [...prioritizedConfigs, ...prioritizedTests, ...prioritizedDirectImports, ...prioritizedDirectImportTests];
