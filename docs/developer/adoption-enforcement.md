@@ -1,7 +1,10 @@
 # Adoption enforcement — making agents actually reach for codemap
 
-Status: **research + design (nothing implemented)** — captures external research (2026-07-18)
-and its reconciliation with this machine's CLI-first setup. The decision frame lives in
+Status: **historical research; enforcement rejected 2026-07-19** — captures external research
+(2026-07-18) and the rejected hook design. The owner declined a global runtime-specific gate in
+favor of the optional harness-agnostic
+[`navigating-with-codemap`](../../skills/navigating-with-codemap/SKILL.md) skill and its generic
+[deployment guide](../user/agent-skill.md). The decision record lives in
 [ADR 20260718](../adr/20260718-grep-fallback-enforcement-gate.md); the incident evidence lives in
 [`TODO.md`](../../TODO.md) (§ "Discoverability").
 
@@ -79,7 +82,7 @@ symbol/definition/reference* questions, keep grep for raw text — enforced at t
 The deny reason must therefore offer an **escape hatch** (a sentinel the agent re-runs with) so the
 gate is a redirect, not a wall, and does not loop.
 
-## Recommended design (Stage 1 — not implemented)
+## Rejected design (not implemented)
 
 A single global `PreToolUse` hook in `~/.claude/settings.json`:
 
@@ -118,9 +121,10 @@ call is intercepted even though `Explore` never read the rule. An explicit
 `.claude/agents/code-recon.md` (allowlist excluding `Grep`/`Glob`, body mandating codemap) is
 **optional hardening, not required**.
 
-## Open decision — strictness
+## Owner decision — no enforcement hook
 
-Genuinely unresolved; owner's call. The research recommends the hard variant.
+Resolved 2026-07-19: do not implement either variant. The alternatives below are retained as the
+historical decision frame, not as active recommendations.
 
 - **Hard-deny-narrow + escape hatch (recommended, matches the report).** Deterministic; blocks only
   the narrow symbol-lookup case; text scans bypass via sentinel. The `codemap-adoption-friction`
@@ -137,7 +141,9 @@ repo for every agent (including unrelated projects like `~/partflow`). Cost: ~1 
 process per intercepted grep. Reversible by removing the hook entry. This is why it is
 approval-gated and not implemented here.
 
-## Rollout & measurement (when/if built)
+## Historical proposed rollout
+
+This rollout was not authorized and must not be treated as active work:
 
 1. Ship Stage 1 (ready-gated deny + escape hatch).
 2. Optional Stage 2: `code-recon` subagent + `deny Agent(Explore)` routing, if delegation still

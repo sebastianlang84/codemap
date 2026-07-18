@@ -1,7 +1,8 @@
 # ADR 20260718 — Enforce codemap-first via a point-of-use grep gate
 
-- **Status:** Proposed (nothing implemented; one sub-decision open)
+- **Status:** Rejected (no hook implemented)
 - **Date:** 2026-07-18
+- **Resolved:** 2026-07-19
 
 ## Context
 
@@ -28,7 +29,7 @@ This host is **CLI-first, no MCP** (`codemap-cli-first-setup` memory). So tool-s
 framing does not apply, and `grep`-via-`Bash` cannot be removed by an allowlist (codemap itself
 needs Bash) — the Bash tool must be intercepted.
 
-## Decision (proposed)
+## Proposal considered
 
 Introduce a global `PreToolUse` hook in `~/.claude/settings.json` that, **only when
 `codemap status --json` reports `readiness == "ready"` for the call's cwd**, returns
@@ -53,24 +54,27 @@ in [`adoption-enforcement.md`](../developer/adoption-enforcement.md).
 - **Not a total ban** — an escape hatch keeps grep available for raw-text scans, matching the 2026
   hybrid consensus (codemap first for symbols; grep for text), avoiding loops.
 
-## Open sub-decision — strictness
+## Resolution
 
-Deferred to the owner:
+The owner rejected a global `PreToolUse` gate because its cross-repository blast radius,
+runtime-specific behavior, and interference with legitimate fallback searches outweigh deterministic
+enforcement. No hard or advisory hook will be built from this proposal.
 
-- **Hard-deny-narrow + escape hatch** (recommended; matches the research). Deterministic; blocks
-  only the narrow symbol-lookup case. Reverses the earlier over-enforcement deferral because
-  Incident 2 added a *correctness* cost, not just latency.
-- **Advisory-only.** Reminder injection via SessionStart/UserPromptSubmit stdout, no block.
-  No loop/annoyance risk but non-deterministic — the class of guidance shown to be
-  quoted-then-ignored.
+Instead, CodeMap ships an optional, harness-agnostic
+[`navigating-with-codemap`](../../skills/navigating-with-codemap/SKILL.md) skill. It loads
+situationally where the target infrastructure supports skills, uses only the public CLI, preserves
+explicit exhaustive-search fallbacks, and is deployed by the user at global or repository-local
+scope. See the [deployment guide](../user/agent-skill.md).
 
 ## Consequences
 
 - **Blast radius:** global on the shared VM — every session, every repo, every agent (incl.
   unrelated projects). Cost ~1 `codemap status` process per intercepted grep. Reversible by removing
   the hook entry. Requires explicit approval before implementing.
-- **Measurable:** existing phase-1 `usage.jsonl` (ADR 0001) already captures the codemap-vs-grep
-  call ratio to tune strictness after rollout.
+- **Measurable only in part:** phase-1 `usage.jsonl` (ADR 0001) captures CodeMap invocations but
+  cannot observe sessions that use only another search tool. Skill adoption therefore needs
+  controlled task comparisons or external command traces, not a claimed codemap-vs-grep ratio
+  from this log alone.
 - **Version-sensitive:** hook exit-code handling, `additionalContext`, `updatedInput`, subagent
   inheritance, and `Explore` model behavior have all shifted across Claude Code releases and carry
   open upstream bugs — verify on the installed version before building.
@@ -80,5 +84,5 @@ Deferred to the owner:
 
 ## Status note
 
-Nothing in this ADR is implemented. It records the decision frame and the single open sub-decision
-so that, when approved, implementation and this ADR's status flip to Accepted together.
+The hook proposal is closed without implementation. The lower-risk bundled skill is documented and
+tested separately; this ADR remains as the evidence and rationale for rejecting enforcement.

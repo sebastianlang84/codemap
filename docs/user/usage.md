@@ -73,7 +73,11 @@ npm link
 pi install ~/dev/codemap   # optional Pi adapter
 ```
 
-The CLI supports `--json`, `--repo`, `--path-prefix`, and `--state-dir`. See the [README CLI reference](../../README.md#cli-reference) for wiring it into `CLAUDE.md` or `AGENTS.md`. Existing `pi-ext-codemap` users should follow the [migration guide](migrating-from-pi-extension.md), especially before changing their state directory.
+The CLI supports `--json`, `--repo`, `--path-prefix`, and `--state-dir`. Agents with directory-based
+skill support can use the optional, harness-agnostic
+[`navigating-with-codemap` deployment guide](agent-skill.md). Existing `pi-ext-codemap` users should
+follow the [migration guide](migrating-from-pi-extension.md), especially before changing their
+state directory.
 
 ## State location
 

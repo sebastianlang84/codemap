@@ -32,29 +32,13 @@ Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst b
 
 ## Discoverability: agents under-use codemap even when the rule mandates it
 
-> **Research + design done (2026-07-18) — nothing implemented.** External research (how others make
-> agents adopt a preferred tool over grep, and make it survive delegation) is reconciled with this
-> CLI-first/no-MCP host in [`docs/developer/adoption-enforcement.md`](docs/developer/adoption-enforcement.md);
-> the decision frame is [ADR 20260718](docs/adr/20260718-grep-fallback-enforcement-gate.md) (Status:
-> Proposed).
->
-> **Conclusion:** prose is not load-bearing — the only deterministic layer on Claude Code is
-> hooks/permissions. A `PreToolUse` **deny-with-reason** hook is the single load-bearing mechanism,
-> and because **hooks fire inside subagents** it closes *both* Incident 1 (grep reflex) and Incident 2
-> (delegation gap) with one mechanism — no need to copy the rule into subagent contexts. This flips
-> the earlier deferral of the grep hook in the `codemap-adoption-friction` memory (fix #6), because
-> Incident 2 added a *correctness* cost, not just latency.
->
-> **Recommended (not built):** global `PreToolUse` hook matching `Grep|Glob` + `Bash`
-> (post-pipe/`&&`-aware), that only denies when `codemap status --json` reports `readiness=="ready"`
-> for the cwd, with a `permissionDecisionReason` naming the exact `codemap search` command and a
-> `CODEMAP_ALLOW_GREP=1` escape hatch for raw-text scans; fail-open otherwise. Footguns encoded:
-> exit-2-not-1, `additionalContext` not honored on `PreToolUse`, "automated gate" wording vs the
-> Opus-4.6 stop-on-block bug.
->
-> **Open sub-decision (owner):** strictness — hard-deny-narrow + escape hatch (recommended) vs
-> advisory-only reminder injection. **Blast radius:** global on the shared VM (every session/repo/
-> agent) → approval-gated before any implementation.
+> **Resolved 2026-07-19:** the owner rejected the proposed global `PreToolUse` gate as too invasive
+> and runtime-specific. CodeMap instead bundles an optional, harness-agnostic
+> [`navigating-with-codemap`](skills/navigating-with-codemap/SKILL.md) skill with explicit fallback
+> boundaries. Users deploy it by copy or symlink at the scope their infrastructure supports; see
+> [`docs/user/agent-skill.md`](docs/user/agent-skill.md). The rejected hook research remains in
+> [`docs/developer/adoption-enforcement.md`](docs/developer/adoption-enforcement.md) and
+> [ADR 20260718](docs/adr/20260718-grep-fallback-enforcement-gate.md) for historical rationale.
 
 **Logged:** 2026-07-18 (from a Claude Code session in `~/partflow`)
 
@@ -94,7 +78,9 @@ mid-task. Discoverability, not capability, is the gap.
   near-zero-friction auto-refresh (or a louder "run `codemap index`") would remove one more reason
   to fall back to grep.
 
-Deciding which of these is worth the prompt-token cost is the actual open question.
+The chosen low-risk response is the bundled skill above. Whether it improves adoption should be
+judged from controlled navigation tasks and future concrete incidents; the local usage log alone
+cannot observe sessions that never invoke CodeMap.
 
 ### Incident 2 — the rule dies at the delegation boundary (2026-07-18)
 

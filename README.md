@@ -118,17 +118,12 @@ codemap context src/app/auth.ts # read-first files + related tests/docs/imports
 codemap status                  # approval / index / staleness (add --json anywhere)
 ```
 
-**Wire it into an agent.** Add a note to the repo's `CLAUDE.md` (Claude Code) or `AGENTS.md` (Codex) so the agent chooses CodeMap for ranked navigation and `rg` for exhaustive literal matching:
-
-```markdown
-## Code navigation
-Use CodeMap for ranked code navigation and related-file discovery:
-- `codemap search <terms>` — ranked files, symbols, and chunks
-- `codemap context <path|query>` — read-first files plus related tests/docs/imports
-Run `codemap index --approve` once, then `codemap index` to refresh after changes.
-Use `--json` when you want to parse results. Staleness is advisory.
-Use `rg` when the task requires every exact literal or regex match.
-```
+**Optional agent skill.** The package includes a harness-agnostic
+[`navigating-with-codemap`](skills/navigating-with-codemap/SKILL.md) skill that routes ranked code
+navigation through the CLI while preserving exhaustive text search for literal and regex scans.
+Deploy it by copy or symlink at global or repository-local scope according to the target
+infrastructure's skill discovery rules; see the
+[`agent skill deployment guide`](docs/user/agent-skill.md).
 
 Everything is local-only and never leaves your machine; the first index requires `--approve`.
 

@@ -118,7 +118,13 @@ check("published package contains built bins without test or benchmark payloads"
     const entry = packageFiles.find((file) => file.path === bin);
     if (typeof entry?.mode !== "number" || (entry.mode & 0o111) === 0) throw new Error(`built bin is not executable: ${bin}`);
   }
-  for (const required of [...(pkg.pi?.extensions ?? []), "migrations/001_init.sql", "migrations/002_fts.sql", "migrations/003_graph.sql"]) {
+  for (const required of [
+    ...(pkg.pi?.extensions ?? []),
+    "skills/navigating-with-codemap/SKILL.md",
+    "migrations/001_init.sql",
+    "migrations/002_fts.sql",
+    "migrations/003_graph.sql",
+  ]) {
     if (!files.has(required.replace(/^\.\//, ""))) throw new Error(`missing runtime package file ${required}`);
   }
   const unwanted = [...files].filter((file) => file.startsWith("tests/") || file.startsWith("scripts/bench-") || file.startsWith("scripts/eval-"));
