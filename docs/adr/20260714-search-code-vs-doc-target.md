@@ -134,3 +134,10 @@ and `npm run verify:local` plus `npm run bench:search-quality:local` are green.
 (`CODEMAP_EVAL_REPOS`) instead of hardcoded paths, and decouple "repo missing" (skip + warn) from
 "quality regressed" (hard fail on the repos that *are* present), so the advisory runs meaningfully
 on any subset. Tracked in `TODO.md`.
+
+**Follow-up completed (2026-07-18):** `CODEMAP_EVAL_REPOS` now selects known suites and supplies
+their absolute roots. Missing configured repos are machine-readable warnings unless the caller
+explicitly requests `--require-repos`; subset runs scale corpus-size/win requirements and use
+non-regression for relative comparisons while retaining recall, forbidden-read, loss, and latency
+checks on the repositories that ran. Deterministic harness tests cover missing, strict, and
+available-subset behavior.

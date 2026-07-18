@@ -23,6 +23,19 @@ npm run eval:real-repo-navigation
 npm run eval:real-repo-navigation:gate
 ```
 
+The built-in suite definitions keep the maintainer defaults for compatibility. On another machine,
+select the available suites and override their roots with absolute paths:
+
+```bash
+CODEMAP_EVAL_REPOS='macrolens=/work/macrolens,pi-ext-memory=/work/pi-ext-memory' \
+  npm run eval:real-repo-navigation:gate
+```
+
+Known labels are `macrolens`, `alpha-cycles`, `pi-ext-memory`, `pi-ext-subagents`, and
+`pi-ext-astgrep`. Missing configured repos are reported in `gate.warnings` and skipped; they do not
+make the quality gate fail. Add `--require-repos` when an inventory check should fail for a missing
+configured root.
+
 Useful options:
 
 ```bash
@@ -68,7 +81,7 @@ The miss taxonomy is diagnostic, not a gate by itself. Current classes are:
 - `query_formulation`: query terms do not overlap the missing expected path.
 - `unknown`: miss needs manual inspection before adding heuristics.
 
-The gate applies the success/recall/latency thresholds to the `baseline` cohort so local quality does not flap on the holdout. It also requires the natural-language holdout to be present, keep a minimum expected/context-recall floor, and avoid explicitly configured forbidden/noisy reads. The holdout floor is intentionally lower than the baseline target because the expanded set is diagnostic and should expose future improvement work as it grows.
+The gate applies success/recall/latency thresholds to the `baseline` cohort and expected/context-recall floors to the natural-language holdout. On the full built-in cohort it retains the calibrated positive-delta and context-win requirements. On a configured subset, corpus-size minimums and the required win count scale to the available tasks, while relative comparisons require non-regression instead of the full-cohort improvement margin. Recall floors, forbidden/noisy reads, per-task context-loss caps, and latency still fail on the repos that actually ran. If every configured repo is missing, the advisory returns warnings without inventing a quality failure; use `--require-repos` for strict presence enforcement.
 
 ## Current local result
 

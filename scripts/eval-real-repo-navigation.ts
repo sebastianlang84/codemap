@@ -2,7 +2,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, isAbsolute, join } from "node:path";
 
 import { explainNavigationMisses, summarizeNavigationMissReasons, type NavigationMissExplanation, type NavigationMissReasonSummary } from "../src/core/eval-navigation-diagnostics.ts";
 import { summarizeMissTaxonomy, type MissClass, type MissDiagnostic, type MissTaxonomySummary } from "../src/core/eval-miss-taxonomy.ts";
@@ -103,6 +103,7 @@ interface RepoReport {
   label: string;
   root: string;
   skipped?: string;
+  taskCounts: Record<TaskCohort, number>;
   indexed?: ReturnType<typeof indexRepo>;
   modes: ModeMetrics[];
   cases: CaseReport[];
@@ -367,9 +368,10 @@ const defaultSuites: RealRepoSuite[] = [
 ];
 
 const parsed = parseArgs(process.argv.slice(2));
+const suites = configuredSuites(process.env.CODEMAP_EVAL_REPOS);
 const stateDir = join(tmpdir(), `pi-codemap-real-repo-navigation-${process.pid}-${Date.now()}`);
 try {
-  const report = runEval(parsed, stateDir);
+  const report = runEval(parsed, stateDir, suites);
   const gate = evaluateGate(report, parsed);
   console.log(JSON.stringify({ generatedAt: new Date().toISOString(), report: parsed.keepState ? report : { ...report, stateDir: undefined }, gate }, null, 2));
   if (parsed.gateEnabled && !gate.passed) process.exitCode = 1;
@@ -400,7 +402,6 @@ function parseArgs(args: string[]): ParsedArgs {
       continue;
     } else if (arg === "--quality-gate") {
       gateEnabled = true;
-      requireRepos = true;
     } else if (arg === "--keep-state") {
       keepState = true;
     } else if (arg === "--require-repos") {
@@ -448,8 +449,28 @@ function parseArgs(args: string[]): ParsedArgs {
   return { gateEnabled, keepState, requireRepos, limit, maxP95LatencyMs, minTasks, minNaturalHoldoutTasks, minNaturalHoldoutExpectedRecall, minNaturalHoldoutContextRecall, minSuccessDeltaVsLexical, minContextRecallDeltaVsSearch, minContextWinsVsSearch, maxContextLossesVsSearch, maxSingleContextLossVsSearch };
 }
 
-function runEval(options: ParsedArgs, stateDir: string): EvalReport {
-  const repos = defaultSuites.map((suite) => runSuite(suite, options, stateDir));
+function configuredSuites(raw: string | undefined): RealRepoSuite[] {
+  if (!raw?.trim()) return defaultSuites;
+  const knownSuites = new Map(defaultSuites.map((suite) => [suite.label, suite]));
+  const seen = new Set<string>();
+  const suites = raw.split(/[\n,]/).map((value) => value.trim()).filter(Boolean).map((spec) => {
+    const separator = spec.indexOf("=");
+    if (separator <= 0 || separator === spec.length - 1) throw new Error(`Invalid CODEMAP_EVAL_REPOS entry: ${spec}. Expected label=/absolute/path.`);
+    const label = spec.slice(0, separator).trim();
+    const root = spec.slice(separator + 1).trim();
+    const suite = knownSuites.get(label);
+    if (!suite) throw new Error(`Unknown CODEMAP_EVAL_REPOS suite: ${label}. Known suites: ${[...knownSuites.keys()].join(", ")}.`);
+    if (seen.has(label)) throw new Error(`Duplicate CODEMAP_EVAL_REPOS suite: ${label}.`);
+    if (!isAbsolute(root)) throw new Error(`CODEMAP_EVAL_REPOS path for ${label} must be absolute: ${root}.`);
+    seen.add(label);
+    return { ...suite, root };
+  });
+  if (suites.length === 0) throw new Error("CODEMAP_EVAL_REPOS did not contain any suites.");
+  return suites;
+}
+
+function runEval(options: ParsedArgs, stateDir: string, suites: RealRepoSuite[]): EvalReport {
+  const repos = suites.map((suite) => runSuite(suite, options, stateDir));
   const allCases = repos.flatMap((repo) => repo.cases);
   const aggregateModes = modes.map((mode) => metricsFor(mode, allCases));
   const searchContext = metric(aggregateModes, "codemap_search_context");
@@ -470,12 +491,16 @@ function runEval(options: ParsedArgs, stateDir: string): EvalReport {
 }
 
 function runSuite(suite: RealRepoSuite, options: ParsedArgs, stateDir: string): RepoReport {
-  if (!existsSync(suite.root)) return { label: suite.label, root: suite.root, skipped: "missing repo", modes: [], cases: [], missTaxonomy: summarizeMissTaxonomy([]) };
+  const taskCounts = taskCohorts.reduce<Record<TaskCohort, number>>((counts, cohort) => {
+    counts[cohort] = suite.tasks.filter((task) => (task.cohort ?? "baseline") === cohort).length;
+    return counts;
+  }, { baseline: 0, natural_holdout: 0 });
+  if (!existsSync(suite.root)) return { label: suite.label, root: suite.root, skipped: "missing repo", taskCounts, modes: [], cases: [], missTaxonomy: summarizeMissTaxonomy([]) };
   const indexed = indexRepo({ cwd: suite.root, approve: true, stateDir });
   const currentStatus = indexStatus(suite.root, { stateDir, health: "full" });
   const indexStale = Boolean(currentStatus.headChanged || currentStatus.changed > 0 || currentStatus.missing > 0 || currentStatus.deleted > 0);
   const cases = modes.flatMap((mode) => suite.tasks.map((task) => evaluateTask({ suite, stateDir, mode, task, limit: options.limit, indexStale })));
-  return { label: suite.label, root: suite.root, indexed, modes: modes.map((mode) => metricsFor(mode, cases)), cases, missTaxonomy: summarizeMissTaxonomy(cases.flatMap((item) => item.misses)) };
+  return { label: suite.label, root: suite.root, taskCounts, indexed, modes: modes.map((mode) => metricsFor(mode, cases)), cases, missTaxonomy: summarizeMissTaxonomy(cases.flatMap((item) => item.misses)) };
 }
 
 function evaluateTask(options: { suite: RealRepoSuite; stateDir: string; mode: NavigationMode; task: RealRepoTask; limit: number; indexStale: boolean }): CaseReport {
@@ -639,34 +664,54 @@ function pairedContextVsSearch(cases: CaseReport[]): PairedRecord {
   return record;
 }
 
-function evaluateGate(report: EvalReport, options: ParsedArgs): { passed: boolean; paired: PairedRecord; issues: Array<{ label: string; metric: string; expected: string; actual: number | string }> } {
-  const issues: Array<{ label: string; metric: string; expected: string; actual: number | string }> = [];
+interface GateFinding {
+  label: string;
+  metric: string;
+  expected: string;
+  actual: number | string;
+}
+
+function evaluateGate(report: EvalReport, options: ParsedArgs): { passed: boolean; paired: PairedRecord; issues: GateFinding[]; warnings: GateFinding[] } {
+  const issues: GateFinding[] = [];
   const skipped = report.repos.filter((repo) => repo.skipped);
-  if (options.requireRepos) for (const repo of skipped) issues.push({ label: repo.label, metric: "repo", expected: "present", actual: repo.skipped ?? "skipped" });
+  const warnings = skipped.map((repo) => ({ label: repo.label, metric: "repo", expected: "present", actual: repo.skipped ?? "skipped" }));
+  if (options.requireRepos) issues.push(...warnings);
+  const available = report.repos.filter((repo) => !repo.skipped);
+  const paired = pairedContextVsSearch(report.repos.flatMap((repo) => repo.cases));
+  if (available.length === 0) return { passed: issues.length === 0, paired, issues, warnings };
   const baseline = cohortMetric(report, "baseline");
   const naturalHoldout = cohortMetric(report, "natural_holdout");
   const searchContext = metric(baseline.modes, "codemap_search_context");
   const lexical = metric(baseline.modes, "lexical");
   const search = metric(baseline.modes, "codemap_search");
   const successDelta = searchContext.successRate - lexical.successRate;
-  const paired = pairedContextVsSearch(report.repos.flatMap((repo) => repo.cases));
-  if (searchContext.tasks < options.minTasks) issues.push({ label: searchContext.mode, metric: "tasks", expected: `>= ${options.minTasks}`, actual: searchContext.tasks });
-  if (successDelta < options.minSuccessDeltaVsLexical) issues.push({ label: searchContext.mode, metric: "successDeltaVsLexical", expected: `>= ${options.minSuccessDeltaVsLexical}`, actual: roundRate(successDelta) });
+  const availableBaselineTasks = available.reduce((total, repo) => total + repo.taskCounts.baseline, 0);
+  const availableHoldoutTasks = available.reduce((total, repo) => total + repo.taskCounts.natural_holdout, 0);
+  const fullTaskCount = defaultSuites.reduce((total, suite) => total + suite.tasks.length, 0);
+  const availableTaskCount = availableBaselineTasks + availableHoldoutTasks;
+  const fullCohortAvailable = availableTaskCount >= fullTaskCount;
+  const effectiveMinTasks = Math.min(options.minTasks, availableBaselineTasks);
+  const effectiveMinHoldoutTasks = Math.min(options.minNaturalHoldoutTasks, availableHoldoutTasks);
+  const effectiveMinWins = fullCohortAvailable ? options.minContextWinsVsSearch : Math.floor(options.minContextWinsVsSearch * availableTaskCount / fullTaskCount);
+  const effectiveMinSuccessDelta = fullCohortAvailable ? options.minSuccessDeltaVsLexical : 0;
+  if (searchContext.tasks < effectiveMinTasks) issues.push({ label: searchContext.mode, metric: "tasks", expected: `>= ${effectiveMinTasks}`, actual: searchContext.tasks });
+  if (successDelta < effectiveMinSuccessDelta) issues.push({ label: searchContext.mode, metric: "successDeltaVsLexical", expected: `>= ${effectiveMinSuccessDelta}`, actual: roundRate(successDelta) });
   // Paired win/loss gate (replaces the statistically-underpowered mean-delta check): context must
   // win on enough tasks, lose on few, and never regress a single task beyond the cap.
-  if (paired.wins < options.minContextWinsVsSearch) issues.push({ label: searchContext.mode, metric: "contextWinsVsSearch", expected: `>= ${options.minContextWinsVsSearch}`, actual: paired.wins });
+  if (paired.wins < effectiveMinWins) issues.push({ label: searchContext.mode, metric: "contextWinsVsSearch", expected: `>= ${effectiveMinWins}`, actual: paired.wins });
   if (paired.losses > options.maxContextLossesVsSearch) issues.push({ label: searchContext.mode, metric: "contextLossesVsSearch", expected: `<= ${options.maxContextLossesVsSearch}`, actual: paired.losses });
   if (paired.maxSingleLoss > options.maxSingleContextLossVsSearch) issues.push({ label: searchContext.mode, metric: "maxSingleContextLossVsSearch", expected: `<= ${options.maxSingleContextLossVsSearch}`, actual: roundRate(paired.maxSingleLoss) });
-  if (searchContext.successRate <= search.successRate) issues.push({ label: searchContext.mode, metric: "successRateVsSearch", expected: `> ${search.successRate}`, actual: searchContext.successRate });
-  if (searchContext.avgExpectedRecall <= lexical.avgExpectedRecall) issues.push({ label: searchContext.mode, metric: "expectedRecallVsLexical", expected: `> ${lexical.avgExpectedRecall}`, actual: searchContext.avgExpectedRecall });
+  const relativeOperator = fullCohortAvailable ? ">" : ">=";
+  if (fullCohortAvailable ? searchContext.successRate <= search.successRate : searchContext.successRate < search.successRate) issues.push({ label: searchContext.mode, metric: "successRateVsSearch", expected: `${relativeOperator} ${search.successRate}`, actual: searchContext.successRate });
+  if (fullCohortAvailable ? searchContext.avgExpectedRecall <= lexical.avgExpectedRecall : searchContext.avgExpectedRecall < lexical.avgExpectedRecall) issues.push({ label: searchContext.mode, metric: "expectedRecallVsLexical", expected: `${relativeOperator} ${lexical.avgExpectedRecall}`, actual: searchContext.avgExpectedRecall });
   if (searchContext.forbiddenReadRate > 0) issues.push({ label: searchContext.mode, metric: "forbiddenReadRate", expected: "0", actual: searchContext.forbiddenReadRate });
   if (searchContext.p95LatencyMs > options.maxP95LatencyMs) issues.push({ label: searchContext.mode, metric: "p95LatencyMs", expected: `<= ${options.maxP95LatencyMs}`, actual: searchContext.p95LatencyMs });
   const holdoutSearchContext = metric(naturalHoldout.modes, "codemap_search_context");
-  if (holdoutSearchContext.tasks < options.minNaturalHoldoutTasks) issues.push({ label: "natural_holdout", metric: "tasks", expected: `>= ${options.minNaturalHoldoutTasks}`, actual: holdoutSearchContext.tasks });
+  if (holdoutSearchContext.tasks < effectiveMinHoldoutTasks) issues.push({ label: "natural_holdout", metric: "tasks", expected: `>= ${effectiveMinHoldoutTasks}`, actual: holdoutSearchContext.tasks });
   if (holdoutSearchContext.avgExpectedRecall < options.minNaturalHoldoutExpectedRecall) issues.push({ label: "natural_holdout", metric: "avgExpectedRecall", expected: `>= ${options.minNaturalHoldoutExpectedRecall}`, actual: holdoutSearchContext.avgExpectedRecall });
   if (holdoutSearchContext.avgContextRecall < options.minNaturalHoldoutContextRecall) issues.push({ label: "natural_holdout", metric: "avgContextRecall", expected: `>= ${options.minNaturalHoldoutContextRecall}`, actual: holdoutSearchContext.avgContextRecall });
   if (holdoutSearchContext.forbiddenReadRate > 0) issues.push({ label: "natural_holdout", metric: "forbiddenReadRate", expected: "0", actual: holdoutSearchContext.forbiddenReadRate });
-  return { passed: issues.length === 0, paired, issues };
+  return { passed: issues.length === 0, paired, issues, warnings };
 }
 
 function metricsForCohort(cohort: TaskCohort, cases: CaseReport[]): CohortReport {
