@@ -39,6 +39,11 @@ Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst b
 > [`docs/user/agent-skill.md`](docs/user/agent-skill.md). The rejected hook research remains in
 > [`docs/developer/adoption-enforcement.md`](docs/developer/adoption-enforcement.md) and
 > [ADR 20260718](docs/adr/20260718-grep-fallback-enforcement-gate.md) for historical rationale.
+>
+> **Update 2026-07-19 (later, from a `~/partflow` Claude Code session):** the skill approach is now
+> itself under test against an **AGENTS.md-only directive** — see *Incident 3* and *Test plan* below.
+> The bundled skill remains shipped; on the owner's dev machine it is temporarily symlink-disabled to
+> A/B the two frames.
 
 **Logged:** 2026-07-18 (from a Claude Code session in `~/partflow`)
 
@@ -122,6 +127,51 @@ grep path shipped a design-relevant omission that codemap's ranking would have c
   context the same way it reaches the main agent. A rule that only the orchestrator can see will
   keep dying every time recon is delegated (which the "subagents by default" rule makes the common
   case, not the exception).
+
+### Incident 3 — recurrence: reflex holds even with the skill shipped (2026-07-19)
+
+**Logged:** 2026-07-19 (a third Claude Code session in `~/partflow`, a frontend UI task).
+
+**What happened.** Same grep reflex as Incidents 1–2, and it recurred *after* the bundled skill was
+in place. For two textbook code-discovery lookups ("which test files reference `PageHeader`", "where
+are the read-only references") the agent used `grep -rl` / `grep -rn`. It ran codemap **zero** times
+and **never loaded the `navigating-with-codemap` skill** the whole session. The user again had to ask
+"did you use codemap?" before it was acknowledged.
+
+**Root cause — the skill's presence did not help.** The skill's frontmatter (name+description) sits
+in the always-on primacy slot, exactly like the `AGENTS.md` rule — so it is *present* at decision
+time, not "too late". It still did not fire. So the problem was never slot/timing; it is
+**presence → action conversion**: an always-on line (in either home) does not, on its own, intercept
+an ingrained intent→action mapping. The skill *body*'s recency (loads fresh when invoked) is real but
+**downstream of invocation** — moot on the exact path that fails, because the missed step *is* the
+decision to invoke.
+
+### Test plan — A/B two soft frames for the same reflex (owner to judge)
+
+Two advisory models (Fable) converged on: for a *reflex*, a **directive frame** ("Code lookup =
+codemap; swap grep") likely converts better than a **menu-offer frame** (a skill description reads as
+"available for…"), even though both occupy the same always-on slot. Unproven — it is a claim about
+model psychology, so treat it as a hypothesis to measure, not settled.
+
+- **Variant A (LIVE now — Fable's pick):** sharpened imperative rule in global `AGENTS.md`
+  (`Code lookup = codemap search …`; grep = closed exception list + "no lookup too small"), env block
+  trimmed, and the **skill symlink-disabled** on the owner's machine. Tests the directive frame alone.
+  - Live state: `AGENTS.md` line ~44 + `codemap:` env block replaced (2026-07-19). Skill removed from
+    the live set (source in `~/codemap/skills/` untouched; codemap's own evals still read it).
+  - Reversal / re-enable skill: `ln -s ~/codemap/skills/navigating-with-codemap
+    ~/.agents/skills/navigating-with-codemap && ln -s ../../.agents/skills/navigating-with-codemap
+    ~/.claude/skills/navigating-with-codemap`.
+- **Variant B (next test option — the owner's alternative to try):** invert the split. Carry the
+  reflex nudge in the **skill frontmatter written as a directive** (not a menu description), and
+  **strip the codemap entries from `AGENTS.md`** so the skill's primacy-slot description is the sole
+  always-on nudge, with the body giving recency-delivered detail. Tests whether a directive-framed
+  frontmatter can replace the AGENTS.md rule outright. (Everything is possible, incl. keeping both if
+  each earns rent.)
+- **Deciding signal (cheap, honest):** this is a solo single-user setup, so a formal parallel A/B is
+  underpowered (can't run both at once; low N; self-priming). Prefer **instrumentation over a formal
+  split**: scan session transcripts for `grep`/`rg`/`find`/Grep/Glob issued with an *identifier
+  pattern* on a code lookup **not** preceded by a `codemap` call — that rate = the reflex-miss rate.
+  Ship one variant, watch the rate, switch if it doesn't move.
 
 ## Produktentscheidungen / später
 
