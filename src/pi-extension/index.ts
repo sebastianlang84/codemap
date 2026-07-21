@@ -1,7 +1,7 @@
 import type { ExtensionAPI, ToolResultEvent } from "@earendil-works/pi-coding-agent";
 import { isBashToolResult } from "@earendil-works/pi-coding-agent";
 import { codeMapStatus } from "../application/operations.ts";
-import { CODEMAP_BASH_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } from "./bash-nudge.ts";
+import { CODEMAP_BASH_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } from "../core/bash-nudge.ts";
 import { registerCodeMapTools } from "./tools.ts";
 import { registerCodeMapCommands } from "./commands.ts";
 import { computeStatusText, STATUS_KEY } from "./status-bar.ts";

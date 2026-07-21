@@ -1,8 +1,15 @@
 import { statSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
 
+// Harness-neutral grep/rg/find navigation heuristic. Lives in core (not the Pi adapter) so every
+// surface — the Pi tool_result hook and the `codemap nudge-check` CLI subcommand — shares one
+// implementation. Pure: only reads file stats to tell a concrete file path from a broad search.
 export const CODEMAP_BASH_NUDGE_TEXT =
   "CodeMap hint: repo is indexed; for broad navigation use codemap_search, then codemap_context before more grep/rg/find.";
+
+// CLI-surface variant of the hint, naming the CLI commands rather than the Pi tool names.
+export const CODEMAP_CLI_NUDGE_TEXT =
+  "CodeMap hint: repo is indexed; for broad navigation try 'codemap search <terms>', then 'codemap context <hit>' before more grep/rg/find.";
 
 interface ShellSegment {
   text: string;

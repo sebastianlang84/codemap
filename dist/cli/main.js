@@ -1,4 +1,7 @@
+import { isAbsolute, resolve } from "node:path";
 import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.js";
+import { CODEMAP_CLI_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } from "../core/bash-nudge.js";
+import { status } from "../core/indexer.js";
 import { packageVersion } from "../core/package-version.js";
 // Every operation issued from this surface is tagged so telemetry can distinguish CLI from MCP/Pi.
 const ADAPTER = "cli";
@@ -9,6 +12,7 @@ Usage:
   codemap context <path|query> [opts]  Read-first package for a target
   codemap status [options]             Approval / index / staleness
   codemap index [--approve] [options]  Index or refresh the repo (approve once)
+  codemap nudge-check '<command>'      Passive hint if a grep/rg/find is broad and the repo is indexed
 
 Options:
   --repo <path>          Target another repo root/dir/file (default: cwd)
@@ -21,6 +25,10 @@ Options:
   --version, --help
 
 Notes:
+  nudge-check is a passive helper for harness hooks: exit 1 + a one-line hint on stdout when the
+  command is a broad grep/rg/find AND the repo is indexed and fresh; exit 0 (silent) otherwise
+  (fail-open: not a broad search, not indexed, stale, or any error). It never blocks. Exit 2 is a
+  usage error. Activation in any harness hook is a deliberate, separate decision (see the ADR).
   Indexing is local-only and never leaves your machine. First index needs --approve.
   Staleness is advisory; refresh with 'codemap index' when it matters.
   New installs store state under CODEMAP_HOME, XDG_DATA_HOME/codemap, or
@@ -165,6 +173,35 @@ function runContext(parsed, cwd) {
         tail.push(`docs: ${pkg.relatedDocs.join(", ")}`);
     return ok([rows.join("\n") || "No read-first items", ...tail].join("\n") + staleNote(pkg));
 }
+// Passive point-of-use helper: report whether a broad grep/rg/find would be better served by codemap,
+// but only when the repo is actually indexed and fresh. Never blocks (exit 1 is advisory, on stdout);
+// fails open on anything uncertain. Uses core status() directly, not the telemetry seam, so an
+// intercepted grep does not spam usage.jsonl with status events. Activation in a harness hook is a
+// separate owner decision (see docs/adr/20260722-passive-nudge-check-subcommand.md); the rejected
+// deny-gate (ADR 20260718) stays rejected.
+function runNudgeCheck(parsed, cwd) {
+    const command = parsed.positionals.join(" ").trim();
+    if (!command)
+        return fail("nudge-check needs a shell command string, e.g. codemap nudge-check 'rg foo src/'", 2);
+    const target = parsed.repo ? (isAbsolute(parsed.repo) ? parsed.repo : resolve(cwd, parsed.repo)) : cwd;
+    const silent = (readiness) => ok(parsed.json ? JSON.stringify({ nudge: false, ...(readiness ? { readiness } : {}) }) : "");
+    if (!shouldNudgeForCodeMapNavigationCommand(command, { cwd: target }))
+        return silent();
+    let readiness;
+    let stale;
+    try {
+        const result = status(target, { stateDir: parsed.stateDir });
+        readiness = result.readiness;
+        stale = result.stale;
+    }
+    catch {
+        return silent(); // fail-open: not a git repo, unreadable state, etc.
+    }
+    if (readiness !== "ready" || stale)
+        return silent(readiness);
+    const out = parsed.json ? JSON.stringify({ nudge: true, readiness, hint: CODEMAP_CLI_NUDGE_TEXT }) : CODEMAP_CLI_NUDGE_TEXT;
+    return { code: 1, out, err: "" };
+}
 /** Pure CLI entrypoint: returns exit code and captured output instead of writing/exiting, so it is testable. */
 export function runCli(argv, io = {}) {
     const cwd = io.cwd ?? process.cwd();
@@ -186,6 +223,7 @@ export function runCli(argv, io = {}) {
             case "index": return runIndex(parsed, cwd);
             case "search": return runSearch(parsed, cwd);
             case "context": return runContext(parsed, cwd);
+            case "nudge-check": return runNudgeCheck(parsed, cwd);
             default: return fail(`Unknown command: ${command}\n\n${USAGE}`, 2);
         }
     }

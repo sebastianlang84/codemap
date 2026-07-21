@@ -10,7 +10,7 @@ import { fixtureRepo, useIsolatedHome } from "./helpers/repo-fixture.ts";
 useIsolatedHome();
 
 const { indexRepo } = await import("../src/core/indexer.ts");
-const { CODEMAP_BASH_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } = await import("../src/pi-extension/bash-nudge.ts");
+const { CODEMAP_BASH_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } = await import("../src/core/bash-nudge.ts");
 const { registerCodeMapTools } = await import("../src/pi-extension/tools.ts");
 const { registerCodeMapCommands } = await import("../src/pi-extension/commands.ts");
 const { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus, parsePathPrefix } = await import("../src/pi-extension/operations.ts");

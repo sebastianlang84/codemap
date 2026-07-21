@@ -75,6 +75,38 @@ test("cli reports usage errors on stderr with a non-zero code", () => {
   assert.match(unknownOption.err, /Unknown option/);
 });
 
+test("cli nudge-check hints on a broad grep only when the repo is indexed and fresh", (t) => {
+  const { root, stateDir } = cliRepo(t);
+  const io = { cwd: root };
+
+  // Not indexed yet → fail-open, silent, exit 0.
+  const beforeIndex = runCli(["nudge-check", "rg renderWidget", "--state-dir", stateDir], io);
+  assert.equal(beforeIndex.code, 0);
+  assert.equal(beforeIndex.out, "");
+
+  runCli(["index", "--approve", "--state-dir", stateDir], io);
+
+  // Broad search on an indexed, fresh repo → hint on stdout, exit 1.
+  const broad = runCli(["nudge-check", "rg renderWidget", "--state-dir", stateDir], io);
+  assert.equal(broad.code, 1);
+  assert.match(broad.out, /codemap search/);
+
+  // A concrete file operand → not broad → silent, exit 0.
+  const concrete = runCli(["nudge-check", "grep -n renderWidget src/widget.ts", "--state-dir", stateDir], io);
+  assert.equal(concrete.code, 0);
+  assert.equal(concrete.out, "");
+
+  // Missing command → usage error, exit 2.
+  const missing = runCli(["nudge-check", "--state-dir", stateDir], io);
+  assert.equal(missing.code, 2);
+  assert.match(missing.err, /needs a shell command/);
+
+  // --json shape mirrors the exit code.
+  const json = runCli(["nudge-check", "rg renderWidget", "--json", "--state-dir", stateDir], io);
+  assert.equal(json.code, 1);
+  assert.deepEqual(JSON.parse(json.out), { nudge: true, readiness: "ready", hint: broad.out });
+});
+
 test("cli --limit rejects non-positive-integers before they reach SQL", (t) => {
   // Each of these previously reached the SQL bind as NaN/float and died with an opaque datatype error.
   for (const value of ["abc", "0", "-5", "3.5"]) {

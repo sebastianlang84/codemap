@@ -264,6 +264,27 @@ Noise handling:
 - read-first context filters noisy related neighbors;
 - explicit queries such as `package-lock.json` can still find lockfiles.
 
+## Opt-in point-of-use nudge (`nudge-check`)
+
+`codemap nudge-check '<command>'` is a **passive** helper for harness hooks. Given a shell command, it
+exits `1` with a one-line hint on stdout **only** when the command is a broad `grep`/`rg`/`find` *and*
+the current repo is indexed and fresh; otherwise it exits `0` silently (fail-open: not a broad search,
+not indexed, stale, or any error). `2` is a usage error. It never blocks and never modifies anything.
+
+Pass the command as a single quoted argument:
+
+```bash
+codemap nudge-check 'rg parseWorksheet src/'
+```
+
+A harness can wire this into a post-command hook to surface the hint as advisory context — for
+example a Claude Code `PostToolUse` script that, on exit `1`, emits the stdout line as additional
+context and itself exits `0` (never propagate exit `2`, which would block).
+
+> Activating `nudge-check` in any harness is a deliberate, separate decision. It is a hint, not a
+> gate: the rejected grep deny-gate ([ADR 20260718](../adr/20260718-grep-fallback-enforcement-gate.md))
+> stays rejected. See [ADR 20260722](../adr/20260722-passive-nudge-check-subcommand.md).
+
 ## What CodeMap deliberately does not do in V1
 
 - No daemon or background watcher.
