@@ -35,7 +35,10 @@ export function applyIndexUpdate(options) {
         if (upsertIndexedFile(stmts, file, forceReindex))
             indexed++;
     }
-    const removed = allowDeletions ? removeDeletedFiles(stmts, seen, pathPrefix) : 0;
+    // Evaluate the deletion guard only now: with a streaming scan, `incomplete` is not settled until the
+    // files iterable above is fully consumed.
+    const deletionsAllowed = typeof allowDeletions === "function" ? allowDeletions() : allowDeletions;
+    const removed = deletionsAllowed ? removeDeletedFiles(stmts, seen, pathPrefix) : 0;
     if (indexed > 0 || removed > 0 || forceGraphRebuild)
         rebuildFileReferenceGraph(db);
     writeIndexMetadata(db, indexVersionKey, lastIndexedAtKey, indexedHeadKey, indexedHead, INDEX_VERSION);

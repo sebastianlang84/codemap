@@ -14,6 +14,25 @@ const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodeMap } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
 const { getRepoInfo, repoKey, listRegistryRepos, approveRepo, resolveStateDir } = await import("../src/core/repo.ts");
+const { scanRepo, scanRepoStream, createScanState } = await import("../src/core/scanner.ts");
+
+test("scanRepoStream yields the same files and state as the eager scanRepo", (t) => {
+  const root = fixtureRepo(t);
+  const eager = scanRepo(root);
+  const state = createScanState();
+  const streamed = [...scanRepoStream(root, {}, state)];
+
+  assert.deepEqual(
+    streamed.map((file) => file.relPath).sort(),
+    eager.files.map((file) => file.relPath).sort(),
+    "streamed and eager scans visit the same files",
+  );
+  assert.ok(eager.files.length > 0, "fixture has scannable files");
+  assert.equal(state.scanned, eager.files.length);
+  assert.equal(state.skipped, eager.skipped);
+  assert.equal(state.incomplete, eager.incomplete);
+  assert.deepEqual(state.skippedReasons, eager.skippedReasons);
+});
 const { collectStateGcCandidates, pruneState } = await import("../src/core/state-gc.ts");
 const { GRAPH_VERSION } = await import("../src/core/graph-store.ts");
 

@@ -4,7 +4,7 @@ import { cheapIndexHealth, fullIndexHealth, readIndexStatusCounts } from "./inde
 import { applyIndexUpdate, isReindexForced, readIndexedFileStats } from "./index-store.js";
 import { getRepoInfo, approveRepo } from "./repo.js";
 import { NotApprovedError } from "./errors.js";
-import { normalizePathPrefix, scanRepo } from "./scanner.js";
+import { createScanState, normalizePathPrefix, scanRepoStream } from "./scanner.js";
 export function indexRepo(options = {}) {
     const stateOptions = { stateDir: options.stateDir };
     const info = options.approve ? approveRepo(options.cwd, "codemap_index", stateOptions) : getRepoInfo(options.cwd, stateOptions);
@@ -15,10 +15,13 @@ export function indexRepo(options = {}) {
     // Skip re-reading+hashing unchanged files (mtime+size match) unless an index-version bump forces a
     // full rewrite, in which case every file needs its real content re-chunked.
     const knownFiles = isReindexForced(db, pathPrefix) ? undefined : readIndexedFileStats(db);
-    const scan = scanRepo(info.root, { pathPrefix, knownFiles });
+    // Stream files into applyIndexUpdate so only one file's contents is held at a time. The scan state is
+    // read after applyIndexUpdate fully consumes the generator — hence allowDeletions is a callback.
+    const scanState = createScanState();
+    const files = scanRepoStream(info.root, { pathPrefix, knownFiles }, scanState);
     try {
-        const update = applyIndexUpdate({ db, files: scan.files, pathPrefix, indexedHead: readGitHead(info.root), allowDeletions: !scan.incomplete });
-        return { scanned: scan.files.length, indexed: update.indexed, skipped: scan.skipped, skippedReasons: scan.skippedReasons, removed: update.removed, warnings: scan.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
+        const update = applyIndexUpdate({ db, files, pathPrefix, indexedHead: readGitHead(info.root), allowDeletions: () => !scanState.incomplete });
+        return { scanned: scanState.scanned, indexed: update.indexed, skipped: scanState.skipped, skippedReasons: scanState.skippedReasons, removed: update.removed, warnings: scanState.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
     }
     catch (error) {
         try {

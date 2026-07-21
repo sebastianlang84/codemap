@@ -53,15 +53,17 @@ function prepareWriteStatements(db: Db): WriteStatements {
 
 export function applyIndexUpdate(options: {
   db: ReturnType<typeof openRepoDb>;
-  files: ScannedFile[];
+  files: Iterable<ScannedFile>;
   pathPrefix: string;
   indexedHead: string | null;
   /**
    * When false, the deletion pass is skipped and nothing is pruned. The scanner sets this via
    * `scan.incomplete` so an aborted/partial traversal (unreadable dir, mid-scan I/O error) can never
-   * mistake unvisited files for deleted ones and wipe them from the index.
+   * mistake unvisited files for deleted ones and wipe them from the index. May be a callback, which is
+   * evaluated AFTER the files iterable is fully consumed — required when streaming, since `incomplete`
+   * is only final once the scan generator has finished.
    */
-  allowDeletions?: boolean;
+  allowDeletions?: boolean | (() => boolean);
 }): IndexStoreResult {
   const { db, files, pathPrefix, indexedHead, allowDeletions = true } = options;
   const indexVersionKey = pathPrefix ? `index_version:${pathPrefix}` : "index_version";
@@ -78,7 +80,10 @@ export function applyIndexUpdate(options: {
     seen.add(file.relPath);
     if (upsertIndexedFile(stmts, file, forceReindex)) indexed++;
   }
-  const removed = allowDeletions ? removeDeletedFiles(stmts, seen, pathPrefix) : 0;
+  // Evaluate the deletion guard only now: with a streaming scan, `incomplete` is not settled until the
+  // files iterable above is fully consumed.
+  const deletionsAllowed = typeof allowDeletions === "function" ? allowDeletions() : allowDeletions;
+  const removed = deletionsAllowed ? removeDeletedFiles(stmts, seen, pathPrefix) : 0;
   if (indexed > 0 || removed > 0 || forceGraphRebuild) rebuildFileReferenceGraph(db);
   writeIndexMetadata(db, indexVersionKey, lastIndexedAtKey, indexedHeadKey, indexedHead, INDEX_VERSION);
   db.exec("commit");

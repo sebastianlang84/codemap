@@ -3,20 +3,23 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { relative, join, resolve, posix } from "node:path";
 import { createScanPolicy, detectLanguage } from "./scan-policy.js";
 export { detectLanguage };
-export function scanRepo(root, options = {}) {
+export function createScanState() {
+    return { skipped: 0, skippedReasons: {}, warnings: [], incomplete: false, scanned: 0 };
+}
+/**
+ * Lazily yield scanned files, one at a time, mutating `state` as it goes. The indexer consumes this
+ * directly so peak memory is one file's text, not the whole repo's — the previous eager array held
+ * every changed file's contents at once. Callers that need the full set (index-health) use scanRepo.
+ */
+export function* scanRepoStream(root, options, state) {
     const policy = createScanPolicy(root);
     const prefix = normalizePathPrefix(options.pathPrefix);
     const known = options.knownFiles;
-    const files = [];
-    const warnings = [];
-    let skipped = 0;
-    let incomplete = false;
-    const skippedReasons = {};
     const skipOne = (reason) => {
-        skipped++;
-        skippedReasons[reason] = (skippedReasons[reason] ?? 0) + 1;
+        state.skipped++;
+        state.skippedReasons[reason] = (state.skippedReasons[reason] ?? 0) + 1;
     };
-    function walk(dir) {
+    function* walk(dir) {
         let entries;
         try {
             entries = readdirSync(dir, { withFileTypes: true });
@@ -24,8 +27,8 @@ export function scanRepo(root, options = {}) {
         catch (error) {
             // Can't list this directory (permissions, race). Skip its subtree but mark the scan incomplete
             // so its previously-indexed files are not mistaken for deletions.
-            incomplete = true;
-            warnings.push(`Unreadable directory ${dir}: ${String(error)}`);
+            state.incomplete = true;
+            state.warnings.push(`Unreadable directory ${dir}: ${String(error)}`);
             skipOne("unreadable directory");
             return;
         }
@@ -42,7 +45,7 @@ export function scanRepo(root, options = {}) {
                 continue;
             }
             if (entry.isDirectory()) {
-                walk(absPath);
+                yield* walk(absPath);
                 continue;
             }
             if (!entry.isFile()) {
@@ -60,7 +63,8 @@ export function scanRepo(root, options = {}) {
                 if (priorStat && priorStat.size === stat.size && Math.round(priorStat.mtimeMs) === Math.round(stat.mtimeMs)) {
                     // Unchanged by mtime+size: reuse the stored hash and skip the read + sha256. applyIndexUpdate
                     // compares hash+mtime and no-ops on these, so `text` is never consumed for them.
-                    files.push({ absPath, relPath, language: filePolicy.language ?? "", size: stat.size, mtimeMs: stat.mtimeMs, hash: priorStat.hash, text: "" });
+                    state.scanned++;
+                    yield { absPath, relPath, language: filePolicy.language ?? "", size: stat.size, mtimeMs: stat.mtimeMs, hash: priorStat.hash, text: "" };
                     continue;
                 }
                 const buf = readFileSync(absPath);
@@ -69,7 +73,8 @@ export function scanRepo(root, options = {}) {
                     skipOne(contentSkip);
                     continue;
                 }
-                files.push({
+                state.scanned++;
+                yield {
                     absPath,
                     relPath,
                     language: filePolicy.language ?? "",
@@ -77,13 +82,13 @@ export function scanRepo(root, options = {}) {
                     mtimeMs: stat.mtimeMs,
                     hash: createHash("sha256").update(buf).digest("hex"),
                     text: buf.toString("utf8"),
-                });
+                };
             }
             catch (error) {
                 // A single file vanished mid-scan (ENOENT race) or became unreadable (EACCES). Skip it and
                 // mark the scan incomplete so the deletion pass is suppressed for this run.
-                incomplete = true;
-                warnings.push(`Unreadable file ${relPath}: ${String(error)}`);
+                state.incomplete = true;
+                state.warnings.push(`Unreadable file ${relPath}: ${String(error)}`);
                 skipOne("unreadable file");
             }
         }
@@ -93,22 +98,27 @@ export function scanRepo(root, options = {}) {
             const repoRoot = resolve(root);
             const scopedRoot = resolve(root, prefix);
             if (scopedRoot !== repoRoot && !scopedRoot.startsWith(`${repoRoot}/`)) {
-                incomplete = true;
-                warnings.push(`Invalid pathPrefix outside repository: ${options.pathPrefix}`);
+                state.incomplete = true;
+                state.warnings.push(`Invalid pathPrefix outside repository: ${options.pathPrefix}`);
             }
             else {
-                walk(scopedRoot);
+                yield* walk(scopedRoot);
             }
         }
         else {
-            walk(root);
+            yield* walk(root);
         }
     }
     catch (error) {
-        incomplete = true;
-        warnings.push(String(error));
+        state.incomplete = true;
+        state.warnings.push(String(error));
     }
-    return { files, skipped, skippedReasons, warnings, incomplete };
+}
+/** Eager scan: materialize every file. Used by index-health, which needs the full current file set. */
+export function scanRepo(root, options = {}) {
+    const state = createScanState();
+    const files = [...scanRepoStream(root, options, state)];
+    return { files, skipped: state.skipped, skippedReasons: state.skippedReasons, warnings: state.warnings, incomplete: state.incomplete };
 }
 export function normalizePathPrefix(pathPrefix) {
     if (!pathPrefix)
