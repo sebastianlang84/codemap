@@ -48,6 +48,7 @@
     "bench:graph-budget": "node --experimental-strip-types scripts/bench-graph-budget.ts --fixtures",
     "bench:graph-budget:local": "node --experimental-strip-types scripts/bench-graph-budget.ts --local-repos",
     "report:architecture": "node --experimental-strip-types scripts/report-architecture.ts",
+    "report:usage": "node --experimental-strip-types scripts/report-usage.ts",
     "bench:context-quality": "node --experimental-strip-types scripts/bench-context-quality.ts --fixtures",
     "bench:context-quality:gate": "node --experimental-strip-types scripts/bench-context-quality.ts --quality-gate --fixtures",
     "eval:agent-navigation": "node --experimental-strip-types scripts/eval-agent-navigation.ts --fixtures",
