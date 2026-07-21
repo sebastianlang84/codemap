@@ -12,6 +12,24 @@ export function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Word-boundary matcher for a query term (non-alphanumeric boundaries, Unicode-aware). Compiled
+// patterns are memoized: the pattern for a term is constant, and this runs per candidate × term in the
+// ranking hot path — so a search reuses one RegExp per term instead of recompiling for every candidate,
+// and the long-lived MCP process reuses them across searches. The `.test()` calls are stateless (no
+// `g`/`y` flag → no `lastIndex`), so sharing one object is safe. Bounded to cap growth in a long run.
+const termPatternCache = new Map<string, RegExp>();
+const TERM_PATTERN_CACHE_MAX = 4096;
+
+export function termBoundaryPattern(term: string): RegExp {
+  let pattern = termPatternCache.get(term);
+  if (!pattern) {
+    if (termPatternCache.size >= TERM_PATTERN_CACHE_MAX) termPatternCache.clear();
+    pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}($|[^\\p{L}\\p{N}])`, "u");
+    termPatternCache.set(term, pattern);
+  }
+  return pattern;
+}
+
 /** De-duplicate a list of strings, preserving first-seen order. */
 export function uniqueStrings(values: string[]): string[] {
   return [...new Set(values)];

@@ -10,8 +10,29 @@ import { fixtureRepo, useIsolatedHome } from "./helpers/repo-fixture.ts";
 useIsolatedHome();
 
 const { indexRepo } = await import("../src/core/indexer.ts");
-const { searchCodeMap } = await import("../src/core/search.ts");
+const { searchCodeMap, searchCodeMapDebug } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
+
+test("role-intent prefilter reaches a role file on a long path past the 500-shortest cap", (t) => {
+  // Regression for the old `order by length(path) limit 500` blind cap: with >500 shorter non-role
+  // files, a decision-record on a deep path was never scanned and produced no role_intent candidate.
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-role-longpath-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "src"), { recursive: true });
+  for (let i = 0; i < 520; i++) {
+    writeFileSync(join(root, "src", `f${String(i).padStart(3, "0")}.ts`), `export const v${i} = ${i};\n`);
+  }
+  const adrDir = join(root, "packages", "some-very-long-package-name", "docs", "adr");
+  mkdirSync(adrDir, { recursive: true });
+  writeFileSync(join(adrDir, "0001-retry-policy.md"), "# ADR 0001: retry policy\n\nDecision record for the retry logic.\n");
+  indexRepo({ cwd: root, approve: true });
+
+  const debug = searchCodeMapDebug({ cwd: root, query: "adr decision record retry", limit: 5 });
+  const roleHit = debug.candidates.find((candidate) => candidate.source === "role_intent"
+    && candidate.path === "packages/some-very-long-package-name/docs/adr/0001-retry-policy.md");
+  assert.ok(roleHit, `expected a role_intent candidate for the deep ADR path; got ${JSON.stringify(debug.candidates.map((c) => [c.source, c.path]))}`);
+});
 
 test("generic implementation search does not seed unrelated main entrypoints", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-generic-implementation-"));

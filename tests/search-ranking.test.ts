@@ -3,6 +3,47 @@ import test from "node:test";
 
 const { planQuery } = await import("../src/core/query-plan.ts");
 const { scoreSearchRow, topHitConfidence } = await import("../src/core/ranking.ts");
+const { termBoundaryPattern } = await import("../src/core/text-util.ts");
+const { roleIntentHasPathPatterns } = await import("../src/core/search-pipeline.ts");
+const { knownIdentifierCompounds, evalTunedPathTerms } = await import("../src/core/query-plan.ts");
+
+test("eval-tuned lexicon stays a ratchet, not a dumping ground", () => {
+  // Each row here was derived from a specific eval case, not a general rule (see the eval-tuned lexicon
+  // note in query-plan.ts and TODO §"Query-/Threshold-Änderung als Ersatz für Systemverbesserung").
+  // Growing either table — or adding a third inline rule beyond the session+repo→scope special-case
+  // wired at query-plan.ts scopePairQuery/expandTerms — must be a deliberate call: bump this ceiling
+  // only alongside the general mechanism or an ADR, never as a quiet way to pass a fixture.
+  assert.ok(knownIdentifierCompounds.size <= 1, `knownIdentifierCompounds grew to ${knownIdentifierCompounds.size}; generalize or record an ADR before raising this`);
+  assert.ok(evalTunedPathTerms.size <= 1, `evalTunedPathTerms grew to ${evalTunedPathTerms.size}; generalize or record an ADR before raising this`);
+});
+
+test("every role intent query-plan can emit has an SQL prefilter pattern (no silent fallback)", () => {
+  // Queries chosen to trigger each branch of inferRoleIntents (query-plan.ts). If a new role intent is
+  // added there without a pattern in ROLE_INTENT_PATH_PATTERNS, roleIntentCandidates would fall back to
+  // the unfiltered scan for it — this pins the mapping so that drift fails loudly instead.
+  const queries = [
+    "what is this project readme", "agent instructions program claude", "main entrypoint orchestrator",
+    "provider outage", "config configuration", "documentation docs", "adr decision record scope",
+    "tests testing", "prepare setup data computed", "package dependencies pyproject", "edit",
+  ];
+  const emitted = new Set<string>();
+  for (const query of queries) for (const intent of planQuery(query).roleIntents) emitted.add(intent);
+  emitted.delete("implementation"); // filtered out before the SQL prefilter runs
+  const uncovered = [...emitted].filter((intent) => !roleIntentHasPathPatterns(intent));
+  assert.deepEqual(uncovered, [], `role intents without an SQL prefilter pattern: ${uncovered}`);
+  assert.ok(emitted.size >= 8, `only exercised ${emitted.size} intents: ${[...emitted]}`);
+});
+
+test("termBoundaryPattern memoizes but stays a correct, metacharacter-safe boundary match", () => {
+  // Metacharacters are escaped: "a.b" matches "a.b" literally, not "axb".
+  assert.ok(termBoundaryPattern("a.b").test("call a.b here"));
+  assert.equal(termBoundaryPattern("a.b").test("call axb here"), false);
+  // Boundary-anchored: a term inside a larger identifier does not match.
+  assert.ok(termBoundaryPattern("auth").test("the auth check"));
+  assert.equal(termBoundaryPattern("auth").test("authenticate"), false);
+  // Same term returns the same cached RegExp instance.
+  assert.equal(termBoundaryPattern("auth"), termBoundaryPattern("auth"));
+});
 
 const scored = (scores: number[]) => scores.map((score, index) => ({ score, path: `f${index}.ts`, startLine: 1 } as never));
 

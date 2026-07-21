@@ -1,5 +1,5 @@
 import { snippet } from "./chunker.ts";
-import { escapeRegExp, uniqueStrings } from "./text-util.ts";
+import { termBoundaryPattern, uniqueStrings } from "./text-util.ts";
 import type { QueryPlan } from "./query-plan.ts";
 import type { SearchResult } from "./types.ts";
 
@@ -254,7 +254,7 @@ function termCoverage(text: string, terms: string[]): number {
 }
 
 function matchedQueryTokens(text: string, terms: string[]): string[] {
-  return terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}($|[^\\p{L}\\p{N}])`, "u").test(text));
+  return terms.filter((term) => termBoundaryPattern(term).test(text));
 }
 
 // NOTE: bm25() returns a small negative number for any FTS match (more-negative = more relevant).

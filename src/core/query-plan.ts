@@ -13,11 +13,14 @@ interface FtsQuery {
 
 // Compounds that should be treated as a single identifier when two adjacent terms are joined
 // (e.g. "local storage" -> "localstorage"). See adjacentCompounds().
-const knownIdentifierCompounds = new Set(["localstorage"]);
+// Exported only for the lexicon-ratchet test (tests/search-ranking.test.ts), which fails if this grows
+// so a new row forces the general-mechanism/ADR decision instead of silent fixture-fitting.
+export const knownIdentifierCompounds = new Set(["localstorage"]);
 
 // Query term -> extra basename path terms to look for. Seeded from the "preload" navigation case,
 // where the relevant module is named "retrieval". Consumed by basenameTermCandidates in search-pipeline.
-const evalTunedPathTerms = new Map<string, string[]>([
+// Exported for the same lexicon-ratchet test as knownIdentifierCompounds.
+export const evalTunedPathTerms = new Map<string, string[]>([
   ["preload", ["retrieval"]],
 ]);
 

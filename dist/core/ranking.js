@@ -1,5 +1,5 @@
 import { snippet } from "./chunker.js";
-import { escapeRegExp, uniqueStrings } from "./text-util.js";
+import { termBoundaryPattern, uniqueStrings } from "./text-util.js";
 export const TEXT_COVERAGE_WEIGHT = 3;
 export function toResult(row, plan, boost) {
     return toScoredCandidate(row, plan, boost).result;
@@ -221,7 +221,7 @@ function termCoverage(text, terms) {
     return matchedQueryTokens(text, terms).length / terms.length;
 }
 function matchedQueryTokens(text, terms) {
-    return terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}($|[^\\p{L}\\p{N}])`, "u").test(text));
+    return terms.filter((term) => termBoundaryPattern(term).test(text));
 }
 // NOTE: bm25() returns a small negative number for any FTS match (more-negative = more relevant).
 // `Math.abs(rank) * 1_000_000` saturates at the `Math.min(5, …)` cap for essentially every real
