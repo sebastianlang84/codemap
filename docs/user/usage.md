@@ -238,6 +238,7 @@ During indexing it:
 - skips binary-looking files and files containing NUL bytes;
 - skips files larger than 1 MB;
 - skips dependency/generated/cache/build folders such as `.git`, `node_modules`, `dist`, `build`, `coverage`, `.venv`, `site-packages`, and `__pycache__`;
+- skips git worktrees nested inside the repository (for example `.claude/worktrees/…`), since a worktree is a second checkout of the same tree and would duplicate every hit. Indexing from *inside* a worktree targets that worktree instead. Git submodules stay indexed — they are distinct code, not duplicates;
 - stores path, language, size, SHA-256 hash, and mtime;
 - chunks source files into overlapping line ranges and Markdown files by headings;
 - extracts cheap symbols such as TypeScript/JavaScript classes, functions, const arrow functions, interfaces, types, methods, Python classes/functions, and Markdown headings;

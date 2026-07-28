@@ -143,6 +143,7 @@ Default indexing is whitelist-first. The scanner should:
 - stay inside the current or explicitly targeted Git repository boundary;
 - respect `.gitignore` and optional `.codemapignore` rules;
 - skip symlinks;
+- skip git worktrees nested inside the repository, detected via `git worktree list --porcelain` rather than a "`.git` is a file" test, so submodules stay indexed ([ADR 20260729](../adr/20260729-nested-worktree-indexing.md));
 - skip binaries, unsupported extensions, secret-like files, generated/cache/build/dependency folders, and files larger than 1 MB;
 - support common source, docs, config, SQL, CSS/HTML, shell, and plain-text extensions;
 - use hash/mtime checks for incremental refreshes;
@@ -230,7 +231,7 @@ Tests should assert external behavior and contracts: indexed files, skipped file
 
 Coverage expectations:
 
-- Scanner tests: allowlists, default excludes, `.gitignore`, `.codemapignore`, size limits, symlinks, deleted files, secret-like files.
+- Scanner tests: allowlists, default excludes, `.gitignore`, `.codemapignore`, size limits, symlinks, nested worktrees vs. submodules, deleted files, secret-like files.
 - Migration/database tests: schema creation, FTS table availability, uniqueness constraints, repeatable migrations.
 - Indexer tests: first indexing, incremental no-op indexing, changed files, deleted files, failed runs.
 - Chunker tests: code, Markdown headings, fenced code blocks, plain text, line ranges, overlap/default sizing, truncation-safe snippets.

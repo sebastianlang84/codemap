@@ -6,6 +6,26 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik, keine breite Heuristik ohne messbaren Context-Gewinn.
 
+## Staleness-Signal: untracked, nie indizierter Inhalt lässt den Index dauerhaft „stale" erscheinen
+
+**Abgegrenzt am 2026-07-29** beim Arbeitsbaum-Fix ([ADR 20260729](docs/adr/20260729-nested-worktree-indexing.md)),
+dort bewusst *nicht* mitbehoben.
+
+[`src/core/index-health.ts:101`](src/core/index-health.ts#L101) macht jede dirty Datei zu `stale: true`.
+Gemessen am reparierten Wegwerf-Repo: `stale: true` bei `changed/missing/deleted = 0`, allein wegen
+`?? .claude/`. Ein `codemap index` behebt es nie, weil der Inhalt gar nicht indiziert wird — genau die
+Frustfalle, die den grep-Rückfall begünstigt (siehe „Staleness ergonomics" weiter unten).
+
+**Nicht arbeitsbaum-spezifisch:** jeder untracked, nicht indizierte Inhalt löst es identisch aus
+(`.claude/settings.json`, Logs). Deshalb eigener Slice statt Anhängsel.
+
+**Was den Fix nicht trivial macht:** git faltet ein untracked Verzeichnis zu *einem* Eintrag
+(`?? .claude/`) — eine Zuordnung pro Pfad gibt es erst mit `-uall`, was die gemeldete dirty-Anzahl
+überall ändert. Pathspec-Exclusion (`:(exclude)…`) greift nicht, gemessen mit git 2.39.2.
+
+**Reichweite vorher messen:** `search` ist nicht betroffen (HEAD-basiertes `cheapIndexHealth`), nur
+`context` und `status --full`. Erst angehen, wenn eine eigene Metrik den Gewinn zeigt.
+
 ## Opportunistisch oder gated
 
 - [ ] Test-/Eval-Script-Deepening nur bei erneutem Doppel-Touch fortführen.
