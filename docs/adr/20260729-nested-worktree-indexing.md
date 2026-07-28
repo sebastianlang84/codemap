@@ -76,6 +76,9 @@ apart and would silently drop both.
 
 ## Not in this change
 
+> **Resolved separately the same day** by
+> [ADR 20260729 — Index staleness follows indexed files only](20260729-staleness-from-indexed-files-only.md).
+
 The untracked worktree directory also makes `git status` report the tree dirty, and
 [`index-health.ts`](../../src/core/index-health.ts) turns any dirty file into `stale: true` — measured
 on the fixed throwaway repo: `stale: true` with `changed/missing/deleted = 0`, driven solely by

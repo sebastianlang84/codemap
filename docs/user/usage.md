@@ -184,6 +184,8 @@ codemap status --full --path-prefix services/api
 
 Search and context include stale warnings when the index no longer matches the working tree. Full status also reports Git freshness fields: `currentHead`, `indexedHead`, `headChanged`, `dirty`, and `dirtyFiles`. CodeMap does not auto-refresh in the background.
 
+Staleness follows the files the index actually covers. `dirty` and `dirtyFiles` report the raw `git status` view, so a tree can be dirty without the index being stale — untracked content CodeMap never indexes (a nested worktree, editor state, logs) does not mark it stale, since re-indexing could not change anything about it.
+
 If results are stale and freshness matters:
 
 ```bash

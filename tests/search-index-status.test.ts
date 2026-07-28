@@ -79,6 +79,59 @@ test("context path matching treats LIKE wildcards literally", (t) => {
   assert.ok(result.warnings.includes("Target was not an indexed file path; falling back to search results."));
 });
 
+test("untracked content codemap never indexes does not make the index stale", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-unindexed-dirty-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "codemap@example.test"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "CodeMap Test"], { cwd: root });
+  mkdirSync(join(root, "src"), { recursive: true });
+  writeFileSync(join(root, "src", "tracked.ts"), "export const tracked = 1;\n");
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["commit", "-m", "initial"], { cwd: root, stdio: "ignore" });
+  indexRepo({ cwd: root, approve: true });
+
+  // A never-indexed binary in an untracked directory: git reports `?? assets/`, codemap indexes none
+  // of it. Before this was filtered, every `context` call reported a stale index that no `codemap
+  // index` run could clear, because re-indexing changes nothing about untracked, unscanned content.
+  mkdirSync(join(root, "assets"), { recursive: true });
+  writeFileSync(join(root, "assets", "logo.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01]));
+
+  const result = status(root, { health: "full" });
+
+  assert.equal(result.dirty, true, "git still reports the untracked directory");
+  assert.deepEqual(result.dirtyFiles.map((file) => file.path), ["assets/"], "raw git view is unchanged");
+  assert.equal(result.changed, 0);
+  assert.equal(result.missing, 0);
+  assert.equal(result.deleted, 0);
+  assert.equal(result.stale, false, "unindexed dirty content must not mark the index stale");
+  assert.deepEqual(result.warnings, []);
+});
+
+test("an edit to an indexed file still marks the index stale via the dirty signal", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-indexed-dirty-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "codemap@example.test"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "CodeMap Test"], { cwd: root });
+  mkdirSync(join(root, "src"), { recursive: true });
+  writeFileSync(join(root, "src", "tracked.ts"), "export const tracked = 1;\n");
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["commit", "-m", "initial"], { cwd: root, stdio: "ignore" });
+  indexRepo({ cwd: root, approve: true });
+
+  writeFileSync(join(root, "src", "tracked.ts"), "export const tracked = 2;\n");
+
+  const result = status(root, { health: "full" });
+
+  assert.equal(result.stale, true);
+  assert.deepEqual(result.dirtyFiles.map((file) => file.path), ["src/tracked.ts"]);
+  assert.ok(
+    result.warnings.includes("Working tree dirty: 1 indexed file."),
+    `expected an indexed-file dirty warning, got ${JSON.stringify(result.warnings)}`,
+  );
+});
+
 test("full status reports git head and dirty tracked files", (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-git-status-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));

@@ -95,10 +95,18 @@ export function fullIndexHealth(db: ReturnType<typeof openRepoDb>, root: string,
   const headChanged = Boolean(indexedHead && git.currentHead && indexedHead !== git.currentHead);
   const dirtyFiles = git.dirtyFiles;
   const dirty = dirtyFiles.length > 0;
+  // Only dirty paths the index actually covers can make it stale. Untracked content codemap never
+  // indexes — a nested worktree, editor state, logs, all folded by git into a single `?? .claude/`
+  // entry — otherwise marked every `context` call stale forever, since no `codemap index` run could
+  // clear it. Files added or removed under such a directory still surface as changed/missing/deleted
+  // through the hash comparison above, so no real drift is lost. `dirty`/`dirtyFiles` stay the raw
+  // git view.
+  const indexRelevantDirtyFiles = dirtyFiles.filter((file) => indexed.has(file.path) || current.has(file.path));
   const hasIndexedGitBaseline = Boolean(indexedHead && git.currentHead);
+  const dirtyIndexedFiles = hasIndexedGitBaseline ? indexRelevantDirtyFiles.length : 0;
   if (headChanged) warnings.push("Git HEAD changed since last index.");
-  if (dirty && hasIndexedGitBaseline) warnings.push(`Working tree dirty: ${dirtyFiles.length} file${dirtyFiles.length === 1 ? "" : "s"}.`);
-  const stale = fileDrift || headChanged || (dirty && hasIndexedGitBaseline);
+  if (dirtyIndexedFiles > 0) warnings.push(`Working tree dirty: ${dirtyIndexedFiles} indexed file${dirtyIndexedFiles === 1 ? "" : "s"}.`);
+  const stale = fileDrift || headChanged || dirtyIndexedFiles > 0;
   return { stale, changed, missing, deleted, skipped: scan.skipped, skippedReasons: scan.skippedReasons, currentHead: git.currentHead, headChanged, dirty, dirtyFiles, warnings };
 }
 

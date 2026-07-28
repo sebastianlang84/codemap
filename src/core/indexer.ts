@@ -41,10 +41,10 @@ export function status(cwd = process.cwd(), options: { health?: "cheap" | "full"
     if (!(err instanceof Error && err.message.startsWith("Not inside a Git repository"))) {
       throw err;
     }
-    return { readiness: "not_git", root: cwd, key: "", remote: undefined, approved: false, dbPath: "", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] };
+    return { readiness: "not_git", root: cwd, key: "", remote: undefined, approved: false, dbPath: "", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] as string[] };
   }
   if (!info.approved) {
-    return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] };
+    return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] as string[] };
   }
   const db = openRepoDb(info.dbPath);
   try {
