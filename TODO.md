@@ -25,12 +25,55 @@ eine Teilmenge an.
 Ergebnis hier nachtragen. Die Suites-Datei **nicht** auf lokal vorhandene Repos umbiegen — das würde
 eine rote Metrik durch Austausch des Messkorpus grün rechnen.
 
+## Offen: deutschsprachiges Erklärdokument fertigstellen
+
+[`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) ist ein Entwurf,
+**nicht** abgenommen. Es erklärt Indexaufbau, Tabellen, Volltextindex und den Vergleich mit
+`ast-grep` für Leser ohne Vorwissen. Alle Zahlen darin sind am Repo selbst gemessen
+(Stand 2026-08-02, Commit cd034dd).
+
+Bewusste Abweichung von der English-only-Konvention für Dokumentation: der Text richtet sich an
+den Eigentümer als Leser, nicht an Mitwirkende. Die technische Referenz bleibt
+[`docs/developer/architecture.md`](docs/developer/architecture.md).
+
+**Aufgabe:** weiter überarbeiten, bis der Eigentümer es abnimmt. Bis dahin nicht als fertig
+behandeln und nicht aus anderen Dokumenten darauf verweisen.
+
+Regeln für die Überarbeitung, aus der bisherigen Arbeit daran:
+
+- **Keine erfundenen Begriffe.** Chunk heißt Chunk. Ersatzvokabeln wie „Zettel", „Häppchen" oder
+  „Register" waren wiederholt Auslöser für Verwirrung und sind zu vermeiden — es gilt der Name,
+  den Code, Datenbank oder Dokumentation verwenden.
+- **Kein übersetztes Englisch.** Formulierungen wie „schneidet an Funktionsgrenzen" sind
+  Übersetzungsdeutsch; es gilt die Formulierung, die ein deutschsprachiger Leser selbst wählen
+  würde.
+- **Jede Zahl gemessen**, nicht geschätzt. Bei Neumessung Datum und Commit im Kopf des Dokuments
+  nachziehen.
+- **Unbequeme Befunde bleiben drin** — etwa dass `codemap search` bei diesem Repo langsamer ist
+  als `grep`.
+
+Noch nicht behandelt: `graph_nodes`/`graph_edges` und die vollständigen Ranking-Regeln
+(Abschnitt „Offene Punkte" im Dokument).
+
 ## Opportunistisch oder gated
 
 - [ ] Test-/Eval-Script-Deepening nur bei erneutem Doppel-Touch fortführen.
   - Gemeinsame Gate-Report-/CLI-Parser-Helfer erst extrahieren, wenn beide Navigation-Skripte erneut geändert werden.
   - Inline Eval-Cases nur dann in Datenmodule verschieben, wenn dadurch Logik- und Corpus-Diffs tatsächlich klarer werden.
   - Bestehende Core-Helfer und die bereits getrennten Search-/Navigation-Suites wiederverwenden; keine Pi/TUI-Adapterdetails in Core-Tests ziehen.
+
+- [ ] Umschlagpunkt gegenüber `grep` messen: ab welcher Repo-Größe ist `codemap search` schneller?
+  - Gemessen am eigenen Repo (197 Dateien, ~1,4 MB Text, 2026-08-02, Commit cd034dd), gleiche Suche
+    nach `openRepoDb`: `grep -rn` 21 ms, `ast-grep run -p 'openRepoDb($$$)'` 57 ms,
+    `codemap search openRepoDb` 235 ms. Davon rund 130 ms Node-Start (Leerlauf-Messung:
+    `codemap index` ohne Änderungen braucht 132 ms).
+  - Bei dieser Größe ist der Index also **kein** Geschwindigkeitsvorteil; er zahlt sich über die
+    Rangfolge aus, nicht über die Laufzeit. Der Umschlagpunkt ist unbekannt.
+  - Offen ist damit auch, ob spürbare Trägheit ein Faktor bei der Adoptionsfrage ist
+    (siehe Abschnitt zur codemap-first-Durchsetzung oben) — das ließe sich nicht durch
+    Prompt-Formulierung beheben.
+  - Startzeit-Optimierung erst danach bewerten: 130 ms sind für ein Node-CLI normal, und ob sie
+    stören, hängt genau an der fehlenden Zahl.
 
 - [ ] Workspace-/Multi-Config-Pfadalias nur bei einem konkreten Miss angehen.
   - Minimaler `tsconfig.json`-/`jsconfig.json`-`baseUrl`- und `paths`-Support existiert; komplexe `extends`-Ketten, Workspace-Aliasse und Budget-Ordering bei vielen Alias-Imports bleiben bewusst offen.
