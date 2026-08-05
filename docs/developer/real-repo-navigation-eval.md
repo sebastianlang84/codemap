@@ -87,6 +87,8 @@ The gate applies success/recall/latency thresholds to the `baseline` cohort and 
 
 On 2026-07-18, `npm run eval:real-repo-navigation:gate` evaluated 8 baseline tasks plus 16 natural-language holdout tasks with the default 5-file read budget. The local gate **passed**: across all 24 paired cases, search+context had 6 wins, 0 losses, and 18 ties against search-only.
 
+Re-confirmed on 2026-08-06 at commit `b7f4562` — the first run on a machine with all five corpus repos present since the worktree-skip (`0cafec9`) and staleness (`55b66b9`) fixes landed. `npm run verify:local` passed end to end; the gate stayed at 6 wins, 0 losses, 18 ties, and every success/recall figure in the tables below reproduced exactly. Only `avgFilesRead` drifted (baseline `codemap_search` 5.000, holdout 4.938), which no threshold reads.
+
 Baseline cohort:
 
 | Mode | Success | Entry hit | Expected recall | Context recall | Avg files | p95 latency |

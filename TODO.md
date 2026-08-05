@@ -6,25 +6,6 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik, keine breite Heuristik ohne messbaren Context-Gewinn.
 
-## Offen: `verify:local` auf der Maschine mit vollständigem Eval-Korpus nachholen
-
-Die Commits **0cafec9** (Arbeitsbäume beim Indizieren überspringen) und **55b66b9** (Veraltung nur aus
-indizierten Dateien) sind mit `npm run verify` abgesichert (Fixtures, grün). `npm run verify:local`
-konnte hier **nicht** laufen: von den fünf Repos in
-[`scripts/eval-real-repo-navigation.suites.json`](scripts/eval-real-repo-navigation.suites.json) fehlen
-`dev/macrolens` und `alpha-cycles` vollständig, `pi-ext-subagents` liegt unter `~/pi-dev/` statt am
-erwarteten `.pi/agent/git/`-Pfad.
-
-Der Gate ist deshalb rot — geprüft am **unveränderten HEAD** mit identischem Wert, also nicht durch die
-Commits verursacht: `natural_holdout avgContextRecall 0.333` (mit `CODEMAP_EVAL_REPOS`-Override für
-subagents: 0.5, `avgExpectedRecall` 0.444) gegen Schwelle 0.55. Die Holdout-Schwellen sind für den
-vollen Fünf-Repo-Korpus kalibriert und passen sich — anders als die Corpus-Size-Schwellen — nicht an
-eine Teilmenge an.
-
-**Aufgabe:** `npm run verify:local` auf einer Maschine mit vollständigem Korpus laufen lassen und das
-Ergebnis hier nachtragen. Die Suites-Datei **nicht** auf lokal vorhandene Repos umbiegen — das würde
-eine rote Metrik durch Austausch des Messkorpus grün rechnen.
-
 ## Offen: deutschsprachiges Erklärdokument fertigstellen
 
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) ist ein Entwurf,
