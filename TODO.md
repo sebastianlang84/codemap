@@ -9,9 +9,9 @@ Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst b
 ## Offen: deutschsprachiges Erklärdokument fertigstellen
 
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) ist ein Entwurf,
-**nicht** abgenommen. Es erklärt Indexaufbau, Tabellen, Volltextindex und den Vergleich mit
-`ast-grep` für Leser ohne Vorwissen. Alle Zahlen darin sind am Repo selbst gemessen
-(Stand 2026-08-02, Commit cd034dd).
+**nicht** abgenommen. Es erklärt Indexaufbau, Tabellen, Volltextindex, Rangfolge, Importgraph und
+den Vergleich mit `ast-grep` für Leser ohne Vorwissen. Alle Zahlen darin sind am Repo selbst
+gemessen (Stand 2026-08-06, Commit 945ca32).
 
 Bewusste Abweichung von der English-only-Konvention für Dokumentation: der Text richtet sich an
 den Eigentümer als Leser, nicht an Mitwirkende. Die technische Referenz bleibt
@@ -33,8 +33,10 @@ Regeln für die Überarbeitung, aus der bisherigen Arbeit daran:
 - **Unbequeme Befunde bleiben drin** — etwa dass `codemap search` bei diesem Repo langsamer ist
   als `grep`.
 
-Noch nicht behandelt: `graph_nodes`/`graph_edges` und die vollständigen Ranking-Regeln
-(Abschnitt „Offene Punkte" im Dokument).
+`graph_nodes`/`graph_edges` (Abschnitt 8) und die Rangfolge (Abschnitt 7) sind inzwischen
+behandelt. Was noch fehlt, steht im Abschnitt „Offene Punkte" des Dokuments: der ungemessene
+Umschlagpunkt gegenüber `grep`, die Herkunft der Punktwerte im Ranking und die Zusammenstellung
+der Leseliste von `codemap context`.
 
 ## Opportunistisch oder gated
 
