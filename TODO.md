@@ -45,18 +45,16 @@ der Leseliste von `codemap context`.
   - Inline Eval-Cases nur dann in Datenmodule verschieben, wenn dadurch Logik- und Corpus-Diffs tatsächlich klarer werden.
   - Bestehende Core-Helfer und die bereits getrennten Search-/Navigation-Suites wiederverwenden; keine Pi/TUI-Adapterdetails in Core-Tests ziehen.
 
-- [ ] Umschlagpunkt gegenüber `grep` messen: ab welcher Repo-Größe ist `codemap search` schneller?
-  - Gemessen am eigenen Repo (197 Dateien, ~1,4 MB Text, 2026-08-02, Commit cd034dd), gleiche Suche
-    nach `openRepoDb`: `grep -rn` 21 ms, `ast-grep run -p 'openRepoDb($$$)'` 57 ms,
-    `codemap search openRepoDb` 235 ms. Davon rund 130 ms Node-Start (Leerlauf-Messung:
-    `codemap index` ohne Änderungen braucht 132 ms).
-  - Bei dieser Größe ist der Index also **kein** Geschwindigkeitsvorteil; er zahlt sich über die
-    Rangfolge aus, nicht über die Laufzeit. Der Umschlagpunkt ist unbekannt.
-  - Offen ist damit auch, ob spürbare Trägheit ein Faktor bei der Adoptionsfrage ist
-    (siehe Abschnitt zur codemap-first-Durchsetzung oben) — das ließe sich nicht durch
-    Prompt-Formulierung beheben.
-  - Startzeit-Optimierung erst danach bewerten: 130 ms sind für ein Node-CLI normal, und ob sie
-    stören, hängt genau an der fehlenden Zahl.
+- [ ] Startzeit-Optimierung bewerten — jetzt entscheidbar, vorher blockiert.
+  - Der Umschlagpunkt gegenüber `grep` ist gemessen (2026-08-06, Commit df73adf): rund
+    25.000–30.000 Dateien bzw. ~300 MB. Zahlen und Vorbehalte in
+    [`docs/developer/search-quality.md`](docs/developer/search-quality.md#latency-crossover-against-grep).
+  - Für Repos dieser Größenordnung ist der Index **kein** Geschwindigkeitsvorteil; er zahlt sich
+    über die Rangfolge aus. `codemap search` braucht hier konstant ~85–95 ms, davon ~20 ms
+    Node-Start — und diese Trägheit ist unabhängig von der Repo-Größe.
+  - Damit ist die offene Frage nicht mehr „wo liegt der Punkt", sondern ob ~90 ms spürbar genug
+    sind, um die Adoption zu bremsen (siehe Abschnitt zur codemap-first-Durchsetzung unten). Erst
+    ein Beleg dafür rechtfertigt Arbeit an der Startzeit.
 
 - [ ] Workspace-/Multi-Config-Pfadalias nur bei einem konkreten Miss angehen.
   - Minimaler `tsconfig.json`-/`jsconfig.json`-`baseUrl`- und `paths`-Support existiert; komplexe `extends`-Ketten, Workspace-Aliasse und Budget-Ordering bei vielen Alias-Imports bleiben bewusst offen.

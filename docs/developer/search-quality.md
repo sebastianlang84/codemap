@@ -184,6 +184,37 @@ The development misses expose vocabulary mismatch intentionally; the holdout inc
 
 Future candidates such as BM25 plus an embedder or reranker must emit the same schema against the same corpus. Use development cases to form and tune one hypothesis at a time; inspect the holdout only for promotion. Do not promote an embedder or reranker unless it beats the lexical baseline without weakening exact path/symbol precedence or imposing unacceptable compute, index, model-download, or reliability cost.
 
+## Latency crossover against `grep`
+
+Measured 2026-08-06 at commit `df73adf`, warm page cache, mean of five runs, selective
+identifier queries (one to nine hits). `git grep -n <identifier>` against `codemap search
+<identifier>`:
+
+| Corpus | Files | Size | `git grep` | `codemap search` |
+|---|---:|---:|---:|---:|
+| codemap | 245 | 1.4 MB | 3 ms | 82 ms |
+| hermes | 3,427 | 66 MB | 20 ms | 84 ms |
+| openclaw | 19,761 | 178 MB | 62 ms | 85 ms |
+| openclaw + hermes | 23,074 | 241 MB | 77–85 ms | 89–90 ms |
+| the above + 2× hermes | 29,848 | 369 MB | 113–171 ms | 94–134 ms |
+| the above corpus doubled | 46,148 | 481 MB | 161–173 ms | 108–114 ms |
+
+**The crossover sits at roughly 25,000–30,000 files (~300 MB).** Below it `grep` wins outright;
+above it the index wins on latency as well as on ranking. `codemap search` is close to flat
+across three orders of magnitude (82 → 114 ms) because its cost tracks the number of *hits*,
+not the amount of text; roughly 20 ms of that floor is Node startup.
+
+This holds for **selective** queries only. On a common term the picture inverts and never
+crosses over: `function` on the 23,074-file corpus costs `git grep` 118 ms and `codemap search`
+729 ms, because CodeMap scores thousands of candidates where `grep` only prints lines.
+
+Caveats: sizes are the on-disk totals of tracked files, including binary assets that both tools
+skip (CodeMap skipped 1,484 of 23,074 in the combined corpus). The two largest corpora were
+built by copying real repositories, so their text volume scales but their vocabulary does not —
+that understates index cost slightly, since a real corpus of that size would carry more distinct
+terms. All figures come from one machine and one warm cache; treat the crossover as an order of
+magnitude, not a threshold.
+
 ## Current limitations
 
 - Structural ground truth depends on optional local `ast-grep`; without it, only natural cases run.

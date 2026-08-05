@@ -504,7 +504,40 @@ Der Index rechnet sich über zwei andere Dinge:
    Rangfolge, in der Definition vor Aufruf und Quellcode vor Changelog steht.
 2. **Die Größe.** Der Aufwand von `grep` wächst mit der Menge des Textes; der Aufwand einer
    Indexsuche wächst mit der Menge der *Treffer*. Bei kleinen Repos gewinnt `grep`, bei großen
-   dreht sich das um. Wo genau der Punkt liegt, ist hier nicht gemessen.
+   dreht sich das um.
+
+### Wo der Punkt liegt, ab dem der Index gewinnt
+
+Gemessen an sechs Korpora wachsender Größe, jeweils mit einem seltenen Bezeichner als Anfrage:
+
+| Korpus | Dateien | Größe | `git grep` | `codemap search` |
+| --- | ---: | ---: | ---: | ---: |
+| codemap | 245 | 1,4 MB | 3 ms | 82 ms |
+| hermes | 3.427 | 66 MB | 20 ms | 84 ms |
+| openclaw | 19.761 | 178 MB | 62 ms | 85 ms |
+| openclaw + hermes | 23.074 | 241 MB | 77–85 ms | 89–90 ms |
+| dasselbe + 2× hermes | 29.848 | 369 MB | 113–171 ms | 94–134 ms |
+| dasselbe, verdoppelt | 46.148 | 481 MB | 161–173 ms | 108–114 ms |
+
+**Der Umschlagpunkt liegt bei rund 25.000 bis 30.000 Dateien, also etwa 300 MB Text.**
+
+Bemerkenswert ist weniger der Punkt selbst als der Verlauf: über drei Größenordnungen hinweg
+bleibt `codemap search` fast konstant — 82 ms beim kleinsten, 114 ms beim größten Korpus. Der
+Index sucht nicht im Text, sondern schlägt Treffer nach; wie viel Text daneben liegt, ist ihm
+gleichgültig. `grep` dagegen muss jedes Byte anfassen.
+
+Das gilt allerdings nur für **selektive** Anfragen. Bei einem häufigen Wort kehrt sich das Bild
+um und dreht sich nie zurück: `function` kostet beim 23.074-Dateien-Korpus `grep` 118 ms und
+`codemap search` 729 ms. Dann muss codemap tausende Kandidaten bewerten, während `grep` nur
+Zeilen ausgibt.
+
+Für den Alltag heißt das: Der Index lohnt sich bei diesem Repo nicht wegen der Laufzeit, sondern
+allein wegen der Rangfolge — und die Trägheit von rund 90 ms bleibt, egal wie klein das Repo
+ist. Etwa 20 ms davon sind der Start der Node-Laufzeit.
+
+Die Zahlen stammen von einer Maschine bei warmem Dateisystem-Cache. Die beiden größten Korpora
+sind aus Kopien echter Repos gebaut: ihr Textvolumen wächst, ihr Wortschatz nicht — ein echtes
+Repo dieser Größe hätte mehr verschiedene Wörter und damit etwas höhere Indexkosten.
 
 ## 10. Wozu die Chunks aus einer einzigen Leerzeile gut sind
 
@@ -604,9 +637,6 @@ cp "$DB" /tmp/index-kopie.sqlite && sqlite3 /tmp/index-kopie.sqlite "create virt
 
 ## 13. Offene Punkte
 
-- Der Umschlagpunkt gegenüber `grep` ist nicht gemessen. Dass der Index sich ab einer gewissen
-  Repo-Größe auch in der Laufzeit lohnt, ist eine begründete Erwartung (Abschnitt 9), keine
-  Messung.
 - Die Zahlenwerte in Abschnitt 7 sind aus dem Code abgelesen und an einem Beispiel nachgerechnet,
   aber nicht hergeleitet. Warum eine exakte Symbolübereinstimmung 28 Punkte wert ist und nicht 20
   oder 40, steht nirgends — die Werte wurden über Evals eingestellt, nicht berechnet.
