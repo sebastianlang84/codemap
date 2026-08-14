@@ -1,11 +1,10 @@
 # Wie der codemap-Index funktioniert
 
 Erklärdokument, deutschsprachig. Es beschreibt, was beim Indexieren passiert und was in der
-Datenbank steht. Die Zahlen zu Index, Datenbank und Suche sind am Repo `codemap` selbst
-gemessen, Stand 2026-08-06, Commit 945ca32. Zwei Stellen messen etwas anderes: die
-Umschlagpunkt-Tabelle in Abschnitt 9 vergleicht sechs Textbestände wachsender Größe — `codemap`
-ist darin nur der kleinste —, gemessen am selben Tag bei Commit df73adf; und die 36 Kandidaten
-in Abschnitt 7 stammen aus einem fremden Repo.
+Datenbank steht. Die Zahlen sind am Repo `codemap` selbst gemessen, Stand 2026-08-14, Commit
+cf4f501. Drei Ausnahmen: die Laufzeiten in Abschnitt 9 stammen vom 2026-08-06 bei Commit
+945ca32, die Umschlagpunkt-Tabelle desselben Abschnitts vom selben Tag bei Commit df73adf, und
+die 36 Kandidaten in Abschnitt 7 aus einem fremden Repo.
 
 Die übrige Dokumentation dieses Repos ist englisch. Dieses Dokument ist bewusst eine Ausnahme
 und richtet sich an Leser, die das Verfahren verstehen wollen — nicht an Entwickler, die es
@@ -31,14 +30,11 @@ weshalb die Datei hier unter `~/.pi/agent/state/codemap/repos/` liegt. Sind `COD
 `XDG_DATA_HOME` gesetzt, schlagen sie beide Vorgaben; `--state-dir` schlägt auch das noch.
 `codemap status --json` nennt den tatsächlichen Pfad im Feld `dbPath`.
 
-Ohne Git geht dabei gar nichts. codemap ermittelt das Wurzelverzeichnis mit `git rev-parse
---show-toplevel` und bricht in einem Verzeichnis ohne Git-Repository mit `Not inside a Git
-repository` ab — nicht erst beim Indexieren, sondern auch beim Suchen (`src/core/repo.ts`,
-Zeilen 67–77). Daran hängt auch der Name der Datenbankdatei: der `<hash>` im Pfad ist die
-Prüfsumme des Wurzelpfads, gekürzt auf 24 Zeichen. Verschiebt man das Repo, bekommt es eine neue
-Datei und muss neu indexiert werden.
+Ohne Git geht dabei gar nichts: codemap ermittelt das Wurzelverzeichnis mit `git rev-parse
+--show-toplevel` und bricht sonst ab — auch beim Suchen. Der `<hash>` im Pfad ist die Prüfsumme
+dieses Wurzelverzeichnisses; verschiebt man das Repo, bekommt es eine neue Datei.
 
-Für dieses Repo ist die Datei 2,7 MB groß. Ginge sie verloren, wäre sie in einer drittel Sekunde
+Für dieses Repo ist die Datei 3,0 MB groß. Ginge sie verloren, wäre sie in einer drittel Sekunde
 neu gebaut — sie enthält nichts, was nicht aus dem Quellcode wiederherstellbar wäre.
 
 ## 2. Was beim Indexieren passiert
@@ -65,19 +61,13 @@ neu gebaut — sie enthält nichts, was nicht aus dem Quellcode wiederherstellba
    bereits innerhalb dieser Transaktion. Für den ganzen Lauf wird einmal auf die Festplatte
    durchgeschrieben, nicht einmal pro Datei.
 
-In diesem Repo greifen von den Ausschlussregeln nur drei, zusammen achtmal: fünfmal die
-Verzeichnisliste (`.git`, `dist`, `node_modules` und zwei weitere `dist`-Verzeichnisse unter
-`tests/fixtures/`), zweimal die Endungsliste (`LICENSE`, `.gitignore`) und einmal die Liste der
-Dateinamen (`budget-renderer.min.js`). Das sind die 8 übersprungenen Dateien aus Abschnitt 9.
-Bemerkenswert daran: `dist` steht in der `.gitignore` dieses Repos gar nicht — ohne die
-eingebaute Liste läge der gebaute Code im Index.
-
-`.codemapignore` ist dabei die einzige Stellschraube, die man selbst in der Hand hat: eine Datei
-im Wurzelverzeichnis des Repos, im Format von `.gitignore` — ein Muster je Zeile, `#` leitet
-einen Kommentar ein, ein vorangestelltes `!` nimmt etwas wieder herein, und von mehreren
-passenden Regeln gewinnt die letzte. Sie wirkt zusätzlich zu `.gitignore`, nicht an dessen
-Stelle, und kommt erst zum Zug, nachdem die fest eingebaute Verzeichnis- und Endungsliste schon
-aussortiert hat. In diesem Repo gibt es keine solche Datei.
+Von diesen Regeln greifen in diesem Repo nur drei, zusammen achtmal: fünfmal die
+Verzeichnisliste, zweimal die Endungsliste (`LICENSE`, `.gitignore`), einmal die Dateinamensliste
+(`budget-renderer.min.js`). Das sind die 8 übersprungenen Dateien aus Abschnitt 9. Bemerkenswert
+daran: `dist` steht in der `.gitignore` dieses Repos gar nicht — ohne die eingebaute Liste läge
+der gebaute Code im Index. `.codemapignore` ist die einzige Stellschraube, die man selbst in der
+Hand hat; sie hat das Format von `.gitignore`, wirkt zusätzlich dazu und greift erst nach den
+eingebauten Listen.
 
 Gelöschte Dateien fliegen aus dem Index — aber nur, wenn der Durchlauf vollständig war. Bricht
 er unterwegs ab (etwa wegen fehlender Leserechte auf ein Verzeichnis), bleiben die bisherigen
@@ -157,7 +147,7 @@ einmal mit — das sind 198 Zeilen und fällt nicht ins Gewicht. `size` und `mti
 beim nächsten Lauf, ob die Datei überhaupt gelesen wird; `hash` entscheidet danach, ob die
 gelesene Datei wirklich neu geschrieben werden muss.
 
-### chunks — eine Zeile pro Chunk (1.866 Zeilen)
+### chunks — eine Zeile pro Chunk (1.884 Zeilen)
 
 ```
 id  file_id  ordinal  start_line  end_line  kind  text
@@ -179,7 +169,7 @@ Diese Tabelle enthält den Quelltext ein zweites Mal. Das ist Absicht: Suchtreff
 so anzeigen, ohne eine Datei zu öffnen, und `codemap context` funktioniert auch dann noch,
 wenn das Arbeitsverzeichnis inzwischen abweicht.
 
-### symbols — eine Zeile pro gefundenen Namen (1.393 Zeilen)
+### symbols — eine Zeile pro gefundenen Namen (1.413 Zeilen)
 
 ```
 id  file_id  name  kind  start_line  end_line  signature
@@ -295,8 +285,8 @@ Am Beispiel `indexRepo` in diesem Repo:
 - **als Symbol**: genau einmal, `src/core/indexer.ts` Zeile 10, Art `function`. Das ist die
   Stelle, an der es definiert wird.
 
-Wörter fallen automatisch an, ohne Auswahl und ohne Bedeutung: 8.052 verschiedene im ganzen
-Repo. Symbole sind gezielt gesucht: 1.393 Stück. Deshalb kann codemap einen Treffer auf eine
+Wörter fallen automatisch an, ohne Auswahl und ohne Bedeutung: 8.807 verschiedene im ganzen
+Repo. Symbole sind gezielt gesucht: 1.413 Stück. Deshalb kann codemap einen Treffer auf eine
 echte Definition höher bewerten als dasselbe Wort mitten in einem Kommentar — wie viel höher,
 steht in Abschnitt 7.
 
@@ -304,11 +294,11 @@ steht in Abschnitt 7.
 
 | | |
 | --- | --- |
-| verschiedene Wörter | 8.052 |
-| Wort-Vorkommen insgesamt | 159.583 |
-| Speicher dafür | 620 KiB |
+| verschiedene Wörter | 8.807 |
+| Wort-Vorkommen insgesamt | 165.513 |
+| Speicher dafür | 700 KiB |
 
-Macht 4,0 Bytes pro Vorkommen. Der Grund: Gespeichert wird nicht jeder Eintrag einzeln, sondern
+Macht 4,3 Bytes pro Vorkommen. Der Grund: Gespeichert wird nicht jeder Eintrag einzeln, sondern
 pro Wort eine sortierte Liste von Chunk-Nummern, und darin nur die Abstände zwischen
 aufeinanderfolgenden Nummern — aus `12, 46, 51` wird `12, +34, +5`. Kleine Zahlen brauchen
 wenige Bits.
@@ -384,20 +374,13 @@ einen Startbonus mit, der ausdrückt, wie belastbar dieser Fund ist:
 | `chunk_fts` | Stufe + 1 | Treffer im Textindex |
 | `code_quota` | Stufe + 1 | Rettungsplatz für Quellcode, siehe unten |
 
-Drei Dinge stehen so nicht in der Tabelle. Erstens greift `basename_term` seltener, als die
-Zeile vermuten lässt: Geprüft werden nicht die Suchwörter selbst, sondern eine Ersetzungsliste in
-`src/core/query-plan.ts`, und die hat zur Zeit einen einzigen Eintrag — die Anfrage `preload`
-sucht zusätzlich nach einer Datei namens `retrieval`. Dass ein Suchwort selbst der Dateistamm
-ist, wirkt an anderer Stelle: Es bringt 8 Punkte in der Dateinamenwertung, genau die 8 aus der
-Beispielrechnung unten.
-
-Zweitens holen die oberen vier Quellen ihre Kandidaten gar nicht aus dem Volltextindex, sondern
-unmittelbar aus `files` und `symbols`. Sie sammeln deshalb auch keine der 15 Volltextpunkte ein,
-mit denen die Rechnung unten arbeitet — ihr Startbonus ist alles, was sie mitbringen.
-
-Drittens ist der Startbonus von `symbol_fts` ein Höchstwert. Passt die Anfrage nur auf die
-Signatur und weder auf den Symbolnamen noch auf den Dateinamen, sinkt er um bis zu 3 Punkte —
-genau um den Vorsprung, den der Namensindex sonst vor dem Textindex hat.
+Drei Dinge stehen so nicht in der Tabelle. `basename_term` greift seltener, als es klingt: Die
+Ersetzungsliste dahinter hat zur Zeit einen einzigen Eintrag (`preload` → `retrieval`). Dass ein
+Suchwort selbst der Dateistamm ist, wirkt anderswo — 8 Punkte in der Dateinamenwertung. Die
+oberen vier Quellen holen ihre Kandidaten nicht aus dem Volltextindex, sondern aus `files` und
+`symbols`; sie bekommen deshalb auch keine der 15 Volltextpunkte, ihr Startbonus ist alles. Und
+der Bonus von `symbol_fts` ist ein Höchstwert: Passt die Anfrage nur auf die Signatur, sinkt er
+um bis zu 3 Punkte.
 
 „Stufe“ ist ein zweiter Bonus. Er hängt davon ab, wie wörtlich die Volltextabfrage war, die den
 Treffer gefunden hat: je wörtlicher, desto höher. Aus einer Anfrage baut codemap mehrere
@@ -413,16 +396,12 @@ Volltextabfragen, von wörtlich bis großzügig:
 | Wortanfänge (`openrepodb*`) | 8 |
 | irgendeines der Wörter | 0 |
 
-Für die Anfrage `get openRepoDb for the index` heißt das: Stufe 18 sucht nach `get openRepoDb
-for the index`, Stufe 16 nach `openrepodb open repo db index`, Stufe 12 nach denselben Wörtern
-samt `get`, `for` und `the`. Die Zeile mit 14 Punkten ist ein Sonderfall: Sie entsteht nur, wenn
-`session` und `repo` beide unter den Suchwörtern sind, und sucht dann allein nach diesen beiden.
+Die Zeile mit 14 Punkten ist ein Sonderfall: Sie entsteht nur, wenn `session` und `repo` beide
+unter den Suchwörtern sind.
 
 Die Stufen greifen nur, wenn nach der Zerlegung mehr als ein Suchwort übrig bleibt oder die
-Anfrage eine Wortgruppe in Anführungszeichen enthält. Ein einzelnes, nicht zerlegbares Wort ohne
-Anführungszeichen bekommt durchweg Stufe 0 — es gibt dann nichts abzustufen. Die Anfrage
-`ranking` erzeugt zwei Abfragen, beide auf Stufe 0; dieselbe Anfrage in Anführungszeichen
-erzeugt die Stufen 24 und 8.
+Anfrage eine Wortgruppe in Anführungszeichen enthält. Ein einzelnes, nicht zerlegbares Wort
+bekommt durchweg Stufe 0 — es gibt dann nichts abzustufen.
 
 ### Die Summe an einem echten Beispiel
 
@@ -472,18 +451,11 @@ Tabelle unten), Tests und Dokumentation.
 | Testdateien | 8 oder 3 | 8, wenn die Anfrage nach der Implementierung fragt und nicht zugleich nach Tests; 3, wenn sie eines von dreizehn Code-Wörtern enthält (`function`, `handler`, `pipeline`, `service` …) |
 | Dokumentation | 6 | bei Anfragen mit eindeutigen Code-Wörtern |
 
-Vollständig freigestellt wird nur das Lockfile. Bei den drei folgenden bleibt auch bei
-ausdrücklicher Nennung ein Rest stehen, und bei generiertem Code und Build-Ausgaben zählt die
-Nennung nur, wenn die Anfrage wie ein Pfad aussieht: `generierter Code` allein hilft nicht,
-`src/budget-renderer.generated.js` schon.
-
-Die Abzüge schließen einander außerdem nicht aus, sie addieren sich. Das `package-lock.json`
-dieses Repos ist 80.099 Bytes groß und zählt deshalb doppelt: 60 Punkte als Lockfile und 36 als
-große JSON-Datei, zusammen 96.
-
-Die 60 Punkte für ein Lockfile sind so bemessen, dass sie jeden denkbaren Bonus überwiegen. Ein
-`package-lock.json` kann bei einer Suche nach einem Paketnamen sonst mühelos gewinnen — es
-enthält den Namen hunderte Male.
+Vollständig freigestellt wird nur das Lockfile; bei den drei folgenden bleibt auch bei
+ausdrücklicher Nennung ein Rest stehen. Und die Abzüge schließen einander nicht aus, sie addieren
+sich: Das `package-lock.json` dieses Repos ist 80.099 Bytes groß und verliert deshalb 96 Punkte —
+60 als Lockfile, 36 als große JSON-Datei. So bemessen sind sie, weil ein `package-lock.json` bei
+einer Suche nach einem Paketnamen sonst mühelos gewinnt: Es enthält den Namen hunderte Male.
 
 ### Der Rettungsplatz für Quellcode
 
@@ -496,12 +468,9 @@ Die Gegenmaßnahme heißt `code_quota` und ist bewusst additiv. Für sie schaut 
 tief in die Trefferliste aus SQLite hinein — deutlich tiefer als für die Antwort selbst — und
 nimmt daraus bis zu 6 Chunks aus Codedateien zusätzlich in die Kandidatenliste auf,
 vorausgesetzt, sie decken mindestens ein Fünftel der Suchwörter ab. Das geschieht je Abfragestufe
-erneut: Eine Anfrage mit vier Stufen kann so bis zu 24 Chunks nachholen, mehrere davon auch aus
-derselben Datei. Gemessen an diesem Repo holt `ranking` (zwei Stufen) zwölf Chunks nach, alle
-zwölf aus `src/core/ranking.ts`; `openRepoDb` (vier Stufen) holt neunzehn nach.
-
-Es wird nichts entfernt und nichts umsortiert; die Dokumentation verliert keinen Platz, der Code
-bekommt nur überhaupt einen.
+erneut, bei vier Stufen also bis zu 24 Mal, mehrfach auch aus derselben Datei. Es wird nichts
+entfernt und nichts umsortiert; die Dokumentation verliert keinen Platz, der Code bekommt nur
+überhaupt einen.
 
 ### Was am Ende herausfällt
 
@@ -518,39 +487,23 @@ die Suchqualität gemessen wird — Punktwerte nennt keines der beiden Dokumente
 
 ### Woher die Punktwerte stammen
 
-Die Zahlen dieses Abschnitts sind gesetzt, nicht ausgerechnet. Am Beispiel der 28 Punkte für eine
-exakte Symbolübereinstimmung lässt sich das nachzeichnen:
+Die Zahlen dieses Abschnitts sind gesetzt, nicht ausgerechnet. Die 28 Punkte für eine exakte
+Symbolübereinstimmung entstanden am 9. Mai 2026 als 8 Punkte (Commit `3149a83`, damals gab es im
+Repo noch keine Messreihe für Suchqualität) und wurden am 23. Mai auf 28 gehoben — im selben
+Commit `26a5ea1`, der den Real-Repo-Eval anlegte. Warum 28 und nicht 20 oder 40, steht nirgends:
+Die Commit-Nachricht ist eine Zeile, und weder CHANGELOG noch ADRs noch die Eval-Dokumente halten
+Vorher/Nachher-Zahlen fest.
 
-- **9. Mai 2026, Commit 3149a83.** Eine exakte Symbolübereinstimmung bekommt zum ersten Mal einen
-  eigenen Beitrag: 8 Punkte. Zu diesem Zeitpunkt gibt es im Repo noch keine einzige Messreihe für
-  Suchqualität — die Zahl ist eine Setzung.
-- **23. Mai 2026, Commit 26a5ea1.** Aus den 8 werden 28. Derselbe Commit legt den Real-Repo-Eval
-  an (`scripts/eval-real-repo-navigation.ts`), der Navigationsaufgaben auf fünf echten Repos
-  durchspielt. Im selben Zug entstehen die 20 Punkte für „ein Suchwort ist genau der Symbolname“,
-  die 10 für einen Präfixtreffer und die 20 für einen HTTP-Handler.
+Nachgemessen am 14. August 2026 auf einer Repo-Kopie: Setzt man den Wert nacheinander auf 0, 8,
+14, 20, 28, 40 und 60, ändert sich am Ergebnis nichts — alle Tests grün, alle Gates grün, der
+Real-Repo-Eval jedes Mal mit denselben Zahlen. Setzt man alle drei Symbolbeiträge gleichzeitig
+auf 0, steigt die Erfolgsquote der reinen Suche sogar von 0,500 auf 0,625.
 
-Wann und wozu die 28 entstanden sind, ist damit belegt. Warum es 28 sind und nicht 20 oder 40,
-nicht. Die Commit-Nachricht besteht aus einer Zeile ohne weiteren Text, und weder CHANGELOG noch
-ADRs noch die Eval-Dokumente halten fest, wie die Messwerte vor und nach der Änderung aussahen
-oder ob andere Werte ausprobiert wurden. Das Repo kann das sonst durchaus: Für spätere
-Ranking-Änderungen stehen Vorher/Nachher-Zahlen und sogar ein ausdrücklich verworfener Versuch in
-`docs/developer/real-repo-navigation-eval.md`. Für diese vier Zahlen fehlen sie.
-
-Nachgemessen am 14. August 2026, auf einer Kopie des Repos: Setzt man den Wert nacheinander auf
-0, 8, 14, 20, 28, 40 und 60, ändert sich am Ergebnis nichts. Alle 220 Tests laufen durch, das
-Suchqualitäts- und das Agent-Navigations-Gate bleiben grün, und der Real-Repo-Eval liefert jedes
-Mal dieselben Zahlen. Setzt man sogar alle drei Symbolbeiträge — 28, 20 und 10 — gleichzeitig auf
-0, bleibt alles grün; die Erfolgsquote der reinen Suche steigt dabei sogar von 0,500 auf 0,625.
-
-Der Grund steckt in der Bauart: Der Beitrag ist additiv und trifft jeden Kandidaten mit demselben
-Symbolnamen gleich, verschiebt also das ganze Feld und nicht die Reihenfolge darin. In der
-Beispielrechnung oben liegt `src/core/db.ts` mit 109 Punkten vor einem Feld bei 51,5 — 48 Punkte
-Abstand allein aus der Symbolwertung. Ob dort 28 stehen oder 0, dreht daran nichts.
-
-Daraus folgt nicht, dass die Änderung im Mai 2026 wirkungslos war: Damals bewegten sich vier
-Werte gleichzeitig, und die fünf Repos, an denen gemessen wurde, sind lebende
-Arbeitsverzeichnisse. Es folgt etwas anderes, und das ist der unbequeme Teil: Keine der heute
-vorhandenen Messreihen kann die Höhe dieser Zahl begründen.
+Der Grund steckt in der Bauart: Der Beitrag trifft jeden Kandidaten mit demselben Symbolnamen
+gleich und verschiebt damit das ganze Feld, nicht die Reihenfolge darin. Im Beispiel oben liegen
+48 Punkte Abstand allein in der Symbolwertung; ob dort 28 stehen oder 0, dreht daran nichts. Das
+heißt nicht, dass die Änderung im Mai wirkungslos war — damals bewegten sich vier Werte
+gleichzeitig. Es heißt: Keine heute vorhandene Messreihe kann die Höhe dieser Zahl begründen.
 
 ## 8. Der Importgraph — und was `codemap context` daraus macht
 
@@ -636,61 +589,37 @@ Lauf einmal vollständig neu gebaut, auch wenn sich keine Datei geändert hat.
 
 ### Wie die Leseliste zusammengestellt wird
 
-`codemap context <pfad>` gibt eine feste Zahl von Einträgen aus — voreingestellt acht. Wie diese
-acht zustande kommen, entscheidet sich in drei Schritten: Ziel bestimmen, Nachbarn sammeln,
-Budget verteilen.
+`codemap context <pfad>` gibt eine feste Zahl von Einträgen aus — voreingestellt acht, erlaubt
+sind 1 bis 25. Zuerst wird das Ziel bestimmt: gesucht wird in `files` nach einem Pfad, der genau
+passt oder den eingegebenen Text enthält; passt keiner, fällt der Befehl auf eine gewöhnliche
+Suche zurück, und dann gibt es überhaupt keine Nachbarn.
 
-**Erstens das Ziel.** Gesucht wird in `files` nach einem Pfad, der genau passt oder den
-eingegebenen Text enthält. Ein exakter Treffer gewinnt, danach der kürzeste Pfad, danach der
-alphabetisch erste; passen mehrere, nennt eine Warnung die Alternativen. Passt keiner, fällt
-`codemap context` auf eine gewöhnliche Suche zurück und gibt deren Treffer aus — dann gibt es
-überhaupt keine Nachbarn, und jede Zeile trägt den Grund `search_result`.
+Die Nachbarn tragen dreizehn mögliche Gründe, und jede Zeile der Ausgabe nennt ihren in Klammern.
+Aus dem Graphen kommen nur vier davon: `import` und `include` für Dateien, die das Ziel benutzt,
+`reverse_import` und `reverse_include` für die Gegenrichtung. Alles andere sind Namens- und
+Verzeichnisregeln — `sibling_test`, `test_of` und `reverse_test` rund um Testdateien,
+`implementation_pair` für `.h`/`.c` und Next.js-Routen, `near_config` und `same_dir` für den
+Ordner, `related_doc` für die passende Markdown-Datei. Eine Zeile kann mehrere Gründe tragen.
 
-**Zweitens die Nachbarn.** Sie stammen aus mehreren Quellen, und jede Zeile der Ausgabe nennt
-ihre eigene in Klammern:
+Die Grenzen greifen dreifach hintereinander: je Richtung höchstens 16 Kanten, daraus je Richtung
+höchstens 8 Dateien, am Ende 8 Einträge insgesamt. Auf jeder Stufe fliegt heraus, was als
+Rauschen gilt — dieselben Dateiarten, die in Abschnitt 7 die hohen Abzüge bekommen.
 
-| Grund | woher |
-| --- | --- |
-| `import`, `include` | aus dem Graphen: Dateien, die das Ziel benutzt |
-| `reverse_import`, `reverse_include` | aus dem Graphen: Dateien, die das Ziel benutzen |
-| `implementation_pair` | Namensregel: `.h` zu `.c`, außerdem `app/api/…/route.ts` zum Handler |
-| `sibling_test`, `reverse_test`, `test_of` | Namensregeln rund um Testdateien |
-| `near_config`, `same_dir` | Verzeichnisregeln: Konfigurationsdateien und Nachbarn im selben Ordner |
-| `related_doc` | Markdown-Datei mit dem Dateistamm des Ziels im Pfad, sonst die nächste `README.md` |
+**Die Reihenfolge ist fest verdrahtet** und hängt an keiner Punktzahl: erst die Zieldatei, dann
+die ersten beiden Importe, Implementierungspaare, der namensverwandte Test, die Tests der ersten
+Importe und Importeure, der erste übrige Importeur, Konfiguration und Dokument, dann alle
+restlichen Importe und Importeure, zuletzt Nachbarn aus demselben Verzeichnis. In der Ausgabe
+oben sieht man es: Der dritte Import steht erst auf Platz sieben, hinter dem Test eines
+Importeurs und hinter dem verwandten Dokument.
 
-Aus dem Importgraphen kommen also nur die ersten beiden Zeilen. Alles andere sind Namens- und
-Verzeichnisregeln, die ohne jede Kante auskommen. Eine Zeile kann mehrere Gründe tragen; dann
-stehen sie nebeneinander, etwa `(sibling_test, reverse_import, reverse_test)`.
+Reicht das Budget nicht, wird von hinten abgeschnitten. `src/core/db.ts` wird von 16 Dateien
+importiert; acht überstehen die Deckelung, fünf erscheinen in der Ausgabe. Die Antwort auf „wer
+benutzt das?“ ist bei einer viel benutzten Datei also bewusst unvollständig — ein Einstieg, keine
+Liste. Reicht es dagegen aus, füllen weitere Chunks der Zieldatei den Rest.
 
-**Drittens die Grenzen.** Sie greifen dreifach hintereinander: je Richtung höchstens 16 Kanten
-aus `graph_edges`; daraus je Richtung höchstens 8 Dateien, ebenso gedeckelt Konfigurationsdateien,
-Nachbarn aus demselben Verzeichnis, Tests und Dokumente; und am Ende 8 Einträge insgesamt, die
-Vorgabe von `--limit`, erlaubt sind 1 bis 25. An jeder dieser Stufen fliegt heraus, was als
-Rauschen gilt: Lockfiles, generierter Code, Build-Ausgaben, minifizierte und große
-JSON-Dateien — dieselben Dateiarten, die in Abschnitt 7 die hohen Abzüge bekommen.
-
-**Die Reihenfolge ist fest verdrahtet** und hängt an keiner Punktzahl. Von vorn nach hinten: die
-Zieldatei; ein Importeur, der eine Next.js-Route ist; die ersten beiden Importe;
-Implementierungspaare und deren Tests; der erste namensverwandte Test der Zieldatei; der erste
-Importeur mit verwandtem Dateistamm; die Tests der beiden ersten Importe und Importeure; der
-erste übrige Importeur; die geprüfte Quelldatei, falls das Ziel selbst ein Test ist; die erste
-Konfigurationsdatei, dann das erste Dokument; alle restlichen Importe und Importeure; Nachbarn
-aus demselben Verzeichnis; und wenn dann noch Platz ist, weitere Chunks der Zieldatei.
-
-An der Ausgabe für `src/core/graph-store.ts` weiter oben lässt sich das ablesen: Der dritte
-Import (`local-references.ts`) steht erst auf Platz sieben, hinter dem Test eines Importeurs und
-hinter dem verwandten Dokument. Bei `README.md` sieht man den anderen Fall — dort füllt nach
-sechs Nachbarn der zweite Chunk der Zieldatei selbst den achten Platz.
-
-**Reicht das Budget nicht, wird von hinten abgeschnitten.** `src/core/db.ts` wird in diesem Repo
-von 16 Dateien importiert; acht überstehen die Achterdeckelung, fünf schaffen es in die Ausgabe,
-die übrigen elf tauchen nirgends auf. Die Antwort auf „wer benutzt das?“ ist bei einer viel
-benutzten Datei also bewusst unvollständig — sie ist ein Einstieg, keine Liste.
-
-**Pro Nachbardatei kommt nur ihr erster Chunk** — nicht die ganze Datei und keine feste
-Zeilenzahl. Ein Tokenbudget gibt es nicht; die einzige Kürzung ist die Textvorschau, die nach 700
-Zeichen endet. Die Zeilen `tests:` und `docs:` am Ende der Ausgabe gehören nicht zu den acht
-Einträgen; sie zählen je bis zu acht namensverwandte Pfade auf, ohne Inhalt.
+Pro Nachbardatei kommt nur ihr erster Chunk. Ein Tokenbudget gibt es nicht; die einzige Kürzung
+ist die Textvorschau nach 700 Zeichen. Die Zeilen `tests:` und `docs:` am Ende gehören nicht zu
+den acht Einträgen, sie zählen nur namensverwandte Pfade auf.
 
 ## 9. Warum das so schnell ist
 
@@ -700,8 +629,8 @@ Am Repo `codemap` selbst gemessen, Mittel aus zehn Läufen; der kalte Wert aus d
 | --- | --- |
 | Vollständiges Indexieren, kalt | 0,32 s — davon 0,26 s die eigentliche Indexarbeit, der Rest Prozessstart und Modulladen |
 | Erneutes Indexieren ohne Änderungen | 0,08 s |
-| Umfang | 198 Dateien, 1,16 MB Text, 8 übersprungen |
-| Ergebnis | 1.866 Chunks, 1.393 Symbole, 2,7 MB Datenbank |
+| Umfang | 198 Dateien, 1,20 MB Text, 8 übersprungen |
+| Ergebnis | 1.884 Chunks, 1.413 Symbole, 3,0 MB Datenbank |
 
 Pro Datei passiert nur: Datei-Info abfragen, Datei lesen, Prüfsumme bilden, mit regulären
 Ausdrücken zerlegen, in die Datenbank schreiben.
@@ -761,7 +690,7 @@ Bezeichner mit einer bis neun Fundstellen:
 Die Spalten Dateien und Größe zählen dabei alle versionierten Dateien auf der Platte,
 Binärdateien eingeschlossen, die beide Werkzeuge überspringen — im Korpus aus 23.074 Dateien
 waren das 1.484. Deshalb stehen hier 245 Dateien und 1,4 MB, während oben von 198 indexierten
-Dateien und 1,16 MB Text die Rede war. Die 82 ms und die 95 ms weiter oben sind zwei verschiedene
+Dateien und 1,20 MB Text die Rede war. Die 82 ms und die 95 ms weiter oben sind zwei verschiedene
 Anfragen an zwei verschiedenen Tagen; in dieser Größenordnung streuen die Werte.
 
 Bemerkenswert ist weniger der Punkt selbst als der Verlauf: Über drei Größenordnungen hinweg
@@ -786,7 +715,7 @@ Umschlagpunkt ist deshalb eine Größenordnung, keine Schwelle.
 
 ## 10. Wozu die leeren Chunks gut sind
 
-Das Beispiel aus Abschnitt 3 hatte zwei davon; im ganzen Repo sind es 550 von 1.866. Das
+Das Beispiel aus Abschnitt 3 hatte zwei davon; im ganzen Repo sind es 550 von 1.884. Das
 Textfeld ist leer, sie kosten zusammen 0 Bytes an Inhalt. Jeder von ihnen umfasst genau eine
 Zeile: meist eine Leerzeile zwischen zwei Funktionen, in 80 Dateien die Stelle hinter dem letzten
 Zeilenumbruch, die es als Textzeile gar nicht mehr gibt.
@@ -830,7 +759,7 @@ Es gibt nichts zu bewerten und keine Rangfolge.
 
 ### Warum ein Index nichts brächte
 
-codemap kann Wörter vorberechnen, weil es endlich viele gibt: 8.052 in diesem Repo. Man kann sie
+codemap kann Wörter vorberechnen, weil es endlich viele gibt: 8.807 in diesem Repo. Man kann sie
 alle einmal aufschreiben.
 
 Muster kann man nicht vorberechnen, weil es unendlich viele gibt. `openRepoDb($$$)`,
@@ -874,23 +803,6 @@ sauber zu fassen — und genau da gehört `ast-grep` hin.
 
 ## 12. Wo man selbst nachsehen kann
 
-### Was `codemap status` sagt
-
-`codemap status` beantwortet drei Fragen auf einmal: ob dieses Repo freigegeben ist, was im Index
-steht und ob er noch passt.
-
-```bash
-codemap status          # kurze Fassung
-codemap status --json   # alle Felder
-codemap status --full   # prüft zusätzlich jede Datei per Prüfsumme
-```
-
-Die tragenden Felder der JSON-Ausgabe: `dbPath` nennt die Datenbankdatei, `files`, `chunks` und
-`symbols` deren Inhalt, `lastIndexedAt` den Zeitpunkt des letzten Laufs. `indexedHead` und
-`currentHead` sind die beiden Git-Commits, deren Vergleich die stale-Meldung auslöst, und
-`changed`, `missing`, `deleted` bleiben ohne `--full` auf 0 — sie werden nur bei der teuren
-Prüfung gefüllt.
-
 ### Wann der Index veraltet
 
 Jede Ausgabe endet mit einem Hinweis, sobald der Index nicht mehr nachweislich zum
@@ -900,17 +812,11 @@ Arbeitsverzeichnis passt:
 (!) index is stale for this query; run 'codemap index' to refresh
 ```
 
-Wie streng geprüft wird, hängt vom Befehl ab. `codemap search` vergleicht nur den aktuellen
-Git-Commit mit dem, auf dem der Index gebaut wurde — das kostet nichts. `codemap context` und
-`codemap status --full` lesen dagegen jede Datei und vergleichen Prüfsummen; sie melden dann
-auch, wie viele Dateien geändert, neu oder gelöscht sind.
-
-Deshalb kann der Hinweis erscheinen, obwohl inhaltlich nichts fehlt. Genau das ist beim Schreiben
-dieses Dokuments der Fall: Der Index steht auf Commit 945ca32, das Repo auf cfca041, und
-dazwischen liegen nur geänderte Dokumentationsdateien. „Stale“ heißt also nicht „falsch“, sondern
-„nicht nachweislich aktuell“. Ein erneutes `codemap index` dauert an diesem Repo 0,08 s, wenn
-sich nichts geändert hat — im Zweifel ist es billiger, es laufen zu lassen, als darüber
-nachzudenken.
+`codemap search` vergleicht dafür nur den aktuellen Git-Commit mit dem, auf dem der Index gebaut
+wurde — das kostet nichts. `codemap context` und `codemap status --full` lesen dagegen jede Datei
+und vergleichen Prüfsummen. Deshalb kann der Hinweis erscheinen, obwohl inhaltlich nichts fehlt:
+„Stale“ heißt nicht „falsch“, sondern „nicht nachweislich aktuell“. Ein erneutes `codemap index`
+dauert hier 0,08 s, wenn sich nichts geändert hat.
 
 ### In die Datenbank sehen
 
@@ -935,10 +841,9 @@ cp "$DB" /tmp/index-kopie.sqlite && sqlite3 /tmp/index-kopie.sqlite "create virt
 
 ## 13. Offene Punkte
 
-- Alle Zahlen hängen am Indexstand von Commit 945ca32. Ein neuer `codemap index`-Lauf verschiebt
-  mindestens die 1.866 Chunks, die 1.393 Symbole und die 550 leeren Chunks — allein dieses
-  Dokument ist seither von 381 auf über 900 Zeilen gewachsen. Vor der Abnahme neu messen und
-  Datum und Commit im Kopf nachziehen.
+- Die Zählwerte hängen am Indexstand von Commit cf4f501 und wandern mit jedem Lauf mit — dieses
+  Dokument indexiert sich selbst mit. Wird es vor der Abnahme noch einmal geändert, sind Chunks,
+  Symbole, Wortschatz und Datenbankgröße nachzuziehen.
 - Die Punktwerte der Rangfolge sind in ihrer Herkunft belegt (Abschnitt 7), in ihrer Höhe aber
   weiterhin unbegründet: Keine der vorhandenen Messreihen ändert ihr Ergebnis, wenn man sie
   verstellt. Solange das so bleibt, sind sie geerbte Setzungen und keine Erkenntnisse.

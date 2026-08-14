@@ -47,9 +47,8 @@ neue Abschnitte zu stale-Warnung, `.codemapignore`, `codemap status` und der Git
 
 Was noch offen ist, steht im Abschnitt „Offene Punkte" des Dokuments:
 
-- Alle Zahlen hängen am Indexstand 945ca32. Vor der Abnahme neu indexieren, Chunk-/Symbolzahlen
-  nachziehen und Datum und Commit im Kopf ändern — das Dokument selbst ist inzwischen von 381 auf
-  über 900 Zeilen gewachsen und verschiebt die Zahlen.
+- Die Zählwerte sind auf Indexstand cf4f501 nachgezogen (2026-08-14). Sie wandern mit jeder
+  weiteren Änderung am Dokument mit, weil es sich selbst mitindexiert.
 - Die Höhe der Ranking-Punktwerte bleibt unbegründet: Verstellt man `exactSymbol` von 0 bis 60,
   ändert keine vorhandene Messreihe ihr Ergebnis (nachgemessen 2026-08-14 auf einer Repo-Kopie).
   Ein Beleg bräuchte zuerst einen Fall, in dem ein exakter Symboltreffer knapp verliert.
