@@ -17,10 +17,11 @@ Umschlagpunkt-Tabelle vom 2026-08-06).
 zwei Prüfrunden, jeder Befund gegen Code und Datenbank belegt und anschließend adversarisch
 gegengeprüft (siehe unten). Das Dokument ist damit benutzbar und darf zitiert werden.
 
-Offen ist nur noch die redaktionelle Abnahme durch den Eigentümer, und die ist **unbefristet** —
-sie blockiert nichts. Der Text ist bei 852 Zeilen angekommen; ob er in dieser Länge noch tut, was
-er soll, ist eine Geschmacksfrage und keine Prüffrage. Wer daran weiterarbeitet, kürzt eher, als
-zu ergänzen.
+Am 2026-08-14 in einem Zug von 852 auf 305 Zeilen gekürzt: Der Text hatte genau einen Adressaten
+und war in einer Länge angekommen, die dieser Adressat nicht liest. Geblieben ist, was man
+verstehen muss; Punktwerte, Abfragestufen und Kantenlimits im Einzelnen stehen ohnehin in
+`docs/developer/architecture.md` und im Code. Wer daran weiterarbeitet, kürzt eher, als zu
+ergänzen.
 
 Bewusste Abweichung von der English-only-Konvention für Dokumentation: der Text richtet sich an
 den Eigentümer als Leser, nicht an Mitwirkende. Die technische Referenz bleibt
