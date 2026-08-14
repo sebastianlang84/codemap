@@ -1,33 +1,34 @@
 #!/usr/bin/env node
 import { existsSync } from "node:fs";
-import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { buildArchitectureReport } from "../src/core/architecture-report.ts";
 import { hasGraphMetadata } from "../src/core/graph-store.ts";
-import { findRepoRoot, repoKey } from "../src/core/repo.ts";
+import { findRepoRoot, repoKey, resolveStateDir } from "../src/core/repo.ts";
 import { normalizePathPrefix } from "../src/core/scanner.ts";
 
 interface ParsedArgs {
   root: string;
   pathPrefix: string;
   limit: number;
+  stateDir?: string;
 }
 
 const parsed = parseArgs(process.argv.slice(2));
 const root = findRepoRoot(parsed.root);
 const key = repoKey(root);
-const registryPath = join(defaultStateDir(), "registry.sqlite");
-const dbPath = join(defaultStateDir(), "repos", `${key}.sqlite`);
+const stateDir = resolveStateDir(parsed.stateDir);
+const registryPath = join(stateDir, "registry.sqlite");
+const dbPath = join(stateDir, "repos", `${key}.sqlite`);
 
 if (!isApproved(registryPath, key)) {
-  console.error("Repository is not approved/indexed yet. Run 'codemap index --approve' first; this report is read-only and does not create registry state.");
+  console.error(`Repository is not approved/indexed in ${stateDir}. Run 'codemap index --approve' first (matching --state-dir/CODEMAP_HOME); this report is read-only and does not create registry state.`);
   process.exit(2);
 }
 
 if (!existsSync(dbPath)) {
-  console.error("CodeMap DB does not exist. Run 'codemap index --approve' first; this report is read-only and does not index.");
+  console.error(`CodeMap DB does not exist at ${dbPath}. Run 'codemap index --approve' first (matching --state-dir/CODEMAP_HOME); this report is read-only and does not index.`);
   process.exit(2);
 }
 
@@ -41,6 +42,7 @@ try {
   const report = buildArchitectureReport(db, pathFilter, { limit: parsed.limit });
   console.log(JSON.stringify({
     root,
+    stateDir,
     pathPrefix: parsed.pathPrefix,
     report,
   }, null, 2));
@@ -52,6 +54,7 @@ function parseArgs(args: string[]): ParsedArgs {
   let root = process.cwd();
   let pathPrefix = "";
   let limit = 10;
+  let stateDir: string | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -66,6 +69,9 @@ function parseArgs(args: string[]): ParsedArgs {
     } else if (name === "--limit") {
       limit = parsePositiveInteger(name, value);
       if (inlineValue === undefined) i++;
+    } else if (name === "--state-dir") {
+      stateDir = requiredValue(name, value);
+      if (inlineValue === undefined) i++;
     } else if (arg === "--help" || arg === "-h") {
       printUsage();
       process.exit(0);
@@ -76,7 +82,7 @@ function parseArgs(args: string[]): ParsedArgs {
     }
   }
 
-  return { root: resolve(root), pathPrefix, limit };
+  return { root: resolve(root), pathPrefix, limit, stateDir };
 }
 
 function requiredValue(name: string, value: string | undefined): string {
@@ -104,14 +110,12 @@ function isApproved(registryPath: string, key: string): boolean {
   }
 }
 
-function defaultStateDir(): string {
-  return join(homedir(), ".pi", "agent", "state", "codemap");
-}
-
 function printUsage(): void {
-  console.log(`Usage: node --experimental-strip-types scripts/report-architecture.ts [repoRoot] [--path-prefix <subtree>] [--limit <n>]
+  console.log(`Usage: node --experimental-strip-types scripts/report-architecture.ts [repoRoot] [--path-prefix <subtree>] [--limit <n>] [--state-dir <path>]
 
 Emits a deterministic JSON architecture report from the existing CodeMap SQLite graph.
+  --state-dir <path>   Index/registry location (overrides CODEMAP_HOME/XDG default)
+
 The script is read-only: it does not index, refresh, call LLMs, or write report state.`);
 }
 

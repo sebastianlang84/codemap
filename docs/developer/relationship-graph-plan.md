@@ -313,7 +313,7 @@ The following scores are qualitative smoke-test notes, not a repeatable benchmar
    - Remaining gate: public `codemap_path` only if repeated agent tasks benefit and a separate product/token-injection review accepts the surface.
 
 3. **Offline architecture report — implemented as developer-only script**
-   - Current surface: `npm run report:architecture -- [repoRoot] [--path-prefix <subtree>] [--limit <n>]`; reads an existing index and does not refresh/index.
+   - Current surface: `npm run report:architecture -- [repoRoot] [--path-prefix <subtree>] [--limit <n>] [--state-dir <path>]`; reads an existing index and does not refresh/index. `--state-dir` (and `CODEMAP_HOME`/`XDG_DATA_HOME`) select the index location, so the report can be measured against throwaway repos without touching the operator's own state.
    - Behavior: emits high-degree files, bridge files, import cycles, weakly connected indexed files, and deterministic module clusters. Symbol-level report sections stay future-gated until stable symbol-node identities exist.
    - Guardrails: no LLM naming, no persistent extra state, no indexing side effects, output lives outside normal tool-call context unless explicitly read.
    - Verification: snapshot-style fixture test covers hotspots, bridges, cycles, weak files, and clusters.
