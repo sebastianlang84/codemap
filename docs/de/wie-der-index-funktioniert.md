@@ -2,9 +2,8 @@
 
 Erklärdokument, deutschsprachig. Es beschreibt, was beim Indexieren passiert und was in der
 Datenbank steht. Die Zahlen sind am Repo `codemap` selbst gemessen, Stand 2026-08-14, Commit
-cf4f501. Drei Ausnahmen: die Laufzeiten in Abschnitt 9 stammen vom 2026-08-06 bei Commit
-945ca32, die Umschlagpunkt-Tabelle desselben Abschnitts vom selben Tag bei Commit df73adf, und
-die 36 Kandidaten in Abschnitt 7 aus einem fremden Repo.
+cf4f501. Zwei Ausnahmen: die Umschlagpunkt-Tabelle in Abschnitt 9 stammt vom 2026-08-06 bei
+Commit df73adf, und die 36 Kandidaten in Abschnitt 7 aus einem fremden Repo.
 
 Die übrige Dokumentation dieses Repos ist englisch. Dieses Dokument ist bewusst eine Ausnahme
 und richtet sich an Leser, die das Verfahren verstehen wollen — nicht an Entwickler, die es
@@ -650,13 +649,13 @@ warmem Dateisystem-Cache und sonst unbelasteter Maschine:
 
 | | |
 | --- | --- |
-| `grep -rn "openRepoDb(" src/` | 3 ms |
-| `ast-grep run -p 'openRepoDb($$$)' -l ts src/` | 21 ms |
-| `codemap search openRepoDb` | 95 ms |
+| `grep -rn "openRepoDb(" src/` | 4 ms |
+| `ast-grep run -p 'openRepoDb($$$)' -l ts src/` | 22 ms |
+| `codemap search openRepoDb` | 96 ms |
 
 Das ist kein Messfehler und soll hier auch nicht schöngeredet werden. Bei 198 Dateien ist der
 Index kein Geschwindigkeitsvorteil: Das reine Durchsuchen dauert bei dieser Größe ohnehin nur
-Millisekunden. codemap ist rund dreißigmal langsamer als `grep`. Von den 95 ms gehen rund 50 ms
+Millisekunden. codemap ist rund fünfundzwanzigmal langsamer als `grep`. Von den 96 ms gehen rund 50 ms
 für Prozessstart und Modulladen drauf, bevor überhaupt etwas gesucht wird — etwa 20 ms davon der
 Start der Node-Laufzeit, der Rest das Einlesen des Programmcodes. Nur die restlichen rund 45 ms
 kosten das Öffnen der Datenbank, die vier Abfragestufen, die genau diese Anfrage auslöst
@@ -690,7 +689,7 @@ Bezeichner mit einer bis neun Fundstellen:
 Die Spalten Dateien und Größe zählen dabei alle versionierten Dateien auf der Platte,
 Binärdateien eingeschlossen, die beide Werkzeuge überspringen — im Korpus aus 23.074 Dateien
 waren das 1.484. Deshalb stehen hier 245 Dateien und 1,4 MB, während oben von 198 indexierten
-Dateien und 1,20 MB Text die Rede war. Die 82 ms und die 95 ms weiter oben sind zwei verschiedene
+Dateien und 1,20 MB Text die Rede war. Die 82 ms und die 96 ms weiter oben sind zwei verschiedene
 Anfragen an zwei verschiedenen Tagen; in dieser Größenordnung streuen die Werte.
 
 Bemerkenswert ist weniger der Punkt selbst als der Verlauf: Über drei Größenordnungen hinweg
