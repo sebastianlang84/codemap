@@ -10,7 +10,7 @@ Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst b
 
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) erklärt
 Indexaufbau, Tabellen, Volltextindex, Rangfolge, Importgraph und den Vergleich mit `ast-grep` für
-Leser ohne Vorwissen. Alle Zahlen sind am Repo selbst gemessen (Stand 2026-08-14, Commit cf4f501;
+Leser ohne Vorwissen. Alle Zahlen sind am Repo selbst gemessen (Stand 2026-08-14, Commit 5db116f;
 Umschlagpunkt-Tabelle vom 2026-08-06).
 
 **Stand der Abnahme.** Die ursprüngliche Frage — stimmt der Inhalt überhaupt? — ist beantwortet:
@@ -40,10 +40,6 @@ Regeln für weitere Überarbeitung, aus der bisherigen Arbeit daran:
 - **Unbequeme Befunde bleiben drin** — etwa dass `codemap search` bei diesem Repo langsamer ist
   als `grep`.
 
-`graph_nodes`/`graph_edges` (Abschnitt 8), die Rangfolge (Abschnitt 7), der Umschlagpunkt
-gegenüber `grep` (Abschnitt 9), die Herkunft der Punktwerte und die Zusammenstellung der
-Leseliste von `codemap context` sind inzwischen behandelt.
-
 **Prüfrunde 2026-08-14** (sechs Prüf-Lenses, jeder Befund einzeln gegengeprüft): 100 Befunde,
 davon 32 verworfen. Eingearbeitet sind unter anderem drei falsche Messwerte (Datenbankgröße,
 Größe des Volltextindex, Zerlegung der 95 ms), fünf falsch erklärte
@@ -52,15 +48,13 @@ vertauschte Abfragestufen 16/12), die widerlegte Zusicherung „jede Zeile liegt
 Chunk" (der Fixed-Chunker überlappt um 10 Zeilen), fehlende Ausschlussregeln des Scanners sowie
 neue Abschnitte zu stale-Warnung, `.codemapignore`, `codemap status` und der Git-Voraussetzung.
 
-Was noch offen ist, steht im Abschnitt „Offene Punkte" des Dokuments:
+Offen bleibt ein Sachpunkt, er steht auch im Dokument: Die Höhe der Ranking-Punktwerte ist
+unbegründet. Verstellt man `exactSymbol` von 0 bis 60, ändert keine vorhandene Messreihe ihr
+Ergebnis (nachgemessen 2026-08-14 auf einer Repo-Kopie). Ein Beleg bräuchte zuerst einen Fall, in
+dem ein exakter Symboltreffer knapp gegen etwas anderes verliert.
 
-- Die Zählwerte sind auf Indexstand cf4f501 nachgezogen (2026-08-14). Sie wandern mit jeder
-  weiteren Änderung am Dokument mit, weil es sich selbst mitindexiert.
-- Die Höhe der Ranking-Punktwerte bleibt unbegründet: Verstellt man `exactSymbol` von 0 bis 60,
-  ändert keine vorhandene Messreihe ihr Ergebnis (nachgemessen 2026-08-14 auf einer Repo-Kopie).
-  Ein Beleg bräuchte zuerst einen Fall, in dem ein exakter Symboltreffer knapp verliert.
-- Redaktionell offen: Abschnitt 8 trägt jetzt Importgraph *und* Leseliste. Ob die Leseliste einen
-  eigenen Abschnitt bekommt — mit Umnummerierung von 9 bis 13 —, entscheidet der Eigentümer.
+Die Zählwerte im Dokument wandern mit jeder weiteren Änderung daran mit, weil es sich selbst
+mitindexiert — nach einer Überarbeitung `codemap index` laufen lassen und nachziehen.
 
 ## Opportunistisch oder gated
 
