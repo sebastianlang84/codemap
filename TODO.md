@@ -33,10 +33,28 @@ Regeln für die Überarbeitung, aus der bisherigen Arbeit daran:
 - **Unbequeme Befunde bleiben drin** — etwa dass `codemap search` bei diesem Repo langsamer ist
   als `grep`.
 
-`graph_nodes`/`graph_edges` (Abschnitt 8) und die Rangfolge (Abschnitt 7) sind inzwischen
-behandelt. Was noch fehlt, steht im Abschnitt „Offene Punkte" des Dokuments: der ungemessene
-Umschlagpunkt gegenüber `grep`, die Herkunft der Punktwerte im Ranking und die Zusammenstellung
-der Leseliste von `codemap context`.
+`graph_nodes`/`graph_edges` (Abschnitt 8), die Rangfolge (Abschnitt 7), der Umschlagpunkt
+gegenüber `grep` (Abschnitt 9), die Herkunft der Punktwerte und die Zusammenstellung der
+Leseliste von `codemap context` sind inzwischen behandelt.
+
+**Prüfrunde 2026-08-14** (sechs Prüf-Lenses, jeder Befund einzeln gegengeprüft): 100 Befunde,
+davon 32 verworfen. Eingearbeitet sind unter anderem drei falsche Messwerte (Datenbankgröße
+3,4 → 2,7 MB, Volltextindex 624 → 620 KiB, Zerlegung der 95 ms), fünf falsch erklärte
+Ranking-Regeln (`basename_term`, Wortabdeckung, zweitbester Treffer, die drei „dito"-Abzüge,
+vertauschte Abfragestufen 16/12), die widerlegte Zusicherung „jede Zeile liegt in genau einem
+Chunk" (der Fixed-Chunker überlappt um 10 Zeilen), fehlende Ausschlussregeln des Scanners sowie
+neue Abschnitte zu stale-Warnung, `.codemapignore`, `codemap status` und der Git-Voraussetzung.
+
+Was noch offen ist, steht im Abschnitt „Offene Punkte" des Dokuments:
+
+- Alle Zahlen hängen am Indexstand 945ca32. Vor der Abnahme neu indexieren, Chunk-/Symbolzahlen
+  nachziehen und Datum und Commit im Kopf ändern — das Dokument selbst ist inzwischen von 381 auf
+  über 900 Zeilen gewachsen und verschiebt die Zahlen.
+- Die Höhe der Ranking-Punktwerte bleibt unbegründet: Verstellt man `exactSymbol` von 0 bis 60,
+  ändert keine vorhandene Messreihe ihr Ergebnis (nachgemessen 2026-08-14 auf einer Repo-Kopie).
+  Ein Beleg bräuchte zuerst einen Fall, in dem ein exakter Symboltreffer knapp verliert.
+- Redaktionell offen: Abschnitt 8 trägt jetzt Importgraph *und* Leseliste. Ob die Leseliste einen
+  eigenen Abschnitt bekommt — mit Umnummerierung von 9 bis 13 —, entscheidet der Eigentümer.
 
 ## Opportunistisch oder gated
 

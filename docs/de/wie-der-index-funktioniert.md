@@ -1,8 +1,11 @@
 # Wie der codemap-Index funktioniert
 
 Erklärdokument, deutschsprachig. Es beschreibt, was beim Indexieren passiert und was in der
-Datenbank steht. Alle Zahlen stammen aus einer Messung am Repo `codemap` selbst,
-Stand 2026-08-06, Commit 945ca32.
+Datenbank steht. Die Zahlen zu Index, Datenbank und Suche sind am Repo `codemap` selbst
+gemessen, Stand 2026-08-06, Commit 945ca32. Zwei Stellen messen etwas anderes: die
+Umschlagpunkt-Tabelle in Abschnitt 9 vergleicht sechs Textbestände wachsender Größe — `codemap`
+ist darin nur der kleinste —, gemessen am selben Tag bei Commit df73adf; und die 36 Kandidaten
+in Abschnitt 7 stammen aus einem fremden Repo.
 
 Die übrige Dokumentation dieses Repos ist englisch. Dieses Dokument ist bewusst eine Ausnahme
 und richtet sich an Leser, die das Verfahren verstehen wollen — nicht an Entwickler, die es
@@ -10,7 +13,7 @@ warten. Die technische Referenz bleibt `docs/developer/architecture.md`.
 
 ---
 
-## 1. Das Grundprinzip in drei Sätzen
+## 1. Das Grundprinzip
 
 Einmal am Anfang liest codemap alle Dateien des Repos und legt das Ergebnis in einer
 Datenbankdatei ab. Bei jeder Suche wird nur noch diese Datei gelesen — keine einzige
@@ -24,10 +27,18 @@ lässt sich nicht bei jeder Anfrage neu ausrechnen.
 Die Datenbank liegt außerhalb des Repos, standardmäßig unter
 `~/.local/share/codemap/repos/<hash>.sqlite`. Existiert dieses Verzeichnis nicht, aber das
 ältere `~/.pi/agent/state/codemap/`, gewinnt das ältere — auf dieser Maschine ist das der Fall,
-weshalb die Datei hier unter `~/.pi/agent/state/codemap/repos/` liegt. `codemap status --json`
-nennt den tatsächlichen Pfad im Feld `dbPath`.
+weshalb die Datei hier unter `~/.pi/agent/state/codemap/repos/` liegt. Sind `CODEMAP_HOME` oder
+`XDG_DATA_HOME` gesetzt, schlagen sie beide Vorgaben; `--state-dir` schlägt auch das noch.
+`codemap status --json` nennt den tatsächlichen Pfad im Feld `dbPath`.
 
-Für dieses Repo ist die Datei 3,4 MB groß. Ginge sie verloren, wäre sie in einer drittel Sekunde
+Ohne Git geht dabei gar nichts. codemap ermittelt das Wurzelverzeichnis mit `git rev-parse
+--show-toplevel` und bricht in einem Verzeichnis ohne Git-Repository mit `Not inside a Git
+repository` ab — nicht erst beim Indexieren, sondern auch beim Suchen (`src/core/repo.ts`,
+Zeilen 67–77). Daran hängt auch der Name der Datenbankdatei: der `<hash>` im Pfad ist die
+Prüfsumme des Wurzelpfads, gekürzt auf 24 Zeichen. Verschiebt man das Repo, bekommt es eine neue
+Datei und muss neu indexiert werden.
+
+Für dieses Repo ist die Datei 2,7 MB groß. Ginge sie verloren, wäre sie in einer drittel Sekunde
 neu gebaut — sie enthält nichts, was nicht aus dem Quellcode wiederherstellbar wäre.
 
 ## 2. Was beim Indexieren passiert
@@ -36,15 +47,37 @@ neu gebaut — sie enthält nichts, was nicht aus dem Quellcode wiederherstellba
 
 1. **Freigabe prüfen.** Ohne vorheriges `codemap index --approve` bricht der Lauf ab. Das
    Indexieren ist rein lokal; nichts verlässt die Maschine, und das Repo wird nicht verändert.
-2. **Dateien einsammeln.** Der Scanner läuft durch das Verzeichnis und bleibt dabei innerhalb
-   der Git-Repo-Grenze. Übersprungen werden: alles aus `.gitignore` und `.codemapignore`,
-   Symlinks, verschachtelte Git-Worktrees, Binärdateien, Dateien, die nach Zugangsdaten
-   aussehen, und alles über 1 MB.
+2. **Dateien einsammeln.** Der Scanner geht den Verzeichnisbaum vom Wurzelverzeichnis des Repos
+   abwärts durch. Ein zweiter Checkout desselben Repos (ein Git-Worktree) im Baum bleibt außen
+   vor, sonst stünde jedes Symbol doppelt im Index; ein Submodul oder ein fremdes Repo im Baum
+   wird dagegen mitindexiert. Übersprungen werden außerdem: Verzeichnisse aus einer fest
+   eingebauten Liste (`.git`, `node_modules`, `dist`, `build`, `__pycache__` und zwanzig
+   weitere Namen), alles aus `.gitignore` und `.codemapignore`, Dateien mit einer Endung, die
+   codemap nicht als Text kennt — es sind 35, weshalb `LICENSE` und `.gitignore` selbst
+   herausfallen —, Bilder, Archive und minifizierte Dateien, Symlinks, Binärdateien, Dateien,
+   die nach Zugangsdaten aussehen, und alles über 1 MB.
 3. **Unveränderte Dateien überspringen.** Stimmen Änderungsdatum und Größe mit dem letzten
    Lauf überein, wird die Datei gar nicht erst gelesen.
 4. **Jede geänderte Datei verarbeiten** — siehe Abschnitt 3.
-5. **Alles in einer einzigen Transaktion schreiben.** Ein Festplatten-Sync für den ganzen Lauf
-   statt einem pro Datei.
+5. **Den Importgraphen neu aufbauen**, sobald mindestens eine Datei neu geschrieben oder eine
+   gelöschte aus dem Index entfernt wurde — siehe Abschnitt 8.
+6. **Alles in einer einzigen Transaktion schreiben.** Genauer: die Schritte 4 und 5 laufen
+   bereits innerhalb dieser Transaktion. Für den ganzen Lauf wird einmal auf die Festplatte
+   durchgeschrieben, nicht einmal pro Datei.
+
+In diesem Repo greifen von den Ausschlussregeln nur drei, zusammen achtmal: fünfmal die
+Verzeichnisliste (`.git`, `dist`, `node_modules` und zwei weitere `dist`-Verzeichnisse unter
+`tests/fixtures/`), zweimal die Endungsliste (`LICENSE`, `.gitignore`) und einmal die Liste der
+Dateinamen (`budget-renderer.min.js`). Das sind die 8 übersprungenen Dateien aus Abschnitt 9.
+Bemerkenswert daran: `dist` steht in der `.gitignore` dieses Repos gar nicht — ohne die
+eingebaute Liste läge der gebaute Code im Index.
+
+`.codemapignore` ist dabei die einzige Stellschraube, die man selbst in der Hand hat: eine Datei
+im Wurzelverzeichnis des Repos, im Format von `.gitignore` — ein Muster je Zeile, `#` leitet
+einen Kommentar ein, ein vorangestelltes `!` nimmt etwas wieder herein, und von mehreren
+passenden Regeln gewinnt die letzte. Sie wirkt zusätzlich zu `.gitignore`, nicht an dessen
+Stelle, und kommt erst zum Zug, nachdem die fest eingebaute Verzeichnis- und Endungsliste schon
+aussortiert hat. In diesem Repo gibt es keine solche Datei.
 
 Gelöschte Dateien fliegen aus dem Index — aber nur, wenn der Durchlauf vollständig war. Bricht
 er unterwegs ab (etwa wegen fehlender Leserechte auf ein Verzeichnis), bleiben die bisherigen
@@ -55,7 +88,7 @@ Es läuft kein Hintergrunddienst. Indexieren passiert nur, wenn man es anstößt
 ## 3. Zwei getrennte Auswertungen pro Datei
 
 Aus dem Text einer Datei entstehen **zwei voneinander unabhängige Ergebnisse**. Das ist der
-Punkt, an dem eine naheliegende Vorstellung falsch ist: die Symbole werden *nicht* aus den
+Punkt, an dem eine naheliegende Vorstellung falsch ist: Die Symbole werden *nicht* aus den
 Chunks abgeleitet, sondern direkt aus dem Dateitext.
 
 ```
@@ -69,13 +102,17 @@ Chunks abgeleitet, sondern direkt aus dem Dateitext.
         chunks_fts             symbols_fts
 ```
 
-Im Code stehen beide Aufrufe direkt untereinander, jeweils auf demselben Rohtext
-(`src/core/index-store.ts`, Zeilen 147 und 154).
+Im Code stehen beide Aufrufe direkt untereinander (`src/core/index-store.ts`, Zeilen 127 und
+128); die Zerlegung selbst passiert dann in zwei getrennten Funktionen, die beide denselben
+Rohtext bekommen (Zeilen 147 und 154).
 
-**`chunkText()`** teilt die Datei in Chunks — zusammenhängende Zeilenbereiche. Der Schnitt
-liegt möglichst so, dass eine Funktion am Stück in einem Chunk landet. Das gelingt nur bei
-TypeScript, JavaScript und Python; bei allen anderen Sprachen kennt codemap die
-Funktionsgrenzen nicht und teilt stumpf alle paar Zeilen auf.
+**`chunkText()`** teilt die Datei in Chunks — zusammenhängende Zeilenbereiche. Wenn möglich,
+wird so geschnitten, dass eine Funktion vollständig in einem Chunk landet. Das gelingt nur bei
+TypeScript, JavaScript und Python. Markdown wird stattdessen an den Überschriften der Ebenen 1
+bis 3 geschnitten — aber erst, wenn seit dem letzten Schnitt mehr als acht Zeilen vergangen
+sind, und ein `#` innerhalb eines Codeblocks zählt nicht. Bei allen übrigen Sprachen weiß
+codemap nicht, wo eine Funktion anfängt und aufhört, und zerschneidet die Datei stur alle 80
+Zeilen, wobei sich zwei benachbarte Blöcke um 10 Zeilen überlappen.
 
 Beispiel `src/core/indexer.ts`:
 
@@ -84,16 +121,29 @@ Chunk 0   Zeile  1– 9   kind: text      die Import-Zeilen
 Chunk 1   Zeile 10–32   kind: function  indexRepo, vollständig
 Chunk 2   Zeile 33–33   kind: text      die Leerzeile dazwischen
 Chunk 3   Zeile 34–57   kind: function  status, vollständig
+Chunk 4   Zeile 58–58   kind: text      leer — die Stelle hinter dem letzten Zeilenumbruch
 ```
 
-**`extractSymbols()`** sucht mit einer Handvoll regulärer Ausdrücke nach Stellen, an denen
-etwas definiert wird — Funktionen, Klassen, Markdown-Überschriften. Das ist bewusst grob:
-das Verfahren ist ungefähr richtig, nicht garantiert richtig.
+Die Datei hat 57 Zeilen; der Zeilenumbruch am Ende macht daraus 58 Positionen, und die letzte
+ist leer. Zwei der fünf Chunks enthalten damit gar keinen Text: die Leerzeile zwischen den
+beiden Funktionen und die Stelle hinter dem Dateiende. Das ist kein Fehler, sondern Absicht —
+warum, steht in Abschnitt 10.
+
+**`extractSymbols()`** sucht mit 32 regulären Ausdrücken — Suchmustern, die auf Text passen,
+ohne die Sprache zu verstehen — nach Stellen, an denen etwas definiert wird: Funktionen,
+Klassen, Markdown-Überschriften. Neun Muster decken TypeScript, JavaScript, Python und Markdown
+ab, zwei C und C++, die übrigen einundzwanzig Go, Rust, Java, Kotlin, Ruby und PHP. Das ist
+bewusst grob: Das Verfahren ist ungefähr richtig, nicht garantiert richtig.
+
+Wie grob, zeigt ein Beispiel aus Abschnitt 4: Der Name „local development:“ steht in `README.md`
+gar nicht als Überschrift, sondern als Kommentarzeile `# local development:` in einem Codeblock.
+Das Muster sieht nur das Doppelkreuz am Zeilenanfang; anders als beim Chunken werden Codeblöcke
+dabei nicht ausgespart.
 
 ## 4. Die Tabellen
 
-Die Datenbank enthält 16 Tabellen, aber nur vier davon muss man kennen. Jede hat sieben
-Spalten.
+Die Datenbank enthält 16 Tabellen, aber nur vier davon muss man kennen. Die ersten drei haben je
+sieben Spalten; die vierte, der Volltextindex, ist ein Sonderfall (Abschnitt 5).
 
 ### files — eine Zeile pro Datei (198 Zeilen)
 
@@ -101,9 +151,11 @@ Spalten.
 id  path  language  size  hash  mtime_ms  indexed_at
 ```
 
-Hier steht der Dateipfad genau einmal. Alle anderen Tabellen verweisen nur mit einer Nummer
-darauf, statt den Pfad tausendfach zu wiederholen. `hash` und `mtime_ms` dienen dem
-Überspringen unveränderter Dateien beim nächsten Lauf.
+Hier steht der Dateipfad genau einmal. `chunks`, `symbols` und `graph_edges` verweisen nur mit
+einer Nummer darauf, statt den Pfad tausendfach zu wiederholen; `graph_nodes` führt ihn noch
+einmal mit — das sind 198 Zeilen und fällt nicht ins Gewicht. `size` und `mtime_ms` entscheiden
+beim nächsten Lauf, ob die Datei überhaupt gelesen wird; `hash` entscheidet danach, ob die
+gelesene Datei wirklich neu geschrieben werden muss.
 
 ### chunks — eine Zeile pro Chunk (1.866 Zeilen)
 
@@ -147,9 +199,12 @@ signature   export function indexRepo(options: { cwd?: string; … })
 
 ### chunks_fts — der Volltextindex (Sonderfall, siehe Abschnitt 5)
 
-Dazu kommt `symbols_fts` nach demselben Muster für die Namen. `graph_nodes` und `graph_edges`
-halten fest, welche Datei welche andere importiert; sie bedienen nicht die Suche, sondern
-`codemap context` — Abschnitt 8.
+Vier Spalten statt sieben: `path`, `language`, `kind`, `text`. Keine davon gibt beim Lesen etwas
+zurück — warum, steht in Abschnitt 5.
+
+Dazu kommt `symbols_fts` nach demselben Muster für die Namen. Damit sind die Tabellen der Suche
+vollzählig. `graph_nodes` und `graph_edges` halten fest, welche Datei welche andere importiert;
+sie bedienen nicht die Suche, sondern `codemap context` — Abschnitt 8.
 
 ### Wie die Nummern zusammenhängen
 
@@ -162,26 +217,28 @@ id 46 in symbols  → der Name "local development:" in Datei 3, Zeile 156
 ```
 
 `id` ist immer die Nummer *in dieser* Tabelle. `file_id` ist dagegen kein eigener Zähler,
-sondern ein Verweis: „gehört zur Datei, die in `files` unter dieser Nummer steht".
+sondern ein Verweis: „gehört zur Datei, die in `files` unter dieser Nummer steht“.
 
 ## 5. Der Volltextindex
 
-`chunks_fts` ist eine Tabelle wie die anderen, aber mit einer Besonderheit: sie speichert
+`chunks_fts` ist eine Tabelle wie die anderen, aber mit einer Besonderheit: Sie speichert
 keinen Inhalt, sondern nur, **welches Wort in welchem Chunk vorkommt**.
 
-Fragt man sie ab, kommt nur eine Nummer zurück:
+Fragt man sie ab, kommen nur Nummern zurück:
 
 ```
 select rowid, path, text from chunks_fts where chunks_fts match 'scanRepoStream'
-→ rowid: 2,  path: null,  text: null
+→ rowid: 2,     path: null,  text: null
+  rowid: 86,    path: null,  text: null
+  … acht weitere Zeilen, alle mit path: null und text: null
 ```
 
 `path` und `text` sind als Spalten deklariert, geben aber nichts zurück. Nutzbar ist allein
-die Zeilennummer, und die zeigt auf `chunks`. Die Verknüpfung stellt codemap selbst her, über
+die Datensatznummer `rowid`, und die zeigt auf `chunks`. Die Verknüpfung stellt codemap selbst her, über
 die Vereinbarung `chunks_fts.rowid = chunks.id`. SQLite erzwingt diese Gleichheit nicht.
 
-Angelegt wird die Tabelle mit `create virtual table … using fts5(…)`. „FTS" steht für
-*Full Text Search*, „virtuell" heißt: SQLite reicht jeden Zugriff an ein eingebautes
+Angelegt wird die Tabelle mit `create virtual table … using fts5(…)`. „FTS“ steht für
+*Full Text Search*, „virtuell“ heißt: SQLite reicht jeden Zugriff an ein eingebautes
 Zusatzmodul weiter, das die Daten in einem eigenen Format ablegt. Für den Benutzer ändert das
 nichts — man fragt mit normalem SQL ab, mit dem Zusatzwort `match`.
 
@@ -207,12 +264,14 @@ Denn im Index steht `scanrepostream` als **ein** Wort; `repostream` kommt dort n
 nach einem Teilnamen sucht, muss den Anfang treffen: `codemap search scanRepo` liefert
 `src/core/scanner.ts` als besten Treffer, `RepoStream` liefert nichts.
 
-Der Unterstrich dagegen schadet nicht. Im Volltextindex passen auf `read_first` 69 Chunks: der
-Suchbegriff wird genauso zerlegt wie der Text, und aus den beiden Wörtern wird die Frage „`read`
-unmittelbar gefolgt von `first`". Das findet dann allerdings auch `read first` und `read-first`
-in Fließtext — die Schreibweise mit Unterstrich ist nach der Zerlegung nicht mehr erkennbar.
+Der Unterstrich dagegen schadet nicht. Eine Suche nach `read_first` findet 69 Chunks: Die
+Anfrage wird genauso zerlegt wie der Text, und aus den beiden Wörtern wird die Frage „`read`
+unmittelbar gefolgt von `first`“. Das findet dann allerdings auch `read first` und `read-first`
+in Fließtext — die Schreibweise mit Unterstrich ist nach der Zerlegung nicht mehr erkennbar. In
+diesem Repo sind es sogar fast nur solche Fundstellen: 65 der 69 Chunks enthalten `read-first`,
+sechs `read first` und nur vier den Unterstrich; einzelne enthalten mehrere Schreibweisen.
 
-### Der Suchbegriff wird stärker zerlegt als der Text
+### Die Anfrage wird stärker zerlegt als der Text
 
 Beim Indexieren trennen Großbuchstaben nicht. Beim Suchen schon: `codemap search openRepoDb`
 sucht nach vier Begriffen statt nach einem.
@@ -247,29 +306,43 @@ steht in Abschnitt 7.
 | --- | --- |
 | verschiedene Wörter | 8.052 |
 | Wort-Vorkommen insgesamt | 159.583 |
-| Speicher dafür | 624 KiB |
+| Speicher dafür | 620 KiB |
 
-Macht 4,0 Bytes pro Vorkommen. Der Grund: gespeichert wird nicht jeder Eintrag einzeln, sondern
+Macht 4,0 Bytes pro Vorkommen. Der Grund: Gespeichert wird nicht jeder Eintrag einzeln, sondern
 pro Wort eine sortierte Liste von Chunk-Nummern, und darin nur die Abstände zwischen
 aufeinanderfolgenden Nummern — aus `12, 46, 51` wird `12, +34, +5`. Kleine Zahlen brauchen
 wenige Bits.
 
+Gemessen ist damit nur `chunks_fts`. Der Volltextindex der Symbole kostet weitere 132 KiB — er
+hat weniger zu verzeichnen, weil in ihm nur Namen und Signaturen stehen.
+
 ## 6. Was bei einer Suche passiert
 
 ```
-"scanRepoStream"  →  chunks_fts nachschlagen  →  Chunk-Nummern  →  chunks lesen
-                                                                    ↓
-                                          src/core/scanner.ts, Zeile 54–67
+"scanRepoStream"  →  chunks_fts nachschlagen   →  Chunk-Nummern   →  chunks lesen
+                                                                        ↓
+                                                 src/core/scanner.ts, Zeile 54–67
+
+                  →  symbols_fts nachschlagen  →  Symbol-Nummern  →  symbols lesen
+                                                                        ↓
+                                                 src/core/scanner.ts, Zeile 60
 ```
 
-Keine Datei wird geöffnet. Es sind zwei Nachschlagevorgänge in Tabellen, mehr nicht.
+Keine Datei wird geöffnet — nachgeschlagen wird nur in Tabellen. Für `scanRepoStream` sind das
+acht Abfragen: je eine im Text- und im Namensindex, und das für jede der vier Abfragestufen, die
+diese Anfrage auslöst (Abschnitt 7 nennt sieben mögliche; hier greifen vier). Die beiden
+Indizes heißen ab hier kurz **Textindex** (`chunks_fts`) und **Namensindex** (`symbols_fts`).
 
-Parallel wird `symbols_fts` befragt. Ein Treffer, den beide melden, wird höher bewertet als
-einer, den nur der Chunk-Index kennt. Wie die Rangfolge daraus entsteht, steht in Abschnitt 7.
+Im Beispiel melden beide dieselbe Datei. Ein Treffer aus dem Namensindex zählt dabei mehr als
+einer, der nur im Textindex steht: Er startet mit einem höheren Bonus und kann zusätzlich die
+Symbolwertung einsammeln. Addiert wird nichts — von zwei Kandidaten derselben Datei bleibt
+schlicht der höher bewertete stehen, hier Zeile 60 mit 98,75 Punkten gegen den Chunk 54–67 mit
+45,5. Wie die Rangfolge daraus entsteht, steht in Abschnitt 7.
 
-Weil der Volltextindex auf Chunks zeigt und nicht auf Dateien, ist die Antwort ein
-Zeilenbereich, keine Datei. Bei einer 700-Zeilen-Datei ist „steht irgendwo da drin" wertlos;
-„Zeile 54–67" ist brauchbar.
+Ausgegeben wird also nur der bessere der beiden Zweige: `codemap search scanRepoStream`
+antwortet mit `src/core/scanner.ts:60`, der Zeile, in der die Funktion definiert wird. Weil
+beide Indizes auf Zeilen zeigen und nicht auf Dateien, ist die Antwort ein Ort in der Datei. Bei
+einer 700-Zeilen-Datei ist „steht irgendwo da drin“ wertlos; „Zeile 60“ ist brauchbar.
 
 ## 7. Wie die Rangfolge zustande kommt
 
@@ -288,9 +361,10 @@ Treffer im Volltextindex   → 10 Punkte Grundwert
 kein Treffer               → 0 Punkte
 ```
 
-Damit bleibt von bm25 in der Praxis eine Ja/Nein-Auskunft übrig: „dieses Wort kommt vor" — rund
-15 Punkte — „oder nicht" — 0. Der Vermerk dazu steht im Code (`src/core/ranking.ts`, ab Zeile
-260) und ist ausdrücklich als revidierbar markiert.
+Damit bleibt von bm25 in der Praxis nur eine Ja/Nein-Auskunft: Kommt das Wort vor, gibt es rund
+15 Punkte; kommt es nicht vor, 0. Bei der Anfrage `openRepoDb` haben alle 80 Kandidaten denselben
+Beitrag von 15 Punkten. Ein Kommentar im Code (`src/core/ranking.ts`, ab Zeile 260) hält das fest
+und sagt dazu, dass diese Entscheidung überprüft werden kann.
 
 Die Rangfolge entsteht stattdessen aus einer Summe von rund einem Dutzend Einzelbeiträgen, die
 codemap selbst berechnet.
@@ -302,29 +376,53 @@ einen Startbonus mit, der ausdrückt, wie belastbar dieser Fund ist:
 
 | Quelle | Startbonus | wofür |
 | --- | ---: | --- |
-| `basename_term` | 42 | ein Suchwort ist exakt der Dateiname |
-| `endpoint_route` | 34 | HTTP-Handler in einer `route.ts` |
+| `basename_term` | 42 | eine im Code hinterlegte Liste ordnet einem Suchwort einen Dateinamen zu, und eine Datei heißt genau so |
+| `endpoint_route` | 34 | ein HTTP-Handler unter `app/api/…/route.ts`, und nur, wenn die Anfrage das Wort `endpoint` und daneben ein Wort aus dem Pfad enthält |
 | `path_match` | 30 | die Anfrage sieht aus wie ein Pfad und trifft einen |
 | `role_intent` | 18 | die Anfrage fragt nach einer Rolle (README, Tests, Konfiguration) |
 | `symbol_fts` | Stufe + 4 | Treffer im Namensindex |
 | `chunk_fts` | Stufe + 1 | Treffer im Textindex |
 | `code_quota` | Stufe + 1 | Rettungsplatz für Quellcode, siehe unten |
 
-„Stufe" ist ein zweiter Bonus, der davon abhängt, **wie genau** die Anfrage getroffen wurde. Aus
-einer Anfrage baut codemap mehrere Volltextabfragen, von wörtlich bis großzügig:
+Drei Dinge stehen so nicht in der Tabelle. Erstens greift `basename_term` seltener, als die
+Zeile vermuten lässt: Geprüft werden nicht die Suchwörter selbst, sondern eine Ersetzungsliste in
+`src/core/query-plan.ts`, und die hat zur Zeit einen einzigen Eintrag — die Anfrage `preload`
+sucht zusätzlich nach einer Datei namens `retrieval`. Dass ein Suchwort selbst der Dateistamm
+ist, wirkt an anderer Stelle: Es bringt 8 Punkte in der Dateinamenwertung, genau die 8 aus der
+Beispielrechnung unten.
 
-| Abfrage | Stufe |
+Zweitens holen die oberen vier Quellen ihre Kandidaten gar nicht aus dem Volltextindex, sondern
+unmittelbar aus `files` und `symbols`. Sie sammeln deshalb auch keine der 15 Volltextpunkte ein,
+mit denen die Rechnung unten arbeitet — ihr Startbonus ist alles, was sie mitbringen.
+
+Drittens ist der Startbonus von `symbol_fts` ein Höchstwert. Passt die Anfrage nur auf die
+Signatur und weder auf den Symbolnamen noch auf den Dateinamen, sinkt er um bis zu 3 Punkte —
+genau um den Vorsprung, den der Namensindex sonst vor dem Textindex hat.
+
+„Stufe“ ist ein zweiter Bonus. Er hängt davon ab, wie wörtlich die Volltextabfrage war, die den
+Treffer gefunden hat: je wörtlicher, desto höher. Aus einer Anfrage baut codemap mehrere
+Volltextabfragen, von wörtlich bis großzügig:
+
+| Volltextabfrage | Stufe |
 | --- | ---: |
 | eine Wortgruppe in Anführungszeichen | 24 |
 | alle Wörter der Anfrage, unverändert | 18 |
-| alle Wörter ohne Füllwörter | 16 |
-| alle Wörter samt der zerlegten Bestandteile | 12 |
+| alle Wörter samt ihrer zerlegten Bestandteile, ohne Füllwörter | 16 |
+| ein im Code hinterlegtes Wortpaar (`session` zusammen mit `repo`) | 14 |
+| dieselbe Liste wie bei 16, aber mit den Füllwörtern | 12 |
 | Wortanfänge (`openrepodb*`) | 8 |
 | irgendeines der Wörter | 0 |
 
-Die Stufen greifen nur, wenn nach der Zerlegung mehr als ein Suchwort übrig bleibt. Bei einer
-Anfrage aus einem einzigen, nicht zerlegbaren Wort sind alle Stufen 0 — es gibt dann nichts
-abzustufen.
+Für die Anfrage `get openRepoDb for the index` heißt das: Stufe 18 sucht nach `get openRepoDb
+for the index`, Stufe 16 nach `openrepodb open repo db index`, Stufe 12 nach denselben Wörtern
+samt `get`, `for` und `the`. Die Zeile mit 14 Punkten ist ein Sonderfall: Sie entsteht nur, wenn
+`session` und `repo` beide unter den Suchwörtern sind, und sucht dann allein nach diesen beiden.
+
+Die Stufen greifen nur, wenn nach der Zerlegung mehr als ein Suchwort übrig bleibt oder die
+Anfrage eine Wortgruppe in Anführungszeichen enthält. Ein einzelnes, nicht zerlegbares Wort ohne
+Anführungszeichen bekommt durchweg Stufe 0 — es gibt dann nichts abzustufen. Die Anfrage
+`ranking` erzeugt zwei Abfragen, beide auf Stufe 0; dieselbe Anfrage in Anführungszeichen
+erzeugt die Stufen 24 und 8.
 
 ### Die Summe an einem echten Beispiel
 
@@ -333,36 +431,55 @@ Zeile 6, mit 109 Punkten. Die setzen sich so zusammen:
 
 | Beitrag | Punkte | warum |
 | --- | ---: | --- |
-| Herkunft (`symbol_fts` 4 + Stufe 18) | 22 | Namensindex, exakte Wortliste |
+| Herkunft (`symbol_fts` 4 + Stufe 18) | 22 | Treffer im Namensindex, Stufe „alle Wörter der Anfrage, unverändert“ |
 | Volltexttreffer | 15 | Grundwert 10 + gedeckelte 5 |
-| Symbolwertung | 51 | Name identisch (28) + Suchwort ist der Name (20) + Text enthält die Anfrage (3) |
+| Symbolwertung | 51 | Symbolname ist genau die Anfrage (28) + ein Suchwort ist genau der Symbolname (20) + die Anfrage steht wörtlich in der Signatur (3) |
 | Dateiname | 9 | `db` ist der Dateistamm (8) + ein Viertel der Suchwörter im Namen (1) |
-| Anfrage steht wörtlich im Text | 4 | |
+| Anfrage steht wörtlich im Text | 4 | denselben Fund gibt es noch einmal ohne die Bedingung, dass der Treffer ein Symbol ist |
 | Quellcode-Bonus | 6 | Code-Endung (2) + liegt unter `src/` (4) |
-| Wortabdeckung im Text | 0,75 | 2 von 4 Suchwörtern gefunden |
+| Wortabdeckung im Text | 0,75 | 1 von 4 Suchwörtern steht im Text des Treffers |
 | Pfadwertung | 1,25 | |
 | **Summe** | **109** | |
 
-Der zweitbeste Treffer — `src/core/graph-store.ts` — kommt auf 51,5. Vom Abstand von 57,5
-Punkten stammen 48 aus der Symbolwertung und 9 aus dem Dateinamen. Der Rest ist Rauschen. Denn
-in `db.ts` steht `openRepoDb` als *Name* einer Funktion; in `graph-store.ts` steht dasselbe Wort
-nur in einer Typangabe, und die Datei heißt auch nicht so.
+Die vier Suchwörter sind `openrepodb`, `open`, `repo` und `db` — die Zerlegung aus Abschnitt 5.
+Als eigenes Wort steht davon nur `openrepodb` in der Signatur: `open` und `repo` stecken darin
+fest, `db` kommt nur in `dbPath` vor. Über Pfad, Text und Symbolnamen zusammen sind es zwei von
+vier, aber in die Wortabdeckung geht allein der Text ein.
+
+Auf Rang 2 folgen sechs Treffer mit je 51,5 Punkten. Welcher davon den zweiten Platz bekommt,
+entscheidet nicht die Bewertung, sondern der Pfad: `src/core/architecture-report.ts` steht
+alphabetisch vorn, `src/core/graph-store.ts` liegt punktgleich auf Rang 4. Das ist die
+Gleichstandsregel vom Ende dieses Abschnitts in freier Wildbahn.
+
+Der Abstand von 57,5 Punkten ist bei allen sechs derselbe: 48 Punkte stammen aus der
+Symbolwertung, 9 aus dem Dateinamen, der Rest fällt nicht ins Gewicht. Denn in `db.ts` steht
+`openRepoDb` als *Name* einer Funktion; in den sechs anderen Dateien steht dasselbe Wort nur in
+einer Typangabe, und keine von ihnen heißt so.
 
 ### Abzüge
 
-Nach unten wirken drei Arten von Abzug: Rauschen (die ersten sechs Zeilen), Tests und
-Dokumentation.
+Nach unten wirken drei Arten von Abzug: uninteressante Dateien (die ersten sechs Zeilen der
+Tabelle unten), Tests und Dokumentation.
 
 | Abzug | Punkte | wann |
 | --- | ---: | --- |
-| Lockfiles | 60 | immer, außer die Anfrage nennt sie ausdrücklich |
-| generierter Code | 60 | dito |
-| Build-Ausgaben, minifizierte Dateien | 48 | dito |
-| große JSON-Dateien (ab 64 KB) | 36 | dito |
+| Lockfiles | 60 | immer; nennt die Anfrage ein Lockfile ausdrücklich, entfällt der Abzug ganz |
+| generierter Code | 60 | immer; zeigt die Anfrage als Pfad darauf, bleiben 8 Punkte |
+| Build-Ausgaben, minifizierte Dateien | 48 | immer; zeigt die Anfrage als Pfad dorthin, bleiben 12 Punkte |
+| große JSON-Dateien (ab 64 KB) | 36 | immer; nennt die Anfrage `.json`, bleiben 12 Punkte |
 | `AGENTS.md`, `CLAUDE.md` u. ä. | 18 | außer die Anfrage zielt auf Agentenanweisungen |
-| archivierte Dokumentation | 14 | außer die Anfrage enthält „archive" |
-| Testdateien | 3 bis 8 | bei Anfragen, die nach Implementierung klingen |
+| archivierte Dokumentation | 14 | außer die Anfrage enthält „archive“ |
+| Testdateien | 8 oder 3 | 8, wenn die Anfrage nach der Implementierung fragt und nicht zugleich nach Tests; 3, wenn sie eines von dreizehn Code-Wörtern enthält (`function`, `handler`, `pipeline`, `service` …) |
 | Dokumentation | 6 | bei Anfragen mit eindeutigen Code-Wörtern |
+
+Vollständig freigestellt wird nur das Lockfile. Bei den drei folgenden bleibt auch bei
+ausdrücklicher Nennung ein Rest stehen, und bei generiertem Code und Build-Ausgaben zählt die
+Nennung nur, wenn die Anfrage wie ein Pfad aussieht: `generierter Code` allein hilft nicht,
+`src/budget-renderer.generated.js` schon.
+
+Die Abzüge schließen einander außerdem nicht aus, sie addieren sich. Das `package-lock.json`
+dieses Repos ist 80.099 Bytes groß und zählt deshalb doppelt: 60 Punkte als Lockfile und 36 als
+große JSON-Datei, zusammen 96.
 
 Die 60 Punkte für ein Lockfile sind so bemessen, dass sie jeden denkbaren Bonus überwiegen. Ein
 `package-lock.json` kann bei einer Suche nach einem Paketnamen sonst mühelos gewinnen — es
@@ -370,28 +487,72 @@ enthält den Namen hunderte Male.
 
 ### Der Rettungsplatz für Quellcode
 
-Eine Anfrage in normaler Sprache — „Überblick Lagerbestand Karten" — trifft Prosa besser als
+Eine Anfrage in normaler Sprache — „Überblick Lagerbestand Karten“ — trifft Prosa besser als
 Code. Die Dokumentation enthält genau diese Wörter als saubere Einzelwörter, der Code enthält
-sie in Bezeichnern versteckt. Das Ergebnis war messbar: bei einer solchen Anfrage in einem
-Fremdrepo blieb von 36 Kandidaten **kein einziger** eine Codedatei.
+sie in Bezeichnern versteckt. Das Ergebnis war messbar: Bei einer solchen Anfrage in einem
+Fremdrepo war von 36 Kandidaten **kein einziger** eine Codedatei.
 
-Die Gegenmaßnahme heißt `code_quota` und ist bewusst additiv: codemap sieht 60 statt der
-üblichen Treffer tief in die Rangliste hinein und hebt bis zu 6 Codedateien zusätzlich in den
-Kandidatentopf — vorausgesetzt, sie decken mindestens ein Fünftel der Suchwörter ab. Es wird
-nichts entfernt und nichts umsortiert; die Dokumentation verliert keinen Platz, der Code bekommt
-nur überhaupt einen.
+Die Gegenmaßnahme heißt `code_quota` und ist bewusst additiv. Für sie schaut codemap 60 Treffer
+tief in die Trefferliste aus SQLite hinein — deutlich tiefer als für die Antwort selbst — und
+nimmt daraus bis zu 6 Chunks aus Codedateien zusätzlich in die Kandidatenliste auf,
+vorausgesetzt, sie decken mindestens ein Fünftel der Suchwörter ab. Das geschieht je Abfragestufe
+erneut: Eine Anfrage mit vier Stufen kann so bis zu 24 Chunks nachholen, mehrere davon auch aus
+derselben Datei. Gemessen an diesem Repo holt `ranking` (zwei Stufen) zwölf Chunks nach, alle
+zwölf aus `src/core/ranking.ts`; `openRepoDb` (vier Stufen) holt neunzehn nach.
+
+Es wird nichts entfernt und nichts umsortiert; die Dokumentation verliert keinen Platz, der Code
+bekommt nur überhaupt einen.
 
 ### Was am Ende herausfällt
 
-Kandidaten mit einer Punktzahl von 0 oder weniger fliegen raus, pro Datei bleibt der beste
-Chunk, und bei Gleichstand entscheidet der Pfad alphabetisch. Letzteres ist kein Qualitäts-,
-sondern ein Reproduzierbarkeitskriterium: dieselbe Anfrage soll zweimal dieselbe Reihenfolge
-liefern.
+Kandidaten mit einer Punktzahl von 0 oder weniger fliegen raus, pro Datei bleibt der
+bestbewertete Kandidat — je nach Quelle ein Chunk, ein Symbol oder die Datei selbst —, und bei
+Gleichstand entscheidet der Pfad alphabetisch. Letzteres ist kein Qualitäts-, sondern ein
+Reproduzierbarkeitskriterium: Dieselbe Anfrage soll zweimal dieselbe Reihenfolge liefern.
 
-Die vollständigen Regeln samt Testabdeckung stehen in `docs/developer/search-quality.md`; der
-Code dazu in `src/core/ranking.ts`, `src/core/search-pipeline.ts` und `src/core/query-plan.ts`.
+Vollständig stehen die Regeln nur im Code: `src/core/ranking.ts` enthält die Punktwerte,
+`src/core/search-pipeline.ts` die sieben Quellen, `src/core/query-plan.ts` die Abfragestufen.
+`docs/developer/architecture.md` fasst die Signale in Worten zusammen, und
+`docs/developer/search-quality.md` beschreibt, welche Regeln durch Tests abgesichert sind und wie
+die Suchqualität gemessen wird — Punktwerte nennt keines der beiden Dokumente.
 
-## 8. Der Importgraph
+### Woher die Punktwerte stammen
+
+Die Zahlen dieses Abschnitts sind gesetzt, nicht ausgerechnet. Am Beispiel der 28 Punkte für eine
+exakte Symbolübereinstimmung lässt sich das nachzeichnen:
+
+- **9. Mai 2026, Commit 3149a83.** Eine exakte Symbolübereinstimmung bekommt zum ersten Mal einen
+  eigenen Beitrag: 8 Punkte. Zu diesem Zeitpunkt gibt es im Repo noch keine einzige Messreihe für
+  Suchqualität — die Zahl ist eine Setzung.
+- **23. Mai 2026, Commit 26a5ea1.** Aus den 8 werden 28. Derselbe Commit legt den Real-Repo-Eval
+  an (`scripts/eval-real-repo-navigation.ts`), der Navigationsaufgaben auf fünf echten Repos
+  durchspielt. Im selben Zug entstehen die 20 Punkte für „ein Suchwort ist genau der Symbolname“,
+  die 10 für einen Präfixtreffer und die 20 für einen HTTP-Handler.
+
+Wann und wozu die 28 entstanden sind, ist damit belegt. Warum es 28 sind und nicht 20 oder 40,
+nicht. Die Commit-Nachricht besteht aus einer Zeile ohne weiteren Text, und weder CHANGELOG noch
+ADRs noch die Eval-Dokumente halten fest, wie die Messwerte vor und nach der Änderung aussahen
+oder ob andere Werte ausprobiert wurden. Das Repo kann das sonst durchaus: Für spätere
+Ranking-Änderungen stehen Vorher/Nachher-Zahlen und sogar ein ausdrücklich verworfener Versuch in
+`docs/developer/real-repo-navigation-eval.md`. Für diese vier Zahlen fehlen sie.
+
+Nachgemessen am 14. August 2026, auf einer Kopie des Repos: Setzt man den Wert nacheinander auf
+0, 8, 14, 20, 28, 40 und 60, ändert sich am Ergebnis nichts. Alle 220 Tests laufen durch, das
+Suchqualitäts- und das Agent-Navigations-Gate bleiben grün, und der Real-Repo-Eval liefert jedes
+Mal dieselben Zahlen. Setzt man sogar alle drei Symbolbeiträge — 28, 20 und 10 — gleichzeitig auf
+0, bleibt alles grün; die Erfolgsquote der reinen Suche steigt dabei sogar von 0,500 auf 0,625.
+
+Der Grund steckt in der Bauart: Der Beitrag ist additiv und trifft jeden Kandidaten mit demselben
+Symbolnamen gleich, verschiebt also das ganze Feld und nicht die Reihenfolge darin. In der
+Beispielrechnung oben liegt `src/core/db.ts` mit 109 Punkten vor einem Feld bei 51,5 — 48 Punkte
+Abstand allein aus der Symbolwertung. Ob dort 28 stehen oder 0, dreht daran nichts.
+
+Daraus folgt nicht, dass die Änderung im Mai 2026 wirkungslos war: Damals bewegten sich vier
+Werte gleichzeitig, und die fünf Repos, an denen gemessen wurde, sind lebende
+Arbeitsverzeichnisse. Es folgt etwas anderes, und das ist der unbequeme Teil: Keine der heute
+vorhandenen Messreihen kann die Höhe dieser Zahl begründen.
+
+## 8. Der Importgraph — und was `codemap context` daraus macht
 
 `graph_nodes` und `graph_edges` beantworten eine Frage, die der Volltextindex nicht beantworten
 kann: **welche Datei benutzt welche andere?**
@@ -406,8 +567,10 @@ Stück. `graph_edges` enthält die Verbindungen, 252 Stück:
 | `imports` | 249 | `import`-Zeilen in TypeScript/JavaScript (245) und Python (4) |
 | `includes` | 3 | `#include "…"` in C/C++ |
 
-Eine Kante merkt sich mehr als nur „A benutzt B": auch die Zeile, in der der Import steht, den
-geschriebenen Verweis (`./db.ts`) und welcher der drei Erkenner ihn gefunden hat.
+Eine Kante merkt sich mehr als nur „A benutzt B“: auch die Zeile, in der der Import steht, den
+geschriebenen Verweis (`./db.ts`) und welcher Erkennungsausdruck ihn gefunden hat. Die Spalte
+`extractor` hält dafür einen von drei Werten fest: `ts-js-local-import-regex`,
+`python-relative-import-regex` oder `cpp-include-regex`.
 
 Erfasst werden **nur repo-interne** Verweise. Ein `import { readFile } from "node:fs"` erzeugt
 keine Kante, weil das Ziel nicht im Index steht. Deshalb haben 107 der 198 Dateien keine einzige
@@ -416,64 +579,134 @@ Standardbibliothek importieren.
 
 ### Wozu das gut ist
 
-`codemap context` beantwortet damit die Frage „was muss ich außer dieser Datei noch lesen?".
+`codemap context` beantwortet damit die Frage „was muss ich außer dieser Datei noch lesen?“.
 Für `src/core/graph-store.ts` sieht das so aus:
 
 ```
-src/core/graph-store.ts        (target)
-src/core/db.ts                 (import)
-src/core/indexed-source.ts     (import)
-src/core/local-references.ts   (import)
-src/core/index-store.ts        (reverse_import)
-src/core/relationships.ts      (reverse_import)
-tests/index-store-deletion-guard.test.ts  (sibling_test)
+src/core/graph-store.ts:1-14   [text] (target)
+src/core/db.ts:1-5             [text] (import)
+src/core/indexed-source.ts:1-19 [text] (import)
+tests/index-store-deletion-guard.test.ts:1-12 [text] (sibling_test)
+src/core/index-store.ts:1-37   [text] (reverse_import)
+tests/fixtures/context-quality/README.md:1-4 [markdown] (related_doc)
+src/core/local-references.ts:1-13 [text] (import)
+src/core/relationships.ts:1-77 [text] (reverse_import)
 ```
 
-Aus dem Graphen stammen davon nur die Zeilen mit `import` und `reverse_import`; der
-`sibling_test` kommt aus einer Namensregel, nicht aus einer Kante. `import` sind die Dateien,
-die diese hier benutzt, `reverse_import` die, die sie benutzen. Die Rückrichtung ist die
-eigentlich wertvolle: „wer ruft das auf?" ist mit Textsuche mühsam, mit
-einer Tabelle trivial. Beide Richtungen sind auf 16 Kanten und danach auf 8 Dateien begrenzt —
-ein `db.ts`, das von 16 Stellen importiert wird, soll die Antwort nicht fluten.
+Hinter jedem Pfad stehen der Zeilenbereich und die Art des ersten Chunks dieser Datei — der
+Einstieg, den codemap vorschlägt. Aus dem Graphen stammen nur die Zeilen mit `import` und
+`reverse_import`; `sibling_test` und `related_doc` kommen aus Regeln über Namen und Pfade, nicht
+aus einer Kante. `import` sind die Dateien, die diese hier benutzt, `reverse_import` die, die sie
+benutzen. Die Rückrichtung ist die eigentlich wertvolle: „wer ruft das auf?“ ist mit Textsuche
+mühsam, mit einer Tabelle trivial.
+
+Beide Richtungen werden dabei zweimal begrenzt: Zuerst liest codemap je Richtung höchstens 16
+Kanten, davon bleiben höchstens 8 Dateien in der Antwort. `src/core/db.ts` wird von genau 16
+Dateien importiert, `src/core/indexer.ts` sogar von 24 — ohne diese Grenze würde eine einzige
+solche Datei die ganze Antwort belegen. Wonach die 16 ausgewählt werden, ist allerdings nicht die
+Wichtigkeit: In der Rückrichtung sortiert codemap die Importeure alphabetisch nach Pfad und
+schneidet dann ab. Bei `src/core/indexer.ts` erreichen acht der 24 die Bewertung nie, weil vor
+ihnen acht `scripts/`-Dateien im Alphabet stehen.
 
 ### Was fehlt
 
-Der Graph kennt Dateien, keine Funktionen. „Wer ruft `openRepoDb` auf?" beantwortet er nicht —
-nur „wer importiert `db.ts`?". Ein Aufrufgraph bräuchte das, worauf codemap bewusst verzichtet:
-einen echten Parser (Abschnitt 9).
+Der Graph kennt Dateien, keine Funktionen. „Wer ruft `openRepoDb` auf?“ beantwortet er nicht —
+nur „wer importiert `db.ts`?“. Ein Aufrufgraph bräuchte das, worauf codemap bewusst verzichtet:
+einen echten Parser — ein Programm, das Code nach den Regeln der Programmiersprache zerlegt,
+statt nur Zeichen zu vergleichen. Was dabei entsteht, heißt Syntaxbaum: die Datei als Baum aus
+Anweisungen, Aufrufen und Deklarationen (Abschnitt 9).
 
 Gefunden werden die Importe mit sechs regulären Ausdrücken — vier für TypeScript/JavaScript, je
 einer für Python und C/C++ —, nicht durch Auflösung des Modulsystems. Ein `import("./db.ts")`
 mit fest geschriebenem Pfad wird erfasst; ein über Variablen zusammengesetzter Pfad nicht, weil
 der Dateiname erst zur Laufzeit entsteht. `baseUrl` und `paths` aus einer `tsconfig.json` löst
-codemap in einfacher Form auf; verkettete `extends`-Ketten und Workspace-Aliasse bleiben offen.
+codemap in einfacher Form auf; `extends` wertet es gar nicht aus, Workspace-Aliasse ebenso wenig.
 Ein Verweis, der auf keine indexierte Datei zeigt, wird stillschweigend verworfen.
 
 ### Wann er neu gebaut wird
 
-Nicht inkrementell. Sobald sich beim Indexieren mindestens eine Datei geändert hat, werden **alle**
-Import-Kanten gelöscht und aus dem gespeicherten Dateitext neu aufgebaut. Bei dieser Repo-Größe
-kostet das nichts — es steckt in den 0,32 s aus Abschnitt 9 mit drin. Hat sich nichts geändert,
-bleibt der Graph unangetastet.
+Nicht Stück für Stück. Sobald sich beim Indexieren mindestens eine Datei geändert hat — oder eine
+gelöschte aus dem Index fliegt —, werden **alle** Import-Kanten gelöscht und aus dem gespeicherten
+Dateitext neu aufgebaut. Bei dieser Repo-Größe kostet das nichts; es steckt in den 0,32 s aus
+Abschnitt 9 mit drin. Hat sich nichts geändert und ist nichts weggefallen, bleibt der Graph
+unangetastet.
 
-Zusätzlich trägt er eine Versionsnummer: ändert sich das Verfahren, wird beim nächsten Lauf
-einmal vollständig neu gebaut, auch wenn keine Datei sich geändert hat.
+Zusätzlich trägt er eine Versionsnummer: Ändert sich das Verfahren, wird der Graph beim nächsten
+Lauf einmal vollständig neu gebaut, auch wenn sich keine Datei geändert hat.
+
+### Wie die Leseliste zusammengestellt wird
+
+`codemap context <pfad>` gibt eine feste Zahl von Einträgen aus — voreingestellt acht. Wie diese
+acht zustande kommen, entscheidet sich in drei Schritten: Ziel bestimmen, Nachbarn sammeln,
+Budget verteilen.
+
+**Erstens das Ziel.** Gesucht wird in `files` nach einem Pfad, der genau passt oder den
+eingegebenen Text enthält. Ein exakter Treffer gewinnt, danach der kürzeste Pfad, danach der
+alphabetisch erste; passen mehrere, nennt eine Warnung die Alternativen. Passt keiner, fällt
+`codemap context` auf eine gewöhnliche Suche zurück und gibt deren Treffer aus — dann gibt es
+überhaupt keine Nachbarn, und jede Zeile trägt den Grund `search_result`.
+
+**Zweitens die Nachbarn.** Sie stammen aus mehreren Quellen, und jede Zeile der Ausgabe nennt
+ihre eigene in Klammern:
+
+| Grund | woher |
+| --- | --- |
+| `import`, `include` | aus dem Graphen: Dateien, die das Ziel benutzt |
+| `reverse_import`, `reverse_include` | aus dem Graphen: Dateien, die das Ziel benutzen |
+| `implementation_pair` | Namensregel: `.h` zu `.c`, außerdem `app/api/…/route.ts` zum Handler |
+| `sibling_test`, `reverse_test`, `test_of` | Namensregeln rund um Testdateien |
+| `near_config`, `same_dir` | Verzeichnisregeln: Konfigurationsdateien und Nachbarn im selben Ordner |
+| `related_doc` | Markdown-Datei mit dem Dateistamm des Ziels im Pfad, sonst die nächste `README.md` |
+
+Aus dem Importgraphen kommen also nur die ersten beiden Zeilen. Alles andere sind Namens- und
+Verzeichnisregeln, die ohne jede Kante auskommen. Eine Zeile kann mehrere Gründe tragen; dann
+stehen sie nebeneinander, etwa `(sibling_test, reverse_import, reverse_test)`.
+
+**Drittens die Grenzen.** Sie greifen dreifach hintereinander: je Richtung höchstens 16 Kanten
+aus `graph_edges`; daraus je Richtung höchstens 8 Dateien, ebenso gedeckelt Konfigurationsdateien,
+Nachbarn aus demselben Verzeichnis, Tests und Dokumente; und am Ende 8 Einträge insgesamt, die
+Vorgabe von `--limit`, erlaubt sind 1 bis 25. An jeder dieser Stufen fliegt heraus, was als
+Rauschen gilt: Lockfiles, generierter Code, Build-Ausgaben, minifizierte und große
+JSON-Dateien — dieselben Dateiarten, die in Abschnitt 7 die hohen Abzüge bekommen.
+
+**Die Reihenfolge ist fest verdrahtet** und hängt an keiner Punktzahl. Von vorn nach hinten: die
+Zieldatei; ein Importeur, der eine Next.js-Route ist; die ersten beiden Importe;
+Implementierungspaare und deren Tests; der erste namensverwandte Test der Zieldatei; der erste
+Importeur mit verwandtem Dateistamm; die Tests der beiden ersten Importe und Importeure; der
+erste übrige Importeur; die geprüfte Quelldatei, falls das Ziel selbst ein Test ist; die erste
+Konfigurationsdatei, dann das erste Dokument; alle restlichen Importe und Importeure; Nachbarn
+aus demselben Verzeichnis; und wenn dann noch Platz ist, weitere Chunks der Zieldatei.
+
+An der Ausgabe für `src/core/graph-store.ts` weiter oben lässt sich das ablesen: Der dritte
+Import (`local-references.ts`) steht erst auf Platz sieben, hinter dem Test eines Importeurs und
+hinter dem verwandten Dokument. Bei `README.md` sieht man den anderen Fall — dort füllt nach
+sechs Nachbarn der zweite Chunk der Zieldatei selbst den achten Platz.
+
+**Reicht das Budget nicht, wird von hinten abgeschnitten.** `src/core/db.ts` wird in diesem Repo
+von 16 Dateien importiert; acht überstehen die Achterdeckelung, fünf schaffen es in die Ausgabe,
+die übrigen elf tauchen nirgends auf. Die Antwort auf „wer benutzt das?“ ist bei einer viel
+benutzten Datei also bewusst unvollständig — sie ist ein Einstieg, keine Liste.
+
+**Pro Nachbardatei kommt nur ihr erster Chunk** — nicht die ganze Datei und keine feste
+Zeilenzahl. Ein Tokenbudget gibt es nicht; die einzige Kürzung ist die Textvorschau, die nach 700
+Zeichen endet. Die Zeilen `tests:` und `docs:` am Ende der Ausgabe gehören nicht zu den acht
+Einträgen; sie zählen je bis zu acht namensverwandte Pfade auf, ohne Inhalt.
 
 ## 9. Warum das so schnell ist
 
-Gemessen an diesem Repo, jeweils Mittel aus zehn Läufen:
+Am Repo `codemap` selbst gemessen, Mittel aus zehn Läufen; der kalte Wert aus drei:
 
 | | |
 | --- | --- |
-| Vollständiges Indexieren, kalt | 0,32 s — davon ~0,02 s Node-Start, also ~0,30 s echte Arbeit |
+| Vollständiges Indexieren, kalt | 0,32 s — davon 0,26 s die eigentliche Indexarbeit, der Rest Prozessstart und Modulladen |
 | Erneutes Indexieren ohne Änderungen | 0,08 s |
 | Umfang | 198 Dateien, 1,16 MB Text, 8 übersprungen |
-| Ergebnis | 1.866 Chunks, 1.393 Symbole, 3,4 MB Datenbank |
+| Ergebnis | 1.866 Chunks, 1.393 Symbole, 2,7 MB Datenbank |
 
 Pro Datei passiert nur: Datei-Info abfragen, Datei lesen, Prüfsumme bilden, mit regulären
 Ausdrücken zerlegen, in die Datenbank schreiben.
 
-Was **nicht** passiert, und das ist der eigentliche Grund für die halbe Sekunde: kein
+Was **nicht** passiert, und das ist der eigentliche Grund für die drittel Sekunde: kein
 Syntaxbaum, kein Parser, keine Embeddings, kein Aufruf eines Sprachmodells, kein Netzwerk,
 keine Auflösung von Typen, kein Aufrufgraph.
 
@@ -483,7 +716,8 @@ steht.
 
 ### Und beim Suchen? Hier ist codemap langsamer als grep
 
-Dieselbe Suche mit drei Werkzeugen, gemessen an diesem Repo, Mittel aus zehn Läufen:
+Dieselbe Suche mit drei Werkzeugen, wieder an diesem Repo gemessen, Mittel aus zehn Läufen bei
+warmem Dateisystem-Cache und sonst unbelasteter Maschine:
 
 | | |
 | --- | --- |
@@ -492,10 +726,12 @@ Dieselbe Suche mit drei Werkzeugen, gemessen an diesem Repo, Mittel aus zehn Lä
 | `codemap search openRepoDb` | 95 ms |
 
 Das ist kein Messfehler und soll hier auch nicht schöngeredet werden. Bei 198 Dateien ist der
-Index kein Geschwindigkeitsvorteil: das reine Durchsuchen dauert bei dieser Größe ohnehin nur
-Millisekunden. codemap ist rund dreißigmal langsamer als `grep`, wovon etwa 20 ms auf den Start
-der Node-Laufzeit entfallen und die restlichen ~75 ms auf das Öffnen der Datenbank, die vier
-Abfragestufen (Abschnitt 7) und die Bewertung.
+Index kein Geschwindigkeitsvorteil: Das reine Durchsuchen dauert bei dieser Größe ohnehin nur
+Millisekunden. codemap ist rund dreißigmal langsamer als `grep`. Von den 95 ms gehen rund 50 ms
+für Prozessstart und Modulladen drauf, bevor überhaupt etwas gesucht wird — etwa 20 ms davon der
+Start der Node-Laufzeit, der Rest das Einlesen des Programmcodes. Nur die restlichen rund 45 ms
+kosten das Öffnen der Datenbank, die vier Abfragestufen, die genau diese Anfrage auslöst
+(Abschnitt 7 nennt sieben mögliche; für `openRepoDb` bleiben vier), und die Bewertung.
 
 Der Index rechnet sich über zwei andere Dinge:
 
@@ -508,7 +744,8 @@ Der Index rechnet sich über zwei andere Dinge:
 
 ### Wo der Punkt liegt, ab dem der Index gewinnt
 
-Gemessen an sechs Korpora wachsender Größe, jeweils mit einem seltenen Bezeichner als Anfrage:
+An sechs Korpora wachsender Größe gemessen, Mittel aus je fünf Läufen, als Anfrage jeweils ein
+Bezeichner mit einer bis neun Fundstellen:
 
 | Korpus | Dateien | Größe | `git grep` | `codemap search` |
 | --- | ---: | ---: | ---: | ---: |
@@ -519,35 +756,56 @@ Gemessen an sechs Korpora wachsender Größe, jeweils mit einem seltenen Bezeich
 | dasselbe + 2× hermes | 29.848 | 369 MB | 113–171 ms | 94–134 ms |
 | dasselbe, verdoppelt | 46.148 | 481 MB | 161–173 ms | 108–114 ms |
 
-**Der Umschlagpunkt liegt bei rund 25.000 bis 30.000 Dateien, also etwa 300 MB Text.**
+**Der Umschlagpunkt liegt bei rund 25.000 bis 30.000 Dateien, also bei rund 300 MB.**
 
-Bemerkenswert ist weniger der Punkt selbst als der Verlauf: über drei Größenordnungen hinweg
+Die Spalten Dateien und Größe zählen dabei alle versionierten Dateien auf der Platte,
+Binärdateien eingeschlossen, die beide Werkzeuge überspringen — im Korpus aus 23.074 Dateien
+waren das 1.484. Deshalb stehen hier 245 Dateien und 1,4 MB, während oben von 198 indexierten
+Dateien und 1,16 MB Text die Rede war. Die 82 ms und die 95 ms weiter oben sind zwei verschiedene
+Anfragen an zwei verschiedenen Tagen; in dieser Größenordnung streuen die Werte.
+
+Bemerkenswert ist weniger der Punkt selbst als der Verlauf: Über drei Größenordnungen hinweg
 bleibt `codemap search` fast konstant — 82 ms beim kleinsten, 114 ms beim größten Korpus. Der
 Index sucht nicht im Text, sondern schlägt Treffer nach; wie viel Text daneben liegt, ist ihm
 gleichgültig. `grep` dagegen muss jedes Byte anfassen.
 
-Das gilt allerdings nur für **selektive** Anfragen. Bei einem häufigen Wort kehrt sich das Bild
-um und dreht sich nie zurück: `function` kostet beim 23.074-Dateien-Korpus `grep` 118 ms und
-`codemap search` 729 ms. Dann muss codemap tausende Kandidaten bewerten, während `grep` nur
-Zeilen ausgibt.
+Das gilt allerdings nur für Anfragen nach seltenen Wörtern. Bei einem häufigen Wort kehrt sich
+das Bild um, und zwar bei jeder Repo-Größe: `function` kostet beim Korpus aus 23.074 Dateien
+`git grep` 118 ms und `codemap search` 729 ms. Dann muss codemap tausende Kandidaten bewerten,
+während `git grep` nur Zeilen ausgibt.
 
 Für den Alltag heißt das: Der Index lohnt sich bei diesem Repo nicht wegen der Laufzeit, sondern
 allein wegen der Rangfolge — und die Trägheit von rund 90 ms bleibt, egal wie klein das Repo
-ist. Etwa 20 ms davon sind der Start der Node-Laufzeit.
+ist. Es sind dieselben rund 50 ms Prozessstart und Modulladen wie oben, nur diesmal unabhängig
+von der Repo-Größe.
 
 Die Zahlen stammen von einer Maschine bei warmem Dateisystem-Cache. Die beiden größten Korpora
-sind aus Kopien echter Repos gebaut: ihr Textvolumen wächst, ihr Wortschatz nicht — ein echtes
-Repo dieser Größe hätte mehr verschiedene Wörter und damit etwas höhere Indexkosten.
+sind aus Kopien echter Repos gebaut: Ihr Textvolumen wächst, ihr Wortschatz nicht — ein echtes
+Repo dieser Größe hätte mehr verschiedene Wörter und damit etwas höhere Indexkosten. Der
+Umschlagpunkt ist deshalb eine Größenordnung, keine Schwelle.
 
-## 10. Wozu die Chunks aus einer einzigen Leerzeile gut sind
+## 10. Wozu die leeren Chunks gut sind
 
-550 der 1.866 Chunks haben gar keinen Text — das Feld ist leer, sie kosten zusammen 0 Bytes an
-Inhalt. Sie zu entfernen wurde gemessen: die Datenbank blieb danach gleich groß.
+Das Beispiel aus Abschnitt 3 hatte zwei davon; im ganzen Repo sind es 550 von 1.866. Das
+Textfeld ist leer, sie kosten zusammen 0 Bytes an Inhalt. Jeder von ihnen umfasst genau eine
+Zeile: meist eine Leerzeile zwischen zwei Funktionen, in 80 Dateien die Stelle hinter dem letzten
+Zeilenumbruch, die es als Textzeile gar nicht mehr gibt.
 
-Der Grund, sie zu behalten, ist ohnehin nicht der Platz, sondern eine Zusicherung: **jede Zeile
-jeder Datei liegt in genau einem Chunk, und die `ordinal`-Nummern laufen lückenlos.** Sobald
-man Lücken zuließe, müsste jede Stelle, die aus Chunks wieder Dateiausschnitte zusammensetzt,
-mit Löchern umgehen können.
+Was ihr Entfernen bringt, wurde gemessen: Die Datei bleibt zunächst gleich groß, weil SQLite
+freigewordene Seiten behält; erst nach einem `vacuum` schrumpft sie — um 40 KB, also um
+anderthalb Prozent. Nichts davon ist Inhalt, sondern der Überbau aus Tabellenzeilen und
+Volltextindex.
+
+Der Grund, sie zu behalten, ist ohnehin nicht der Platz, sondern eine Zusicherung: **Keine Zeile
+fehlt, und die `ordinal`-Nummern laufen lückenlos.** Sobald man Lücken zuließe, müsste jede
+Stelle, die aus Chunks wieder Dateiausschnitte zusammensetzt, mit Löchern umgehen können.
+
+Überschneidungsfrei ist die Abdeckung dagegen nicht. Alles, was codemap nicht als Funktion
+erkennt — eine unbekannte Sprache, aber auch die Strecke zwischen zwei erkannten Funktionen —,
+zerlegt es in Blöcke von 80 Zeilen, und zwei benachbarte Blöcke überlappen sich dabei um 10
+Zeilen, damit ein Treffer an der Schnittkante nicht in zwei Hälften zerfällt. In diesem Index
+sind das 80 Blockpaare in 32 Dateien: 800 Zeilen stehen doppelt, 29 der 80 Paare allein in
+`package-lock.json`, der Rest überwiegend in langen Testdateien.
 
 ## 11. Warum ast-grep ohne Index auskommt
 
@@ -556,8 +814,8 @@ Vorbereitung. Der Grund ist nicht, dass es cleverer wäre — es beantwortet ein
 
 | | codemap | ast-grep |
 | --- | --- | --- |
-| Frage | „Wo ist das Thema X relevant?" | „Wo steht genau dieses Muster?" |
-| Antwort | eine Rangliste | eine vollständige Fundliste, ungeordnet |
+| Frage | „Wo ist das Thema X relevant?“ | „Wo steht genau dieses Muster?“ |
+| Antwort | eine Rangfolge | eine vollständige Fundliste, ungeordnet |
 | Eingabe | ein paar Suchwörter | ein Codemuster mit Platzhaltern |
 | Vorbereitung | Index nötig | keine |
 
@@ -567,7 +825,7 @@ Es liest bei jedem Aufruf die Dateien frisch ein, baut daraus einen Syntaxbaum i
 und vergleicht das Muster gegen die Knoten dieses Baums. Danach wird der Baum weggeworfen.
 
 Das Muster ist selbst schon die vollständige Frage. `openRepoDb($$$)` heißt: „ein Aufruf von
-`openRepoDb`, mit beliebigen Argumenten". Die Antwort ist binär — es passt oder es passt nicht.
+`openRepoDb`, mit beliebigen Argumenten“. Die Antwort ist binär — es passt oder es passt nicht.
 Es gibt nichts zu bewerten und keine Rangfolge.
 
 ### Warum ein Index nichts brächte
@@ -597,7 +855,7 @@ export function openRepoDb(dbPath: string): DatabaseSync {
 ```
 
 Das ist kein Aufruf, sondern die **Definition**. `grep` kann das nicht unterscheiden, weil es nur
-Text sieht: die Zeichenkette `openRepoDb(` steht da nun einmal. `ast-grep` unterscheidet es, weil
+Text sieht: Die Zeichenkette `openRepoDb(` steht da nun einmal. `ast-grep` unterscheidet es, weil
 es im Syntaxbaum den Unterschied zwischen einem Funktionsaufruf und einer Funktionsdeklaration
 kennt.
 
@@ -616,8 +874,48 @@ sauber zu fassen — und genau da gehört `ast-grep` hin.
 
 ## 12. Wo man selbst nachsehen kann
 
+### Was `codemap status` sagt
+
+`codemap status` beantwortet drei Fragen auf einmal: ob dieses Repo freigegeben ist, was im Index
+steht und ob er noch passt.
+
+```bash
+codemap status          # kurze Fassung
+codemap status --json   # alle Felder
+codemap status --full   # prüft zusätzlich jede Datei per Prüfsumme
+```
+
+Die tragenden Felder der JSON-Ausgabe: `dbPath` nennt die Datenbankdatei, `files`, `chunks` und
+`symbols` deren Inhalt, `lastIndexedAt` den Zeitpunkt des letzten Laufs. `indexedHead` und
+`currentHead` sind die beiden Git-Commits, deren Vergleich die stale-Meldung auslöst, und
+`changed`, `missing`, `deleted` bleiben ohne `--full` auf 0 — sie werden nur bei der teuren
+Prüfung gefüllt.
+
+### Wann der Index veraltet
+
+Jede Ausgabe endet mit einem Hinweis, sobald der Index nicht mehr nachweislich zum
+Arbeitsverzeichnis passt:
+
+```
+(!) index is stale for this query; run 'codemap index' to refresh
+```
+
+Wie streng geprüft wird, hängt vom Befehl ab. `codemap search` vergleicht nur den aktuellen
+Git-Commit mit dem, auf dem der Index gebaut wurde — das kostet nichts. `codemap context` und
+`codemap status --full` lesen dagegen jede Datei und vergleichen Prüfsummen; sie melden dann
+auch, wie viele Dateien geändert, neu oder gelöscht sind.
+
+Deshalb kann der Hinweis erscheinen, obwohl inhaltlich nichts fehlt. Genau das ist beim Schreiben
+dieses Dokuments der Fall: Der Index steht auf Commit 945ca32, das Repo auf cfca041, und
+dazwischen liegen nur geänderte Dokumentationsdateien. „Stale“ heißt also nicht „falsch“, sondern
+„nicht nachweislich aktuell“. Ein erneutes `codemap index` dauert an diesem Repo 0,08 s, wenn
+sich nichts geändert hat — im Zweifel ist es billiger, es laufen zu lassen, als darüber
+nachzudenken.
+
+### In die Datenbank sehen
+
 Die Datenbank ist eine gewöhnliche SQLite-Datei und lässt sich direkt öffnen. Den Pfad nennt das
-Feld `dbPath` der Statusausgabe (Abschnitt 1 zu den zwei möglichen Orten):
+Feld `dbPath` der Statusausgabe (Abschnitt 1 zu den möglichen Orten):
 
 ```bash
 codemap status --json
@@ -627,7 +925,7 @@ codemap status --json
 sqlite3 "$(codemap status --json | python3 -c 'import sys,json; print(json.load(sys.stdin)["dbPath"])')" "select path, start_line, end_line from chunks join files on files.id = chunks.file_id limit 10"
 ```
 
-Die Wortliste des Volltextindex ist nicht direkt lesbar. Sichtbar wird sie über eine
+Der Wortschatz des Volltextindex ist nicht direkt lesbar. Sichtbar wird er über eine
 Hilfstabelle, die aber in derselben Datei angelegt werden muss — also auf einer Kopie arbeiten,
 nicht auf dem Index selbst. So sind die Zahlen aus Abschnitt 5 entstanden:
 
@@ -637,8 +935,13 @@ cp "$DB" /tmp/index-kopie.sqlite && sqlite3 /tmp/index-kopie.sqlite "create virt
 
 ## 13. Offene Punkte
 
-- Die Zahlenwerte in Abschnitt 7 sind aus dem Code abgelesen und an einem Beispiel nachgerechnet,
-  aber nicht hergeleitet. Warum eine exakte Symbolübereinstimmung 28 Punkte wert ist und nicht 20
-  oder 40, steht nirgends — die Werte wurden über Evals eingestellt, nicht berechnet.
-- `codemap context` ist nur so weit beschrieben, wie der Importgraph reicht. Wie die Leseliste
-  zusammengestellt und ihr Umfang begrenzt wird, fehlt.
+- Alle Zahlen hängen am Indexstand von Commit 945ca32. Ein neuer `codemap index`-Lauf verschiebt
+  mindestens die 1.866 Chunks, die 1.393 Symbole und die 550 leeren Chunks — allein dieses
+  Dokument ist seither von 381 auf über 900 Zeilen gewachsen. Vor der Abnahme neu messen und
+  Datum und Commit im Kopf nachziehen.
+- Die Punktwerte der Rangfolge sind in ihrer Herkunft belegt (Abschnitt 7), in ihrer Höhe aber
+  weiterhin unbegründet: Keine der vorhandenen Messreihen ändert ihr Ergebnis, wenn man sie
+  verstellt. Solange das so bleibt, sind sie geerbte Setzungen und keine Erkenntnisse.
+- Abschnitt 8 trägt inzwischen zwei Themen: den Importgraphen und das Verhalten von
+  `codemap context`. Ob die Leseliste einen eigenen Abschnitt bekommt — mit Umnummerierung der
+  folgenden —, ist eine offene redaktionelle Entscheidung.
