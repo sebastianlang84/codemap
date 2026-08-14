@@ -11,7 +11,7 @@ Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst b
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) ist ein Entwurf,
 **nicht** abgenommen. Es erklärt Indexaufbau, Tabellen, Volltextindex, Rangfolge, Importgraph und
 den Vergleich mit `ast-grep` für Leser ohne Vorwissen. Alle Zahlen darin sind am Repo selbst
-gemessen (Stand 2026-08-06, Commit 945ca32).
+gemessen (Stand 2026-08-14, Commit cf4f501; Laufzeiten und Umschlagpunkt-Tabelle vom 2026-08-06).
 
 Bewusste Abweichung von der English-only-Konvention für Dokumentation: der Text richtet sich an
 den Eigentümer als Leser, nicht an Mitwirkende. Die technische Referenz bleibt
@@ -38,8 +38,8 @@ gegenüber `grep` (Abschnitt 9), die Herkunft der Punktwerte und die Zusammenste
 Leseliste von `codemap context` sind inzwischen behandelt.
 
 **Prüfrunde 2026-08-14** (sechs Prüf-Lenses, jeder Befund einzeln gegengeprüft): 100 Befunde,
-davon 32 verworfen. Eingearbeitet sind unter anderem drei falsche Messwerte (Datenbankgröße
-3,4 → 2,7 MB, Volltextindex 624 → 620 KiB, Zerlegung der 95 ms), fünf falsch erklärte
+davon 32 verworfen. Eingearbeitet sind unter anderem drei falsche Messwerte (Datenbankgröße,
+Größe des Volltextindex, Zerlegung der 95 ms), fünf falsch erklärte
 Ranking-Regeln (`basename_term`, Wortabdeckung, zweitbester Treffer, die drei „dito"-Abzüge,
 vertauschte Abfragestufen 16/12), die widerlegte Zusicherung „jede Zeile liegt in genau einem
 Chunk" (der Fixed-Chunker überlappt um 10 Zeilen), fehlende Ausschlussregeln des Scanners sowie
