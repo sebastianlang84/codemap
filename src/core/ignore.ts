@@ -66,14 +66,33 @@ function matchPatterns(relPath: string, name: string, patterns: string[]): boole
 }
 
 function patternMatches(relPath: string, name: string, rawPattern: string): boolean {
-  const pattern = rawPattern.replace(/^\//, "");
+  let pattern = rawPattern.replace(/^\//, "");
   if (!pattern) return false;
-  if (pattern.endsWith("/")) return relPath === pattern.slice(0, -1) || relPath.startsWith(pattern);
+  const directoryOnly = pattern.endsWith("/");
+  if (directoryOnly) pattern = pattern.slice(0, -1);
+  const candidates = directoryOnly ? pathPrefixes(relPath) : [relPath];
   if (/[*?]/.test(pattern)) {
     const rx = globToRegExp(pattern);
-    return rx.test(relPath) || rx.test(name);
+    if (candidates.some((candidate) => rx.test(candidate))) return true;
+    if (!pattern.includes("/")) {
+      const names = directoryOnly
+        ? candidates.map((candidate) => candidate.slice(candidate.lastIndexOf("/") + 1))
+        : [name];
+      return names.some((candidate) => rx.test(candidate));
+    }
+    return false;
+  }
+  if (directoryOnly) {
+    return pattern.includes("/")
+      ? candidates.includes(pattern)
+      : relPath.split("/").includes(pattern);
   }
   return relPath === pattern || relPath.startsWith(pattern + "/") || name === pattern;
+}
+
+function pathPrefixes(relPath: string): string[] {
+  const parts = relPath.split("/");
+  return parts.map((_, index) => parts.slice(0, index + 1).join("/"));
 }
 
 // Translate a gitignore glob to an anchored RegExp. `*`/`?` do not cross `/` (unlike the previous
@@ -83,7 +102,11 @@ function globToRegExp(glob: string): RegExp {
   for (let i = 0; i < glob.length; i++) {
     const char = glob[i];
     if (char === "*") {
-      if (glob[i + 1] === "*") { source += ".*"; i++; }
+      if (glob[i + 1] === "*" && glob[i + 2] === "/") {
+        source += "(?:.*/)?";
+        i += 2;
+      }
+      else if (glob[i + 1] === "*") { source += ".*"; i++; }
       else source += "[^/]*";
     } else if (char === "?") {
       source += "[^/]";

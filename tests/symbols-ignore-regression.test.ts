@@ -35,3 +35,22 @@ test("gitignore negations re-include files and * does not cross /", (t) => {
   assert.equal(shouldSkip("logs/out.txt", false, rules), ".gitignore", "logs/* matches a direct child");
   assert.equal(shouldSkip("logs/sub/out.txt", false, rules), undefined, "* in logs/* does not cross a slash");
 });
+
+test("gitignore directory globs exclude generated trees at every depth", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "pi-codemap-ignore-dir-glob-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeFileSync(join(dir, ".gitignore"), "**/*.egg-info/\n*.cache-dir/\n");
+  const rules = loadIgnoreRules(dir);
+
+  assert.equal(shouldSkip("package.egg-info", true, rules), ".gitignore");
+  assert.equal(shouldSkip("services/package.egg-info", true, rules), ".gitignore");
+  assert.equal(
+    shouldSkip("services/package.egg-info/SOURCES.txt", false, rules),
+    ".gitignore",
+  );
+  assert.equal(shouldSkip("services/package.cache-dir", true, rules), ".gitignore");
+  assert.equal(
+    shouldSkip("services/package.cache-dir/metadata.json", false, rules),
+    ".gitignore",
+  );
+});
