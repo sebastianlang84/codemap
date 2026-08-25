@@ -56,7 +56,7 @@ Near-term improvement priorities:
 3. **Improve structural extraction pragmatically**: revisit optional `ast-grep`/Tree-sitter-style extraction for imports, exports, route declarations, and test-subject detection only with a concrete eval miss; the first symbol-indexing prototype was removed after it failed the keep rule.
 4. **Keep semantic/vector retrieval optional**: embeddings may help vague vocabulary mismatch, but exact path/symbol, lexical FTS, and deterministic relationships must remain the default and fallback.
 5. **Expose only proven surfaces**: prefer internal eval utilities and docs over new prompt-facing tools/parameters until a measured miss requires an API change.
-6. **Connect navigation to product outcomes**: add a bounded end-to-end agent-task replay that measures successful patches/tests and CodeMap use, rather than treating file-navigation success as the final outcome.
+6. **Connect navigation to product outcomes**: the bounded end-to-end replay now measures hidden-test success, CodeMap use, tokens, cost, time, and changed paths. Its two-task smoke validates the harness but shows no product effect; next run a frozen 12-task development pilot, then a fresh untouched holdout before any generalization claim. See [`agent-impact-eval.md`](../developer/agent-impact-eval.md).
 
 Main known weakness: quality depends on parser/import recognition, test conventions, and eval coverage. For large polyglot repos, the next durable lever is better structural extraction under the same local/no-daemon/no-mandatory-model constraints, not a broad knowledge graph.
 

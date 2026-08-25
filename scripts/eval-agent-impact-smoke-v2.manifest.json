@@ -1,0 +1,102 @@
+{
+  "$comment": "Development-only smoke corpus selected from the already-inspected external v1 set. It validates the replay harness and must never be described as untouched product-effect evidence.",
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-harness-smoke-v2",
+    "version": 2,
+    "frozenAt": "2026-08-26",
+    "purpose": "harness-smoke",
+    "selectionProtocol": "Two existing JavaScript PR cases with source plus upstream regression-test changes, one per repository. Selected for executable oracle coverage before any agent run, not for a favorable CodeMap navigation result. Dependency installs are not lock-frozen and therefore permitted only for this harness smoke, never a product-effect pilot.",
+    "orderSeed": 826
+  },
+  "agent": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "medium",
+    "maxBudgetUsdPerRun": 2,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "94d361641a7be333c7b9fac872c6df16a221fb14",
+    "expectedVersion": "0.10.0"
+  },
+  "repositories": [
+    {
+      "id": "express",
+      "remote": "https://github.com/expressjs/express.git"
+    },
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "express-pr-7181",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/7181",
+      "prompt": "fix: restore array parsing for req.query repeated keys (#7147)",
+      "baseCommit": "d39e8ad1778a0b8a606a5a7b17096d0cc5ec722d",
+      "fixCommit": "8d09bfe6d88983da5c3e12cfdd54782c4dc675db",
+      "expectedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "hiddenTestPaths": [
+        "test/req.query.js"
+      ],
+      "expectedBaseFailure": "should parse more than 20 repeated values as an array",
+      "forbiddenChangePaths": [
+        "History.md",
+        "package.json",
+        "package-lock.json"
+      ],
+      "setup": {
+        "file": "npm",
+        "args": ["install", "--no-package-lock", "--ignore-scripts", "--no-audit", "--no-fund"],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": ["--require", "test/support/env", "--reporter", "dot", "--bail", "--check-leaks", "test/req.query.js"],
+        "timeoutMs": 120000
+      }
+    },
+    {
+      "id": "fastify-pr-6942",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6942",
+      "prompt": "fix(content-type): return undefined for invalid media types",
+      "baseCommit": "eaff726a68c629c1aedc99f96b3c4b95dfdb38d1",
+      "fixCommit": "15c2fb1933461f846a6160923a2bc4e091039826",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "hiddenTestPaths": [
+        "test/content-type.test.js"
+      ],
+      "expectedBaseFailure": "returns empty instance for empty value",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setup": {
+        "file": "npm",
+        "args": ["install", "--no-package-lock", "--ignore-scripts", "--no-audit", "--no-fund"],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": ["--test", "test/content-type.test.js"],
+        "timeoutMs": 120000
+      }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 2,
+    "minTreatmentAdoptionRate": 1,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  }
+}

@@ -1,0 +1,251 @@
+{
+  "agent": {
+    "claudeCodeVersion": "2.1.245 (Claude Code)",
+    "effort": "medium",
+    "isolationConfigSha256": "25133e526efa94007d54100b693afbe47f683043b2a8682133475a3aff72e16f",
+    "maxBudgetUsdPerRun": 2,
+    "provider": "claude-code",
+    "requestedModel": "opus"
+  },
+  "claimBoundary": "Validates runner, isolation, oracle, adoption, and cost capture only; it is not product-effect evidence.",
+  "codemapProfile": {
+    "expectedVersion": "0.10.0",
+    "gitCommit": "94d361641a7be333c7b9fac872c6df16a221fb14"
+  },
+  "corpus": {
+    "frozenAt": "2026-08-26",
+    "id": "agent-impact-harness-smoke-v2",
+    "orderSeed": 826,
+    "purpose": "harness-smoke",
+    "selectionProtocol": "Two existing JavaScript PR cases with source plus upstream regression-test changes, one per repository. Selected for executable oracle coverage before any agent run, not for a favorable CodeMap navigation result. Dependency installs are not lock-frozen and therefore permitted only for this harness smoke, never a product-effect pilot.",
+    "version": 2
+  },
+  "gate": {
+    "issues": [
+      {
+        "actual": 0,
+        "expected": ">= 1",
+        "metric": "treatmentAdoptionRate"
+      }
+    ],
+    "passed": false
+  },
+  "manifestSha256": "ad98383dff18f1bdc604a0f2c77d45564c95439436fcac1944ce563fae6d3310",
+  "oracles": [
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "express-pr-7181",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6942",
+      "valid": true
+    }
+  ],
+  "plannedRuns": 4,
+  "results": [
+    {
+      "addedLines": 164,
+      "agentDurationMs": 205956,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "express",
+      "runOrder": 1,
+      "success": true,
+      "taskId": "express-pr-7181",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 28189,
+        "cacheReadInputTokens": 489164,
+        "costUsd": 0.8756370000000001,
+        "inputTokens": 58,
+        "isError": false,
+        "outputTokens": 13955,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 24,
+          "Edit": 3,
+          "Read": 1
+        },
+        "turns": 29
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 129,
+      "agentDurationMs": 223614,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/middleware/query.js",
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "codemapCommands": {
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 221,
+      "mode": "codemap",
+      "repo": "express",
+      "runOrder": 2,
+      "success": true,
+      "taskId": "express-pr-7181",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 34803,
+        "cacheReadInputTokens": 651174,
+        "costUsd": 1.0394619999999999,
+        "inputTokens": 64,
+        "isError": false,
+        "outputTokens": 14621,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 26,
+          "Edit": 4,
+          "Read": 1
+        },
+        "turns": 32
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 74,
+      "agentDurationMs": 184946,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "docs/Reference/Reply.md",
+        "docs/Reference/Request.md",
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js",
+        "test/reply-media-type.test.js",
+        "test/request-media-type.test.js"
+      ],
+      "codemapCommands": {
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 4,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 534,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 3,
+      "success": true,
+      "taskId": "fastify-pr-6942",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 26717,
+        "cacheReadInputTokens": 524751,
+        "costUsd": 0.7033405,
+        "inputTokens": 54,
+        "isError": false,
+        "outputTokens": 6941,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 24,
+          "Edit": 3
+        },
+        "turns": 28
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 64,
+      "agentDurationMs": 158147,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/content-type.js",
+        "lib/reply.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js",
+        "test/reply-media-type.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 4,
+      "success": true,
+      "taskId": "fastify-pr-6942",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 21363,
+        "cacheReadInputTokens": 396469,
+        "costUsd": 0.5334895,
+        "inputTokens": 50,
+        "isError": false,
+        "outputTokens": 4855,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 18,
+          "Edit": 4,
+          "Grep": 1,
+          "Read": 2
+        },
+        "turns": 26
+      },
+      "verifierExitCode": 0
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "agentDurationRatio": 1.1221,
+    "baselineSuccessRate": 1,
+    "budgetExhaustedRuns": 0,
+    "crossArmContamination": 0,
+    "exactTwoSidedP": 1,
+    "losingTasks": [],
+    "losses": 0,
+    "tasks": 2,
+    "ties": 2,
+    "tokenRatio": 1.3197,
+    "totalCostUsd": 3.1519,
+    "treatmentAdoptionRate": 0,
+    "treatmentSuccessRate": 1,
+    "validPairs": 2,
+    "wins": 0
+  },
+  "worstCaseBudgetUsd": 8
+}

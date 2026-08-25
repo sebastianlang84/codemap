@@ -4,7 +4,17 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 ## Nächster Slice
 
-Kein aktiver Implementierungsslice. Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik, keine breite Heuristik ohne messbaren Context-Gewinn.
+Ein 12-Task-Development-Pilot für den neuen End-to-End-Agenten-Replay ist der nächste Slice. Vor
+dem ersten Agentenlauf werden Task-Auswahl, vollständige Commits, benannte Hidden-Test-Oracles,
+gegenbalancierte Reihenfolge und Gesamtbudget eingefroren. Dependency-Trees müssen lock-frozen
+sein; der Zwei-Task-Smoke mit `npm install --no-package-lock` belegt nur den Harness. Der Pilot
+entscheidet über Adoption, Scoring, Varianz und Kosten, nicht über Produktwirkung. Erst danach darf
+ein frischer, unangetasteter Holdout von ungefähr 40 Tasks Produktwirkung prüfen. Details und die
+roten/grünen Smoke-Ergebnisse: [`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md).
+
+Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro
+Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik, keine breite Heuristik ohne
+messbaren Context-Gewinn.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
