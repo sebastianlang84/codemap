@@ -106,7 +106,7 @@ not satisfiable as written, and treating it as a universal gate was the actual d
   clone, or on any other machine — so "MUST pass before merge" made the merge condition
   unreproducible by construction.
 - Even here it cannot pass on a subset: with 2 of 5 repos present the gate reports 3 tasks
-  (needs ≥8) and 5 natural-holdout tasks (needs ≥16); the minimum-task thresholds are
+  (needs ≥8) and 5 development-regression tasks (needs ≥16); the minimum-task thresholds are
   mathematically unreachable without ~5 repos, so cloning one more repo does not fix it.
 
 **Decision:** the reproducible **fixture gates** (`bench:search-quality:gate`,

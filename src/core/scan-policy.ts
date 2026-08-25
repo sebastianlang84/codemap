@@ -14,9 +14,9 @@ export interface ScanPolicy {
   contentSkipReason(buffer: Buffer): string | undefined;
 }
 
-export function createScanPolicy(root: string): ScanPolicy {
+export function createScanPolicy(root: string, options: { discoverNestedWorktrees?: boolean } = {}): ScanPolicy {
   const rules = loadIgnoreRules(root);
-  const nestedWorktrees = new Set(listNestedWorktrees(root));
+  const nestedWorktrees = options.discoverNestedWorktrees === false ? new Set<string>() : new Set(listNestedWorktrees(root));
   return {
     entrySkipReason(relPath, isDir) {
       if (isDir && nestedWorktrees.has(relPath)) return "nested git worktree";

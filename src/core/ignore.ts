@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { escapeRegExp } from "./text-util.ts";
 
 const ignoredDirs = new Set([
@@ -21,12 +21,16 @@ const secretish = [/^\.env($|\.)/, /secret/i, /private[-_]?key/i];
 export interface IgnoreRules {
   gitignore: string[];
   codemapignore: string[];
+  root?: string;
+  nestedGitignore?: Map<string, string[]>;
 }
 
 export function loadIgnoreRules(root: string): IgnoreRules {
   return {
     gitignore: loadIgnoreFile(join(root, ".gitignore")),
     codemapignore: loadIgnoreFile(join(root, ".codemapignore")),
+    root,
+    nestedGitignore: new Map(),
   };
 }
 
@@ -46,17 +50,39 @@ export function shouldSkip(relPath: string, isDir: boolean, rules: IgnoreRules):
   if (!isDir && ignoredFiles.some((rx) => rx.test(name))) return "binary/generated extension";
   if (!isDir && secretish.some((rx) => rx.test(name) || rx.test(relPath))) return "secret-like file";
 
-  const gitignore = matchPatterns(relPath, name, rules.gitignore);
+  const gitignore = matchGitignoreFiles(relPath, name, rules);
   if (gitignore) return ".gitignore";
   const codemapignore = matchPatterns(relPath, name, rules.codemapignore);
   if (codemapignore) return ".codemapignore";
   return undefined;
 }
 
+function matchGitignoreFiles(relPath: string, name: string, rules: IgnoreRules): boolean {
+  let ignored = matchPatterns(relPath, name, rules.gitignore);
+  if (!rules.root || !rules.nestedGitignore) return ignored;
+
+  const parent = dirname(relPath).replace(/^\.$/, "");
+  if (!parent) return ignored;
+  const parts = parent.split("/");
+  for (let index = 0; index < parts.length; index++) {
+    const base = parts.slice(0, index + 1).join("/");
+    let patterns = rules.nestedGitignore.get(base);
+    if (!patterns) {
+      patterns = loadIgnoreFile(join(rules.root, base, ".gitignore"));
+      rules.nestedGitignore.set(base, patterns);
+    }
+    if (patterns.length === 0) continue;
+    const localPath = relPath.slice(base.length + 1);
+    const localName = localPath.slice(localPath.lastIndexOf("/") + 1);
+    ignored = matchPatterns(localPath, localName, patterns, ignored);
+  }
+  return ignored;
+}
+
 // Evaluate ignore rules with gitignore-style last-match-wins semantics: a later `!pattern` line can
 // re-include a path that an earlier pattern ignored.
-function matchPatterns(relPath: string, name: string, patterns: string[]): boolean {
-  let ignored = false;
+function matchPatterns(relPath: string, name: string, patterns: string[], initial = false): boolean {
+  let ignored = initial;
   for (const raw of patterns) {
     const negated = raw.startsWith("!");
     const body = negated ? raw.slice(1) : raw;

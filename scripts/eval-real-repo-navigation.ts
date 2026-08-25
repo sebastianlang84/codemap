@@ -29,7 +29,7 @@ import {
   type SearchCandidateSelectionDiagnostic,
 } from "../src/core/navigation-eval.ts";
 
-type TaskCohort = "baseline" | "natural_holdout";
+type TaskCohort = "baseline" | "development_regression";
 
 interface RealRepoTask {
   name: string;
@@ -142,7 +142,7 @@ interface ParsedArgs {
 }
 
 const modes: NavigationMode[] = ["lexical", "codemap_search", "codemap_search_context"];
-const taskCohorts: TaskCohort[] = ["baseline", "natural_holdout"];
+const taskCohorts: TaskCohort[] = ["baseline", "development_regression"];
 // Real-repo suites live in a checked-in data module (home-relative roots), not inline machine paths.
 const defaultSuites: RealRepoSuite[] = loadSuites();
 
@@ -195,13 +195,13 @@ function parseArgs(args: string[]): ParsedArgs {
     } else if (name === "--min-tasks") {
       minTasks = parsePositiveInteger(name, value);
       if (inlineValue === undefined) i++;
-    } else if (name === "--min-natural-holdout-tasks") {
+    } else if (name === "--min-development-regression-tasks" || name === "--min-natural-holdout-tasks") {
       minNaturalHoldoutTasks = parsePositiveInteger(name, value);
       if (inlineValue === undefined) i++;
-    } else if (name === "--min-natural-holdout-expected-recall") {
+    } else if (name === "--min-development-regression-expected-recall" || name === "--min-natural-holdout-expected-recall") {
       minNaturalHoldoutExpectedRecall = parseNonNegativeNumber(name, value);
       if (inlineValue === undefined) i++;
-    } else if (name === "--min-natural-holdout-context-recall") {
+    } else if (name === "--min-development-regression-context-recall" || name === "--min-natural-holdout-context-recall") {
       minNaturalHoldoutContextRecall = parseNonNegativeNumber(name, value);
       if (inlineValue === undefined) i++;
     } else if (name === "--min-success-delta-vs-lexical") {
@@ -273,7 +273,7 @@ function runSuite(suite: RealRepoSuite, options: ParsedArgs, stateDir: string): 
   const taskCounts = taskCohorts.reduce<Record<TaskCohort, number>>((counts, cohort) => {
     counts[cohort] = suite.tasks.filter((task) => (task.cohort ?? "baseline") === cohort).length;
     return counts;
-  }, { baseline: 0, natural_holdout: 0 });
+  }, { baseline: 0, development_regression: 0 });
   if (!existsSync(suite.root)) return { label: suite.label, root: suite.root, skipped: "missing repo", taskCounts, modes: [], cases: [], missTaxonomy: summarizeMissTaxonomy([]) };
   const indexed = indexRepo({ cwd: suite.root, approve: true, stateDir });
   const currentStatus = indexStatus(suite.root, { stateDir, health: "full" });
@@ -459,13 +459,13 @@ function evaluateGate(report: EvalReport, options: ParsedArgs): { passed: boolea
   const paired = pairedContextVsSearch(report.repos.flatMap((repo) => repo.cases));
   if (available.length === 0) return { passed: issues.length === 0, paired, issues, warnings };
   const baseline = cohortMetric(report, "baseline");
-  const naturalHoldout = cohortMetric(report, "natural_holdout");
+  const naturalHoldout = cohortMetric(report, "development_regression");
   const searchContext = metric(baseline.modes, "codemap_search_context");
   const lexical = metric(baseline.modes, "lexical");
   const search = metric(baseline.modes, "codemap_search");
   const successDelta = searchContext.successRate - lexical.successRate;
   const availableBaselineTasks = available.reduce((total, repo) => total + repo.taskCounts.baseline, 0);
-  const availableHoldoutTasks = available.reduce((total, repo) => total + repo.taskCounts.natural_holdout, 0);
+  const availableHoldoutTasks = available.reduce((total, repo) => total + repo.taskCounts.development_regression, 0);
   const fullTaskCount = defaultSuites.reduce((total, suite) => total + suite.tasks.length, 0);
   const availableTaskCount = availableBaselineTasks + availableHoldoutTasks;
   const fullCohortAvailable = availableTaskCount >= fullTaskCount;
@@ -486,10 +486,10 @@ function evaluateGate(report: EvalReport, options: ParsedArgs): { passed: boolea
   if (searchContext.forbiddenReadRate > 0) issues.push({ label: searchContext.mode, metric: "forbiddenReadRate", expected: "0", actual: searchContext.forbiddenReadRate });
   if (searchContext.p95LatencyMs > options.maxP95LatencyMs) issues.push({ label: searchContext.mode, metric: "p95LatencyMs", expected: `<= ${options.maxP95LatencyMs}`, actual: searchContext.p95LatencyMs });
   const holdoutSearchContext = metric(naturalHoldout.modes, "codemap_search_context");
-  if (holdoutSearchContext.tasks < effectiveMinHoldoutTasks) issues.push({ label: "natural_holdout", metric: "tasks", expected: `>= ${effectiveMinHoldoutTasks}`, actual: holdoutSearchContext.tasks });
-  if (holdoutSearchContext.avgExpectedRecall < options.minNaturalHoldoutExpectedRecall) issues.push({ label: "natural_holdout", metric: "avgExpectedRecall", expected: `>= ${options.minNaturalHoldoutExpectedRecall}`, actual: holdoutSearchContext.avgExpectedRecall });
-  if (holdoutSearchContext.avgContextRecall < options.minNaturalHoldoutContextRecall) issues.push({ label: "natural_holdout", metric: "avgContextRecall", expected: `>= ${options.minNaturalHoldoutContextRecall}`, actual: holdoutSearchContext.avgContextRecall });
-  if (holdoutSearchContext.forbiddenReadRate > 0) issues.push({ label: "natural_holdout", metric: "forbiddenReadRate", expected: "0", actual: holdoutSearchContext.forbiddenReadRate });
+  if (holdoutSearchContext.tasks < effectiveMinHoldoutTasks) issues.push({ label: "development_regression", metric: "tasks", expected: `>= ${effectiveMinHoldoutTasks}`, actual: holdoutSearchContext.tasks });
+  if (holdoutSearchContext.avgExpectedRecall < options.minNaturalHoldoutExpectedRecall) issues.push({ label: "development_regression", metric: "avgExpectedRecall", expected: `>= ${options.minNaturalHoldoutExpectedRecall}`, actual: holdoutSearchContext.avgExpectedRecall });
+  if (holdoutSearchContext.avgContextRecall < options.minNaturalHoldoutContextRecall) issues.push({ label: "development_regression", metric: "avgContextRecall", expected: `>= ${options.minNaturalHoldoutContextRecall}`, actual: holdoutSearchContext.avgContextRecall });
+  if (holdoutSearchContext.forbiddenReadRate > 0) issues.push({ label: "development_regression", metric: "forbiddenReadRate", expected: "0", actual: holdoutSearchContext.forbiddenReadRate });
   return { passed: issues.length === 0, paired, issues, warnings };
 }
 

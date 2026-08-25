@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Check, Errors } from "typebox/value";
 
-import { codeMapOperationMetadata, type CodeMapOperationId } from "../application/operation-metadata.ts";
+import { codeMapMcpInstructions, codeMapOperationMetadata, type CodeMapOperationId } from "../application/operation-metadata.ts";
 import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.ts";
 
 // Minimal Model Context Protocol server exposing the same codemap_* tools as the Pi extension to
@@ -15,9 +15,6 @@ import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../a
 // batching (removed in 2025-06-18).
 const PROTOCOL_VERSION = "2025-11-25";
 const SUPPORTED_PROTOCOL_VERSIONS = new Set(["2025-11-25", "2025-06-18"]);
-
-const INSTRUCTIONS =
-  "Use these tools to navigate code in this repo. codemap_search ranks files/symbols/chunks — start there when the target file/symbol is unknown or the query is conceptual; for exhaustive matches of a known literal or regex, grep/rg is the right tool. If a search result is missing, re-query or raise limit before anything else. codemap_context lists read-first neighbors (tests/docs/imports) of a known target — use it as a follow-up on a file you already trust, passing an exact path or symbol, not a broad query; do not point it at an uncertain top search hit, as it expands whatever it lands on. codemap_status checks index readiness. Run codemap_index to build/refresh; the first index needs approveRepo=true and only after the user approves local indexing. Staleness is advisory. If your host lists these tools without preloading their schemas (deferred tools), load all four before the first call.";
 
 export interface JsonRpcRequest {
   jsonrpc?: string;
@@ -176,7 +173,7 @@ function summarize(name: string, value: unknown): string {
       const tail: string[] = [];
       if (Array.isArray(value.relatedTests) && value.relatedTests.length > 0) tail.push(`tests: ${value.relatedTests.join(", ")}`);
       if (Array.isArray(value.relatedDocs) && value.relatedDocs.length > 0) tail.push(`docs: ${value.relatedDocs.join(", ")}`);
-      return [rows.join("\n") || "No read-first items", ...tail].join("\n") + staleSuffix(value);
+      return [...warningLines(value), rows.join("\n") || "No read-first items", ...tail].join("\n") + staleSuffix(value);
     }
     default:
       return JSON.stringify(value, null, 2);
@@ -202,7 +199,7 @@ export function dispatch(request: JsonRpcRequest, io: { cwd?: string } = {}): Js
         protocolVersion: typeof requested === "string" && SUPPORTED_PROTOCOL_VERSIONS.has(requested) ? requested : PROTOCOL_VERSION,
         capabilities: { tools: {} },
         serverInfo: { name: "codemap", version: serverVersion(), description: "Local SQLite/FTS repo map: ranked code/doc/config search and read-first context." },
-        instructions: INSTRUCTIONS,
+        instructions: codeMapMcpInstructions,
       });
     }
     case "ping":

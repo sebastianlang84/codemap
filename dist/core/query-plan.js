@@ -1,20 +1,7 @@
 import { uniqueStrings } from "./text-util.js";
-// --- Eval-tuned lexicon -------------------------------------------------------------------------
-// The tables below were derived from specific navigation/search eval cases, not from general
-// language rules. They are intentionally isolated here (rather than inlined into the planning logic)
-// with provenance so they are revisited deliberately as the holdout set grows, per TODO §"Query-/
-// Threshold-Änderung als Ersatz für Systemverbesserung". Prefer a general mechanism over adding rows.
-// Compounds that should be treated as a single identifier when two adjacent terms are joined
-// (e.g. "local storage" -> "localstorage"). See adjacentCompounds().
-// Exported only for the lexicon-ratchet test (tests/search-ranking.test.ts), which fails if this grows
-// so a new row forces the general-mechanism/ADR decision instead of silent fixture-fitting.
+// Narrow language-normalization exception: JS exposes localStorage as one FTS token while natural
+// queries commonly spell it as two words. Keep this set bounded; prefer general mechanisms first.
 export const knownIdentifierCompounds = new Set(["localstorage"]);
-// Query term -> extra basename path terms to look for. Seeded from the "preload" navigation case,
-// where the relevant module is named "retrieval". Consumed by basenameTermCandidates in search-pipeline.
-// Exported for the same lexicon-ratchet test as knownIdentifierCompounds.
-export const evalTunedPathTerms = new Map([
-    ["preload", ["retrieval"]],
-]);
 export function planQuery(query) {
     const raw = query.trim();
     const phrases = [...raw.matchAll(/"([^"]+)"/g)].map((match) => match[1].trim()).filter(Boolean);
@@ -29,7 +16,7 @@ export function planQuery(query) {
     const pathNeedle = raw.replace(/^"|"$/g, "");
     const codeIntent = coreTerms.some((term) => codeIntentTerms.has(term));
     const roleIntents = inferRoleIntents(normalized, coreTerms);
-    const pathTerms = inferPathTerms(coreTerms);
+    const pathTerms = [];
     const endpointPathTerms = inferEndpointPathTerms(expandedTerms);
     const quotedPhrases = phrases.map(quoteFtsPhrase);
     const quotedTerms = terms.map(quoteFtsPhrase);
@@ -38,12 +25,10 @@ export function planQuery(query) {
     const broadTerms = terms.length > 1 ? expandedTerms : terms.map((term) => term.toLowerCase());
     const prefixTerms = broadTerms.map(toPrefixTerm).filter(Boolean);
     const tiered = phrases.length > 0 || expandedTerms.length > 1;
-    const scopePairQuery = coreTerms.includes("session") && coreTerms.includes("repo") ? `${quoteFtsPhrase("session")} ${quoteFtsPhrase("repo")}` : "";
     const ftsQueries = uniqueFtsQueries([
         ...quotedPhrases.map((query) => ({ query, tierBoost: tiered ? 24 : 0 })),
         { query: quotedTerms.join(" "), tierBoost: tiered ? 18 : 0 },
         { query: quotedCoreTerms.join(" "), tierBoost: tiered ? 16 : 0 },
-        ...(scopePairQuery ? [{ query: scopePairQuery, tierBoost: tiered ? 14 : 0 }] : []),
         { query: quotedExpandedTerms.join(" "), tierBoost: tiered ? 12 : 0 },
         { query: prefixTerms.join(" OR "), tierBoost: tiered ? 8 : 0 },
         { query: broadTerms.map(quoteFtsPhrase).join(" OR "), tierBoost: 0 },
@@ -96,9 +81,6 @@ function inferRoleIntents(normalized, terms) {
         intents.push("dependencies");
     return uniqueStrings(intents);
 }
-function inferPathTerms(terms) {
-    return uniqueStrings(terms.flatMap((term) => evalTunedPathTerms.get(term) ?? []));
-}
 function inferEndpointPathTerms(terms) {
     const endpointTerms = [];
     for (let index = 0; index < terms.length; index++) {
@@ -121,10 +103,6 @@ function expandTerms(terms, compoundSourceTerms = terms) {
                 expanded.push(normalized);
         }
     }
-    const lowered = new Set(expanded.map((term) => term.toLowerCase()));
-    // Eval-tuned: "session" + "repo" queries target scope-resolution code (see eval-tuned lexicon note).
-    if (lowered.has("session") && lowered.has("repo"))
-        expanded.push("scope");
     for (const compound of adjacentCompounds(compoundSourceTerms))
         expanded.push(compound);
     return uniqueStrings(expanded).slice(0, 16);

@@ -49,7 +49,7 @@ CodeMap's intended sweet spot is narrower than a full AI IDE or code-search serv
 
 Near-term improvement priorities:
 
-1. **Make the current lightweight workflow honest and strong**: keep search/context evals, preserve visible search hits in scripted read plans, and expand the natural-language holdout before claiming broad bug-report navigation.
+1. **Make the current lightweight workflow honest and strong**: keep search/context evals, preserve visible search hits in scripted read plans, and add an externally versioned unseen holdout before claiming broad bug-report navigation.
 2. **Add relationships only as measured verticals**: route↔handler, UI↔API, provider/hook↔consumer, and config-key↔usage should each get a fixture or real-repo case before any broad heuristic ships.
 3. **Improve structural extraction pragmatically**: revisit optional `ast-grep`/Tree-sitter-style extraction for imports, exports, route declarations, and test-subject detection only with a concrete eval miss; the first symbol-indexing prototype was removed after it failed the keep rule.
 4. **Keep semantic/vector retrieval optional**: embeddings may help vague vocabulary mismatch, but exact path/symbol, lexical FTS, and deterministic relationships must remain the default and fallback.

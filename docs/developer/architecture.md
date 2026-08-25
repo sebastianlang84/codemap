@@ -141,7 +141,7 @@ Default indexing is whitelist-first. The scanner should:
 
 - require explicit approval before first indexing;
 - stay inside the current or explicitly targeted Git repository boundary;
-- respect `.gitignore` and optional `.codemapignore` rules;
+- respect repository and nested `.gitignore` files plus an optional root `.codemapignore`;
 - skip symlinks;
 - skip git worktrees nested inside the repository, detected via `git worktree list --porcelain` rather than a "`.git` is a file" test, so submodules stay indexed ([ADR 20260729](../adr/20260729-nested-worktree-indexing.md));
 - skip binaries, unsupported extensions, secret-like files, generated/cache/build/dependency folders, and files larger than 1 MB;
@@ -161,11 +161,11 @@ Priority languages are TypeScript, JavaScript, C, and C++ (product scope in [`..
 | Capability | Languages |
 | --- | --- |
 | Text / FTS indexing | all whitelisted extensions (see scanner allowlist) |
-| Symbol extraction (`src/core/symbols.ts`) | TypeScript, JavaScript, Python, C, C++ (+ Markdown headings) |
+| Symbol extraction (`src/core/symbols.ts`) | TypeScript, JavaScript, Python, C, C++, Go, Rust, Java, Kotlin, Ruby, PHP (+ Markdown headings) |
 | Structured (brace/indent) chunking (`src/core/chunker.ts`) | TypeScript, JavaScript, Python |
 | Import/include relationships (`src/core/relationships.ts`) | TypeScript/JavaScript imports, Python relative imports, C/C++ quoted includes |
 
-C/C++ file extensions are normalized to canonical `c`/`cpp` language tags in `src/core/scan-policy.ts`. A language outside a given row falls back to the lighter behavior (fixed-window chunks, no symbols or relationships). Structured chunking for C/C++ is a known gap tracked in the backlog.
+C/C++ file extensions are normalized to canonical `c`/`cpp` language tags in `src/core/scan-policy.ts`. Go, Rust, Java, Kotlin, Ruby, and PHP use conservative line-based declaration extraction plus fixed-window chunks. A language outside a given row falls back to the lighter behavior.
 
 ## Search and ranking
 
@@ -192,7 +192,7 @@ Search-quality gates and diagnostics are documented in [`search-quality.md`](sea
 
 ## Context builder
 
-`codemap_context` builds a compact read-first package for an indexed file path or falls back to search results for a symbol/query.
+`codemap_context` builds a compact read-first package. Exact indexed paths/symbols expand directly. Broad queries run ranked search, expand the top target, and merge visible search evidence with graph/convention neighbors under one limit; `targetForm`, `contextTarget`, and `readPlan` make that routing explicit.
 
 For direct file targets, context can include:
 

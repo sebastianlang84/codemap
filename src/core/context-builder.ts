@@ -21,6 +21,7 @@ import {
 import { getRepoInfo, type StateOptions } from "./repo.ts";
 import { NotApprovedError } from "./errors.ts";
 import { searchCodeMap } from "./search.ts";
+import { explainSearchContextReadPlan, type ReadPlanDiagnostics } from "./navigation-read-plan.ts";
 import { normalizePathPrefix } from "./scanner.ts";
 import { escapeLike, localityScore, uniqueStrings } from "./text-util.ts";
 import type { SearchResult } from "./types.ts";
@@ -47,6 +48,8 @@ export type CodeMapReadFirstItem = (CodeMapReadFirstChunk | SearchResult) & { re
 
 export interface CodeMapContextPackage {
   target: string;
+  targetForm: "path" | "query";
+  contextTarget: string | null;
   root: string;
   pathPrefix: string;
   lastIndexedAt: string | null;
@@ -58,6 +61,7 @@ export interface CodeMapContextPackage {
   relatedTests: string[];
   relatedDocs: string[];
   warnings: string[];
+  readPlan?: ReadPlanDiagnostics;
 }
 
 interface ContextDiagnostics {
@@ -70,6 +74,10 @@ interface ContextDiagnostics {
 }
 
 export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapContextPackage {
+  return buildCodeMapContextInternal(options);
+}
+
+function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDiagnostics?: ContextDiagnostics, depth = 0): CodeMapContextPackage {
   const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
   if (!info.approved) throw new NotApprovedError();
   const db = openRepoDb(info.dbPath);
@@ -79,18 +87,45 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
     // when that content has drifted (unlike search, where path staleness is only advisory). Computed
     // on the already-open db handle + resolved repo root instead of calling status(), which would
     // re-resolve repo info and open a second db connection for the same work.
-    const counts = readIndexStatusCounts(db, request.pathPrefix);
-    const health = fullIndexHealth(db, info.root, request.pathPrefix);
-    const diagnostics: ContextDiagnostics = {
-      lastIndexedAt: counts.lastIndexedAt,
-      stale: health.stale,
-      changed: health.changed,
-      missing: health.missing,
-      deleted: health.deleted,
-      warnings: health.warnings,
-    };
+    const diagnostics: ContextDiagnostics = inheritedDiagnostics ?? (() => {
+      const counts = readIndexStatusCounts(db, request.pathPrefix);
+      const health = fullIndexHealth(db, info.root, request.pathPrefix);
+      return {
+        lastIndexedAt: counts.lastIndexedAt,
+        stale: health.stale,
+        changed: health.changed,
+        missing: health.missing,
+        deleted: health.deleted,
+        warnings: health.warnings,
+      };
+    })();
     const warnings: string[] = [...(diagnostics.warnings ?? [])];
     const readFirst = readFirstItems(db, request, warnings, options.cwd, options.stateDir);
+    if (!readFirst.direct && readFirst.items.length > 0 && depth === 0) {
+      const contextTarget = readFirst.items[0]!.path;
+      const anchored = buildCodeMapContextInternal({ ...options, target: contextTarget, limit: request.limit, pathPrefix: request.pathPrefix }, diagnostics, depth + 1);
+      const readPlan = explainSearchContextReadPlan(readFirst.items.map((item) => item.path), anchored.readFirst, request.limit);
+      const itemByPath = new Map<string, CodeMapReadFirstItem>();
+      for (const item of anchored.readFirst) if (!itemByPath.has(item.path)) itemByPath.set(item.path, item);
+      for (const item of readFirst.items) if (!itemByPath.has(item.path)) itemByPath.set(item.path, item);
+      return {
+        target: request.target,
+        targetForm: "query",
+        contextTarget,
+        root: info.root,
+        pathPrefix: request.pathPrefix,
+        lastIndexedAt: anchored.lastIndexedAt,
+        stale: anchored.stale,
+        changed: anchored.changed,
+        missing: anchored.missing,
+        deleted: anchored.deleted,
+        readFirst: readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []),
+        relatedTests: anchored.relatedTests,
+        relatedDocs: anchored.relatedDocs,
+        warnings: uniqueStrings([...warnings, ...anchored.warnings]),
+        readPlan,
+      };
+    }
     const related = relatedPaths(db, readFirst.base, request.pathFilter);
     const relationships = readFirst.direct ? findIndexedRelationships(db, readFirst.base, request.pathFilter) : { imports: [], importers: [], implementationPairs: [] };
     const importedNeighborTests = readFirst.direct ? importedNeighborTestPaths(db, relationships.imports, request.pathFilter) : [];
@@ -117,6 +152,8 @@ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapCont
 
     return {
       target: request.target,
+      targetForm: readFirst.direct ? "path" : "query",
+      contextTarget: readFirst.direct ? readFirst.base : null,
       root: info.root,
       pathPrefix: request.pathPrefix,
       lastIndexedAt,
@@ -170,7 +207,6 @@ function readFirstItems(
   }
 
   if (!file) {
-    warnings.push("Target was not an indexed file path; falling back to search results.");
     return {
       base: request.target,
       items: searchCodeMap({ query: request.target, cwd, limit: request.limit, pathPrefix: request.pathPrefix, stateDir })
@@ -409,4 +445,3 @@ function hasStemAffinity(baseStem: string, candidateStem: string): boolean {
 function sortByLocality(base: string, paths: string[]): string[] {
   return paths.filter((path) => path !== base).sort((left, right) => localityScore(base, right) - localityScore(base, left) || left.localeCompare(right));
 }
-

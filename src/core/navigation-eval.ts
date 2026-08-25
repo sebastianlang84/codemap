@@ -2,7 +2,7 @@ import { performance } from "node:perf_hooks";
 
 import { codemapContext } from "./context.ts";
 import { classifyMisses, summarizeMissTaxonomy, type MissClass, type MissDiagnostic, type MissTaxonomySummary } from "./eval-miss-taxonomy.ts";
-import { explainSearchContextReadPlan, mergeSearchContextReadPlan, type ReadPlanDiagnostics } from "./navigation-read-plan.ts";
+import type { ReadPlanDiagnostics } from "./navigation-read-plan.ts";
 import { searchCodeMapDebug, type SearchCandidateDebugDiagnostic } from "./search.ts";
 
 export type NavigationMode = "lexical" | "codemap_search" | "codemap_search_context";
@@ -235,8 +235,8 @@ export function navigateForNavigationEval(options: NavigationEvalLookupOptions):
   }));
   const searchCandidates = compactSearchCandidates(searchDebug.candidates, limit);
   if (mode === "codemap_search") return { filesRead: searchPaths, searchTop, searchCandidates };
-  const contextTarget = searchPaths[0] ?? query;
-  const context = codemapContext({ cwd: root, target: contextTarget, pathPrefix, stateDir, limit });
+  const context = codemapContext({ cwd: root, target: query, pathPrefix, stateDir, limit });
+  const contextTarget = context.contextTarget ?? searchPaths[0] ?? query;
   const readFirst: FileSelectionDiagnostic[] = uniqueSelections(context.readFirst.map((item, index) => ({
     path: item.path,
     source: "context",
@@ -245,8 +245,8 @@ export function navigateForNavigationEval(options: NavigationEvalLookupOptions):
     kind: item.kind,
     reasons: item.reasons?.map((reason) => reason.kind),
   })));
-  const filesRead = mergeSearchContextReadPlan(searchPaths, context.readFirst, limit);
-  const readPlanDebug = explainSearchContextReadPlan(searchPaths, context.readFirst, limit);
+  const filesRead = context.readFirst.map((item) => item.path);
+  const readPlanDebug = context.readPlan;
   return { filesRead, searchTop, searchCandidates, contextTarget, readFirst, readPlanDebug };
 }
 

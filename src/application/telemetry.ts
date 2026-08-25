@@ -43,6 +43,7 @@ interface RunOptions<P, R> {
  * telemetry bug can never leak onto the result path.
  */
 export function runWithTelemetry<P, R>(options: RunOptions<P, R>): R {
+  if (process.env.CODEMAP_TELEMETRY === "0") return options.run();
   const start = Date.now();
   let result: R | undefined;
   let succeeded = false;

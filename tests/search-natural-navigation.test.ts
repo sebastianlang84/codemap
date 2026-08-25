@@ -104,6 +104,10 @@ Dashboard provider no data diagnostics should remain visible in newsletter plans
   ]) {
     assert.ok(readPlan.includes(expectedPath), JSON.stringify({ searchPaths, readFirst: contextResult.readFirst.map((item) => ({ path: item.path, reasons: item.reasons?.map((reason) => reason.kind) })), readPlan }));
   }
+
+  const productPlan = codemapContext({ cwd: root, target: query, limit: 5 });
+  assert.deepEqual(productPlan.readFirst.map((item) => item.path), readPlan);
+  assert.equal(productPlan.warnings.some((warning) => warning.includes("falling back")), false);
 });
 
 test("natural handoff preload requests keep implementation, test, and active ADRs in the search plus context read plan", (t) => {
@@ -532,4 +536,3 @@ export function DashboardClient() {
     assert.ok(readPlan.includes(expectedPath), JSON.stringify({ searchPaths, readFirst: contextResult.readFirst.map((item) => ({ path: item.path, reasons: item.reasons?.map((reason) => reason.kind) })), readPlan }));
   }
 });
-

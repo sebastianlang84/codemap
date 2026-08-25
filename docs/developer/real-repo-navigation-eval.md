@@ -42,8 +42,8 @@ Useful options:
 npm run eval:real-repo-navigation -- --limit 8
 npm run eval:real-repo-navigation -- --keep-state
 npm run eval:real-repo-navigation -- --quality-gate --min-success-delta-vs-lexical 0.2
-npm run eval:real-repo-navigation -- --quality-gate --min-natural-holdout-tasks 16
-npm run eval:real-repo-navigation -- --quality-gate --min-natural-holdout-expected-recall 0.55
+npm run eval:real-repo-navigation -- --quality-gate --min-development-regression-tasks 16
+npm run eval:real-repo-navigation -- --quality-gate --min-development-regression-expected-recall 0.55
 ```
 
 Because this eval depends on local repos, it is a local evidence gate, not a portable CI gate.
@@ -53,7 +53,7 @@ Because this eval depends on local repos, it is a local evidence gate, not a por
 Per mode, the eval reports aggregate metrics plus cohort metrics:
 
 - `baseline`: the original symbol/entrypoint-oriented local navigation tasks.
-- `natural_holdout`: a symptom-style holdout with no exact function/class symbol names in the queries.
+- `development_regression`: symptom-style queries with no exact function/class symbol names. These cases have been inspected during ranking work and are not a sealed holdout.
 
 Per mode, metrics are:
 
@@ -81,11 +81,13 @@ The miss taxonomy is diagnostic, not a gate by itself. Current classes are:
 - `query_formulation`: query terms do not overlap the missing expected path.
 - `unknown`: miss needs manual inspection before adding heuristics.
 
-The gate applies success/recall/latency thresholds to the `baseline` cohort and expected/context-recall floors to the natural-language holdout. On the full built-in cohort it retains the calibrated positive-delta and context-win requirements. On a configured subset, corpus-size minimums and the required win count scale to the available tasks, while relative comparisons require non-regression instead of the full-cohort improvement margin. Recall floors, forbidden/noisy reads, per-task context-loss caps, and latency still fail on the repos that actually ran. If every configured repo is missing, the advisory returns warnings without inventing a quality failure; use `--require-repos` for strict presence enforcement.
+The gate applies success/recall/latency thresholds to the `baseline` cohort and expected/context-recall floors to the natural-language development-regression cohort. On the full built-in cohort it retains the calibrated positive-delta and context-win requirements. On a configured subset, corpus-size minimums and the required win count scale to the available tasks, while relative comparisons require non-regression instead of the full-cohort improvement margin. Recall floors, forbidden/noisy reads, per-task context-loss caps, and latency still fail on the repos that actually ran. If every configured repo is missing, the advisory returns warnings without inventing a quality failure; use `--require-repos` for strict presence enforcement.
 
 ## Current local result
 
-On 2026-07-18, `npm run eval:real-repo-navigation:gate` evaluated 8 baseline tasks plus 16 natural-language holdout tasks with the default 5-file read budget. The local gate **passed**: across all 24 paired cases, search+context had 6 wins, 0 losses, and 18 ties against search-only.
+On 2026-08-25, after query-form `codemap_context` became the production fused read-plan path, the full local gate passed with **7 wins, 0 losses, and 17 ties** across 24 paired cases. The dated tables below remain the last fully transcribed per-mode snapshot; the release gate report is authoritative for the current paired result.
+
+On 2026-07-18, `npm run eval:real-repo-navigation:gate` evaluated 8 baseline tasks plus 16 natural-language development-regression tasks with the default 5-file read budget. The local gate **passed**: across all 24 paired cases, search+context had 6 wins, 0 losses, and 18 ties against search-only.
 
 Re-confirmed on 2026-08-06 at commit `b7f4562` — the first run on a machine with all five corpus repos present since the worktree-skip (`0cafec9`) and staleness (`55b66b9`) fixes landed. `npm run verify:local` passed end to end; the gate stayed at 6 wins, 0 losses, 18 ties, and every success/recall figure in the tables below reproduced exactly. Only `avgFilesRead` drifted (baseline `codemap_search` 5.000, holdout 4.938), which no threshold reads.
 
@@ -97,7 +99,7 @@ Baseline cohort:
 | `codemap_search` | 0.500 | 1.000 | 0.844 | 0.771 | 4.875 | 49.187 ms |
 | `codemap_search_context` | 0.750 | 1.000 | 0.927 | 0.896 | 5.000 | 54.295 ms |
 
-Natural-language holdout cohort:
+Natural-language development-regression cohort:
 
 | Mode | Success | Entry hit | Expected recall | Context recall | Avg files | p95 latency |
 |---|---:|---:|---:|---:|---:|---:|
@@ -110,7 +112,7 @@ Baseline deltas:
 - Search+context vs lexical: `+0.625` success, `+0.479` expected recall, `+0.375` context recall, with the same average files read.
 - Search+context vs search-only: `+0.250` success, `+0.083` expected recall, `+0.125` context recall.
 
-The latest kept read-plan experiment addresses drift exposed by the full local cohort: the Macrolens provider-outage query named both Yahoo and FRED, but search+context displaced the visible `providers/fred.ts` hit with a test belonging only to a newly added direct-import neighbor. Before the change, the comparison was 6 wins, 1 loss, and 17 ties with a maximum single loss of `0.333`; natural-holdout search+context success was `0.438`, expected recall `0.740`, and context recall `0.708`. Restricting that imported-neighbor-test promotion to route-adapter pairs restores the FRED hit: 6 wins, 0 losses, and 18 ties; natural-holdout success rises to `0.500`, expected recall to `0.755`, and context recall to `0.729`, with no forbidden reads. The case is fixed in a deterministic read-plan regression test.
+The latest kept read-plan experiment addresses drift exposed by the full local cohort: the Macrolens provider-outage query named both Yahoo and FRED, but search+context displaced the visible `providers/fred.ts` hit with a test belonging only to a newly added direct-import neighbor. Restricting imported-neighbor-test promotion to evidence-backed pairs restores the FRED hit without a paired loss. The case is fixed in a deterministic read-plan regression test.
 
 Interpretation: under a realistic small read budget, CodeMap's intended search-then-context workflow remains materially better in aggregate and avoids forbidden reads in both cohorts. Preserving query-visible evidence prevents context around a wrong top hit from making the search-only read plan worse.
 
@@ -118,7 +120,7 @@ The 2026-07-14 ranking slice resolved the remaining Macrolens macro-signal searc
 
 ### Rejected experiment: suppress context on low-confidence hits
 
-On 2026-07-13, an internal `expandContext` switch tested skipping context expansion when the top search hit had low confidence. It removed the then-observed paired losses (2 to 0), but regressed holdout success from 0.625 to 0.438, reduced context wins from 5 to 3, and introduced a 0.063 forbidden-read rate. Context expansion was net positive even on low-confidence hits, including through noise displacement, so this approach was rejected. Future work should target the specific entry-ranking or read-plan miss with one measured lever rather than globally suppressing context.
+On 2026-07-13, an internal `expandContext` switch tested skipping context expansion when the top search hit had low confidence. It removed the then-observed paired losses but regressed development-regression success, reduced context wins, and introduced forbidden reads. The approach was rejected.
 
 ## Known limitations and risks exposed by the eval
 
@@ -128,7 +130,7 @@ The eval is intentionally honest. The current local gate is green and still expo
 - Some framework/UI-to-API relationships are convention/config based, not import based.
 - Alias imports add useful direct neighbors and increase average search+context reads on this suite; direct imports and imported-neighbor convention tests are therefore capped in small read budgets.
 - The scripted `codemap_search_context` read plan keeps the top visible search hit, protects visible source↔test pairs and uncovered visible tests, prefers high-confidence context tests/configs, preserves context-backed search hits, defers archived docs behind active search/context candidates, and only promotes one direct import when no doc/config or unsearched test/config neighbor competes. For API route-adapter targets, it instead prefers the path-affine imported implementation plus its test before generic configs so endpoint reads stay source-centered.
-- The expanded natural-language holdout is local and partly paired with baseline tasks. It intentionally exposes misses even while the paired-loss gate passes. Root README fallback is only used when no name/path-specific docs were found, so specific PRDs or docs keep their budget priority. Next.js API route-adapter prioritization is limited to reverse importers under `app/api/**/route.*`, and endpoint route retrieval only adds route candidates when route path terms are adjacent to `endpoint`.
+- The natural-language development-regression cohort is local and partly paired with baseline tasks. Because it has informed implementation changes, a future generalization claim requires a new externally versioned, unseen holdout.
 - Search+context is slower than lexical scanning on these small repos, though still under the local gate threshold.
 
 These are candidates for future gated work; they should not be expanded unless this real-repo eval or a follow-up case proves the benefit.

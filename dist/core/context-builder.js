@@ -5,9 +5,13 @@ import { findIndexedRelationships, isConfigReadFirstPath, isNoisyIndexedPath, is
 import { getRepoInfo } from "./repo.js";
 import { NotApprovedError } from "./errors.js";
 import { searchCodeMap } from "./search.js";
+import { explainSearchContextReadPlan } from "./navigation-read-plan.js";
 import { normalizePathPrefix } from "./scanner.js";
 import { escapeLike, localityScore, uniqueStrings } from "./text-util.js";
 export function buildCodeMapContext(options) {
+    return buildCodeMapContextInternal(options);
+}
+function buildCodeMapContextInternal(options, inheritedDiagnostics, depth = 0) {
     const info = getRepoInfo(options.cwd, { stateDir: options.stateDir });
     if (!info.approved)
         throw new NotApprovedError();
@@ -18,18 +22,49 @@ export function buildCodeMapContext(options) {
         // when that content has drifted (unlike search, where path staleness is only advisory). Computed
         // on the already-open db handle + resolved repo root instead of calling status(), which would
         // re-resolve repo info and open a second db connection for the same work.
-        const counts = readIndexStatusCounts(db, request.pathPrefix);
-        const health = fullIndexHealth(db, info.root, request.pathPrefix);
-        const diagnostics = {
-            lastIndexedAt: counts.lastIndexedAt,
-            stale: health.stale,
-            changed: health.changed,
-            missing: health.missing,
-            deleted: health.deleted,
-            warnings: health.warnings,
-        };
+        const diagnostics = inheritedDiagnostics ?? (() => {
+            const counts = readIndexStatusCounts(db, request.pathPrefix);
+            const health = fullIndexHealth(db, info.root, request.pathPrefix);
+            return {
+                lastIndexedAt: counts.lastIndexedAt,
+                stale: health.stale,
+                changed: health.changed,
+                missing: health.missing,
+                deleted: health.deleted,
+                warnings: health.warnings,
+            };
+        })();
         const warnings = [...(diagnostics.warnings ?? [])];
         const readFirst = readFirstItems(db, request, warnings, options.cwd, options.stateDir);
+        if (!readFirst.direct && readFirst.items.length > 0 && depth === 0) {
+            const contextTarget = readFirst.items[0].path;
+            const anchored = buildCodeMapContextInternal({ ...options, target: contextTarget, limit: request.limit, pathPrefix: request.pathPrefix }, diagnostics, depth + 1);
+            const readPlan = explainSearchContextReadPlan(readFirst.items.map((item) => item.path), anchored.readFirst, request.limit);
+            const itemByPath = new Map();
+            for (const item of anchored.readFirst)
+                if (!itemByPath.has(item.path))
+                    itemByPath.set(item.path, item);
+            for (const item of readFirst.items)
+                if (!itemByPath.has(item.path))
+                    itemByPath.set(item.path, item);
+            return {
+                target: request.target,
+                targetForm: "query",
+                contextTarget,
+                root: info.root,
+                pathPrefix: request.pathPrefix,
+                lastIndexedAt: anchored.lastIndexedAt,
+                stale: anchored.stale,
+                changed: anchored.changed,
+                missing: anchored.missing,
+                deleted: anchored.deleted,
+                readFirst: readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []),
+                relatedTests: anchored.relatedTests,
+                relatedDocs: anchored.relatedDocs,
+                warnings: uniqueStrings([...warnings, ...anchored.warnings]),
+                readPlan,
+            };
+        }
         const related = relatedPaths(db, readFirst.base, request.pathFilter);
         const relationships = readFirst.direct ? findIndexedRelationships(db, readFirst.base, request.pathFilter) : { imports: [], importers: [], implementationPairs: [] };
         const importedNeighborTests = readFirst.direct ? importedNeighborTestPaths(db, relationships.imports, request.pathFilter) : [];
@@ -55,6 +90,8 @@ export function buildCodeMapContext(options) {
         const lastIndexedAt = diagnostics.lastIndexedAt ?? null;
         return {
             target: request.target,
+            targetForm: readFirst.direct ? "path" : "query",
+            contextTarget: readFirst.direct ? readFirst.base : null,
             root: info.root,
             pathPrefix: request.pathPrefix,
             lastIndexedAt,
@@ -98,7 +135,6 @@ function readFirstItems(db, request, warnings, cwd, stateDir) {
         warnings.push(`Ambiguous target "${request.target}" matched ${count} indexed files; using ${file.path}. Other matches: ${alternatives}${matches.length > 4 ? ", …" : ""}`);
     }
     if (!file) {
-        warnings.push("Target was not an indexed file path; falling back to search results.");
         return {
             base: request.target,
             items: searchCodeMap({ query: request.target, cwd, limit: request.limit, pathPrefix: request.pathPrefix, stateDir })

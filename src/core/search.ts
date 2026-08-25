@@ -17,6 +17,11 @@ interface SearchDiagnostics {
   warnings?: string[];
 }
 
+// The measured agent-navigation budget is five files. Preserve that ranking as the stable prefix;
+// wider requests may add candidates but never reorder the default read budget.
+const STABLE_SEARCH_PREFIX = 5;
+const MAX_SEARCH_LIMIT = 50;
+
 export interface CodeMapSearchPackage {
   query: string;
   root: string;
@@ -57,9 +62,8 @@ export interface CodeMapSearchDebugReport {
 
 export function searchCodeMapWithDiagnostics(options: { query: string; cwd?: string; limit?: number; pathPrefix?: string } & StateOptions): CodeMapSearchPackage {
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
-  // Cheap (HEAD-based) health only: a full scan hashes the entire repo on every
-  // search, which dominates latency on large repos. Search staleness is advisory
-  // (see promptGuidelines); the file-level stale scan stays behind codemap_status --full.
+  // Cheap Git health checks HEAD plus Git-visible indexable changes without hashing the repo.
+  // Search staleness is advisory; file-level counts stay behind codemap_status --full.
   const diagnostics = status(options.cwd, { health: "cheap", pathPrefix, stateDir: options.stateDir }) as SearchDiagnostics & { root: string };
   const results = searchCodeMap({ ...options, pathPrefix });
   return {
@@ -86,8 +90,7 @@ export function searchCodeMap(options: { query: string; cwd?: string; limit?: nu
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
 
   try {
-    const candidates = collectSearchCandidates(db, { plan, limit, pathFilter: pathFilterForPrefix(pathPrefix) });
-    return rankAndSlice(candidates, limit);
+    return stableSearchResults(db, plan, pathFilterForPrefix(pathPrefix), limit);
   } finally {
     db.close();
   }
@@ -102,9 +105,13 @@ export function searchCodeMapDebug(options: { query: string; cwd?: string; limit
   const pathPrefix = normalizePathPrefix(options.pathPrefix);
 
   try {
-    const candidates = collectSearchCandidateDiagnostics(db, { plan, limit, pathFilter: pathFilterForPrefix(pathPrefix) });
-    const results = rankAndSlice(candidates.map((candidate) => candidate.result), limit);
-    const bestCandidateByPath = bestCandidateMap(candidates);
+    const prefixCandidates = collectSearchCandidateDiagnostics(db, { plan, limit: STABLE_SEARCH_PREFIX, pathFilter: pathFilterForPrefix(pathPrefix) });
+    const expandedCandidates = limit <= STABLE_SEARCH_PREFIX
+      ? prefixCandidates
+      : collectSearchCandidateDiagnostics(db, { plan, limit: MAX_SEARCH_LIMIT, pathFilter: pathFilterForPrefix(pathPrefix) });
+    const candidates = mergeCandidateDiagnostics(prefixCandidates, expandedCandidates);
+    const results = stableResultsFromCandidates(prefixCandidates, expandedCandidates, limit);
+    const bestCandidateByPath = candidateMapForResults(candidates, results);
     const selectedRanks = selectedCandidateRanks(results, bestCandidateByPath);
     return {
       query: options.query,
@@ -130,8 +137,41 @@ export function searchCodeMapDebug(options: { query: string; cwd?: string; limit
   }
 }
 
+function mergeCandidateDiagnostics(prefix: SearchCandidateDiagnostic[], expanded: SearchCandidateDiagnostic[]): SearchCandidateDiagnostic[] {
+  const merged = new Map<string, SearchCandidateDiagnostic>();
+  for (const candidate of [...prefix, ...expanded]) {
+    const key = [candidate.source, candidate.result.path, candidate.result.startLine, candidate.result.endLine, candidate.result.kind, candidate.result.score].join("\0");
+    if (!merged.has(key)) merged.set(key, candidate);
+  }
+  return [...merged.values()];
+}
+
 function normalizedLimit(limit: number | undefined): number {
-  return Math.min(Math.max(limit ?? 10, 1), 50);
+  return Math.min(Math.max(limit ?? 10, 1), MAX_SEARCH_LIMIT);
+}
+
+function stableSearchResults(
+  db: ReturnType<typeof openRepoDb>,
+  plan: ReturnType<typeof planQuery>,
+  pathFilter: string,
+  limit: number,
+): SearchResult[] {
+  const prefix = collectSearchCandidates(db, { plan, limit: STABLE_SEARCH_PREFIX, pathFilter });
+  if (limit <= STABLE_SEARCH_PREFIX) return rankAndSlice(prefix, STABLE_SEARCH_PREFIX).slice(0, limit);
+  const expanded = collectSearchCandidates(db, { plan, limit: MAX_SEARCH_LIMIT, pathFilter });
+  return stableResultsFromCandidates(prefix, expanded, limit);
+}
+
+function stableResultsFromCandidates(
+  prefixCandidates: SearchResult[] | SearchCandidateDiagnostic[],
+  expandedCandidates: SearchResult[] | SearchCandidateDiagnostic[],
+  limit: number,
+): SearchResult[] {
+  const resultsOf = (items: SearchResult[] | SearchCandidateDiagnostic[]) => items.map((item) => "result" in item ? item.result : item);
+  const prefix = rankAndSlice(resultsOf(prefixCandidates), STABLE_SEARCH_PREFIX);
+  const seen = new Set(prefix.map((result) => result.path));
+  const expanded = rankAndSlice(resultsOf(expandedCandidates), MAX_SEARCH_LIMIT).filter((result) => !seen.has(result.path));
+  return [...prefix, ...expanded].slice(0, limit);
 }
 
 function selectedCandidateRanks(results: SearchResult[], bestCandidateByPath: Map<string, SearchCandidateDiagnostic>): Map<SearchCandidateDiagnostic, number> {
@@ -143,11 +183,13 @@ function selectedCandidateRanks(results: SearchResult[], bestCandidateByPath: Ma
   return ranks;
 }
 
-function bestCandidateMap(candidates: SearchCandidateDiagnostic[]): Map<string, SearchCandidateDiagnostic> {
+function candidateMapForResults(candidates: SearchCandidateDiagnostic[], results: SearchResult[]): Map<string, SearchCandidateDiagnostic> {
   const byPath = new Map<string, SearchCandidateDiagnostic>();
-  for (const candidate of candidates) {
-    const previous = byPath.get(candidate.result.path);
-    if (!previous || candidate.result.score > previous.result.score) byPath.set(candidate.result.path, candidate);
+  for (const result of results) {
+    const exact = candidates.find((candidate) => candidate.result.path === result.path && candidate.result.score === result.score);
+    const fallback = candidates.filter((candidate) => candidate.result.path === result.path)
+      .sort((left, right) => right.result.score - left.result.score)[0];
+    if (exact ?? fallback) byPath.set(result.path, (exact ?? fallback)!);
   }
   return byPath;
 }

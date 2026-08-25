@@ -5,16 +5,12 @@ const { planQuery } = await import("../src/core/query-plan.ts");
 const { scoreSearchRow, topHitConfidence } = await import("../src/core/ranking.ts");
 const { termBoundaryPattern } = await import("../src/core/text-util.ts");
 const { roleIntentHasPathPatterns } = await import("../src/core/search-pipeline.ts");
-const { knownIdentifierCompounds, evalTunedPathTerms } = await import("../src/core/query-plan.ts");
+const { knownIdentifierCompounds } = await import("../src/core/query-plan.ts");
 
-test("eval-tuned lexicon stays a ratchet, not a dumping ground", () => {
-  // Each row here was derived from a specific eval case, not a general rule (see the eval-tuned lexicon
-  // note in query-plan.ts and TODO §"Query-/Threshold-Änderung als Ersatz für Systemverbesserung").
-  // Growing either table — or adding a third inline rule beyond the session+repo→scope special-case
-  // wired at query-plan.ts scopePairQuery/expandTerms — must be a deliberate call: bump this ceiling
-  // only alongside the general mechanism or an ADR, never as a quiet way to pass a fixture.
+test("query planning has no query-specific basename aliases", () => {
   assert.ok(knownIdentifierCompounds.size <= 1, `knownIdentifierCompounds grew to ${knownIdentifierCompounds.size}; generalize or record an ADR before raising this`);
-  assert.ok(evalTunedPathTerms.size <= 1, `evalTunedPathTerms grew to ${evalTunedPathTerms.size}; generalize or record an ADR before raising this`);
+  const plan = planQuery("active handoff preload");
+  assert.deepEqual(plan.pathTerms, []);
 });
 
 test("every role intent query-plan can emit has an SQL prefilter pattern (no silent fallback)", () => {

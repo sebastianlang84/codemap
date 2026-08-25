@@ -163,7 +163,7 @@ test("bash CodeMap nudge classifies broad discovery but skips targeted checks", 
   assert.equal(shouldNudge("find . -delete"), false);
 });
 
-test("bash CodeMap nudge appends once for broad fresh indexed searches", async (t) => {
+test("bash CodeMap nudge appends once for broad indexed searches", async (t) => {
   const root = mkdtempSync(join(tmpdir(), "pi-codemap-bash-nudge-indexed-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
@@ -267,8 +267,8 @@ test("registers only codemap tools with compact complete prompt guidance", () =>
     codemap_search: ["indexed", "query", "stale", "pathPrefix"],
     codemap_context: ["read-first", "indexed", "read substitute", "pathPrefix"],
   };
-  // No hard length cap here — token cost is a soft target measured by scripts/check-token-injection.ts
-  // (warn-only) and justified per addition. What stays enforced are the *function* contracts that keep
+  // The token budget is measured and gated by scripts/check-token-injection.ts. What stays enforced
+  // here are the *function* contracts that keep
   // the guidance usable when surfaced per tool: each guideline names its tool, and the key terms an
   // agent needs are present. Minimizing the surface remains a duty; impairing routing to save tokens
   // is not the goal.

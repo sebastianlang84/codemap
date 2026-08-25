@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, truncateSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -110,6 +110,23 @@ test("a telemetry write failure never changes the command result", (t) => {
 
   const pkg = codeMapSearch(root, { query: "renderWidget", stateDir });
   assert.equal(pkg.results[0]?.path, "src/widget.ts", "search result is unaffected by a broken log");
+});
+
+test("CODEMAP_TELEMETRY=0 disables local usage logging without changing operations", (t) => {
+  const { root, stateDir } = tempRepo(t);
+  const previous = process.env.CODEMAP_TELEMETRY;
+  process.env.CODEMAP_TELEMETRY = "0";
+  t.after(() => {
+    if (previous === undefined) delete process.env.CODEMAP_TELEMETRY;
+    else process.env.CODEMAP_TELEMETRY = previous;
+  });
+
+  const indexed = codeMapIndex(root, { approveRepo: true, stateDir });
+  const search = codeMapSearch(root, { query: "renderWidget", stateDir });
+
+  assert.equal(indexed.root, root);
+  assert.equal(search.results[0]?.path, "src/widget.ts");
+  assert.equal(existsSync(join(stateDir, "usage.jsonl")), false);
 });
 
 test("rotateUsageLogIfOverCap rotates only past the cap and never throws", (t) => {

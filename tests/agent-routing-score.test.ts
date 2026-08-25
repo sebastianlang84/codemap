@@ -16,9 +16,10 @@ test("scenario A: codemap_search first passes; raw search first fails", () => {
   assert.equal(scoreEpisode(episode("A_plain_navigation"), []).pass, false);
 });
 
-test("scenario B: re-query before context passes; jumping to context fails", () => {
+test("scenario B: re-query or query-driven context recovers a miss; direct anchoring fails", () => {
   assert.equal(scoreEpisode(episode("B_seeded_miss"), [search({ query: "x", limit: 5 }), search({ query: "y" })]).pass, true);
   assert.equal(scoreEpisode(episode("B_seeded_miss"), [search({ query: "x", limit: 5 }), search({ query: "x", limit: 10 })]).pass, true);
+  assert.equal(scoreEpisode(episode("B_seeded_miss"), [search({ query: "x" }), context("where is the missing implementation")]).pass, true);
   assert.equal(scoreEpisode(episode("B_seeded_miss"), [search({ query: "x" }), context("a.ts"), search({ query: "y" })]).pass, false);
   assert.equal(scoreEpisode(episode("B_seeded_miss"), [search({ query: "x" })]).pass, false);
 });

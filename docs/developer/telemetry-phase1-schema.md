@@ -1,8 +1,6 @@
 # Telemetry — phase-1 JSONL schema & write-point
 
-Status: **draft design** — derives directly from the phase-1 rows in
-[telemetry-questions.md](./telemetry-questions.md). Not yet implemented. Grounded in the
-current code; file:line anchors are integration points, not existing telemetry.
+Status: **implemented**. This document defines the shipped local JSONL schema and its remaining deferred reports.
 
 Recall the capture rule from the questions doc: **capture the phase-1+2 field superset from
 day one; phases only switch on reports.** So this schema logs the impression-level fields the
@@ -39,6 +37,8 @@ fields.
 - Format: newline-delimited JSON, one event per invocation, UTF-8, mode `0600`.
 - Sensitivity: **same class as the index** — query text echoes repo internals. Local-only,
   never synced, never attached to a bug report. Document, don't redact (phase 1).
+- Default and control: enabled by default; `CODEMAP_TELEMETRY=0` disables every telemetry write.
+  Delete `usage.jsonl` and `usage.jsonl.1` from the active state directory to remove existing events.
 
 ## Write mechanics (failure-proof, off the result path)
 

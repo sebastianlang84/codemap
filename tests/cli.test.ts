@@ -61,6 +61,19 @@ test("cli --json emits a parseable search package", (t) => {
   assert.equal(pkg.results[0]?.path, "src/widget.ts");
 });
 
+test("cli context text preserves ambiguous-target warnings", (t) => {
+  const { root, stateDir } = cliRepo(t);
+  mkdirSync(join(root, "lib"), { recursive: true });
+  writeFileSync(join(root, "lib", "widget.ts"), "export const otherWidget = true;\n");
+  const io = { cwd: root };
+  runCli(["index", "--approve", "--state-dir", stateDir], io);
+
+  const result = runCli(["context", "widget.ts", "--state-dir", stateDir], io);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /Ambiguous target "widget\.ts"/);
+  assert.match(result.out, /src\/widget\.ts|lib\/widget\.ts/);
+});
+
 test("cli reports usage errors on stderr with a non-zero code", () => {
   const missingQuery = runCli(["search"]);
   assert.equal(missingQuery.code, 2);
@@ -75,7 +88,7 @@ test("cli reports usage errors on stderr with a non-zero code", () => {
   assert.match(unknownOption.err, /Unknown option/);
 });
 
-test("cli nudge-check hints on a broad grep only when the repo is indexed and fresh", (t) => {
+test("cli nudge-check hints on a broad grep when ready, including during working-tree edits", (t) => {
   const { root, stateDir } = cliRepo(t);
   const io = { cwd: root };
 
@@ -90,6 +103,11 @@ test("cli nudge-check hints on a broad grep only when the repo is indexed and fr
   const broad = runCli(["nudge-check", "rg renderWidget", "--state-dir", stateDir], io);
   assert.equal(broad.code, 1);
   assert.match(broad.out, /codemap search/);
+
+  writeFileSync(join(root, "src", "widget.ts"), "export function renderWidget() { return \"edited\"; }\n");
+  const whileEditing = runCli(["nudge-check", "rg renderWidget", "--state-dir", stateDir], io);
+  assert.equal(whileEditing.code, 1);
+  assert.match(whileEditing.out, /codemap search/);
 
   // A concrete file operand → not broad → silent, exit 0.
   const concrete = runCli(["nudge-check", "grep -n renderWidget src/widget.ts", "--state-dir", stateDir], io);

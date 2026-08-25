@@ -1,7 +1,6 @@
 import { performance } from "node:perf_hooks";
 import { codemapContext } from "./context.js";
 import { classifyMisses, summarizeMissTaxonomy } from "./eval-miss-taxonomy.js";
-import { explainSearchContextReadPlan, mergeSearchContextReadPlan } from "./navigation-read-plan.js";
 import { searchCodeMapDebug } from "./search.js";
 export function assessNavigationCase(options) {
     const uniqueFilesRead = uniqueStrings(options.filesRead);
@@ -99,8 +98,8 @@ export function navigateForNavigationEval(options) {
     const searchCandidates = compactSearchCandidates(searchDebug.candidates, limit);
     if (mode === "codemap_search")
         return { filesRead: searchPaths, searchTop, searchCandidates };
-    const contextTarget = searchPaths[0] ?? query;
-    const context = codemapContext({ cwd: root, target: contextTarget, pathPrefix, stateDir, limit });
+    const context = codemapContext({ cwd: root, target: query, pathPrefix, stateDir, limit });
+    const contextTarget = context.contextTarget ?? searchPaths[0] ?? query;
     const readFirst = uniqueSelections(context.readFirst.map((item, index) => ({
         path: item.path,
         source: "context",
@@ -109,8 +108,8 @@ export function navigateForNavigationEval(options) {
         kind: item.kind,
         reasons: item.reasons?.map((reason) => reason.kind),
     })));
-    const filesRead = mergeSearchContextReadPlan(searchPaths, context.readFirst, limit);
-    const readPlanDebug = explainSearchContextReadPlan(searchPaths, context.readFirst, limit);
+    const filesRead = context.readFirst.map((item) => item.path);
+    const readPlanDebug = context.readPlan;
     return { filesRead, searchTop, searchCandidates, contextTarget, readFirst, readPlanDebug };
 }
 export function compactSearchCandidates(candidates, limit) {

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
 
 import { fixtureRepo, useIsolatedHome } from "./helpers/repo-fixture.ts";
@@ -6,6 +8,7 @@ import { fixtureRepo, useIsolatedHome } from "./helpers/repo-fixture.ts";
 useIsolatedHome();
 
 const { dispatch, mcpTools } = await import("../src/mcp/server.ts");
+const { indexRepo } = await import("../src/core/indexer.ts");
 
 test("initialize negotiates protocol and advertises the codemap server", () => {
   const response = dispatch({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18" } });
@@ -15,7 +18,8 @@ test("initialize negotiates protocol and advertises the codemap server", () => {
   assert.equal(result.protocolVersion, "2025-06-18", "echoes a supported requested version");
   assert.equal(result.serverInfo.name, "codemap");
   assert.equal(typeof result.serverInfo.description, "string");
-  assert.match(result.instructions ?? "", /codemap_search/, "surfaces usage guidance via instructions");
+  assert.match(result.instructions ?? "", /Search ranks/, "surfaces usage guidance via instructions");
+  assert.match(result.instructions ?? "", /broad query/, "documents query-driven context plans");
   assert.ok("tools" in result.capabilities, "advertises tools capability");
 });
 
@@ -67,6 +71,21 @@ test("tools/call runs codemap_search against the target repo", (t) => {
   assert.doesNotMatch(result.content[0]!.text, /"results":/, "text is not a JSON blob");
   // Full structured object stays available once for hosts that parse it.
   assert.ok(result.structuredContent?.results?.some((row) => row.path === "src/core/user-service.ts"), result.content[0]?.text);
+});
+
+test("tools/call context text preserves ambiguous-target warnings", (t) => {
+  const root = fixtureRepo(t);
+  mkdirSync(join(root, "src", "other"), { recursive: true });
+  writeFileSync(join(root, "src", "other", "user-service.ts"), "export const otherUserService = true;\n");
+  indexRepo({ cwd: root });
+
+  const response = dispatch(
+    { jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "codemap_context", arguments: { target: "user-service.ts" } } },
+    { cwd: root },
+  );
+  const result = response!.result as { content: Array<{ text: string }> };
+  assert.match(result.content[0]!.text, /Ambiguous target "user-service\.ts"/);
+  assert.match(result.content[0]!.text, /src\/core\/user-service\.ts|src\/other\/user-service\.ts/);
 });
 
 test("tools/call reports tool failures in-band with isError", (t) => {

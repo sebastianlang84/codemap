@@ -51,7 +51,7 @@ function targetOf(call: ToolCall): string {
   return String(call.args.target ?? call.args.query ?? "");
 }
 
-// A path or symbol (safe codemap_context target) vs a broad prose query (unsafe).
+// Distinguish direct anchors from query-driven context plans.
 function looksLikePathOrSymbol(value: string): boolean {
   const trimmed = value.trim();
   if (trimmed === "") return false;
@@ -83,9 +83,11 @@ export function scoreEpisode(episode: RoutingEpisode, transcript: ToolCall[]): E
       const secondSearchIdx = transcript.findIndex((call, index) =>
         index > firstSearchIdx && isSearch(call) && (targetOf(call) !== targetOf(first) || Number(call.args.limit ?? 0) > Number(first.args.limit ?? 0)),
       );
-      if (secondSearchIdx === -1) return verdict(false, "did not re-query / raise limit");
-      const contextBeforeSecond = firstContextIdx !== -1 && firstContextIdx < secondSearchIdx;
-      return verdict(!contextBeforeSecond, contextBeforeSecond ? "jumped to codemap_context before re-querying" : "re-queried before codemap_context");
+      const queryContextIdx = transcript.findIndex((call, index) => index > firstSearchIdx && isContext(call) && !looksLikePathOrSymbol(targetOf(call)));
+      if (secondSearchIdx === -1 && queryContextIdx === -1) return verdict(false, "did not re-query, raise limit, or request a query-driven context plan");
+      const recoveryIdx = secondSearchIdx === -1 ? queryContextIdx : queryContextIdx === -1 ? secondSearchIdx : Math.min(secondSearchIdx, queryContextIdx);
+      const directContextBeforeRecovery = transcript.some((call, index) => index > firstSearchIdx && index < recoveryIdx && isContext(call) && looksLikePathOrSymbol(targetOf(call)));
+      return verdict(!directContextBeforeRecovery, directContextBeforeRecovery ? "anchored context before recovering the miss" : "recovered with search or query-driven context");
     }
     case "C_confident_anchor": {
       if (firstContextIdx === -1) return verdict(false, "never called codemap_context on the named target");

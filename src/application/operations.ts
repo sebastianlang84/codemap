@@ -124,9 +124,7 @@ export function codeMapContext(cwd: string, params: RepoPathParams & { target: s
       }),
     fields: (pkg: CodeMapContextPackage, p) => {
       const first = pkg.readFirst[0];
-      // A direct file resolution carries a `target` reason on its first read-first item; anything else
-      // (empty, or a search fallback) means context was used as another query (#23).
-      const directTarget = first?.reasons?.some((reason) => reason.kind === "target") ?? false;
+      const directTarget = pkg.targetForm === "path";
       return {
         target: p.target,
         target_form: directTarget ? "path" : "query",

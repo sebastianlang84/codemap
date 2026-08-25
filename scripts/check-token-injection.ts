@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-import { codeMapOperationMetadata } from "../src/application/operation-metadata.ts";
+import { codeMapMcpInstructions, codeMapOperationMetadata } from "../src/application/operation-metadata.ts";
 
 export type TokenInjectionFieldName = "description" | "parameters" | "promptSnippet" | "promptGuidelines";
 
@@ -27,6 +27,14 @@ export interface TokenInjectionReport {
   generatedAt: string;
   estimator: "chars/4-ceil";
   fields: TokenInjectionFieldName[];
+  tools: TokenInjectionToolReport[];
+  totals: TokenInjectionFieldReport;
+  surfaces?: TokenInjectionSurfaceReport[];
+}
+
+export interface TokenInjectionSurfaceReport {
+  name: "pi" | "mcp";
+  instructions: TokenInjectionFieldReport;
   tools: TokenInjectionToolReport[];
   totals: TokenInjectionFieldReport;
 }
@@ -88,7 +96,7 @@ export function buildTokenInjectionReport(tools: TokenInjectionToolRegistration[
 }
 
 export function buildCodeMapTokenInjectionReport(generatedAt?: string): TokenInjectionReport {
-  return buildTokenInjectionReport(
+  const pi = buildTokenInjectionReport(
     codeMapOperationMetadata.map((operation) => ({
       name: operation.toolName,
       description: operation.description,
@@ -98,27 +106,46 @@ export function buildCodeMapTokenInjectionReport(generatedAt?: string): TokenInj
     })),
     generatedAt,
   );
+  const mcp = buildTokenInjectionReport(
+    codeMapOperationMetadata.map((operation) => ({
+      name: operation.toolName,
+      description: operation.description,
+      parameters: operation.parameters,
+    })),
+    generatedAt,
+  );
+  const instructions = fieldReport(codeMapMcpInstructions);
+  return {
+    ...pi,
+    surfaces: [
+      { name: "pi", instructions: fieldReport(""), tools: pi.tools, totals: pi.totals },
+      { name: "mcp", instructions, tools: mcp.tools, totals: sumFields([mcp.totals, instructions]) },
+    ],
+  };
 }
 
 export function assessTokenInjection(report: TokenInjectionReport, targets: TokenInjectionTargets = tokenInjectionTargets): TokenInjectionAssessment {
   const warnings: TokenInjectionWarning[] = [];
-  for (const tool of report.tools) {
-    if (tool.total.tokens > targets.softMaxTokensPerTool) {
+  const surfaces = report.surfaces ?? [{ name: "pi" as const, instructions: fieldReport(""), tools: report.tools, totals: report.totals }];
+  for (const surface of surfaces) {
+    for (const tool of surface.tools) {
+      if (tool.total.tokens > targets.softMaxTokensPerTool) {
+        warnings.push({
+          label: `${surface.name}:${tool.name}`,
+          metric: "toolTokens",
+          target: `<= ${targets.softMaxTokensPerTool}`,
+          actual: tool.total.tokens,
+        });
+      }
+    }
+    if (surface.totals.tokens > targets.softMaxTotalTokens) {
       warnings.push({
-        label: tool.name,
-        metric: "toolTokens",
-        target: `<= ${targets.softMaxTokensPerTool}`,
-        actual: tool.total.tokens,
+        label: `${surface.name} surface`,
+        metric: "totalTokens",
+        target: `<= ${targets.softMaxTotalTokens}`,
+        actual: surface.totals.tokens,
       });
     }
-  }
-  if (report.totals.tokens > targets.softMaxTotalTokens) {
-    warnings.push({
-      label: "all CodeMap tools",
-      metric: "totalTokens",
-      target: `<= ${targets.softMaxTotalTokens}`,
-      actual: report.totals.tokens,
-    });
   }
   return { withinTarget: warnings.length === 0, targets, warnings };
 }
@@ -149,14 +176,15 @@ function sumFields(fields: TokenInjectionFieldReport[]): TokenInjectionFieldRepo
   };
 }
 
-function parseCliArgs(args: string[]): { targets: TokenInjectionTargets } {
+function parseCliArgs(args: string[]): { targets: TokenInjectionTargets; budgetGate: boolean } {
   const targets = { ...tokenInjectionTargets };
+  let budgetGate = false;
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const [name, inlineValue] = arg.split("=", 2);
     const value = inlineValue ?? args[i + 1];
-    // Accepted for back-compat; the check is warn-only now, so this is a no-op flag.
     if (arg === "--budget-gate") {
+      budgetGate = true;
       continue;
     } else if (name === "--max-tool-tokens") {
       targets.softMaxTokensPerTool = parsePositiveInteger(name, value);
@@ -165,13 +193,13 @@ function parseCliArgs(args: string[]): { targets: TokenInjectionTargets } {
       targets.softMaxTotalTokens = parsePositiveInteger(name, value);
       if (inlineValue === undefined) i++;
     } else if (arg === "--help") {
-      console.log("Usage: check-token-injection.ts [--max-tool-tokens N] [--max-total-tokens N]  (soft targets; reports, never fails)");
+      console.log("Usage: check-token-injection.ts [--budget-gate] [--max-tool-tokens N] [--max-total-tokens N]");
       process.exit(0);
     } else {
       throw new Error(`Unknown option: ${arg}`);
     }
   }
-  return { targets };
+  return { targets, budgetGate };
 }
 
 function parsePositiveInteger(name: string, value: string | undefined): number {
@@ -186,9 +214,8 @@ function runCli(): void {
   const report = buildCodeMapTokenInjectionReport();
   const assessment = assessTokenInjection(report, parsed.targets);
   console.log(JSON.stringify({ ...report, assessment }, null, 2));
-  // Warn-only by design: surface over-target tools loudly for review, but never fail the build —
-  // token cost is governed by justification and the routing eval, not a hard cap.
   if (!assessment.withinTarget) console.error(formatTokenInjectionWarnings(assessment.warnings));
+  if (parsed.budgetGate && !assessment.withinTarget) process.exitCode = 1;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

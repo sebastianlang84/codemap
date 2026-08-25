@@ -19,6 +19,8 @@ const SCHEMA_VERSION = 1;
  * telemetry bug can never leak onto the result path.
  */
 export function runWithTelemetry(options) {
+    if (process.env.CODEMAP_TELEMETRY === "0")
+        return options.run();
     const start = Date.now();
     let result;
     let succeeded = false;

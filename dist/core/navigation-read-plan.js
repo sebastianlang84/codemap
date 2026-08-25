@@ -42,7 +42,9 @@ function buildSearchContextReadPlan(searchPaths, contextPaths, limit) {
         && !hasVisibleSourceTestCounterpart(path, laterSearchPaths)));
     const routeAdapterEntry = isRouteAdapterPath(firstSearchPath ?? "");
     const prioritizedConfigs = contextEntries.filter((item) => isRelatedConfig(item) && !searchPathSet.has(item.path));
-    const prioritizedTests = contextEntries.filter((item) => isRelatedTest(item, searchPathSet) && !searchPathSet.has(item.path));
+    const prioritizedTests = contextEntries.filter((item) => (isRelatedTest(item, searchPathSet)
+        && !searchPathSet.has(item.path)
+        && !isWeakRouteSiblingTest(item, firstSearchPath ?? "")));
     const hasCompetingDocOrConfig = laterSearchPaths.some(isDocumentationPath) || contextEntries.some((item) => isRelatedDoc(item) || isAnyConfig(item));
     const directImportCandidates = contextEntries.filter((item) => isDirectImport(item) && (routeAdapterEntry || !searchPaths.includes(item.path)));
     const prioritizedDirectImports = routeAdapterEntry
@@ -50,10 +52,12 @@ function buildSearchContextReadPlan(searchPaths, contextPaths, limit) {
         : prioritizedConfigs.length === 0 && prioritizedTests.length === 0 && !hasCompetingDocOrConfig
             ? directImportCandidates.slice(0, 1)
             : [];
-    const directImportPathSet = new Set([...searchPaths, ...prioritizedDirectImports.map((item) => item.path)]);
+    const selectedDirectImportPaths = new Set(prioritizedDirectImports.map((item) => item.path));
     // Outside route adapters, a test for a newly promoted import must not displace query-visible source hits.
     const prioritizedDirectImportTests = routeAdapterEntry && prioritizedDirectImports.length > 0
-        ? contextEntries.filter((item) => isRelatedTest(item, directImportPathSet) && !searchPathSet.has(item.path) && !prioritizedDirectImports.some((priority) => priority.path === item.path)).slice(0, 1)
+        ? contextEntries.filter((item) => item.siblingTestTargetPaths.some((targetPath) => selectedDirectImportPaths.has(targetPath))
+            && !searchPathSet.has(item.path)
+            && !prioritizedDirectImports.some((priority) => priority.path === item.path)).slice(0, 1)
         : [];
     const prioritizedContext = [...prioritizedConfigs, ...prioritizedTests, ...prioritizedDirectImports, ...prioritizedDirectImportTests];
     const remainingContext = contextEntries.filter((item) => !prioritizedContext.some((priority) => priority.path === item.path));
@@ -96,6 +100,16 @@ function toContextEntry(input, contextRank) {
 function isRelatedTest(item, searchPathSet) {
     return item.reasons.some((reason) => reason === "reverse_test" || reason === "test_of")
         || item.siblingTestTargetPaths.some((targetPath) => searchPathSet.has(targetPath));
+}
+function isWeakRouteSiblingTest(item, targetPath) {
+    if (!isRouteAdapterPath(targetPath))
+        return false;
+    if (!item.siblingTestTargetPaths.includes(targetPath))
+        return false;
+    if (item.reasons.some((reason) => reason !== "sibling_test"))
+        return false;
+    const targetDir = targetPath.split("/").slice(0, -1).join("/");
+    return !item.path.startsWith(`${targetDir}/`);
 }
 function isRelatedConfig(item) {
     return /^docker-compose(?:[.-].*)?\.ya?ml$/.test(item.path.split("/").pop() ?? item.path) && isAnyConfig(item);

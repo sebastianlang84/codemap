@@ -7,14 +7,15 @@ export function readGitHead(root) {
         return null;
     }
 }
-export function readGitWorkingTreeStatus(root, pathPrefix = "") {
+export function readGitWorkingTreeStatus(root, pathPrefix = "", untrackedFiles = "all") {
     const currentHead = readGitHead(root);
-    const dirtyFiles = readGitDirtyFiles(root, pathPrefix);
+    const effectiveUntrackedFiles = untrackedFiles === "auto" ? (currentHead === null ? "all" : "normal") : untrackedFiles;
+    const dirtyFiles = readGitDirtyFiles(root, pathPrefix, effectiveUntrackedFiles);
     return { currentHead, dirty: dirtyFiles.length > 0, dirtyFiles };
 }
-function readGitDirtyFiles(root, pathPrefix) {
+function readGitDirtyFiles(root, pathPrefix, untrackedFiles) {
     try {
-        const args = ["status", "--porcelain=v1", "-z"];
+        const args = ["status", "--porcelain=v1", "-z", `--untracked-files=${untrackedFiles}`];
         if (pathPrefix)
             args.push("--", pathPrefix);
         const output = execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });

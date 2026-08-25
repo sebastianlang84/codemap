@@ -207,7 +207,7 @@ The CLI is the scriptable interface. MCP and Pi expose the same operations as st
 | Status | `codemap status [--repo <path>] [--full] [--path-prefix <subtree>]` | `codemap_status({ repoPath?, full?, pathPrefix? })` | repo approval, DB path, file/chunk/symbol counts, `lastIndexedAt`, and full Git/index diagnostics (`currentHead`, `indexedHead`, `headChanged`, `dirty`, `dirtyFiles`, stale counts) when `full=true` |
 | Index | `codemap index [--repo <path>] [--approve] [--path-prefix <subtree>]` | `codemap_index({ repoPath?, approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
 | Search | `codemap search [--repo <path>] [--path-prefix <subtree>] <query>` | `codemap_search({ repoPath?, query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
-| Context | `codemap context [--repo <path>] [--path-prefix <subtree>] <target>` | `codemap_context({ repoPath?, target, limit?, pathPrefix? })` | `readFirst[]` with optional `reasons[]`, `relatedTests[]`, `relatedDocs[]`, stale diagnostics, warnings |
+| Context | `codemap context [--repo <path>] [--path-prefix <subtree>] <path-or-query>` | `codemap_context({ repoPath?, target, limit?, pathPrefix? })` | fused `readFirst[]`, `targetForm`, `contextTarget`, optional `readPlan`, related tests/docs, stale diagnostics, warnings |
 
 The Pi slash-command forms are `/codemap-status`, `/codemap-index`, `/codemap-search`, and `/codemap-context`; they use `--repo-path` and `--approve-repo` instead of the shorter CLI flags.
 
@@ -217,8 +217,8 @@ Recommended agent flow:
 
 1. Use `codemap_status` if approval, index existence, or freshness is uncertain.
 2. Use `codemap_index` when the repo was explicitly approved or the index should be refreshed.
-3. Use `codemap_search` when the relevant file/symbol/subsystem is unknown.
-4. Use `codemap_context` after finding a likely target, then read source files before editing.
+3. Use `codemap_search` for ranked discovery when you want to inspect candidate hits.
+4. Use `codemap_context` with a path/symbol for direct neighbors or with a broad query for one fused read plan, then read source files before editing.
 
 ## What gets indexed
 
@@ -227,14 +227,14 @@ CodeMap indexes common code, docs, and config files, including:
 - TypeScript/JavaScript;
 - Python;
 - Shell;
-- Go/Rust/Java/Kotlin/Ruby/PHP/C/C++ and similar files as plain text;
+- Go/Rust/Java/Kotlin/Ruby/PHP/C/C++ with symbol extraction and fixed-window chunks;
 - Markdown/MDX/RST/TXT;
 - JSON/YAML/TOML/SQL/CSS/SCSS/HTML;
 - important config files.
 
 During indexing it:
 
-- respects `.gitignore` and optional `.codemapignore` rules;
+- respects repository and nested `.gitignore` files plus an optional root `.codemapignore`;
 - skips symlinks;
 - skips secret-like files such as `.env`;
 - skips binary-looking files and files containing NUL bytes;
@@ -243,10 +243,16 @@ During indexing it:
 - skips git worktrees nested inside the repository (for example `.claude/worktrees/…`), since a worktree is a second checkout of the same tree and would duplicate every hit. Indexing from *inside* a worktree targets that worktree instead. Git submodules stay indexed — they are distinct code, not duplicates;
 - stores path, language, size, SHA-256 hash, and mtime;
 - chunks source files into overlapping line ranges and Markdown files by headings;
-- extracts cheap symbols such as TypeScript/JavaScript classes, functions, const arrow functions, interfaces, types, methods, Python classes/functions, and Markdown headings;
+- extracts cheap symbols for TypeScript/JavaScript, Python, C/C++, Go, Rust, Java, Kotlin, Ruby, and PHP, plus Markdown headings;
 - writes paths, chunks, and symbols into SQLite FTS5 tables.
 
 Re-indexing is incremental: unchanged files are skipped, changed files are refreshed, and deleted files are removed.
+
+## Local usage telemetry
+
+CodeMap records local usage events by default in `usage.jsonl` beside its state database. Events can contain raw queries, targets, result paths, absolute repo paths, adapter/session hints, and latency; they never contain result snippets and are never uploaded. The log is mode `0600`, rotates at 32 MB to one `usage.jsonl.1` generation, and never affects command results.
+
+Set `CODEMAP_TELEMETRY=0` to disable all writes. Delete `usage.jsonl` and `usage.jsonl.1` from the active state directory to remove existing events.
 
 ## Ranking behavior in plain language
 
@@ -271,8 +277,8 @@ Noise handling:
 
 `codemap nudge-check '<command>'` is a **passive** helper for harness hooks. Given a shell command, it
 exits `1` with a one-line hint on stdout **only** when the command is a broad `grep`/`rg`/`find` *and*
-the current repo is indexed and fresh; otherwise it exits `0` silently (fail-open: not a broad search,
-not indexed, stale, or any error). `2` is a usage error. It never blocks and never modifies anything.
+the current repo is indexed and its Git HEAD baseline is current; otherwise it exits `0` silently (fail-open: not a broad search,
+not indexed, HEAD changed, or any error). Uncommitted working-tree edits do not suppress it. `2` is a usage error. It never blocks and never modifies anything.
 
 Pass the command as a single quoted argument:
 

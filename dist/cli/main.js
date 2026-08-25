@@ -1,8 +1,7 @@
 import { isAbsolute, resolve } from "node:path";
+import { codeMapNavigationNudge } from "../application/navigation-nudge.js";
 import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.js";
-import { CODEMAP_CLI_NUDGE_TEXT, shouldNudgeForCodeMapNavigationCommand } from "../core/bash-nudge.js";
-import { status } from "../core/indexer.js";
-import { packageVersion } from "../core/package-version.js";
+import { codeMapPackageVersion } from "../application/package-info.js";
 // Every operation issued from this surface is tagged so telemetry can distinguish CLI from MCP/Pi.
 const ADAPTER = "cli";
 const USAGE = `codemap — local SQLite/FTS repo map for coding agents
@@ -26,8 +25,9 @@ Options:
 
 Notes:
   nudge-check is a passive helper for harness hooks: exit 1 + a one-line hint on stdout when the
-  command is a broad grep/rg/find AND the repo is indexed and fresh; exit 0 (silent) otherwise
-  (fail-open: not a broad search, not indexed, stale, or any error). It never blocks. Exit 2 is a
+  command is a broad grep/rg/find AND the repo is indexed with a current HEAD baseline; exit 0 otherwise
+  (fail-open: not a broad search, not indexed, HEAD changed, or any error). Working-tree edits remain
+  advisory. It never blocks. Exit 2 is a
   usage error. Activation in any harness hook is a deliberate, separate decision (see the ADR).
   Indexing is local-only and never leaves your machine. First index needs --approve.
   Staleness is advisory; refresh with 'codemap index' when it matters.
@@ -167,15 +167,18 @@ function runContext(parsed, cwd) {
         return `${item.path}:${item.startLine}-${item.endLine} [${item.kind}]${reasons}`;
     });
     const tail = [];
+    if (pkg.warnings.length > 0)
+        tail.push(...pkg.warnings.map((warning) => `(!) ${warning}`));
     if (pkg.relatedTests.length > 0)
         tail.push(`tests: ${pkg.relatedTests.join(", ")}`);
     if (pkg.relatedDocs.length > 0)
         tail.push(`docs: ${pkg.relatedDocs.join(", ")}`);
-    return ok([rows.join("\n") || "No read-first items", ...tail].join("\n") + staleNote(pkg));
+    return ok([...tail, rows.join("\n") || "No read-first items"].join("\n") + staleNote(pkg));
 }
 // Passive point-of-use helper: report whether a broad grep/rg/find would be better served by codemap,
-// but only when the repo is actually indexed and fresh. Never blocks (exit 1 is advisory, on stdout);
-// fails open on anything uncertain. Uses core status() directly, not the telemetry seam, so an
+// but only when the repo is indexed and its Git HEAD baseline is current. Working-tree drift stays
+// advisory so the nudge remains useful during active edits. Never blocks (exit 1 is advisory, on stdout);
+// fails open on anything uncertain. Uses the non-telemetry application nudge seam, so an
 // intercepted grep does not spam usage.jsonl with status events. Activation in a harness hook is a
 // separate owner decision (see docs/adr/20260722-passive-nudge-check-subcommand.md); the rejected
 // deny-gate (ADR 20260718) stays rejected.
@@ -185,21 +188,10 @@ function runNudgeCheck(parsed, cwd) {
         return fail("nudge-check needs a shell command string, e.g. codemap nudge-check 'rg foo src/'", 2);
     const target = parsed.repo ? (isAbsolute(parsed.repo) ? parsed.repo : resolve(cwd, parsed.repo)) : cwd;
     const silent = (readiness) => ok(parsed.json ? JSON.stringify({ nudge: false, ...(readiness ? { readiness } : {}) }) : "");
-    if (!shouldNudgeForCodeMapNavigationCommand(command, { cwd: target }))
-        return silent();
-    let readiness;
-    let stale;
-    try {
-        const result = status(target, { stateDir: parsed.stateDir });
-        readiness = result.readiness;
-        stale = result.stale;
-    }
-    catch {
-        return silent(); // fail-open: not a git repo, unreadable state, etc.
-    }
-    if (readiness !== "ready" || stale)
-        return silent(readiness);
-    const out = parsed.json ? JSON.stringify({ nudge: true, readiness, hint: CODEMAP_CLI_NUDGE_TEXT }) : CODEMAP_CLI_NUDGE_TEXT;
+    const result = codeMapNavigationNudge(command, { cwd: target, stateDir: parsed.stateDir, surface: "cli" });
+    if (!result.nudge || !result.hint)
+        return silent(result.readiness);
+    const out = parsed.json ? JSON.stringify({ nudge: true, readiness: result.readiness, hint: result.hint }) : result.hint;
     return { code: 1, out, err: "" };
 }
 /** Pure CLI entrypoint: returns exit code and captured output instead of writing/exiting, so it is testable. */
@@ -209,7 +201,7 @@ export function runCli(argv, io = {}) {
     if (command === undefined || command === "--help" || command === "-h" || command === "help")
         return ok(USAGE);
     if (command === "--version" || command === "-v" || command === "version")
-        return ok(packageVersion());
+        return ok(codeMapPackageVersion());
     let parsed;
     try {
         parsed = parseArgs(rest);

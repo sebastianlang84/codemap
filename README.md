@@ -66,7 +66,7 @@ Give an agent five files' worth of attention and point it at a real task:
 
 Put differently: against the grep-like baseline, the intended workflow improves complete-task success by 0.625 and expected recall by 0.479 — **without spending a larger reading budget**. It still has visible misses, but substantially reduces speculative reads before an agent can start real work.
 
-The gain also holds on the deliberately harder 16-task **natural-language holdout** (symptom-style queries with no function/class names to grep for): grep-style search succeeds on 0.125 of tasks and the full workflow on 0.688, with 0.823 expected recall and 0.812 context recall. Search+context has no paired losses or forbidden reads in the current run.
+The gain also holds on the deliberately harder 16-task **natural-language development-regression cohort** (symptom-style queries with no function/class names to grep for). These cases have been inspected and tuned against, so they are regression evidence, not a sealed holdout or an unseen-generalization claim.
 
 ### Read cost
 
@@ -78,7 +78,7 @@ Success and recall say whether the agent found the right files; the same eval al
 | `codemap_search` | ~11,600 | **~4.5× fewer** |
 | `codemap_search_context` | ~11,200 | **~4.6× fewer** |
 
-Because ranked search points the agent at the *right* files, it spends its 5-file budget on small, relevant sources instead of large speculative reads — roughly a 4–5× cut in tokens read for the same number of files. The ratio holds per cohort (baseline ~53.9k→12.1–13.0k, natural holdout ~50.7k→10.8–10.9k). This is the concrete token payoff behind the success/recall numbers above.
+Because ranked search points the agent at the *right* files, it spends its 5-file budget on small, relevant sources instead of large speculative reads — roughly a 4–5× cut in tokens read for the same number of files. This is the concrete token payoff behind the success/recall numbers above.
 
 These numbers are reproducible locally and gated in CI-style checks:
 
@@ -115,6 +115,7 @@ Then, inside any Git repository:
 codemap index --approve         # one-time: approve + build the local index
 codemap search auth middleware  # ranked files/symbols/chunks
 codemap context src/app/auth.ts # read-first files + related tests/docs/imports
+codemap context "where auth tokens are refreshed" # fused query-driven read plan
 codemap status                  # approval / index / staleness (add --json anywhere)
 ```
 
@@ -189,9 +190,9 @@ State resolution is `--state-dir` → `CODEMAP_HOME` → `$XDG_DATA_HOME/codemap
 
 ## Strengths and limitations at a glance
 
-**Strengths:** fast lexical/FTS search; symbol-aware for TypeScript, JavaScript, Python, C, and C++; relationship-aware read-first context; deterministic and reproducible; zero infrastructure and a tiny dependency footprint; monorepo scoping and cross-repo targeting; explicit stale-index warnings.
+**Strengths:** fast lexical/FTS search; symbol-aware for TypeScript, JavaScript, Python, C/C++, Go, Rust, Java, Kotlin, Ruby, and PHP; relationship-aware read-first context; deterministic and reproducible; zero infrastructure and a tiny dependency footprint; monorepo scoping and cross-repo targeting; explicit stale-index warnings.
 
-**Limitations:** no semantic/NL search; heuristic (non-AST) symbols and relationships; language support is tiered (C/C++ have symbols but not yet structured chunking; many languages are indexed as text only); manual re-index; per-repo approval and Node ≥ 22.13 required.
+**Limitations:** no semantic/NL search; heuristic (non-AST) symbols and relationships; language support is tiered (only TypeScript/JavaScript/Python have structured code chunking); manual re-index; per-repo approval and Node ≥ 22.13 required.
 
 The full, current capability list lives in [`docs/user/usage.md`](docs/user/usage.md).
 

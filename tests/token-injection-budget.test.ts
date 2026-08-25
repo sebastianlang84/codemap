@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
 
 import { registerCodeMapTools } from "../src/pi-extension/tools.ts";
@@ -49,13 +49,22 @@ test("a surface far over target is flagged, not silently accepted", () => {
   assert.ok(assessment.warnings.some((warning) => warning.metric === "toolTokens"));
 });
 
-test("token-injection checker emits a machine-readable report and never fails", () => {
+test("token-injection checker reports Pi and MCP surfaces including MCP instructions", () => {
   const output = execFileSync(process.execPath, ["--experimental-strip-types", "scripts/check-token-injection.ts"], { encoding: "utf8" });
-  const report = JSON.parse(output) as { assessment?: { withinTarget?: boolean; warnings?: unknown[] }; tools?: Array<{ name?: string; total?: { tokens?: number } }>; totals?: { tokens?: number } };
+  const report = JSON.parse(output) as { assessment?: { withinTarget?: boolean; warnings?: unknown[] }; tools?: Array<{ name?: string; total?: { tokens?: number } }>; totals?: { tokens?: number }; surfaces?: Array<{ name?: string; instructions?: { tokens?: number }; totals?: { tokens?: number } }> };
 
   assert.equal(typeof report.assessment?.withinTarget, "boolean");
   assert.ok(Array.isArray(report.assessment?.warnings));
   assert.equal(report.tools?.length, 4);
   assert.ok((report.totals?.tokens ?? 0) > 0);
   assert.ok(report.tools?.every((tool) => typeof tool.name === "string" && (tool.total?.tokens ?? 0) > 0));
+  assert.deepEqual(report.surfaces?.map((surface) => surface.name), ["pi", "mcp"]);
+  assert.ok((report.surfaces?.find((surface) => surface.name === "mcp")?.instructions?.tokens ?? 0) > 0);
+});
+
+test("--budget-gate fails when a configured surface budget is exceeded", () => {
+  const result = spawnSync(process.execPath, ["--experimental-strip-types", "scripts/check-token-injection.ts", "--budget-gate", "--max-total-tokens", "1"], { encoding: "utf8" });
+  assert.equal(result.status, 1, result.stderr);
+  const report = JSON.parse(result.stdout) as { assessment?: { withinTarget?: boolean } };
+  assert.equal(report.assessment?.withinTarget, false);
 });

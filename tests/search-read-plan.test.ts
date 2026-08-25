@@ -96,6 +96,41 @@ test("search+context read plan promotes context-related tests ahead of lower sea
   );
 });
 
+test("route read plans do not promote a weak basename-only test over visible query evidence", () => {
+  assert.deepEqual(
+    mergeSearchContextReadPlan(
+      [
+        "apps/web/src/app/api/newsletter/macro/route.ts",
+        "apps/web/src/app/api/newsletter/route.ts",
+        "apps/web/src/lib/newsletter-macro-snapshot.ts",
+        "docs/plans/20260502-newsletter-macro-data-integration.md",
+        "apps/web/src/lib/__tests__/newsletter-macro-snapshot.test.ts",
+      ],
+      [
+        { path: "apps/web/src/app/api/newsletter/macro/route.ts", reasons: [{ kind: "target" }] },
+        { path: "apps/web/src/lib/dashboard-data.ts", reasons: [{ kind: "import" }] },
+        { path: "apps/web/src/lib/newsletter-macro-snapshot.ts", reasons: [{ kind: "import" }] },
+        {
+          path: "apps/web/src/lib/__tests__/technical-analysis-routes.test.ts",
+          reasons: [{ kind: "sibling_test", targetPath: "apps/web/src/app/api/newsletter/macro/route.ts" }],
+        },
+        {
+          path: "apps/web/src/lib/__tests__/newsletter-macro-snapshot.test.ts",
+          reasons: [{ kind: "sibling_test", targetPath: "apps/web/src/lib/newsletter-macro-snapshot.ts" }],
+        },
+      ],
+      5,
+    ),
+    [
+      "apps/web/src/app/api/newsletter/macro/route.ts",
+      "apps/web/src/lib/newsletter-macro-snapshot.ts",
+      "apps/web/src/lib/__tests__/newsletter-macro-snapshot.test.ts",
+      "apps/web/src/app/api/newsletter/route.ts",
+      "docs/plans/20260502-newsletter-macro-data-integration.md",
+    ],
+  );
+});
+
 test("search+context read plan keeps the first direct import before lower search hits", () => {
   assert.deepEqual(
     mergeSearchContextReadPlan(

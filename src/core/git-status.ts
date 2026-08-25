@@ -20,15 +20,16 @@ export function readGitHead(root: string): string | null {
   }
 }
 
-export function readGitWorkingTreeStatus(root: string, pathPrefix = ""): GitWorkingTreeStatus {
+export function readGitWorkingTreeStatus(root: string, pathPrefix = "", untrackedFiles: "normal" | "all" | "auto" = "all"): GitWorkingTreeStatus {
   const currentHead = readGitHead(root);
-  const dirtyFiles = readGitDirtyFiles(root, pathPrefix);
+  const effectiveUntrackedFiles = untrackedFiles === "auto" ? (currentHead === null ? "all" : "normal") : untrackedFiles;
+  const dirtyFiles = readGitDirtyFiles(root, pathPrefix, effectiveUntrackedFiles);
   return { currentHead, dirty: dirtyFiles.length > 0, dirtyFiles };
 }
 
-function readGitDirtyFiles(root: string, pathPrefix: string): GitDirtyFile[] {
+function readGitDirtyFiles(root: string, pathPrefix: string, untrackedFiles: "normal" | "all"): GitDirtyFile[] {
   try {
-    const args = ["status", "--porcelain=v1", "-z"];
+    const args = ["status", "--porcelain=v1", "-z", `--untracked-files=${untrackedFiles}`];
     if (pathPrefix) args.push("--", pathPrefix);
     const output = execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
     return parsePorcelainStatus(output);

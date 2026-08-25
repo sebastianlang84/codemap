@@ -79,12 +79,11 @@ export const codeMapOperationMetadataById = {
     label: "CodeMap Context",
     toolName: "codemap_context",
     commandName: "codemap-context",
-    description: "Read-first neighbors (tests, imports, docs) of a known target — graph relationships grep won't surface. Follow-up to codemap_search; feed it a target you already trust, not a broad query.",
+    description: "Build a read-first plan. A path/symbol expands graph neighbors; a broad query fuses ranked search with tests, imports, and docs.",
     commandDescription: "Get CodeMap read-first context: /codemap-context [--repo-path <path>] <target>",
-    promptSnippet: "Read-first neighbors (tests, imports, docs) of a known target.",
+    promptSnippet: "Build a read-first plan from a path, symbol, or broad query.",
     promptGuidelines: [
-      "Use codemap_context on an indexed path or symbol you already trust — pass an exact target, not a broad query.",
-      "Do not target codemap_context at an uncertain top search hit (low confidence / near-ties) — it expands whatever it lands on, spending your read budget on the wrong file's neighbors. Widen the search or read the candidate first.",
+      "Use codemap_context with an indexed path/symbol for direct expansion, or a broad query for a fused search-and-neighbor read plan.",
       "codemap_context returns read-first hints, not a read substitute; pathPrefix scopes monorepos.",
     ],
     parameters: Type.Object({
@@ -102,3 +101,6 @@ export const codeMapOperationMetadata = [
   codeMapOperationMetadataById.search,
   codeMapOperationMetadataById.context,
 ] as const;
+
+export const codeMapMcpInstructions =
+  "Use CodeMap for local repo navigation. Search ranks paths, symbols, and chunks; use grep/rg for exhaustive literal or regex matches. Context accepts either a trusted path/symbol or a broad query: query targets return a fused search-and-neighbor read plan. Status checks readiness; index builds or refreshes after explicit first-run approval. Staleness is advisory.";

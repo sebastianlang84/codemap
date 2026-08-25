@@ -13,7 +13,7 @@ const { indexRepo, status } = await import("../src/core/indexer.ts");
 const { searchCodeMap, searchCodeMapWithDiagnostics } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
 
-test("search uses cheap health and does not auto-refresh stale indexes", (t) => {
+test("search uses cheap Git health and warns about unindexed working-tree changes", (t) => {
   const root = fixtureRepo(t);
   writeFileSync(join(root, "src", "core", "new-feature.ts"), `
 export function newFeatureFlag() {
@@ -21,11 +21,12 @@ export function newFeatureFlag() {
 }
 `);
 
-  // Cheap (HEAD-based) health does not hash the working tree, so an unindexed
-  // new file is not flagged here — that file-level scan lives in codemap_status --full.
+  // Cheap health uses Git status without hashing the tree, so it can truthfully warn that the
+  // search index is stale while leaving exact file-level counts to codemap_status --full.
   const result = searchCodeMapWithDiagnostics({ cwd: root, query: "newFeatureFlag", limit: 5 });
-  assert.equal(result.stale, false);
+  assert.equal(result.stale, true);
   assert.equal(result.missing, 0);
+  assert.match(result.warnings.join("\n"), /Working tree changed/);
   assert.equal(result.results.length, 0);
 
   indexRepo({ cwd: root });
@@ -76,7 +77,8 @@ export function contextAdded() {
 test("context path matching treats LIKE wildcards literally", (t) => {
   const root = fixtureRepo(t);
   const result = codemapContext({ cwd: root, target: "user_service.ts", limit: 5 });
-  assert.ok(result.warnings.includes("Target was not an indexed file path; falling back to search results."));
+  assert.equal(result.targetForm, "query");
+  assert.equal(result.warnings.some((warning) => warning.includes("falling back")), false);
 });
 
 test("untracked content codemap never indexes does not make the index stale", (t) => {
@@ -96,15 +98,49 @@ test("untracked content codemap never indexes does not make the index stale", (t
   // index` run could clear, because re-indexing changes nothing about untracked, unscanned content.
   mkdirSync(join(root, "assets"), { recursive: true });
   writeFileSync(join(root, "assets", "logo.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01]));
+  writeFileSync(join(root, "assets", "notes.bin"), Buffer.from([0x00, 0x01]));
+
+  const cheap = status(root);
+
+  assert.equal(cheap.dirty, true, "git still reports the collapsed untracked directory");
+  assert.deepEqual(cheap.dirtyFiles.map((file) => file.path), ["assets/"]);
+  assert.equal(cheap.stale, false, "cheap health must inspect an untracked directory before calling it indexable");
+  assert.deepEqual(cheap.warnings, []);
+
+  writeFileSync(join(root, "assets", "feature.ts"), "export const feature = true;\n");
+  const cheapWithCode = status(root);
+  assert.equal(cheapWithCode.stale, true, "an indexable file inside the collapsed directory must still be detected");
+  unlinkSync(join(root, "assets", "feature.ts"));
 
   const result = status(root, { health: "full" });
 
   assert.equal(result.dirty, true, "git still reports the untracked directory");
-  assert.deepEqual(result.dirtyFiles.map((file) => file.path), ["assets/"], "raw git view is unchanged");
+  assert.deepEqual(result.dirtyFiles.map((file) => file.path), ["assets/logo.png", "assets/notes.bin"], "raw git view reports concrete untracked files");
   assert.equal(result.changed, 0);
   assert.equal(result.missing, 0);
   assert.equal(result.deleted, 0);
   assert.equal(result.stale, false, "unindexed dirty content must not mark the index stale");
+  assert.deepEqual(result.warnings, []);
+});
+
+test("an untracked symlink codemap never indexes does not make cheap health stale", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-unindexed-symlink-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "codemap@example.test"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "CodeMap Test"], { cwd: root });
+  mkdirSync(join(root, "src"), { recursive: true });
+  writeFileSync(join(root, "src", "tracked.ts"), "export const tracked = 1;\n");
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["commit", "-m", "initial"], { cwd: root, stdio: "ignore" });
+  indexRepo({ cwd: root, approve: true });
+
+  symlinkSync("tracked.ts", join(root, "src", "link.ts"));
+
+  const result = status(root);
+  assert.equal(result.dirty, true, "git still reports the untracked symlink");
+  assert.deepEqual(result.dirtyFiles.map((file) => file.path), ["src/link.ts"]);
+  assert.equal(result.stale, false, "a symlink skipped by the indexer must not make cheap health permanently stale");
   assert.deepEqual(result.warnings, []);
 });
 
@@ -448,7 +484,7 @@ test("full status reports dirty files before the first commit without stale warn
   assert.deepEqual(result.warnings, []);
 });
 
-test("cheap status avoids stale scan while full status reports drift", (t) => {
+test("cheap status detects Git-visible drift while full status reports file counts", (t) => {
   const root = fixtureRepo(t);
   writeFileSync(join(root, "src", "core", "cheap-status-added.ts"), `
 export function cheapStatusAdded() {
@@ -458,9 +494,9 @@ export function cheapStatusAdded() {
 
   const cheap = status(root, { health: "cheap" });
   assert.equal(cheap.health, "cheap");
-  assert.equal(cheap.stale, false);
+  assert.equal(cheap.stale, true);
   assert.equal(cheap.missing, 0);
-  assert.deepEqual(cheap.warnings, []);
+  assert.match(cheap.warnings.join("\n"), /Working tree changed/);
 
   const full = status(root, { health: "full" });
   assert.equal(full.health, "full");

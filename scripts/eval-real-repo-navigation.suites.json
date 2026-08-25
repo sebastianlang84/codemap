@@ -48,8 +48,8 @@
           }
         },
         {
-          "name": "NL holdout newsletter stale macro snapshot",
-          "cohort": "natural_holdout",
+          "name": "NL regression newsletter stale macro snapshot",
+          "cohort": "development_regression",
           "query": "newsletter macro article shows wrong FINRA snapshot after dashboard refresh",
           "entry": "apps/web/src/lib/newsletter-macro-snapshot.ts",
           "requiredContext": [
@@ -61,8 +61,8 @@
           ]
         },
         {
-          "name": "NL holdout newsletter macro endpoint warnings",
-          "cohort": "natural_holdout",
+          "name": "NL regression newsletter macro endpoint warnings",
+          "cohort": "development_regression",
           "query": "newsletter macro endpoint should return stale unavailable source decision warnings for missing macro indicators",
           "entry": "apps/web/src/app/api/newsletter/macro/route.ts",
           "requiredContext": [
@@ -76,8 +76,8 @@
           ]
         },
         {
-          "name": "NL holdout partial provider outage",
-          "cohort": "natural_holdout",
+          "name": "NL regression partial provider outage",
+          "cohort": "development_regression",
           "query": "dashboard provider no data diagnostics should keep FRED and Yahoo series when one market source is empty",
           "entry": "apps/web/src/lib/dashboard-pipeline.ts",
           "requiredContext": [
@@ -91,8 +91,8 @@
           ]
         },
         {
-          "name": "NL holdout workbench chart session restore",
-          "cohort": "natural_holdout",
+          "name": "NL regression workbench chart session restore",
+          "cohort": "development_regression",
           "query": "workbench chart interval and x range settings should survive reload from local storage",
           "entry": "apps/web/src/lib/use-series-workbench-session.ts",
           "requiredContext": [
@@ -105,8 +105,8 @@
           ]
         },
         {
-          "name": "NL holdout macro signal threshold boundaries",
-          "cohort": "natural_holdout",
+          "name": "NL regression macro signal threshold boundaries",
+          "cohort": "development_regression",
           "query": "market regime cards show neutral tone at threshold values for VIX oil CPI payrolls yield curve and credit",
           "entry": "apps/web/src/lib/macro-signal-rules.ts",
           "requiredContext": [
@@ -119,8 +119,8 @@
           ]
         },
         {
-          "name": "NL holdout catalog endpoint duplicate provider ids",
-          "cohort": "natural_holdout",
+          "name": "NL regression catalog endpoint duplicate provider ids",
+          "cohort": "development_regression",
           "query": "catalog endpoint returns duplicate macro provider ids and dashboard dropdown shows repeated series",
           "entry": "apps/web/src/app/api/catalog/route.ts",
           "requiredContext": [
@@ -151,8 +151,8 @@
           ]
         },
         {
-          "name": "NL holdout duplicate run rejection",
-          "cohort": "natural_holdout",
+          "name": "NL regression duplicate run rejection",
+          "cohort": "development_regression",
           "query": "FastAPI confirm true run already in progress",
           "entry": "api/app.py",
           "requiredContext": [
@@ -164,8 +164,8 @@
           ]
         },
         {
-          "name": "NL holdout run button busy status",
-          "cohort": "natural_holdout",
+          "name": "NL regression run button busy status",
+          "cohort": "development_regression",
           "query": "webapp run button disabled while batch is starting then status polling shows latest success or failure",
           "entry": "ui/src/App.tsx",
           "requiredContext": [
@@ -208,8 +208,8 @@
           ]
         },
         {
-          "name": "NL holdout stored memory hint",
-          "cohort": "natural_holdout",
+          "name": "NL regression stored memory hint",
+          "cohort": "development_regression",
           "query": "Use memory_search if prior context matters no relevant stored context",
           "entry": "src/pi-extension/retrieval.ts",
           "requiredContext": [
@@ -220,8 +220,8 @@
           ]
         },
         {
-          "name": "NL holdout handoff scope precedence",
-          "cohort": "natural_holdout",
+          "name": "NL regression handoff scope precedence",
+          "cohort": "development_regression",
           "query": "active handoff preload should prefer current session before repo fallback and warn not to overwrite fallback handoffs",
           "entry": "src/pi-extension/retrieval.ts",
           "requiredContext": [
@@ -235,8 +235,8 @@
           ]
         },
         {
-          "name": "NL holdout legacy project audit preview",
-          "cohort": "natural_holdout",
+          "name": "NL regression legacy project audit preview",
+          "cohort": "development_regression",
           "query": "memory audit should show read only legacy project migration preview without rewriting archived or repo scoped records",
           "entry": "src/pi-extension/audit.ts",
           "requiredContext": [
@@ -265,8 +265,8 @@
           ]
         },
         {
-          "name": "NL holdout invalid subagent request shape",
-          "cohort": "natural_holdout",
+          "name": "NL regression invalid subagent request shape",
+          "cohort": "development_regression",
           "query": "reject subagent request when parallel tasks and single task are both set",
           "entry": "src/request.ts",
           "requiredContext": [
@@ -274,8 +274,8 @@
           ]
         },
         {
-          "name": "NL holdout reviewer scout recursion guard",
-          "cohort": "natural_holdout",
+          "name": "NL regression reviewer scout recursion guard",
+          "cohort": "development_regression",
           "query": "reviewer context scout should gather bounded contract and nearby test evidence without scout recursion",
           "entry": "docs/plans/reviewer-scout.md",
           "requiredContext": [
@@ -287,8 +287,8 @@
           ]
         },
         {
-          "name": "NL holdout repo agent mutation warning",
-          "cohort": "natural_holdout",
+          "name": "NL regression repo agent mutation warning",
+          "cohort": "development_regression",
           "query": "repo local subagent approval warning should list mutation capable bash and edit tools without trusting untrusted frontmatter text",
           "entry": "src/agents.ts",
           "requiredContext": [
@@ -319,8 +319,8 @@
           ]
         },
         {
-          "name": "NL holdout ambiguous sg binary",
-          "cohort": "natural_holdout",
+          "name": "NL regression ambiguous sg binary",
+          "cohort": "development_regression",
           "query": "ast grep binary path should reject ambiguous sg shadow utils command and show install guidance",
           "entry": "src/ast-grep/binary-path.ts",
           "requiredContext": [
@@ -334,8 +334,8 @@
           ]
         },
         {
-          "name": "NL holdout truncated ast-grep output banner",
-          "cohort": "natural_holdout",
+          "name": "NL regression truncated ast-grep output banner",
+          "cohort": "development_regression",
           "query": "ast grep search should salvage truncated JSON output and explain output exceeded the one megabyte limit",
           "entry": "src/ast-grep/json-output.ts",
           "requiredContext": [
