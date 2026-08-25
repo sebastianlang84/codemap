@@ -112,6 +112,9 @@ and "is the gate a wall?") with the least join logic:
 Everything requiring a join (the #5 funnel, #12/#13/#14 clickthrough, #19/#20 cross-session
 gate patterns) is a phase-2 *report* — but its *fields* are captured from day one.
 
+Implementation note: phase 2 is available as the aggregate-only `codemap usage-report`; the raw
+events remain local and are not an output mode.
+
 ## Interpretation caveats (keyed to the questions above)
 
 - **C — #12 clickthrough is a lower bound, and biased.** Agents routinely open a path straight

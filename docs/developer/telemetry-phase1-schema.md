@@ -153,15 +153,14 @@ already owns state hygiene and runs via `npm run gc:state`:
 At ~1–2 KB/event, a heavy multi-agent day is thousands of events → tens of MB/month worst
 case, so one 32 MB cap + one rotated generation is ample headroom.
 
-## Deferred (not phase 1)
+## Deferred beyond the shipped local report
 
-- The offline analyzer / `codemap telemetry report` (phase-2 reports: funnel, clickthrough join,
-  reformulation chains).
+- Reformulation-chain analysis and any automatic export or upload.
 - Mandatory `query_id` threading; per-event fsync; any read-back into ranking.
 - Harness-side `shadow_search` hook (#3/#4) — separate phase-4 mini-project.
 - Redaction machinery.
 
-## Implementation status (phase 1 — done)
+## Implementation status (phases 1 and 2 — done)
 
 Implemented per this schema. Files: `src/application/telemetry.ts` (the seam wrapper),
 `src/core/errors.ts` (`NotApprovedError` with stable `code`), `src/core/package-version.ts`
@@ -171,6 +170,14 @@ Implemented per this schema. Files: `src/application/telemetry.ts` (the seam wra
 - `packageVersion()` lifted into `src/core/package-version.ts` (shared by CLI and the seam). ✓
 - The not-approved throw now carries a stable `code = "not_approved"` via `NotApprovedError`, applied
   at all three throw sites (search, context, indexer); the human message is preserved verbatim. ✓
+
+The phase-2 reader is shipped as `codemap usage-report`: `src/application/usage-report.ts` keeps the
+pure analysis, `src/application/usage-report-file.ts` owns local file/filter I/O, and
+`src/cli/usage-report.ts` exposes only an aggregate projection. The shareable output deliberately
+omits raw queries, targets, result paths, paths/IDs per repository, agent/session IDs, exact
+timestamps, and the state directory. The richer internal report remains an analysis primitive, not
+a public raw-output mode. The installed-package script `npm run report:usage` delegates to the same
+CLI command.
 
 Verified against code: `SearchResult` exposes `path`/`language`/`kind`/`score`
 ([src/core/types.ts:26](../../src/core/types.ts)) — the trimmed `results[]` set needs no new extraction.
@@ -188,5 +195,5 @@ Verified against code: `SearchResult` exposes `path`/`language`/`kind`/`score`
 
 ## Open / next
 
-- Second Fable pass on the shipped implementation (optional).
-- Phase 2: the offline analyzer / `codemap telemetry report` — see the phased plan above.
+- Validate which aggregate signals predict successful end-to-end agent tasks; do not feed telemetry
+  back into ranking automatically.

@@ -36,7 +36,19 @@ CodeMap indexes the current (rebuildable) repo state and helps you navigate it.
 
 ## Benchmarks
 
-The claims above are measured, not asserted. The strongest evidence is the local **real-repo navigation eval**: it indexes five real repositories, gives every mode the *same* budget of 5 files to read, and checks whether the mode actually found the right entry file plus its required read-first neighbors. Three modes are compared:
+The strongest generalization evidence is the frozen **external holdout** first run from 2026-08-25: 40 merged changes from six public repositories that had not been used to develop CodeMap. Each mode received the same five-file read budget; the query was the change title, and the expected paths were source, test, or config files changed by the fix and already present before it.
+
+| Mode | Complete success | Expected-path recall | Avg files | Avg est. tokens read |
+|---|---:|---:|---:|---:|
+| frozen lexical baseline | 0.250 | 0.358 | 5.000 | ~114,200 |
+| CodeMap 0.9.0 search→context | 0.400 | **0.584** | 4.925 | ~32,400 |
+| CodeMap 0.9.1 search→context | **0.425** | 0.572 | 5.000 | **~29,400** |
+
+Under the same five-file cap, 0.9.1 improved complete success by **17.5 percentage points** and used **74.2% fewer estimated read tokens** than the lexical baseline. Both modes averaged exactly five files, so that token delta comes from file size, not fewer selected files. The lexical baseline searches every tracked text file, like a broad `rg`; CodeMap applies its documented index exclusions, so the result measures the whole product workflow rather than an identical candidate corpus. The paired success signal versus lexical was 9 wins, 2 losses, and 29 ties (exact two-sided p=0.065), directional but not significant at 0.05.
+
+Against 0.9.0, 0.9.1 gained only one net case: 3 wins, 2 losses, and 35 ties (+2.5 points, exact p=1.0), while expected-path recall fell 1.25 points. That is not evidence of a statistically reliable version-to-version gain. CodeMap 0.10.0 ships the same navigation implementation as 0.9.1; its product changes are the evidence harness and aggregate usage report. This holdout is a navigation proxy, not proof of end-to-end coding-task or test success. The corpus became inspected regression evidence after its first run, so a future broad generalization claim requires another untouched holdout. See the [external holdout report](docs/developer/external-holdout.md).
+
+The longer-running local **real-repo navigation eval** complements that result: it indexes five maintainer repositories, gives every mode the same budget of five files to read, and checks whether the mode found the right entry file plus its required read-first neighbors. Three modes are compared:
 
 - **`lexical`** — a stand-in for raw `grep`/`rg`: score tracked files by keyword match and read the top ones.
 - **`codemap_search`** — read only CodeMap's top ranked search hits.
@@ -83,6 +95,7 @@ Because ranked search points the agent at the *right* files, it spends its 5-fil
 These numbers are reproducible locally and gated in CI-style checks:
 
 ```bash
+npm run eval:external-holdout:gate      # source checkout only; downloads/caches pinned snapshots
 npm run eval:real-repo-navigation       # real repos vs rg-like baseline
 npm run eval:agent-navigation           # deterministic checked-in fixture
 npm run bench:search-quality            # ranking / top-1 / recall benchmark
@@ -90,6 +103,7 @@ npm run bench:semantic-quality          # fixed lexical development split for se
 ```
 
 Full methodology, per-cohort tables, miss taxonomy, and known limitations live in
+[`docs/developer/external-holdout.md`](docs/developer/external-holdout.md),
 [`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) and
 [`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md).
 
@@ -101,7 +115,7 @@ Requires **Node ≥ 22.13** (CodeMap uses the built-in `node:sqlite`; this relea
 
 ```bash
 # Installs a `codemap` command on your PATH
-npm install -g github:sebastianlang84/codemap
+npm install -g github:sebastianlang84/codemap#v0.10.0
 
 # …or link a development checkout
 git clone https://github.com/sebastianlang84/codemap ~/dev/codemap
@@ -117,6 +131,7 @@ codemap search auth middleware  # ranked files/symbols/chunks
 codemap context src/app/auth.ts # read-first files + related tests/docs/imports
 codemap context "where auth tokens are refreshed" # fused query-driven read plan
 codemap status                  # approval / index / staleness (add --json anywhere)
+codemap usage-report            # aggregate local adoption and navigation signals
 ```
 
 **Optional agent skill.** The package includes a harness-agnostic
@@ -164,7 +179,7 @@ Upgrading from `pi-ext-codemap` or moving an existing local installation? Follow
 
 ## CLI reference
 
-All commands default to the current directory and accept `--json`, `--repo <path>` (target another repo), `--path-prefix <dir>` (scope to a subtree), and `--state-dir <path>` (override where indexes and the approval registry are stored).
+The four navigation commands default to the current directory and accept `--json`, `--repo <path>` (target another repo), `--path-prefix <dir>` (scope to a subtree), and `--state-dir <path>` (override where indexes and the approval registry are stored).
 
 | Command | Purpose |
 |---|---|
@@ -172,6 +187,7 @@ All commands default to the current directory and accept `--json`, `--repo <path
 | `codemap context <path\|query> [--limit N]` | Read-first target file plus related imports, callers, tests, docs, config. |
 | `codemap status [--full]` | Approval, index counts, and staleness (`--full` does a working-tree scan). |
 | `codemap index [--approve]` | Build or refresh the index (`--approve` required the first time). |
+| `codemap usage-report [--since YYYY-MM-DD] [--window N]` | Aggregate local usage, activation, freshness, and search→context signals without exposing raw telemetry fields. |
 
 ### State location
 
@@ -204,6 +220,7 @@ The full, current capability list lives in [`docs/user/usage.md`](docs/user/usag
 - [`docs/product/roadmap.md`](docs/product/roadmap.md) — future/non-V1 ideas, deferred questions, delivery history.
 - [`docs/developer/architecture.md`](docs/developer/architecture.md) — storage, schema, scanner/index/search/context architecture, adapter boundary, testing policy.
 - [`docs/developer/search-quality.md`](docs/developer/search-quality.md) — maintainer notes for ranking/search-quality benchmark usage.
+- [`docs/developer/external-holdout.md`](docs/developer/external-holdout.md) — frozen public-repo holdout method, first-run evidence, and claim limits.
 - [`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md) — deterministic eval comparing lexical, search-only, and search-plus-context navigation.
 - [`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) — local real-repo eval measuring navigation value against rg-like lexical baselines.
 - [`docs/developer/qmd-research.md`](docs/developer/qmd-research.md) — prior-art notes from `tobi/qmd` and implications for chunking, vector search, models, and lightweight defaults.

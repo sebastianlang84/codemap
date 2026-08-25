@@ -1,0 +1,402 @@
+{
+  "$comment": "Frozen before the first CodeMap run. PR titles are the queries; expected paths are every modified supported source/test/config file in the fix, excluding docs, CI, dependency metadata, generated files, lockfiles, changelogs, and centralized test registries.",
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "external-pr-navigation-v1",
+    "version": 1,
+    "frozenAt": "2026-08-25",
+    "selectionProtocol": "Forty merged public PRs across six previously unused repositories; query equals the pre-fix PR title; base is the first parent of the merge commit; oracle paths are all qualifying modified files that already exist at base. No ranking change may use this corpus as an unseen holdout after its first run."
+  },
+  "budget": { "files": 5 },
+  "profiles": [
+    {
+      "id": "codemap-0.9.0",
+      "gitCommit": "b65223900a437cdebd836dd698995efd8a7aba7b",
+      "expectedVersion": "0.9.0"
+    },
+    {
+      "id": "codemap-0.9.1",
+      "gitCommit": "6b5d941ee5f686b4966fd46322eac67c2c75eb9d",
+      "expectedVersion": "0.9.1"
+    }
+  ],
+  "repositories": [
+    { "id": "express", "remote": "https://github.com/expressjs/express.git" },
+    { "id": "fastify", "remote": "https://github.com/fastify/fastify.git" },
+    { "id": "flask", "remote": "https://github.com/pallets/flask.git" },
+    { "id": "gh-cli", "remote": "https://github.com/cli/cli.git" },
+    { "id": "ripgrep", "remote": "https://github.com/BurntSushi/ripgrep.git" },
+    { "id": "libuv", "remote": "https://github.com/libuv/libuv.git" }
+  ],
+  "cases": [
+    {
+      "id": "express-pr-7377",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/7377",
+      "query": "feat: allow conditional revalidation for QUERY requests (v4)",
+      "baseCommit": "715101bd27ec9c14a7ccc8a37c476f330d98ad53",
+      "fixCommit": "61ccf2ea8c1bd19cbca6acfb7cd276c5fcd410d3",
+      "expectedPaths": ["lib/request.js", "test/req.fresh.js"]
+    },
+    {
+      "id": "express-pr-7181",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/7181",
+      "query": "fix: restore array parsing for req.query repeated keys (#7147)",
+      "baseCommit": "d39e8ad1778a0b8a606a5a7b17096d0cc5ec722d",
+      "fixCommit": "8d09bfe6d88983da5c3e12cfdd54782c4dc675db",
+      "expectedPaths": ["lib/utils.js", "test/req.query.js"]
+    },
+    {
+      "id": "express-pr-6991",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/6991",
+      "query": "feat: do not modify the Content-Type twice when sending strings",
+      "baseCommit": "5a4568abfe05f71d5559e1db9321627af501ebe3",
+      "fixCommit": "a479419b16f5b97eb20f5dbae5848708ff30ce2d",
+      "expectedPaths": ["lib/response.js"]
+    },
+    {
+      "id": "express-pr-7265",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/7265",
+      "query": "fix: replace deprecated trimRight() with trimEnd()",
+      "baseCommit": "90ec6206d3275fdf2787f2028c6f48a2d92e8042",
+      "fixCommit": "9d8223d92ee81137a50a28eb6ad55a096791091d",
+      "expectedPaths": ["lib/request.js"]
+    },
+    {
+      "id": "fastify-pr-6965",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6965",
+      "query": "fix: callNotFound should run not-found preHandler regardless of registration order",
+      "baseCommit": "83e69762aff047940b376fc2a266d143499ef727",
+      "fixCommit": "4176096a31f5b4c31512c36f578b08a596a72435",
+      "expectedPaths": ["lib/four-oh-four.js", "test/404s.test.js"]
+    },
+    {
+      "id": "fastify-pr-6942",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6942",
+      "query": "fix(content-type): return `undefined` for invalid media types",
+      "baseCommit": "eaff726a68c629c1aedc99f96b3c4b95dfdb38d1",
+      "fixCommit": "15c2fb1933461f846a6160923a2bc4e091039826",
+      "expectedPaths": ["lib/content-type.js", "test/content-type.test.js"]
+    },
+    {
+      "id": "fastify-pr-6892",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6892",
+      "query": "fix: recognize constructor-assigned built-in properties as decorators",
+      "baseCommit": "a2f590563f111ebc8e92b8f17701909e9b19d4b7",
+      "fixCommit": "27938ac777c15482a81881b29f86c82b025f7fae",
+      "expectedPaths": ["lib/decorate.js", "test/decorator-instance-properties.test.js"]
+    },
+    {
+      "id": "fastify-pr-6889",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6889",
+      "query": "fix: do not force close in-flight connections when forceCloseConnections is 'idle'",
+      "baseCommit": "74c44c94afea276256721316d25218d1cdd1aae4",
+      "fixCommit": "9ba6d6016fa932118e6cb2a2f68617cab0824f12",
+      "expectedPaths": ["fastify.js", "test/close.test.js"]
+    },
+    {
+      "id": "fastify-pr-6881",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6881",
+      "query": "fix: uncatchable throws in writeHead when using async hook",
+      "baseCommit": "b6cdc6a40598d15f38fe7d399eb17f4b84b7bf06",
+      "fixCommit": "01ca8393b9d10a897f0d2daedbe2f9eb90076ef5",
+      "expectedPaths": ["lib/hooks.js", "test/reply-error.test.js"]
+    },
+    {
+      "id": "fastify-pr-6865",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6865",
+      "query": "fix: honor quoted-string in Content-Type parameter values",
+      "baseCommit": "01ca8393b9d10a897f0d2daedbe2f9eb90076ef5",
+      "fixCommit": "29bdcbb91f1318dc90ae8c0e52ab6f4e13c42744",
+      "expectedPaths": ["lib/content-type.js", "test/content-type.test.js", "test/internals/reply.test.js"]
+    },
+    {
+      "id": "fastify-pr-6846",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6846",
+      "query": "fix: reset lastIndex before testing global/sticky content-type RegExp parsers",
+      "baseCommit": "27938ac777c15482a81881b29f86c82b025f7fae",
+      "fixCommit": "16a74e7cb2d1abdc2feca9097f2936fe8b851a5c",
+      "expectedPaths": ["lib/content-type-parser.js", "test/content-parser.test.js"]
+    },
+    {
+      "id": "fastify-pr-6803",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6803",
+      "query": "fix: avoid double slash when joining nested prefixes",
+      "baseCommit": "8b9c07b645a8156c23a1d2619267fc84ea879250",
+      "fixCommit": "2f597a9297a3020a9f30bf5548a8442c28ddb1c1",
+      "expectedPaths": ["lib/plugin-override.js", "test/route-prefix.test.js"]
+    },
+    {
+      "id": "flask-pr-6096",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/6096",
+      "query": "Fix .partition(':') usage on potential IPv6 addresses",
+      "baseCommit": "514fc6b3e8402e4c646d5284e97a4f0ab50a7c4b",
+      "fixCommit": "05e9c6bd630ecf4ec0ec884b1fc7901663737bc7",
+      "expectedPaths": ["src/flask/app.py", "src/flask/testing.py", "tests/test_basic.py", "tests/test_testing.py"]
+    },
+    {
+      "id": "flask-pr-6013",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/6013",
+      "query": "autoescape selection uses case-insensitive comparison",
+      "baseCommit": "06ea505ce2b2042af26e96d35ebf159af7c0869d",
+      "fixCommit": "dcbede0cb00df32e7f1895e19e37d5f40a75d1f6",
+      "expectedPaths": ["src/flask/sansio/app.py"]
+    },
+    {
+      "id": "flask-pr-5898",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/5898",
+      "query": "redirect defaults to 303",
+      "baseCommit": "eb58d862cc4a8f31a369b6e9ad1724e9e642f13f",
+      "fixCommit": "809d5a8869d4ffe8656680b2438b10f7c8845613",
+      "expectedPaths": ["src/flask/helpers.py", "src/flask/sansio/app.py"]
+    },
+    {
+      "id": "flask-pr-5818",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/5818",
+      "query": "pass context through dispatch methods",
+      "baseCommit": "88a65bb374e87a18816a780dbd4ae69d307aa85c",
+      "fixCommit": "70d04b5a2620705011e65f79ccfd52caa86f5d6a",
+      "expectedPaths": ["src/flask/app.py", "src/flask/ctx.py", "src/flask/templating.py", "tests/test_reqctx.py", "tests/test_subclassing.py"]
+    },
+    {
+      "id": "flask-pr-5808",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/5808",
+      "query": "fix annotation for select_jinja_autoescape",
+      "baseCommit": "64dd0809c2fc732ed30539235232a268f9bd96ac",
+      "fixCommit": "25642fd1fd65985fc98f95e64bc2c7ff353d6c2b",
+      "expectedPaths": ["src/flask/sansio/app.py"]
+    },
+    {
+      "id": "flask-pr-5526",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/5526",
+      "query": "Add encoding parameter to open resource",
+      "baseCommit": "66af0e55ef6631d05c691707da19d0f1c46921ea",
+      "fixCommit": "a8956feba1e40105e7bc78fa62ce36c58d1c91e1",
+      "expectedPaths": ["src/flask/app.py", "src/flask/blueprints.py", "tests/test_helpers.py"]
+    },
+    {
+      "id": "flask-pr-5499",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/5499",
+      "query": "add SESSION_COOKIE_PARTITIONED config",
+      "baseCommit": "6f2014d353d514e404c1f40e8f0a24e2bf62b941",
+      "fixCommit": "ce08bc704e24c01582052f5c544fae181d08386f",
+      "expectedPaths": ["src/flask/app.py", "src/flask/sessions.py", "tests/test_basic.py"]
+    },
+    {
+      "id": "gh-cli-pr-14222",
+      "repo": "gh-cli",
+      "sourceUrl": "https://github.com/cli/cli/pull/14222",
+      "query": "Fix Copilot declined-install warning newline",
+      "baseCommit": "62e3e719a483d9e2b9be2b7dba7e2bb4a7f91c8c",
+      "fixCommit": "5d3c4817f1619213951dbf15031bad04acb88392",
+      "expectedPaths": ["pkg/cmd/copilot/copilot.go", "pkg/cmd/copilot/copilot_test.go"]
+    },
+    {
+      "id": "gh-cli-pr-14191",
+      "repo": "gh-cli",
+      "sourceUrl": "https://github.com/cli/cli/pull/14191",
+      "query": "Adapt spinner output for invoking agents",
+      "baseCommit": "a255baf71d13fe5947a4eb7ad521ffd412d64cee",
+      "fixCommit": "7fff140bad992d8e18f6116fe81116c523ea1bcc",
+      "expectedPaths": ["internal/ghcmd/cmd.go", "internal/ghcmd/cmd_test.go"]
+    },
+    {
+      "id": "gh-cli-pr-14056",
+      "repo": "gh-cli",
+      "sourceUrl": "https://github.com/cli/cli/pull/14056",
+      "query": "Fix project item-add output for non-TTY",
+      "baseCommit": "2bcdfbb1ac0206f8e4ad31e231d218ee37e5b884",
+      "fixCommit": "78de8634435243cb2db1735a4874dce7fdfb5c98",
+      "expectedPaths": ["pkg/cmd/project/item-add/item_add.go", "pkg/cmd/project/item-add/item_add_test.go"]
+    },
+    {
+      "id": "gh-cli-pr-13988",
+      "repo": "gh-cli",
+      "sourceUrl": "https://github.com/cli/cli/pull/13988",
+      "query": "Fix RESTWithNext error type, repairing gh status and attestation retries",
+      "baseCommit": "ad2a3383771268dd5584127aa9f0615af8bf46d2",
+      "fixCommit": "e83adbc0642994fae7c39a9a012eb34b8c81f4f1",
+      "expectedPaths": ["api/client.go", "api/client_test.go", "pkg/cmd/attestation/api/client_test.go", "pkg/cmd/status/status_test.go"]
+    },
+    {
+      "id": "gh-cli-pr-13967",
+      "repo": "gh-cli",
+      "sourceUrl": "https://github.com/cli/cli/pull/13967",
+      "query": "Fix skill picker label wrapping",
+      "baseCommit": "11a5ef817f10bcdc6f5de511e90836dab93a58c4",
+      "fixCommit": "c2ad3b0eb7ead66eec3a8a61239e10a765332ec7",
+      "expectedPaths": ["pkg/cmd/skills/install/install.go", "pkg/cmd/skills/install/install_test.go"]
+    },
+    {
+      "id": "ripgrep-pr-3502",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3502",
+      "query": "ignore,globset: increase pool capacity",
+      "baseCommit": "7525479a9576f1ca4c2d04339d78e47ff5ae9b05",
+      "fixCommit": "020687a77d13146923333f0beb274eeabd54a270",
+      "expectedPaths": ["crates/globset/Cargo.toml", "crates/ignore/Cargo.toml", "crates/ignore/src/gitignore.rs", "crates/ignore/src/types.rs"]
+    },
+    {
+      "id": "ripgrep-pr-3496",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3496",
+      "query": "ignore: skip loading unreachable ignore files",
+      "baseCommit": "dffd776a737dc19a48b758dd6a621de113794121",
+      "fixCommit": "435f59fc4b43af3ab32f34d53fa34978f393fe52",
+      "expectedPaths": ["crates/ignore/src/walk.rs"]
+    },
+    {
+      "id": "ripgrep-pr-3475",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3475",
+      "query": "ignore: fix deadlock when visitor panics",
+      "baseCommit": "5e16a5c9e57e81f6031a23faa2ace52205fa8242",
+      "fixCommit": "0d7054d8e466d6aa0a6bb6cf121e87225d26df44",
+      "expectedPaths": ["crates/ignore/src/walk.rs"]
+    },
+    {
+      "id": "ripgrep-pr-3464",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3464",
+      "query": "feat[ignore]: Add depth to more errors",
+      "baseCommit": "48b0c795f4feb37343b2832d991c5c6a3900c08a",
+      "fixCommit": "f127579b006d9fb388050281d7d7146799a9cd4c",
+      "expectedPaths": ["crates/ignore/src/walk.rs"]
+    },
+    {
+      "id": "ripgrep-pr-3420",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3420",
+      "query": "ignore: scope compiled parent matchers by root",
+      "baseCommit": "79a23e0841ae84ef9b99c446052c8e6063a198bd",
+      "fixCommit": "43e2f08edef8c00e5d7719212c3e6a869bca1151",
+      "expectedPaths": ["crates/ignore/src/dir.rs"]
+    },
+    {
+      "id": "ripgrep-pr-3212",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3212",
+      "query": "ignore: only stat .jj if we actually care",
+      "baseCommit": "36b7597693c994ffaf023b95d2e18aeeda7d9286",
+      "fixCommit": "85edf4c79671b00002123a2a43ff5238b6a27891",
+      "expectedPaths": ["crates/ignore/src/dir.rs"]
+    },
+    {
+      "id": "ripgrep-pr-3195",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3195",
+      "query": "searcher: fix regression with --line-buffered flag",
+      "baseCommit": "38d630261aded3a8e535fe85761e68af35bc462d",
+      "fixCommit": "d47663b1b4548e4fa02d6e4b575718d0f5f5e7d6",
+      "expectedPaths": ["crates/searcher/src/line_buffer.rs", "crates/searcher/src/searcher/glue.rs"]
+    },
+    {
+      "id": "ripgrep-pr-3190",
+      "repo": "ripgrep",
+      "sourceUrl": "https://github.com/BurntSushi/ripgrep/pull/3190",
+      "query": "printer: fix --stats for --json",
+      "baseCommit": "b610d1cb1506feab33459c5853e4c0d0cb16a6e2",
+      "fixCommit": "63209ae0b95d31f28d14be5125fba3f61f5835e6",
+      "expectedPaths": ["crates/printer/src/json.rs"]
+    },
+    {
+      "id": "libuv-pr-5231",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5231",
+      "query": "unix: short-circuit no-op event mask changes in uv__io_stop",
+      "baseCommit": "e43e3d8a464ddb5ce2ac24f4db780db747691a7b",
+      "fixCommit": "b57dc51116573fb9a325f74c6324e8452314c89f",
+      "expectedPaths": ["src/unix/core.c"]
+    },
+    {
+      "id": "libuv-pr-5230",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5230",
+      "query": "unix,process: never shrink the stdio socket pair buffers",
+      "baseCommit": "b57dc51116573fb9a325f74c6324e8452314c89f",
+      "fixCommit": "f87c8e4f70f234b952d9c47b15fb567f78e5f399",
+      "expectedPaths": ["src/unix/process.c", "test/test-spawn.c"]
+    },
+    {
+      "id": "libuv-pr-5224",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5224",
+      "query": "win: fix crash when closing a pipe after a failed bind",
+      "baseCommit": "e7740992153d9751deea97163c77ab768298f383",
+      "fixCommit": "a6d06ba716b6facdf00e29306aa5013d51e070d4",
+      "expectedPaths": ["src/win/pipe.c", "test/test-pipe-bind-error.c"]
+    },
+    {
+      "id": "libuv-pr-5217",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5217",
+      "query": "darwin: report physical footprint as rss",
+      "baseCommit": "a6d06ba716b6facdf00e29306aa5013d51e070d4",
+      "fixCommit": "071d26c819cc041bd1f8e2b363ef581e14b3f5b0",
+      "expectedPaths": ["src/unix/darwin.c"]
+    },
+    {
+      "id": "libuv-pr-5213",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5213",
+      "query": "fix leak if uv_loop_init fails",
+      "baseCommit": "2594240e798a44452de91a395f9e1b0b08399207",
+      "fixCommit": "1157b320b2a66214d31a9db2ea44611f64d68ff6",
+      "expectedPaths": ["src/win/core.c"]
+    },
+    {
+      "id": "libuv-pr-5206",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5206",
+      "query": "stream: handle cancel after close",
+      "baseCommit": "9d51562c10be60bc1126a3d71803b1038f4fbb7e",
+      "fixCommit": "ff8ce838bee78e0763c5090a4a3d5b1b200945a9",
+      "expectedPaths": ["src/threadpool.c", "test/test-write-cancel.c"]
+    },
+    {
+      "id": "libuv-pr-5200",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5200",
+      "query": "linux: use scaling_max_freq in uv_cpu_info()",
+      "baseCommit": "2191b68322d6cbda5de3b345654259e5cb26398f",
+      "fixCommit": "2594240e798a44452de91a395f9e1b0b08399207",
+      "expectedPaths": ["src/unix/linux.c"]
+    },
+    {
+      "id": "libuv-pr-5188",
+      "repo": "libuv",
+      "sourceUrl": "https://github.com/libuv/libuv/pull/5188",
+      "query": "unix: optimize trailing empty write buffers",
+      "baseCommit": "6ea389cf64216e3c650eed9197e59cbb1f61c8d5",
+      "fixCommit": "9d51562c10be60bc1126a3d71803b1038f4fbb7e",
+      "expectedPaths": ["src/unix/stream.c"]
+    }
+  ],
+  "gates": {
+    "candidateProfile": "codemap-0.9.1",
+    "baselineProfile": "codemap-0.9.0",
+    "minCases": 40,
+    "minRepos": 6,
+    "minSuccessDeltaVsLexical": 0.1,
+    "maxTokenRatioVsLexical": 0.75,
+    "minSuccessDeltaVsBaseline": 0
+  }
+}

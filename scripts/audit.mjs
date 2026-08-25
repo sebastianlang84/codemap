@@ -124,6 +124,7 @@ check("published package contains built bins without test or benchmark payloads"
     "migrations/001_init.sql",
     "migrations/002_fts.sql",
     "migrations/003_graph.sql",
+    "docs/developer/external-holdout.md",
   ]) {
     if (!files.has(required.replace(/^\.\//, ""))) throw new Error(`missing runtime package file ${required}`);
   }
@@ -148,6 +149,20 @@ check("compiled CLI and MCP artifacts run against packaged runtime assets", () =
     if (index.status !== 0) throw new Error(index.stderr || "compiled CLI index failed");
     const search = spawnSync(process.execPath, [cli, "search", "packagedArtifactNeedle", "--state-dir", stateDir], { cwd: repo, encoding: "utf8" });
     if (search.status !== 0 || !search.stdout.includes("src/artifact.ts")) throw new Error(search.stderr || search.stdout || "compiled CLI search failed");
+
+    const usage = spawnSync(process.execPath, [cli, "usage-report", "--json", "--state-dir", stateDir], { cwd: repo, encoding: "utf8" });
+    if (usage.status !== 0) throw new Error(usage.stderr || "compiled CLI usage-report failed");
+    const usageReport = JSON.parse(usage.stdout);
+    if (
+      usageReport.privacy !== "aggregate" ||
+      typeof usageReport.overview !== "object" ||
+      usageReport.overview === null ||
+      typeof usageReport.overview.totalEvents !== "number" ||
+      usageReport.overview.totalEvents < 2
+    ) throw new Error("compiled CLI returned an invalid aggregate usage report");
+    for (const secret of [repo, stateDir, "packagedArtifactNeedle", "src/artifact.ts"]) {
+      if (usage.stdout.includes(secret)) throw new Error(`compiled usage-report leaked ${secret}`);
+    }
 
     const request = `${JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })}\n`;
     const mcp = spawnSync(process.execPath, [join(root, "dist", "mcp", "bin.js")], { cwd: repo, input: request, encoding: "utf8" });

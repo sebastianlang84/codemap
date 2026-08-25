@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildUsageReport, parseUsageLines, type UsageEvent } from "../src/application/usage-report.ts";
+import { anonymizeUsageReport, buildUsageReport, parseUsageLines, type UsageEvent } from "../src/application/usage-report.ts";
 
 // Fixed base time; offsets in minutes keep the sequence analyses readable and deterministic.
 const BASE = Date.parse("2026-07-20T12:00:00.000Z");
@@ -20,11 +20,12 @@ test("parseUsageLines keeps valid events, skips blanks, and counts malformed lin
     "{not json",
     JSON.stringify({ v: 1, ts: at(1) }), // missing command
     JSON.stringify({ v: 1, command: "search" }), // missing ts
+    JSON.stringify({ v: 1, command: "search", ts: "not-a-date" }),
     JSON.stringify(event({ command: "index", ts: at(2) })),
   ];
   const { events, malformedLines } = parseUsageLines(lines);
   assert.equal(events.length, 2);
-  assert.equal(malformedLines, 3);
+  assert.equal(malformedLines, 4);
   // sorted by ts
   assert.deepEqual(events.map((e) => e.command), ["search", "index"]);
 });
@@ -66,6 +67,18 @@ test("gate funnel counts repos through not_approved → approving index → sear
   const funnel = buildUsageReport(events).gateFunnel;
   assert.equal(funnel.notApprovedRepos, 2);
   assert.equal(funnel.notApprovedEvents, 2);
+  assert.equal(funnel.approvedAfterGate, 1);
+  assert.equal(funnel.searchedAfterApprove, 1);
+});
+
+test("gate funnel uses the first approval after a gate, not an older approval", () => {
+  const events: UsageEvent[] = [
+    event({ command: "index", ts: at(0), repo_key: "A", outcome: "ok", approve: true }),
+    event({ command: "search", ts: at(1), repo_key: "A", outcome: "not_approved" }),
+    event({ command: "index", ts: at(2), repo_key: "A", outcome: "ok", approve: true }),
+    event({ command: "search", ts: at(3), repo_key: "A", outcome: "ok" }),
+  ];
+  const funnel = buildUsageReport(events).gateFunnel;
   assert.equal(funnel.approvedAfterGate, 1);
   assert.equal(funnel.searchedAfterApprove, 1);
 });
@@ -114,6 +127,20 @@ test("search→context join ranks hits, prefers same agent, and flags recovered 
   assert.equal(join.meanRank, 2);
 });
 
+test("search→context joins the latest prior impression containing the opened path", () => {
+  const events: UsageEvent[] = [
+    event({ command: "search", ts: at(0), repo_key: "R", agent: { ppid_chain: "me" }, results: [{ path: "src/a.ts" }, { path: "src/b.ts" }] }),
+    event({ command: "search", ts: at(1), repo_key: "R", agent: { ppid_chain: "me" }, results: [{ path: "src/other.ts" }] }),
+    event({ command: "context", ts: at(2), repo_key: "R", agent: { ppid_chain: "me" }, target_form: "path", resolved_path: "src/a.ts" }),
+    event({ command: "search", ts: at(3), repo_key: "R", results: [{ path: "src/c.ts" }, { path: "src/d.ts" }, { path: "src/e.ts" }] }),
+    event({ command: "context", ts: at(4), repo_key: "R", target_form: "path", resolved_path: "src/e.ts" }),
+  ];
+  const join = buildUsageReport(events).searchContextJoin;
+  assert.equal(join.joined, 2);
+  assert.equal(join.recoveredMisses, 0);
+  assert.deepEqual(join.rankHistogram, { "1": 1, "3": 1 });
+});
+
 test("overview buckets adapter and version, defaulting a missing adapter to unknown", () => {
   const events: UsageEvent[] = [
     event({ command: "search", ts: at(0), adapter: "mcp", tool_version: "0.9.0", agent: { harness: "claude_code", ppid_chain: "p1" } }),
@@ -124,6 +151,81 @@ test("overview buckets adapter and version, defaulting a missing adapter to unkn
   assert.deepEqual(o.byToolVersion, { "0.9.0": 2 });
   assert.deepEqual(o.byHarness, { claude_code: 1 });
   assert.equal(o.distinctAgents, 1);
+});
+
+test("repo aggregates and joins never merge unrelated events that lack a repository", () => {
+  const events: UsageEvent[] = [
+    event({ command: "search", ts: at(0), outcome: "not_approved", stale: true, results: [{ path: "src/private.ts" }] }),
+    event({ command: "index", ts: at(1), outcome: "ok", approve: true }),
+    event({ command: "search", ts: at(2), outcome: "ok" }),
+    event({ command: "context", ts: at(3), target_form: "path", resolved_path: "src/private.ts" }),
+  ];
+  const report = buildUsageReport(events);
+  assert.equal(report.overview.distinctRepos, 0);
+  assert.deepEqual(report.gateFunnel, {
+    notApprovedRepos: 0,
+    notApprovedEvents: 1,
+    approvedAfterGate: 0,
+    searchedAfterApprove: 0,
+  });
+  assert.deepEqual(report.staleRefresh, {
+    staleSearches: 1,
+    refreshedWithinWindow: 0,
+    reSearchedAfterRefresh: 0,
+  });
+  assert.equal(report.searchContextJoin.joined, 0);
+  assert.equal(report.searchContextJoin.unjoinable, 1);
+});
+
+test("anonymized report keeps product metrics without leaking local identifiers or raw navigation data", () => {
+  const privateRoot = "/home/alice/private/acme";
+  const privateState = "/home/alice/.local/share/codemap";
+  const events: UsageEvent[] = [
+    event({
+      command: "search",
+      ts: "2026-07-20T12:34:56.000Z",
+      repo_key: "stable-private-repo-key",
+      repo_root: privateRoot,
+      cwd: `${privateRoot}/packages/api`,
+      query: "customer-secret implementation",
+      path_prefix: "packages/api",
+      agent: { ppid_chain: "private-process-chain", harness: "claude_code", session: "private-session" },
+      outcome: "ok",
+      results: [{ path: "packages/api/src/customer-secret.ts", score: 42, kind: "text", language: "typescript" }],
+    }),
+    event({
+      command: "context",
+      ts: "2026-07-21T01:02:03.000Z",
+      repo_key: "stable-private-repo-key",
+      target: "packages/api/src/customer-secret.ts",
+      target_form: "path",
+      resolved_path: "packages/api/src/customer-secret.ts",
+      outcome: "ok",
+    }),
+  ];
+
+  const report = anonymizeUsageReport(buildUsageReport(events));
+  assert.equal(report.reportVersion, 1);
+  assert.equal(report.privacy, "aggregate");
+  assert.deepEqual(report.period, { firstDate: "2026-07-20", lastDate: "2026-07-21" });
+  assert.equal(report.overview.distinctRepos, 1);
+  assert.deepEqual(report.overview.byHarness, { claude_code: 1 });
+
+  const serialized = JSON.stringify(report);
+  for (const secret of [
+    privateState,
+    privateRoot,
+    "stable-private-repo-key",
+    "customer-secret",
+    "packages/api",
+    "private-process-chain",
+    "private-session",
+    "12:34:56",
+  ]) {
+    assert.equal(serialized.includes(secret), false, `anonymized report leaked ${secret}`);
+  }
+  assert.equal("perRepo" in report, false);
+  assert.equal("distinctAgents" in report.overview, false);
 });
 
 function round(value: number): number {

@@ -1,0 +1,67 @@
+{
+  "$comment": "Post-run completeness audit. Every fix-diff path omitted from expectedPaths is enumerated with a reason; the harness rejects unexplained omissions.",
+  "schemaVersion": 1,
+  "manifestSha256": "94a8cb51d6bdb822855e1de6b821c33d893c7bf47069f057f43f6133c2f599af",
+  "exclusions": [
+    { "caseId": "express-pr-7377", "paths": [{ "path": "History.md", "reason": "changelog" }] },
+    { "caseId": "express-pr-6991", "paths": [{ "path": "History.md", "reason": "changelog" }] },
+    { "caseId": "flask-pr-6013", "paths": [{ "path": "CHANGES.rst", "reason": "changelog" }] },
+    {
+      "caseId": "flask-pr-5898",
+      "paths": [
+        { "path": "CHANGES.rst", "reason": "changelog" },
+        { "path": "docs/api.rst", "reason": "documentation" }
+      ]
+    },
+    { "caseId": "flask-pr-5818", "paths": [{ "path": "CHANGES.rst", "reason": "changelog" }] },
+    { "caseId": "flask-pr-5526", "paths": [{ "path": "CHANGES.rst", "reason": "changelog" }] },
+    {
+      "caseId": "flask-pr-5499",
+      "paths": [
+        { "path": "CHANGES.rst", "reason": "changelog" },
+        { "path": "docs/config.rst", "reason": "documentation" }
+      ]
+    },
+    {
+      "caseId": "gh-cli-pr-14191",
+      "paths": [{ "path": "acceptance/testdata/telemetry/agent-dimensions.txtar", "reason": "not_present_at_base" }]
+    },
+    { "caseId": "ripgrep-pr-3502", "paths": [{ "path": "Cargo.lock", "reason": "dependency_lock" }] },
+    { "caseId": "ripgrep-pr-3212", "paths": [{ "path": "CHANGELOG.md", "reason": "changelog" }] },
+    { "caseId": "ripgrep-pr-3195", "paths": [{ "path": "CHANGELOG.md", "reason": "changelog" }] },
+    { "caseId": "ripgrep-pr-3190", "paths": [{ "path": "CHANGELOG.md", "reason": "changelog" }] },
+    {
+      "caseId": "libuv-pr-5231",
+      "paths": [
+        { "path": "CMakeLists.txt", "reason": "central_registration" },
+        { "path": "Makefile.am", "reason": "central_registration" },
+        { "path": "test/test-list.h", "reason": "central_registration" },
+        { "path": "test/test-tcp-write-in-read-cb-backend-timeout.c", "reason": "not_present_at_base" }
+      ]
+    },
+    { "caseId": "libuv-pr-5230", "paths": [{ "path": "test/test-list.h", "reason": "central_registration" }] },
+    { "caseId": "libuv-pr-5224", "paths": [{ "path": "test/test-list.h", "reason": "central_registration" }] },
+    {
+      "caseId": "libuv-pr-5217",
+      "paths": [
+        { "path": "CMakeLists.txt", "reason": "central_registration" },
+        { "path": "Makefile.am", "reason": "central_registration" },
+        { "path": "test/test-list.h", "reason": "central_registration" },
+        { "path": "test/test-osx-resident-set-memory.c", "reason": "not_present_at_base" }
+      ]
+    },
+    {
+      "caseId": "libuv-pr-5206",
+      "paths": [{ "path": "test/test-list.h", "reason": "central_registration" }]
+    },
+    {
+      "caseId": "libuv-pr-5188",
+      "paths": [
+        { "path": "CMakeLists.txt", "reason": "central_registration" },
+        { "path": "Makefile.am", "reason": "central_registration" },
+        { "path": "test/test-list.h", "reason": "central_registration" },
+        { "path": "test/test-pipe-write.c", "reason": "not_present_at_base" }
+      ]
+    }
+  ]
+}

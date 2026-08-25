@@ -1,0 +1,5001 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "external-pr-navigation-v1",
+    "version": 1,
+    "frozenAt": "2026-08-25",
+    "selectionProtocol": "Forty merged public PRs across six previously unused repositories; query equals the pre-fix PR title; base is the first parent of the merge commit; oracle paths are all qualifying modified files that already exist at base. No ranking change may use this corpus as an unseen holdout after its first run."
+  },
+  "manifestSha256": "94a8cb51d6bdb822855e1de6b821c33d893c7bf47069f057f43f6133c2f599af",
+  "oracleAuditSha256": "0f53d7d6cdaefca5836755fa4aecf99a8b69e3f75c6b0ae50f511d3e7145a163",
+  "frozenCorpusEnforced": true,
+  "qualitativeResultSha256": "b3ebe357dfba046bad8731f8da4c7990b9db28ad1730a880695396d75a4f43f0",
+  "readBudget": 5,
+  "profiles": [
+    {
+      "id": "codemap-0.9.0",
+      "gitCommit": "b65223900a437cdebd836dd698995efd8a7aba7b",
+      "expectedVersion": "0.9.0"
+    },
+    {
+      "id": "codemap-0.9.1",
+      "gitCommit": "6b5d941ee5f686b4966fd46322eac67c2c75eb9d",
+      "expectedVersion": "0.9.1"
+    }
+  ],
+  "repositories": [
+    "express",
+    "fastify",
+    "flask",
+    "gh-cli",
+    "libuv",
+    "ripgrep"
+  ],
+  "metrics": [
+    {
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "tasks": 40,
+      "successRate": 0.25,
+      "avgRecall": 0.3579,
+      "avgFilesRead": 5,
+      "avgBytesRead": 456687,
+      "estTokensRead": 114172
+    },
+    {
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "tasks": 40,
+      "successRate": 0.4,
+      "avgRecall": 0.5842,
+      "avgFilesRead": 4.925,
+      "avgBytesRead": 129797,
+      "estTokensRead": 32449
+    },
+    {
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "tasks": 40,
+      "successRate": 0.4,
+      "avgRecall": 0.5842,
+      "avgFilesRead": 4.925,
+      "avgBytesRead": 129797,
+      "estTokensRead": 32449
+    },
+    {
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "tasks": 40,
+      "successRate": 0.4,
+      "avgRecall": 0.5842,
+      "avgFilesRead": 4.925,
+      "avgBytesRead": 129797,
+      "estTokensRead": 32449
+    },
+    {
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "tasks": 40,
+      "successRate": 0.425,
+      "avgRecall": 0.5717,
+      "avgFilesRead": 5,
+      "avgBytesRead": 117775,
+      "estTokensRead": 29444
+    }
+  ],
+  "perRepoMetrics": [
+    {
+      "repo": "express",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "tasks": 4,
+      "successRate": 0.25,
+      "avgRecall": 0.25,
+      "avgFilesRead": 5,
+      "avgBytesRead": 221599,
+      "estTokensRead": 55400
+    },
+    {
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "tasks": 4,
+      "successRate": 0.25,
+      "avgRecall": 0.375,
+      "avgFilesRead": 5,
+      "avgBytesRead": 56455,
+      "estTokensRead": 14114
+    },
+    {
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "tasks": 4,
+      "successRate": 0.25,
+      "avgRecall": 0.375,
+      "avgFilesRead": 5,
+      "avgBytesRead": 56455,
+      "estTokensRead": 14114
+    },
+    {
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "tasks": 4,
+      "successRate": 0.25,
+      "avgRecall": 0.375,
+      "avgFilesRead": 5,
+      "avgBytesRead": 56455,
+      "estTokensRead": 14114
+    },
+    {
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "tasks": 4,
+      "successRate": 0,
+      "avgRecall": 0.125,
+      "avgFilesRead": 5,
+      "avgBytesRead": 47854,
+      "estTokensRead": 11964
+    },
+    {
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "tasks": 8,
+      "successRate": 0,
+      "avgRecall": 0.125,
+      "avgFilesRead": 5,
+      "avgBytesRead": 270725,
+      "estTokensRead": 67681
+    },
+    {
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "tasks": 8,
+      "successRate": 0,
+      "avgRecall": 0.3333,
+      "avgFilesRead": 5,
+      "avgBytesRead": 76188,
+      "estTokensRead": 19047
+    },
+    {
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "tasks": 8,
+      "successRate": 0,
+      "avgRecall": 0.3333,
+      "avgFilesRead": 5,
+      "avgBytesRead": 76188,
+      "estTokensRead": 19047
+    },
+    {
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "tasks": 8,
+      "successRate": 0,
+      "avgRecall": 0.3333,
+      "avgFilesRead": 5,
+      "avgBytesRead": 76188,
+      "estTokensRead": 19047
+    },
+    {
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "tasks": 8,
+      "successRate": 0.125,
+      "avgRecall": 0.3958,
+      "avgFilesRead": 5,
+      "avgBytesRead": 72455,
+      "estTokensRead": 18114
+    },
+    {
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "tasks": 7,
+      "successRate": 0.1429,
+      "avgRecall": 0.4024,
+      "avgFilesRead": 5,
+      "avgBytesRead": 308959,
+      "estTokensRead": 77240
+    },
+    {
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "tasks": 7,
+      "successRate": 0.4286,
+      "avgRecall": 0.6,
+      "avgFilesRead": 5,
+      "avgBytesRead": 113290,
+      "estTokensRead": 28322
+    },
+    {
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "tasks": 7,
+      "successRate": 0.4286,
+      "avgRecall": 0.6,
+      "avgFilesRead": 5,
+      "avgBytesRead": 113290,
+      "estTokensRead": 28322
+    },
+    {
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "tasks": 7,
+      "successRate": 0.4286,
+      "avgRecall": 0.6,
+      "avgFilesRead": 5,
+      "avgBytesRead": 113290,
+      "estTokensRead": 28322
+    },
+    {
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "tasks": 7,
+      "successRate": 0.4286,
+      "avgRecall": 0.6,
+      "avgFilesRead": 5,
+      "avgBytesRead": 95412,
+      "estTokensRead": 23853
+    },
+    {
+      "repo": "gh-cli",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "tasks": 5,
+      "successRate": 0.2,
+      "avgRecall": 0.2,
+      "avgFilesRead": 5,
+      "avgBytesRead": 743550,
+      "estTokensRead": 185888
+    },
+    {
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "tasks": 5,
+      "successRate": 0,
+      "avgRecall": 0.4,
+      "avgFilesRead": 5,
+      "avgBytesRead": 105034,
+      "estTokensRead": 26258
+    },
+    {
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "tasks": 5,
+      "successRate": 0,
+      "avgRecall": 0.4,
+      "avgFilesRead": 5,
+      "avgBytesRead": 105034,
+      "estTokensRead": 26258
+    },
+    {
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "tasks": 5,
+      "successRate": 0,
+      "avgRecall": 0.4,
+      "avgFilesRead": 5,
+      "avgBytesRead": 105034,
+      "estTokensRead": 26258
+    },
+    {
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "tasks": 5,
+      "successRate": 0.2,
+      "avgRecall": 0.4,
+      "avgFilesRead": 5,
+      "avgBytesRead": 74945,
+      "estTokensRead": 18736
+    },
+    {
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "tasks": 8,
+      "successRate": 0.25,
+      "avgRecall": 0.375,
+      "avgFilesRead": 5,
+      "avgBytesRead": 528487,
+      "estTokensRead": 132122
+    },
+    {
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 5,
+      "avgBytesRead": 153182,
+      "estTokensRead": 38296
+    },
+    {
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 5,
+      "avgBytesRead": 153182,
+      "estTokensRead": 38296
+    },
+    {
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 5,
+      "avgBytesRead": 153182,
+      "estTokensRead": 38296
+    },
+    {
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 5,
+      "avgBytesRead": 135119,
+      "estTokensRead": 33780
+    },
+    {
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "tasks": 8,
+      "successRate": 0.625,
+      "avgRecall": 0.6875,
+      "avgFilesRead": 5,
+      "avgBytesRead": 638366,
+      "estTokensRead": 159592
+    },
+    {
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 4.625,
+      "avgBytesRead": 226612,
+      "estTokensRead": 56653
+    },
+    {
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 4.625,
+      "avgBytesRead": 226612,
+      "estTokensRead": 56653
+    },
+    {
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 4.625,
+      "avgBytesRead": 226612,
+      "estTokensRead": 56653
+    },
+    {
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "tasks": 8,
+      "successRate": 0.75,
+      "avgRecall": 0.8125,
+      "avgFilesRead": 5,
+      "avgBytesRead": 227047,
+      "estTokensRead": 56762
+    }
+  ],
+  "comparisons": {
+    "candidateContextVsLexical": {
+      "pairs": 40,
+      "successWins": 9,
+      "successLosses": 2,
+      "successTies": 29,
+      "recallWins": 17,
+      "recallLosses": 6,
+      "recallTies": 17,
+      "twoSidedExactP": 0.06543,
+      "successLosingCases": [
+        "express-pr-6991",
+        "gh-cli-pr-13967"
+      ],
+      "recallLosingCases": [
+        "express-pr-6991",
+        "flask-pr-5499",
+        "flask-pr-5818",
+        "gh-cli-pr-13967",
+        "libuv-pr-5230",
+        "ripgrep-pr-3195"
+      ]
+    },
+    "candidateContextVsBaseline": {
+      "pairs": 40,
+      "successWins": 3,
+      "successLosses": 2,
+      "successTies": 35,
+      "recallWins": 3,
+      "recallLosses": 3,
+      "recallTies": 34,
+      "twoSidedExactP": 1,
+      "successLosingCases": [
+        "express-pr-7265",
+        "libuv-pr-5206"
+      ],
+      "recallLosingCases": [
+        "express-pr-7265",
+        "gh-cli-pr-13967",
+        "libuv-pr-5206"
+      ]
+    },
+    "candidateContextVsSearch": {
+      "pairs": 40,
+      "successWins": 3,
+      "successLosses": 2,
+      "successTies": 35,
+      "recallWins": 3,
+      "recallLosses": 3,
+      "recallTies": 34,
+      "twoSidedExactP": 1,
+      "successLosingCases": [
+        "express-pr-7265",
+        "libuv-pr-5206"
+      ],
+      "recallLosingCases": [
+        "express-pr-7265",
+        "gh-cli-pr-13967",
+        "libuv-pr-5206"
+      ]
+    }
+  },
+  "gate": {
+    "passed": true,
+    "issues": [],
+    "successDeltaVsLexical": 0.175,
+    "tokenRatioVsLexical": 0.2579,
+    "successDeltaVsBaseline": 0.025
+  },
+  "cases": [
+    {
+      "caseId": "express-pr-7377",
+      "repo": "express",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "filesRead": [
+        "History.md",
+        "test/express.urlencoded.js",
+        "lib/response.js",
+        "lib/application.js",
+        "lib/router/index.js"
+      ],
+      "bytesRead": 202446,
+      "missingPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7377",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "filesRead": [
+        "lib/middleware/query.js",
+        "test/express.static.js",
+        "examples/mvc/index.js",
+        "examples/static-files/index.js",
+        "lib/response.js"
+      ],
+      "bytesRead": 56774,
+      "missingPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7377",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "filesRead": [
+        "lib/middleware/query.js",
+        "test/express.static.js",
+        "examples/mvc/index.js",
+        "examples/static-files/index.js",
+        "lib/response.js"
+      ],
+      "bytesRead": 56774,
+      "missingPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7377",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "filesRead": [
+        "lib/middleware/query.js",
+        "test/express.static.js",
+        "examples/mvc/index.js",
+        "examples/static-files/index.js",
+        "lib/response.js"
+      ],
+      "bytesRead": 56774,
+      "missingPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7377",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "filesRead": [
+        "lib/middleware/query.js",
+        "test/express.static.js",
+        "test/req.query.js",
+        "examples/mvc/index.js",
+        "examples/static-files/index.js"
+      ],
+      "bytesRead": 31652,
+      "missingPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7181",
+      "repo": "express",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "filesRead": [
+        "History.md",
+        "test/app.router.js",
+        "test/res.sendFile.js",
+        "test/express.urlencoded.js",
+        "test/express.static.js"
+      ],
+      "bytesRead": 230499,
+      "missingPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7181",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "filesRead": [
+        "test/req.query.js",
+        "lib/middleware/query.js",
+        "lib/request.js",
+        "lib/response.js",
+        "lib/router/index.js"
+      ],
+      "bytesRead": 60427,
+      "missingPaths": [
+        "lib/utils.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "express-pr-7181",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "filesRead": [
+        "test/req.query.js",
+        "lib/middleware/query.js",
+        "lib/request.js",
+        "lib/response.js",
+        "lib/router/index.js"
+      ],
+      "bytesRead": 60427,
+      "missingPaths": [
+        "lib/utils.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "express-pr-7181",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "filesRead": [
+        "test/req.query.js",
+        "lib/middleware/query.js",
+        "lib/request.js",
+        "lib/response.js",
+        "lib/router/index.js"
+      ],
+      "bytesRead": 60427,
+      "missingPaths": [
+        "lib/utils.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "express-pr-7181",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "filesRead": [
+        "test/req.query.js",
+        "lib/middleware/query.js",
+        "lib/request.js",
+        "lib/response.js",
+        "lib/router/index.js"
+      ],
+      "bytesRead": 60427,
+      "missingPaths": [
+        "lib/utils.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "express-pr-6991",
+      "repo": "express",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "filesRead": [
+        "History.md",
+        "test/express.urlencoded.js",
+        "test/express.static.js",
+        "test/express.json.js",
+        "lib/response.js"
+      ],
+      "bytesRead": 222735,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "express-pr-6991",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "filesRead": [
+        "Readme.md",
+        "examples/README.md",
+        "test/req.is.js",
+        "test/res.type.js",
+        "test/res.send.js"
+      ],
+      "bytesRead": 30288,
+      "missingPaths": [
+        "lib/response.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-6991",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "filesRead": [
+        "Readme.md",
+        "examples/README.md",
+        "test/req.is.js",
+        "test/res.type.js",
+        "test/res.send.js"
+      ],
+      "bytesRead": 30288,
+      "missingPaths": [
+        "lib/response.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-6991",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "filesRead": [
+        "Readme.md",
+        "examples/README.md",
+        "test/req.is.js",
+        "test/res.type.js",
+        "test/res.send.js"
+      ],
+      "bytesRead": 30288,
+      "missingPaths": [
+        "lib/response.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-6991",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "filesRead": [
+        "Readme.md",
+        "test/req.is.js",
+        "test/res.type.js",
+        "test/res.send.js",
+        "examples/README.md"
+      ],
+      "bytesRead": 30288,
+      "missingPaths": [
+        "lib/response.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7265",
+      "repo": "express",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/request.js"
+      ],
+      "filesRead": [
+        "History.md",
+        "test/res.sendFile.js",
+        "lib/response.js",
+        "test/express.urlencoded.js",
+        "test/app.router.js"
+      ],
+      "bytesRead": 230717,
+      "missingPaths": [
+        "lib/request.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "express-pr-7265",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/request.js"
+      ],
+      "filesRead": [
+        "lib/response.js",
+        "test/express.json.js",
+        "test/res.location.js",
+        "test/res.render.js",
+        "lib/request.js"
+      ],
+      "bytesRead": 78331,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "express-pr-7265",
+      "repo": "express",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/request.js"
+      ],
+      "filesRead": [
+        "lib/response.js",
+        "test/express.json.js",
+        "test/res.location.js",
+        "test/res.render.js",
+        "lib/request.js"
+      ],
+      "bytesRead": 78331,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "express-pr-7265",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/request.js"
+      ],
+      "filesRead": [
+        "lib/response.js",
+        "test/express.json.js",
+        "test/res.location.js",
+        "test/res.render.js",
+        "lib/request.js"
+      ],
+      "bytesRead": 78331,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "express-pr-7265",
+      "repo": "express",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/request.js"
+      ],
+      "filesRead": [
+        "lib/response.js",
+        "test/res.location.js",
+        "test/res.render.js",
+        "test/app.response.js",
+        "test/express.json.js"
+      ],
+      "bytesRead": 69050,
+      "missingPaths": [
+        "lib/request.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6965",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/four-oh-four.js",
+        "test/404s.test.js"
+      ],
+      "filesRead": [
+        "test/404s.test.js",
+        "test/hooks.test.js",
+        "docs/Reference/Server.md",
+        "types/hooks.d.ts",
+        "test/route-prefix.test.js"
+      ],
+      "bytesRead": 303242,
+      "missingPaths": [
+        "lib/four-oh-four.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6965",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/four-oh-four.js",
+        "test/404s.test.js"
+      ],
+      "filesRead": [
+        "types/reply.d.ts",
+        "docs/Reference/Hooks.md",
+        "lib/reply.js",
+        "types/hooks.d.ts",
+        "test/404s.test.js"
+      ],
+      "bytesRead": 169674,
+      "missingPaths": [
+        "lib/four-oh-four.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6965",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/four-oh-four.js",
+        "test/404s.test.js"
+      ],
+      "filesRead": [
+        "types/reply.d.ts",
+        "docs/Reference/Hooks.md",
+        "lib/reply.js",
+        "types/hooks.d.ts",
+        "test/404s.test.js"
+      ],
+      "bytesRead": 169674,
+      "missingPaths": [
+        "lib/four-oh-four.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6965",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/four-oh-four.js",
+        "test/404s.test.js"
+      ],
+      "filesRead": [
+        "types/reply.d.ts",
+        "docs/Reference/Hooks.md",
+        "lib/reply.js",
+        "types/hooks.d.ts",
+        "test/404s.test.js"
+      ],
+      "bytesRead": 169674,
+      "missingPaths": [
+        "lib/four-oh-four.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6965",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/four-oh-four.js",
+        "test/404s.test.js"
+      ],
+      "filesRead": [
+        "types/reply.d.ts",
+        "test/404s.test.js",
+        "docs/Reference/Hooks.md",
+        "lib/reply.js",
+        "types/hooks.d.ts"
+      ],
+      "bytesRead": 169674,
+      "missingPaths": [
+        "lib/four-oh-four.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6942",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/TypeScript.md",
+        "test/types/type-provider.tst.ts",
+        "test/content-parser.test.js",
+        "types/hooks.d.ts",
+        "docs/Reference/Server.md"
+      ],
+      "bytesRead": 249578,
+      "missingPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6942",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "lib/content-type-parser.js",
+        "types/content-type-parser.d.ts",
+        "test/reply-media-type.test.js",
+        "test/schema-validation.test.js"
+      ],
+      "bytesRead": 64523,
+      "missingPaths": [
+        "test/content-type.test.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6942",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "lib/content-type-parser.js",
+        "types/content-type-parser.d.ts",
+        "test/reply-media-type.test.js",
+        "test/schema-validation.test.js"
+      ],
+      "bytesRead": 64523,
+      "missingPaths": [
+        "test/content-type.test.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6942",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "lib/content-type-parser.js",
+        "types/content-type-parser.d.ts",
+        "test/reply-media-type.test.js",
+        "test/schema-validation.test.js"
+      ],
+      "bytesRead": 64523,
+      "missingPaths": [
+        "test/content-type.test.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6942",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "test/reply-media-type.test.js",
+        "test/schema-validation.test.js",
+        "test/content-type.test.js",
+        "test/internals/content-type-parser.test.js"
+      ],
+      "bytesRead": 58914,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "fastify-pr-6892",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "filesRead": [
+        "test/hooks.test.js",
+        "docs/Reference/TypeScript.md",
+        "docs/Guides/Ecosystem.md",
+        "docs/Reference/Server.md",
+        "test/schema-feature.test.js"
+      ],
+      "bytesRead": 341144,
+      "missingPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6892",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "lib/log-controller.js",
+        "lib/schema-controller.js",
+        "test/internals/logger.test.js",
+        "types/content-type-parser.d.ts"
+      ],
+      "bytesRead": 37520,
+      "missingPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6892",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "lib/log-controller.js",
+        "lib/schema-controller.js",
+        "test/internals/logger.test.js",
+        "types/content-type-parser.d.ts"
+      ],
+      "bytesRead": 37520,
+      "missingPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6892",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "lib/log-controller.js",
+        "lib/schema-controller.js",
+        "test/internals/logger.test.js",
+        "types/content-type-parser.d.ts"
+      ],
+      "bytesRead": 37520,
+      "missingPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6892",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "test/internals/logger.test.js",
+        "test/content-type.test.js",
+        "test/internals/content-type-parser.test.js",
+        "lib/log-controller.js"
+      ],
+      "bytesRead": 38393,
+      "missingPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6889",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/Server.md",
+        "test/hooks.test.js",
+        "docs/Reference/TypeScript.md",
+        "test/hooks.on-listen.test.js",
+        "test/404s.test.js"
+      ],
+      "bytesRead": 324455,
+      "missingPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6889",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/Server.md",
+        "test/close.test.js",
+        "lib/errors.js",
+        "lib/server.js",
+        "test/custom-http-server.test.js"
+      ],
+      "bytesRead": 135010,
+      "missingPaths": [
+        "fastify.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6889",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/Server.md",
+        "test/close.test.js",
+        "lib/errors.js",
+        "lib/server.js",
+        "test/custom-http-server.test.js"
+      ],
+      "bytesRead": 135010,
+      "missingPaths": [
+        "fastify.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6889",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/Server.md",
+        "test/close.test.js",
+        "lib/errors.js",
+        "lib/server.js",
+        "test/custom-http-server.test.js"
+      ],
+      "bytesRead": 135010,
+      "missingPaths": [
+        "fastify.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6889",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/Server.md",
+        "test/close.test.js",
+        "test/custom-http-server.test.js",
+        "test/https/custom-https-server.test.js",
+        "test/internals/server.test.js"
+      ],
+      "bytesRead": 108787,
+      "missingPaths": [
+        "fastify.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6881",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/Server.md",
+        "docs/Reference/TypeScript.md",
+        "test/hooks.test.js",
+        "types/instance.d.ts",
+        "docs/Reference/Hooks.md"
+      ],
+      "bytesRead": 308542,
+      "missingPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6881",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "filesRead": [
+        "test/request-error.test.js",
+        "examples/benchmark/hooks-benchmark-async-await.js",
+        "lib/log-controller.js",
+        "types/logger.d.ts",
+        "test/internals/reply.test.js"
+      ],
+      "bytesRead": 82776,
+      "missingPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6881",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "filesRead": [
+        "test/request-error.test.js",
+        "examples/benchmark/hooks-benchmark-async-await.js",
+        "lib/log-controller.js",
+        "types/logger.d.ts",
+        "test/internals/reply.test.js"
+      ],
+      "bytesRead": 82776,
+      "missingPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6881",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "filesRead": [
+        "test/request-error.test.js",
+        "examples/benchmark/hooks-benchmark-async-await.js",
+        "lib/log-controller.js",
+        "types/logger.d.ts",
+        "test/internals/reply.test.js"
+      ],
+      "bytesRead": 82776,
+      "missingPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6881",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "filesRead": [
+        "test/request-error.test.js",
+        "test/internals/reply.test.js",
+        "lib/symbols.js",
+        "examples/benchmark/hooks-benchmark-async-await.js",
+        "lib/log-controller.js"
+      ],
+      "bytesRead": 80833,
+      "missingPaths": [
+        "lib/hooks.js",
+        "test/reply-error.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6865",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "filesRead": [
+        "docs/Reference/TypeScript.md",
+        "docs/Reference/Server.md",
+        "test/types/type-provider.tst.ts",
+        "test/types/route.tst.ts",
+        "lib/config-validator.js"
+      ],
+      "bytesRead": 238700,
+      "missingPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6865",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "types/content-type-parser.d.ts",
+        "test/types/content-type-parser.tst.ts",
+        "test/content-parser.test.js"
+      ],
+      "bytesRead": 41683,
+      "missingPaths": [
+        "test/internals/reply.test.js"
+      ],
+      "success": false,
+      "recall": 0.6667
+    },
+    {
+      "caseId": "fastify-pr-6865",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "types/content-type-parser.d.ts",
+        "test/types/content-type-parser.tst.ts",
+        "test/content-parser.test.js"
+      ],
+      "bytesRead": 41683,
+      "missingPaths": [
+        "test/internals/reply.test.js"
+      ],
+      "success": false,
+      "recall": 0.6667
+    },
+    {
+      "caseId": "fastify-pr-6865",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "types/content-type-parser.d.ts",
+        "test/types/content-type-parser.tst.ts",
+        "test/content-parser.test.js"
+      ],
+      "bytesRead": 41683,
+      "missingPaths": [
+        "test/internals/reply.test.js"
+      ],
+      "success": false,
+      "recall": 0.6667
+    },
+    {
+      "caseId": "fastify-pr-6865",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "filesRead": [
+        "lib/content-type.js",
+        "test/types/content-type-parser.tst.ts",
+        "test/content-parser.test.js",
+        "test/internals/content-type-parser.test.js",
+        "test/content-type.test.js"
+      ],
+      "bytesRead": 40427,
+      "missingPaths": [
+        "test/internals/reply.test.js"
+      ],
+      "success": false,
+      "recall": 0.6667
+    },
+    {
+      "caseId": "fastify-pr-6846",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "filesRead": [
+        "test/types/type-provider.tst.ts",
+        "test/types/route.tst.ts",
+        "types/hooks.d.ts",
+        "test/types/hooks.tst.ts",
+        "docs/Reference/TypeScript.md"
+      ],
+      "bytesRead": 197521,
+      "missingPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6846",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "filesRead": [
+        "test/content-type.test.js",
+        "test/http2/secure-with-fallback.test.js",
+        "test/route.7.test.js",
+        "test/route.5.test.js",
+        "test/build-certificate.js"
+      ],
+      "bytesRead": 29224,
+      "missingPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6846",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "filesRead": [
+        "test/content-type.test.js",
+        "test/http2/secure-with-fallback.test.js",
+        "test/route.7.test.js",
+        "test/route.5.test.js",
+        "test/build-certificate.js"
+      ],
+      "bytesRead": 29224,
+      "missingPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6846",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "filesRead": [
+        "test/content-type.test.js",
+        "test/http2/secure-with-fallback.test.js",
+        "test/route.7.test.js",
+        "test/route.5.test.js",
+        "test/build-certificate.js"
+      ],
+      "bytesRead": 29224,
+      "missingPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6846",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "filesRead": [
+        "test/content-type.test.js",
+        "test/http2/secure-with-fallback.test.js",
+        "test/route.7.test.js",
+        "test/route.5.test.js",
+        "test/build-certificate.js"
+      ],
+      "bytesRead": 29224,
+      "missingPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "fastify-pr-6803",
+      "repo": "fastify",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "lib/plugin-override.js",
+        "test/route-prefix.test.js"
+      ],
+      "filesRead": [
+        "test/route-prefix.test.js",
+        "docs/Reference/Server.md",
+        "docs/Reference/Routes.md",
+        "test/404s.test.js",
+        "lib/route.js"
+      ],
+      "bytesRead": 202617,
+      "missingPaths": [
+        "lib/plugin-override.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6803",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/plugin-override.js",
+        "test/route-prefix.test.js"
+      ],
+      "filesRead": [
+        "test/plugin.3.test.js",
+        "lib/handle-request.js",
+        "lib/plugin-override.js",
+        "lib/reply.js",
+        "test/find-route.test.js"
+      ],
+      "bytesRead": 49091,
+      "missingPaths": [
+        "test/route-prefix.test.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6803",
+      "repo": "fastify",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/plugin-override.js",
+        "test/route-prefix.test.js"
+      ],
+      "filesRead": [
+        "test/plugin.3.test.js",
+        "lib/handle-request.js",
+        "lib/plugin-override.js",
+        "lib/reply.js",
+        "test/find-route.test.js"
+      ],
+      "bytesRead": 49091,
+      "missingPaths": [
+        "test/route-prefix.test.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6803",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "lib/plugin-override.js",
+        "test/route-prefix.test.js"
+      ],
+      "filesRead": [
+        "test/plugin.3.test.js",
+        "lib/handle-request.js",
+        "lib/plugin-override.js",
+        "lib/reply.js",
+        "test/find-route.test.js"
+      ],
+      "bytesRead": 49091,
+      "missingPaths": [
+        "test/route-prefix.test.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "fastify-pr-6803",
+      "repo": "fastify",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "lib/plugin-override.js",
+        "test/route-prefix.test.js"
+      ],
+      "filesRead": [
+        "test/plugin.3.test.js",
+        "test/find-route.test.js",
+        "fastify.js",
+        "lib/handle-request.js",
+        "lib/plugin-override.js"
+      ],
+      "bytesRead": 53391,
+      "missingPaths": [
+        "test/route-prefix.test.js"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-6096",
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "filesRead": [
+        "uv.lock",
+        "CHANGES.rst",
+        "src/flask/app.py",
+        "docs/config.rst",
+        "src/flask/sansio/app.py"
+      ],
+      "bytesRead": 571446,
+      "missingPaths": [
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "success": false,
+      "recall": 0.25
+    },
+    {
+      "caseId": "flask-pr-6096",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "src/flask/debughelpers.py",
+        "src/flask/cli.py",
+        "src/flask/sessions.py"
+      ],
+      "bytesRead": 133360,
+      "missingPaths": [
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-6096",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "src/flask/debughelpers.py",
+        "src/flask/cli.py",
+        "src/flask/sessions.py"
+      ],
+      "bytesRead": 133360,
+      "missingPaths": [
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-6096",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "src/flask/debughelpers.py",
+        "src/flask/cli.py",
+        "src/flask/sessions.py"
+      ],
+      "bytesRead": 133360,
+      "missingPaths": [
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-6096",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "tests/type_check/typing_app_decorators.py",
+        "tests/test_apps/cliapp/__init__.py",
+        "src/flask/cli.py",
+        "src/flask/testing.py"
+      ],
+      "bytesRead": 112910,
+      "missingPaths": [
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-6013",
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "CHANGES.rst",
+        "docs/config.rst",
+        "src/flask/sansio/app.py",
+        "src/flask/app.py",
+        "src/flask/config.py"
+      ],
+      "bytesRead": 220407,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-6013",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/sansio/app.py",
+        "src/flask/json/tag.py",
+        "src/flask/sessions.py",
+        "src/flask/cli.py"
+      ],
+      "bytesRead": 165863,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-6013",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/sansio/app.py",
+        "src/flask/json/tag.py",
+        "src/flask/sessions.py",
+        "src/flask/cli.py"
+      ],
+      "bytesRead": 165863,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-6013",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/sansio/app.py",
+        "src/flask/json/tag.py",
+        "src/flask/sessions.py",
+        "src/flask/cli.py"
+      ],
+      "bytesRead": 165863,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-6013",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "tests/type_check/typing_app_decorators.py",
+        "tests/test_apps/cliapp/__init__.py",
+        "src/flask/cli.py",
+        "src/flask/sansio/app.py"
+      ],
+      "bytesRead": 142202,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5898",
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/flask/helpers.py",
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "CHANGES.rst",
+        "src/flask/app.py",
+        "src/flask/sansio/app.py",
+        "docs/quickstart.rst",
+        "uv.lock"
+      ],
+      "bytesRead": 504194,
+      "missingPaths": [
+        "src/flask/helpers.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-5898",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/helpers.py",
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/helpers.py",
+        "tests/test_helpers.py",
+        "src/flask/sansio/blueprints.py",
+        "src/flask/sansio/scaffold.py",
+        "tests/test_basic.py"
+      ],
+      "bytesRead": 145272,
+      "missingPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-5898",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/helpers.py",
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/helpers.py",
+        "tests/test_helpers.py",
+        "src/flask/sansio/blueprints.py",
+        "src/flask/sansio/scaffold.py",
+        "tests/test_basic.py"
+      ],
+      "bytesRead": 145272,
+      "missingPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-5898",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/helpers.py",
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/helpers.py",
+        "tests/test_helpers.py",
+        "src/flask/sansio/blueprints.py",
+        "src/flask/sansio/scaffold.py",
+        "tests/test_basic.py"
+      ],
+      "bytesRead": 145272,
+      "missingPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-5898",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/helpers.py",
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/helpers.py",
+        "tests/test_basic.py",
+        "tests/test_helpers.py",
+        "src/flask/globals.py",
+        "src/flask/sansio/blueprints.py"
+      ],
+      "bytesRead": 117322,
+      "missingPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "flask-pr-5818",
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "filesRead": [
+        "CHANGES.rst",
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "src/flask/cli.py",
+        "docs/api.rst"
+      ],
+      "bytesRead": 208129,
+      "missingPaths": [
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "success": false,
+      "recall": 0.4
+    },
+    {
+      "caseId": "flask-pr-5818",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/cli.py",
+        "src/flask/views.py",
+        "src/flask/json/tag.py",
+        "tests/test_views.py"
+      ],
+      "bytesRead": 120521,
+      "missingPaths": [
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "success": false,
+      "recall": 0.2
+    },
+    {
+      "caseId": "flask-pr-5818",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/cli.py",
+        "src/flask/views.py",
+        "src/flask/json/tag.py",
+        "tests/test_views.py"
+      ],
+      "bytesRead": 120521,
+      "missingPaths": [
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "success": false,
+      "recall": 0.2
+    },
+    {
+      "caseId": "flask-pr-5818",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/cli.py",
+        "src/flask/views.py",
+        "src/flask/json/tag.py",
+        "tests/test_views.py"
+      ],
+      "bytesRead": 120521,
+      "missingPaths": [
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "success": false,
+      "recall": 0.2
+    },
+    {
+      "caseId": "flask-pr-5818",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "tests/test_views.py",
+        "tests/type_check/typing_app_decorators.py",
+        "tests/test_apps/cliapp/__init__.py",
+        "src/flask/cli.py"
+      ],
+      "bytesRead": 104867,
+      "missingPaths": [
+        "src/flask/ctx.py",
+        "src/flask/templating.py",
+        "tests/test_reqctx.py",
+        "tests/test_subclassing.py"
+      ],
+      "success": false,
+      "recall": 0.2
+    },
+    {
+      "caseId": "flask-pr-5808",
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "CHANGES.rst",
+        "src/flask/app.py",
+        "docs/quickstart.rst",
+        "src/flask/sansio/scaffold.py",
+        "tests/test_blueprints.py"
+      ],
+      "bytesRead": 224682,
+      "missingPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "flask-pr-5808",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/sansio/app.py",
+        "src/flask/app.py",
+        "src/flask/templating.py",
+        "src/flask/debughelpers.py",
+        "src/flask/sansio/scaffold.py"
+      ],
+      "bytesRead": 143830,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5808",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/sansio/app.py",
+        "src/flask/app.py",
+        "src/flask/templating.py",
+        "src/flask/debughelpers.py",
+        "src/flask/sansio/scaffold.py"
+      ],
+      "bytesRead": 143830,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5808",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/sansio/app.py",
+        "src/flask/app.py",
+        "src/flask/templating.py",
+        "src/flask/debughelpers.py",
+        "src/flask/sansio/scaffold.py"
+      ],
+      "bytesRead": 143830,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5808",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "filesRead": [
+        "src/flask/sansio/app.py",
+        "tests/test_apps/blueprintapp/__init__.py",
+        "src/flask/app.py",
+        "src/flask/templating.py",
+        "src/flask/debughelpers.py"
+      ],
+      "bytesRead": 113715,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5526",
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "tests/test_helpers.py"
+      ],
+      "filesRead": [
+        "CHANGES.rst",
+        "src/flask/app.py",
+        "src/flask/sansio/app.py",
+        "docs/quickstart.rst",
+        "src/flask/sansio/scaffold.py"
+      ],
+      "bytesRead": 230380,
+      "missingPaths": [
+        "src/flask/blueprints.py",
+        "tests/test_helpers.py"
+      ],
+      "success": false,
+      "recall": 0.3333
+    },
+    {
+      "caseId": "flask-pr-5526",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "tests/test_helpers.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "src/flask/json/__init__.py",
+        "tests/test_helpers.py",
+        "examples/tutorial/flaskr/db.py"
+      ],
+      "bytesRead": 81707,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5526",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "tests/test_helpers.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "src/flask/json/__init__.py",
+        "tests/test_helpers.py",
+        "examples/tutorial/flaskr/db.py"
+      ],
+      "bytesRead": 81707,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5526",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "tests/test_helpers.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "src/flask/json/__init__.py",
+        "tests/test_helpers.py",
+        "examples/tutorial/flaskr/db.py"
+      ],
+      "bytesRead": 81707,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5526",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/blueprints.py",
+        "tests/test_helpers.py"
+      ],
+      "filesRead": [
+        "src/flask/app.py",
+        "tests/test_helpers.py",
+        "tests/typing/typing_app_decorators.py",
+        "tests/test_apps/cliapp/__init__.py",
+        "src/flask/blueprints.py"
+      ],
+      "bytesRead": 75495,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "flask-pr-5499",
+      "repo": "flask",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "filesRead": [
+        "CHANGES.rst",
+        "docs/config.rst",
+        "src/flask/sansio/app.py",
+        "tests/test_config.py",
+        "src/flask/app.py"
+      ],
+      "bytesRead": 203472,
+      "missingPaths": [
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "success": false,
+      "recall": 0.3333
+    },
+    {
+      "caseId": "flask-pr-5499",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "filesRead": [
+        ".github/ISSUE_TEMPLATE/config.yml",
+        ".pre-commit-config.yaml",
+        ".devcontainer/devcontainer.json",
+        ".github/workflows/lock.yaml",
+        ".github/workflows/pre-commit.yaml"
+      ],
+      "bytesRead": 2474,
+      "missingPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "flask-pr-5499",
+      "repo": "flask",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "filesRead": [
+        ".github/ISSUE_TEMPLATE/config.yml",
+        ".pre-commit-config.yaml",
+        ".devcontainer/devcontainer.json",
+        ".github/workflows/lock.yaml",
+        ".github/workflows/pre-commit.yaml"
+      ],
+      "bytesRead": 2474,
+      "missingPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "flask-pr-5499",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "filesRead": [
+        ".github/ISSUE_TEMPLATE/config.yml",
+        ".pre-commit-config.yaml",
+        ".devcontainer/devcontainer.json",
+        ".github/workflows/lock.yaml",
+        ".github/workflows/pre-commit.yaml"
+      ],
+      "bytesRead": 2474,
+      "missingPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "flask-pr-5499",
+      "repo": "flask",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "filesRead": [
+        ".github/ISSUE_TEMPLATE/config.yml",
+        "tests/static/config.json",
+        "tests/static/config.toml",
+        ".pre-commit-config.yaml",
+        ".devcontainer/devcontainer.json"
+      ],
+      "bytesRead": 1376,
+      "missingPaths": [
+        "src/flask/app.py",
+        "src/flask/sessions.py",
+        "tests/test_basic.py"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14222",
+      "repo": "gh-cli",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/skills/install/install_test.go",
+        ".github/workflows/issue-triage.lock.yml",
+        ".github/workflows/dependabot-triage.lock.yml",
+        ".github/workflows/scripts/spam-detection/eval-prompts.yml",
+        "pkg/cmd/skills/install/install.go"
+      ],
+      "bytesRead": 824671,
+      "missingPaths": [
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14222",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "filesRead": [
+        "pkg/iostreams/color.go",
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/skills/install/install_test.go",
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/publish/publish_test.go"
+      ],
+      "bytesRead": 220202,
+      "missingPaths": [
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-14222",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "filesRead": [
+        "pkg/iostreams/color.go",
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/skills/install/install_test.go",
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/publish/publish_test.go"
+      ],
+      "bytesRead": 220202,
+      "missingPaths": [
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-14222",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "filesRead": [
+        "pkg/iostreams/color.go",
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/skills/install/install_test.go",
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/publish/publish_test.go"
+      ],
+      "bytesRead": 220202,
+      "missingPaths": [
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-14222",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "filesRead": [
+        "pkg/iostreams/color.go",
+        "pkg/iostreams/color_test.go",
+        "pkg/jsoncolor/jsoncolor_test.go",
+        "pkg/cmd/copilot/copilot.go",
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "bytesRead": 134079,
+      "missingPaths": [
+        "pkg/cmd/copilot/copilot_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-14191",
+      "repo": "gh-cli",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "filesRead": [
+        ".github/workflows/scripts/spam-detection/eval-prompts.yml",
+        ".github/workflows/dependabot-triage.lock.yml",
+        ".github/workflows/issue-triage.lock.yml",
+        ".github/extensions/terminal-mockup/assets/html2canvas.min.js",
+        "pkg/cmd/agent-task/shared/testdata/log-1-input.txt"
+      ],
+      "bytesRead": 918440,
+      "missingPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14191",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "filesRead": [
+        "AGENTS.md",
+        "internal/config/config.go",
+        ".github/workflows/shared/dependabot-triage-security.md",
+        "skills/gh-skill/SKILL.md",
+        ".github/ISSUE_TEMPLATE/submit-a-design-proposal.md"
+      ],
+      "bytesRead": 44229,
+      "missingPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14191",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "filesRead": [
+        "AGENTS.md",
+        "internal/config/config.go",
+        ".github/workflows/shared/dependabot-triage-security.md",
+        "skills/gh-skill/SKILL.md",
+        ".github/ISSUE_TEMPLATE/submit-a-design-proposal.md"
+      ],
+      "bytesRead": 44229,
+      "missingPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14191",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "filesRead": [
+        "AGENTS.md",
+        "internal/config/config.go",
+        ".github/workflows/shared/dependabot-triage-security.md",
+        "skills/gh-skill/SKILL.md",
+        ".github/ISSUE_TEMPLATE/submit-a-design-proposal.md"
+      ],
+      "bytesRead": 44229,
+      "missingPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14191",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "filesRead": [
+        "AGENTS.md",
+        "internal/agents/detect_test.go",
+        "internal/config/config.go",
+        ".github/workflows/shared/dependabot-triage-security.md",
+        "skills/gh-skill/SKILL.md"
+      ],
+      "bytesRead": 49394,
+      "missingPaths": [
+        "internal/ghcmd/cmd.go",
+        "internal/ghcmd/cmd_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14056",
+      "repo": "gh-cli",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "filesRead": [
+        ".github/workflows/scripts/spam-detection/eval-prompts.yml",
+        "pkg/cmd/project/shared/queries/queries.go",
+        "pkg/cmd/project/item-edit/item_edit_test.go",
+        ".github/workflows/dependabot-triage.lock.yml",
+        ".github/workflows/issue-triage.lock.yml"
+      ],
+      "bytesRead": 759617,
+      "missingPaths": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-14056",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-edit/item_edit_test.go",
+        "pkg/cmd/project/item-edit/item_edit.go",
+        "pkg/cmd/issue/create/create_test.go",
+        "pkg/cmd/skills/search/search_test.go"
+      ],
+      "bytesRead": 136867,
+      "missingPaths": [
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-14056",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-edit/item_edit_test.go",
+        "pkg/cmd/project/item-edit/item_edit.go",
+        "pkg/cmd/issue/create/create_test.go",
+        "pkg/cmd/skills/search/search_test.go"
+      ],
+      "bytesRead": 136867,
+      "missingPaths": [
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-14056",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-edit/item_edit_test.go",
+        "pkg/cmd/project/item-edit/item_edit.go",
+        "pkg/cmd/issue/create/create_test.go",
+        "pkg/cmd/skills/search/search_test.go"
+      ],
+      "bytesRead": 136867,
+      "missingPaths": [
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-14056",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-add/item_add_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/project/item-add/item_add.go",
+        "pkg/cmd/project/item-add/item_add_test.go",
+        "pkg/cmd/project/item-edit/item_edit_test.go",
+        "pkg/cmd/project/item-edit/item_edit.go",
+        "pkg/cmd/issue/create/create_test.go"
+      ],
+      "bytesRead": 125362,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "gh-cli-pr-13988",
+      "repo": "gh-cli",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "api/client.go",
+        "api/client_test.go",
+        "pkg/cmd/attestation/api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "filesRead": [
+        ".github/workflows/scripts/spam-detection/eval-prompts.yml",
+        ".github/workflows/issue-triage.lock.yml",
+        ".github/workflows/dependabot-triage.lock.yml",
+        ".github/extensions/terminal-mockup/assets/html2canvas.min.js",
+        "git/client_test.go"
+      ],
+      "bytesRead": 924686,
+      "missingPaths": [
+        "api/client.go",
+        "api/client_test.go",
+        "pkg/cmd/attestation/api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "gh-cli-pr-13988",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "api/client.go",
+        "api/client_test.go",
+        "pkg/cmd/attestation/api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/attestation/api/mock_githubApiClient_test.go",
+        "api/client.go",
+        "pkg/cmd/status/status.go",
+        "pkg/cmd/attestation/api/client.go",
+        "pkg/cmd/attestation/api/client_test.go"
+      ],
+      "bytesRead": 51605,
+      "missingPaths": [
+        "api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-13988",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "api/client.go",
+        "api/client_test.go",
+        "pkg/cmd/attestation/api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/attestation/api/mock_githubApiClient_test.go",
+        "api/client.go",
+        "pkg/cmd/status/status.go",
+        "pkg/cmd/attestation/api/client.go",
+        "pkg/cmd/attestation/api/client_test.go"
+      ],
+      "bytesRead": 51605,
+      "missingPaths": [
+        "api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-13988",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "api/client.go",
+        "api/client_test.go",
+        "pkg/cmd/attestation/api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/attestation/api/mock_githubApiClient_test.go",
+        "api/client.go",
+        "pkg/cmd/status/status.go",
+        "pkg/cmd/attestation/api/client.go",
+        "pkg/cmd/attestation/api/client_test.go"
+      ],
+      "bytesRead": 51605,
+      "missingPaths": [
+        "api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-13988",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "api/client.go",
+        "api/client_test.go",
+        "pkg/cmd/attestation/api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/attestation/api/mock_githubApiClient_test.go",
+        "api/client.go",
+        "pkg/cmd/status/status.go",
+        "pkg/cmd/attestation/api/client.go",
+        "pkg/cmd/attestation/api/client_test.go"
+      ],
+      "bytesRead": 51605,
+      "missingPaths": [
+        "api/client_test.go",
+        "pkg/cmd/status/status_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-13967",
+      "repo": "gh-cli",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/skills/install/install_test.go",
+        "internal/skills/discovery/discovery_test.go",
+        "internal/skills/discovery/discovery.go",
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/update/update_test.go"
+      ],
+      "bytesRead": 290338,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "gh-cli-pr-13967",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/label/shared.go",
+        "docs/primer/components/README.md",
+        "skills/gh-skill/SKILL.md",
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/preview/preview.go"
+      ],
+      "bytesRead": 72265,
+      "missingPaths": [
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-13967",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/label/shared.go",
+        "docs/primer/components/README.md",
+        "skills/gh-skill/SKILL.md",
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/preview/preview.go"
+      ],
+      "bytesRead": 72265,
+      "missingPaths": [
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-13967",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/label/shared.go",
+        "docs/primer/components/README.md",
+        "skills/gh-skill/SKILL.md",
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/preview/preview.go"
+      ],
+      "bytesRead": 72265,
+      "missingPaths": [
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "gh-cli-pr-13967",
+      "repo": "gh-cli",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "filesRead": [
+        "pkg/cmd/label/shared.go",
+        "pkg/cmd/agent-task/shared/capi_test.go",
+        "pkg/cmd/agent-task/shared/log_test.go",
+        "pkg/cmd/alias/shared/validations_test.go",
+        "docs/primer/components/README.md"
+      ],
+      "bytesRead": 14284,
+      "missingPaths": [
+        "pkg/cmd/skills/install/install.go",
+        "pkg/cmd/skills/install/install_test.go"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "ripgrep-pr-3502",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/types.rs"
+      ],
+      "filesRead": [
+        "benchsuite/runs/2016-09-20-ubuntu1604-ec2/raw.csv",
+        "crates/ignore/src/dir.rs",
+        "benchsuite/runs/2018-01-08-archlinux-cheetah/raw.csv",
+        "crates/core/flags/defs.rs",
+        "crates/ignore/src/incremental.rs"
+      ],
+      "bytesRead": 694466,
+      "missingPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/types.rs"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "ripgrep-pr-3502",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/types.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/globset/src/lib.rs",
+        "crates/ignore/src/types.rs",
+        "crates/ignore/src/gitignore.rs"
+      ],
+      "bytesRead": 127840,
+      "missingPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "ripgrep-pr-3502",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/types.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/globset/src/lib.rs",
+        "crates/ignore/src/types.rs",
+        "crates/ignore/src/gitignore.rs"
+      ],
+      "bytesRead": 127840,
+      "missingPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "ripgrep-pr-3502",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/types.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/globset/src/lib.rs",
+        "crates/ignore/src/types.rs",
+        "crates/ignore/src/gitignore.rs"
+      ],
+      "bytesRead": 127840,
+      "missingPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "ripgrep-pr-3502",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/types.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/globset/src/lib.rs",
+        "crates/ignore/src/types.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/searcher/README.md"
+      ],
+      "bytesRead": 128746,
+      "missingPaths": [
+        "crates/globset/Cargo.toml",
+        "crates/ignore/Cargo.toml"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "ripgrep-pr-3496",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "benchsuite/runs/2016-09-20-ubuntu1604-ec2/raw.csv",
+        "crates/ignore/src/dir.rs",
+        "crates/core/flags/defs.rs",
+        "benchsuite/runs/2018-01-08-archlinux-cheetah/raw.csv",
+        "crates/ignore/src/walk.rs"
+      ],
+      "bytesRead": 738859,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3496",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/incremental.rs",
+        "crates/ignore/tests/gitignore_skip_bom.rs",
+        "GUIDE.md",
+        "crates/core/flags/doc/man.rs"
+      ],
+      "bytesRead": 185987,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3496",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/incremental.rs",
+        "crates/ignore/tests/gitignore_skip_bom.rs",
+        "GUIDE.md",
+        "crates/core/flags/doc/man.rs"
+      ],
+      "bytesRead": 185987,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3496",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/incremental.rs",
+        "crates/ignore/tests/gitignore_skip_bom.rs",
+        "GUIDE.md",
+        "crates/core/flags/doc/man.rs"
+      ],
+      "bytesRead": 185987,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3496",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/tests/gitignore_skip_bom.rs",
+        "crates/ignore/src/incremental.rs",
+        "GUIDE.md",
+        "crates/core/flags/doc/man.rs"
+      ],
+      "bytesRead": 185987,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3475",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "benchsuite/runs/2016-09-20-ubuntu1604-ec2/raw.csv",
+        "crates/ignore/src/dir.rs",
+        "crates/core/flags/defs.rs",
+        "CHANGELOG.md",
+        "benchsuite/runs/2018-01-08-archlinux-cheetah/raw.csv"
+      ],
+      "bytesRead": 725318,
+      "missingPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "ripgrep-pr-3475",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/globset/src/serde_impl.rs",
+        "crates/matcher/src/lib.rs",
+        "crates/pcre2/src/matcher.rs"
+      ],
+      "bytesRead": 214314,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3475",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/globset/src/serde_impl.rs",
+        "crates/matcher/src/lib.rs",
+        "crates/pcre2/src/matcher.rs"
+      ],
+      "bytesRead": 214314,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3475",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/globset/src/serde_impl.rs",
+        "crates/matcher/src/lib.rs",
+        "crates/pcre2/src/matcher.rs"
+      ],
+      "bytesRead": 214314,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3475",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/globset/src/serde_impl.rs",
+        "crates/matcher/src/lib.rs",
+        "crates/pcre2/src/matcher.rs"
+      ],
+      "bytesRead": 214314,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3464",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/core/flags/defs.rs",
+        "tests/data/sherlock-nul.txt",
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/dir.rs",
+        "CHANGELOG.md"
+      ],
+      "bytesRead": 549125,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3464",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/lib.rs",
+        "CHANGELOG.md",
+        "GUIDE.md"
+      ],
+      "bytesRead": 264467,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3464",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/lib.rs",
+        "CHANGELOG.md",
+        "GUIDE.md"
+      ],
+      "bytesRead": 264467,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3464",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/lib.rs",
+        "CHANGELOG.md",
+        "GUIDE.md"
+      ],
+      "bytesRead": 264467,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3464",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/walk.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/ignore/src/lib.rs",
+        "CHANGELOG.md",
+        "GUIDE.md"
+      ],
+      "bytesRead": 264467,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3420",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "benchsuite/runs/2016-09-20-ubuntu1604-ec2/raw.csv",
+        "crates/core/flags/defs.rs",
+        "crates/ignore/tests/gitignore_matched_path_or_any_parents_tests.rs",
+        "crates/ignore/src/gitignore.rs"
+      ],
+      "bytesRead": 552799,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3420",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/tests/gitignore_matched_path_or_any_parents_tests.rs"
+      ],
+      "bytesRead": 144953,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3420",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/tests/gitignore_matched_path_or_any_parents_tests.rs"
+      ],
+      "bytesRead": 144953,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3420",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/tests/gitignore_matched_path_or_any_parents_tests.rs"
+      ],
+      "bytesRead": 144953,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3420",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/tests/gitignore_matched_path_or_any_parents_tests.rs",
+        "crates/ignore/src/walk.rs",
+        "crates/ignore/README.md",
+        "crates/cli/README.md"
+      ],
+      "bytesRead": 147526,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3212",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/core/flags/defs.rs",
+        "benchsuite/runs/2016-09-20-ubuntu1604-ec2/raw.csv",
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/walk.rs",
+        "benchsuite/runs/2018-01-08-archlinux-cheetah/raw.csv"
+      ],
+      "bytesRead": 708430,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3212",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/searcher/src/searcher/mod.rs",
+        "crates/ignore/src/overrides.rs",
+        "crates/printer/src/standard.rs"
+      ],
+      "bytesRead": 264845,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3212",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/searcher/src/searcher/mod.rs",
+        "crates/ignore/src/overrides.rs",
+        "crates/printer/src/standard.rs"
+      ],
+      "bytesRead": 264845,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3212",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/searcher/src/searcher/mod.rs",
+        "crates/ignore/src/overrides.rs",
+        "crates/printer/src/standard.rs"
+      ],
+      "bytesRead": 264845,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3212",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/ignore/src/dir.rs"
+      ],
+      "filesRead": [
+        "crates/ignore/src/dir.rs",
+        "crates/ignore/src/gitignore.rs",
+        "crates/searcher/src/searcher/mod.rs",
+        "crates/ignore/src/overrides.rs",
+        "crates/printer/src/standard.rs"
+      ],
+      "bytesRead": 264845,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3195",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "filesRead": [
+        "crates/core/flags/defs.rs",
+        "crates/printer/src/standard.rs",
+        "CHANGELOG.md",
+        "crates/searcher/src/searcher/glue.rs",
+        "crates/searcher/src/searcher/mod.rs"
+      ],
+      "bytesRead": 551135,
+      "missingPaths": [
+        "crates/searcher/src/line_buffer.rs"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "ripgrep-pr-3195",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/testutil.rs",
+        "crates/cli/src/wtr.rs",
+        "crates/cli/src/lib.rs",
+        "crates/printer/src/standard.rs",
+        "crates/core/flags/defs.rs"
+      ],
+      "bytesRead": 415562,
+      "missingPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "ripgrep-pr-3195",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/testutil.rs",
+        "crates/cli/src/wtr.rs",
+        "crates/cli/src/lib.rs",
+        "crates/printer/src/standard.rs",
+        "crates/core/flags/defs.rs"
+      ],
+      "bytesRead": 415562,
+      "missingPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "ripgrep-pr-3195",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/testutil.rs",
+        "crates/cli/src/wtr.rs",
+        "crates/cli/src/lib.rs",
+        "crates/printer/src/standard.rs",
+        "crates/core/flags/defs.rs"
+      ],
+      "bytesRead": 415562,
+      "missingPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "ripgrep-pr-3195",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "filesRead": [
+        "crates/searcher/src/testutil.rs",
+        "crates/cli/src/wtr.rs",
+        "crates/cli/src/lib.rs",
+        "crates/printer/src/standard.rs",
+        "crates/core/flags/defs.rs"
+      ],
+      "bytesRead": 415562,
+      "missingPaths": [
+        "crates/searcher/src/line_buffer.rs",
+        "crates/searcher/src/searcher/glue.rs"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "ripgrep-pr-3190",
+      "repo": "ripgrep",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "crates/printer/src/json.rs"
+      ],
+      "filesRead": [
+        "crates/printer/src/standard.rs",
+        "crates/core/flags/defs.rs",
+        "CHANGELOG.md",
+        "tests/data/sherlock-nul.txt",
+        "crates/printer/src/json.rs"
+      ],
+      "bytesRead": 586797,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3190",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/printer/src/json.rs"
+      ],
+      "filesRead": [
+        "crates/printer/src/json.rs",
+        "crates/printer/src/stats.rs",
+        "tests/json.rs",
+        "crates/printer/src/standard.rs",
+        "crates/printer/src/lib.rs"
+      ],
+      "bytesRead": 194925,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3190",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/printer/src/json.rs"
+      ],
+      "filesRead": [
+        "crates/printer/src/json.rs",
+        "crates/printer/src/stats.rs",
+        "tests/json.rs",
+        "crates/printer/src/standard.rs",
+        "crates/printer/src/lib.rs"
+      ],
+      "bytesRead": 194925,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3190",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "crates/printer/src/json.rs"
+      ],
+      "filesRead": [
+        "crates/printer/src/json.rs",
+        "crates/printer/src/stats.rs",
+        "tests/json.rs",
+        "crates/printer/src/standard.rs",
+        "crates/printer/src/lib.rs"
+      ],
+      "bytesRead": 194925,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "ripgrep-pr-3190",
+      "repo": "ripgrep",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "crates/printer/src/json.rs"
+      ],
+      "filesRead": [
+        "crates/printer/src/json.rs",
+        "tests/json.rs",
+        "crates/printer/src/stats.rs",
+        "crates/printer/src/standard.rs",
+        "crates/printer/src/lib.rs"
+      ],
+      "bytesRead": 194925,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5231",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/unix/core.c"
+      ],
+      "filesRead": [
+        "ChangeLog",
+        "src/win/winapi.h",
+        "test/test-fs.c",
+        "src/win/fs.c",
+        "src/unix/linux.c"
+      ],
+      "bytesRead": 646890,
+      "missingPaths": [
+        "src/unix/core.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5231",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/core.c"
+      ],
+      "filesRead": [
+        "src/unix/core.c",
+        "src/unix/aix.c",
+        "src/win/fs-event.c",
+        "src/win/signal.c",
+        "src/unix/signal.c"
+      ],
+      "bytesRead": 128462,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5231",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/core.c"
+      ],
+      "filesRead": [
+        "src/unix/core.c",
+        "src/unix/aix.c",
+        "src/win/fs-event.c",
+        "src/win/signal.c",
+        "src/unix/signal.c"
+      ],
+      "bytesRead": 128462,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5231",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/core.c"
+      ],
+      "filesRead": [
+        "src/unix/core.c",
+        "src/unix/aix.c",
+        "src/win/fs-event.c",
+        "src/win/signal.c",
+        "src/unix/signal.c"
+      ],
+      "bytesRead": 128462,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5231",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/core.c"
+      ],
+      "filesRead": [
+        "src/unix/core.c",
+        "src/unix/aix.c",
+        "src/win/fs-event.c",
+        "src/win/signal.c",
+        "src/unix/signal.c"
+      ],
+      "bytesRead": 128462,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5230",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "filesRead": [
+        "ChangeLog",
+        "test/test-spawn.c",
+        "src/win/tcp.c",
+        "src/win/pipe.c",
+        "src/win/process.c"
+      ],
+      "bytesRead": 446100,
+      "missingPaths": [
+        "src/unix/process.c"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "libuv-pr-5230",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "filesRead": [
+        "src/win/process.c",
+        "src/win/process-stdio.c",
+        "src/win/internal.h",
+        "src/win/pipe.c",
+        "src/win/winsock.c"
+      ],
+      "bytesRead": 172746,
+      "missingPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5230",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "filesRead": [
+        "src/win/process.c",
+        "src/win/process-stdio.c",
+        "src/win/internal.h",
+        "src/win/pipe.c",
+        "src/win/winsock.c"
+      ],
+      "bytesRead": 172746,
+      "missingPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5230",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "filesRead": [
+        "src/win/process.c",
+        "src/win/process-stdio.c",
+        "src/win/internal.h",
+        "src/win/pipe.c",
+        "src/win/winsock.c"
+      ],
+      "bytesRead": 172746,
+      "missingPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5230",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "filesRead": [
+        "src/win/process.c",
+        "test/test-process-priority.c",
+        "src/win/process-stdio.c",
+        "src/win/internal.h",
+        "src/win/pipe.c"
+      ],
+      "bytesRead": 159932,
+      "missingPaths": [
+        "src/unix/process.c",
+        "test/test-spawn.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5224",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/win/pipe.c",
+        "test/test-pipe-bind-error.c"
+      ],
+      "filesRead": [
+        "ChangeLog",
+        "src/win/pipe.c",
+        "test/test-list.h",
+        "test/test-write-cancel.c",
+        "test/test-pipe-getsockname.c"
+      ],
+      "bytesRead": 363491,
+      "missingPaths": [
+        "test/test-pipe-bind-error.c"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "libuv-pr-5224",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/win/pipe.c",
+        "test/test-pipe-bind-error.c"
+      ],
+      "filesRead": [
+        "src/win/pipe.c",
+        "src/unix/pipe.c",
+        "src/win/winapi.h",
+        "src/unix/core.c",
+        "src/unix/linux.c"
+      ],
+      "bytesRead": 356951,
+      "missingPaths": [
+        "test/test-pipe-bind-error.c"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "libuv-pr-5224",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/win/pipe.c",
+        "test/test-pipe-bind-error.c"
+      ],
+      "filesRead": [
+        "src/win/pipe.c",
+        "src/unix/pipe.c",
+        "src/win/winapi.h",
+        "src/unix/core.c",
+        "src/unix/linux.c"
+      ],
+      "bytesRead": 356951,
+      "missingPaths": [
+        "test/test-pipe-bind-error.c"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "libuv-pr-5224",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/win/pipe.c",
+        "test/test-pipe-bind-error.c"
+      ],
+      "filesRead": [
+        "src/win/pipe.c",
+        "src/unix/pipe.c",
+        "src/win/winapi.h",
+        "src/unix/core.c",
+        "src/unix/linux.c"
+      ],
+      "bytesRead": 356951,
+      "missingPaths": [
+        "test/test-pipe-bind-error.c"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "libuv-pr-5224",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/win/pipe.c",
+        "test/test-pipe-bind-error.c"
+      ],
+      "filesRead": [
+        "src/win/pipe.c",
+        "test/test-pipe-bind-error.c",
+        "src/unix/pipe.c",
+        "src/win/winapi.h",
+        "src/unix/core.c"
+      ],
+      "bytesRead": 289823,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5217",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/unix/darwin.c"
+      ],
+      "filesRead": [
+        "test/test-fs.c",
+        "ChangeLog",
+        "test/test-spawn.c",
+        "src/win/fs.c",
+        "src/win/tty.c"
+      ],
+      "bytesRead": 577862,
+      "missingPaths": [
+        "src/unix/darwin.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5217",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/darwin.c"
+      ],
+      "filesRead": [
+        "src/unix/darwin.c",
+        "include/uv/darwin.h",
+        "src/unix/darwin-stub.h",
+        "src/unix/darwin-syscalls.h",
+        "src/unix/cygwin.c"
+      ],
+      "bytesRead": 16711,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5217",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/darwin.c"
+      ],
+      "filesRead": [
+        "src/unix/darwin.c",
+        "include/uv/darwin.h",
+        "src/unix/darwin-stub.h",
+        "src/unix/darwin-syscalls.h",
+        "src/unix/cygwin.c"
+      ],
+      "bytesRead": 16711,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5217",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/darwin.c"
+      ],
+      "filesRead": [
+        "src/unix/darwin.c",
+        "include/uv/darwin.h",
+        "src/unix/darwin-stub.h",
+        "src/unix/darwin-syscalls.h",
+        "src/unix/cygwin.c"
+      ],
+      "bytesRead": 16711,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5217",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/darwin.c"
+      ],
+      "filesRead": [
+        "src/unix/darwin.c",
+        "include/uv/darwin.h",
+        "src/unix/darwin-stub.h",
+        "src/unix/darwin-syscalls.h",
+        "src/unix/cygwin.c"
+      ],
+      "bytesRead": 16711,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5213",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/win/core.c"
+      ],
+      "filesRead": [
+        "src/win/winapi.h",
+        "ChangeLog",
+        "src/win/fs.c",
+        "src/unix/linux.c",
+        "src/win/pipe.c"
+      ],
+      "bytesRead": 602975,
+      "missingPaths": [
+        "src/win/core.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5213",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/win/core.c"
+      ],
+      "filesRead": [
+        "src/unix/loop.c",
+        "src/win/core.c",
+        "src/unix/aix.c",
+        "src/unix/darwin.c",
+        "src/unix/freebsd.c"
+      ],
+      "bytesRead": 77519,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5213",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/win/core.c"
+      ],
+      "filesRead": [
+        "src/unix/loop.c",
+        "src/win/core.c",
+        "src/unix/aix.c",
+        "src/unix/darwin.c",
+        "src/unix/freebsd.c"
+      ],
+      "bytesRead": 77519,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5213",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/win/core.c"
+      ],
+      "filesRead": [
+        "src/unix/loop.c",
+        "src/win/core.c",
+        "src/unix/aix.c",
+        "src/unix/darwin.c",
+        "src/unix/freebsd.c"
+      ],
+      "bytesRead": 77519,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5213",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/win/core.c"
+      ],
+      "filesRead": [
+        "src/unix/loop.c",
+        "test/benchmark-loop-count.c",
+        "test/test-default-loop-close.c",
+        "src/win/core.c",
+        "src/unix/aix.c"
+      ],
+      "bytesRead": 68977,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5206",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "filesRead": [
+        "src/win/pipe.c",
+        "src/win/tcp.c",
+        "src/unix/stream.c",
+        "src/win/tty.c",
+        "ChangeLog"
+      ],
+      "bytesRead": 465659,
+      "missingPaths": [
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "success": false,
+      "recall": 0
+    },
+    {
+      "caseId": "libuv-pr-5206",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "docs/code/queue-cancel/main.c",
+        "src/win/pipe.c",
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "bytesRead": 158916,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5206",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "docs/code/queue-cancel/main.c",
+        "src/win/pipe.c",
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "bytesRead": 158916,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5206",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "docs/code/queue-cancel/main.c",
+        "src/win/pipe.c",
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "bytesRead": 158916,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5206",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/threadpool.c",
+        "test/test-write-cancel.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "test/test-write-cancel.c",
+        "docs/code/proc-streams/test.c",
+        "docs/code/queue-cancel/main.c",
+        "src/win/pipe.c"
+      ],
+      "bytesRead": 147710,
+      "missingPaths": [
+        "src/threadpool.c"
+      ],
+      "success": false,
+      "recall": 0.5
+    },
+    {
+      "caseId": "libuv-pr-5200",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/unix/linux.c"
+      ],
+      "filesRead": [
+        "ChangeLog",
+        "src/win/winapi.h",
+        "src/win/fs.c",
+        "test/test-fs.c",
+        "src/unix/linux.c"
+      ],
+      "bytesRead": 646193,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5200",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/linux.c"
+      ],
+      "filesRead": [
+        "src/unix/linux.c",
+        "src/unix/aix.c",
+        "src/unix/cygwin.c",
+        "src/unix/darwin.c",
+        "src/unix/freebsd.c"
+      ],
+      "bytesRead": 122563,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5200",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/linux.c"
+      ],
+      "filesRead": [
+        "src/unix/linux.c",
+        "src/unix/aix.c",
+        "src/unix/cygwin.c",
+        "src/unix/darwin.c",
+        "src/unix/freebsd.c"
+      ],
+      "bytesRead": 122563,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5200",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/linux.c"
+      ],
+      "filesRead": [
+        "src/unix/linux.c",
+        "src/unix/aix.c",
+        "src/unix/cygwin.c",
+        "src/unix/darwin.c",
+        "src/unix/freebsd.c"
+      ],
+      "bytesRead": 122563,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5200",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/linux.c"
+      ],
+      "filesRead": [
+        "src/unix/linux.c",
+        "src/unix/aix.c",
+        "src/unix/cygwin.c",
+        "src/unix/darwin.c",
+        "src/unix/freebsd.c"
+      ],
+      "bytesRead": 122563,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5188",
+      "repo": "libuv",
+      "profile": "frozen-lexical",
+      "mode": "lexical",
+      "expectedPaths": [
+        "src/unix/stream.c"
+      ],
+      "filesRead": [
+        "ChangeLog",
+        "src/win/pipe.c",
+        "src/unix/stream.c",
+        "test/test-fs.c",
+        "test/test-fs-open-flags.c"
+      ],
+      "bytesRead": 478727,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5188",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/stream.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "src/idna.c",
+        "src/win/pipe.c",
+        "src/queue.h",
+        "src/win/process.c"
+      ],
+      "bytesRead": 191591,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5188",
+      "repo": "libuv",
+      "profile": "codemap-0.9.0",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/stream.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "src/idna.c",
+        "src/win/pipe.c",
+        "src/queue.h",
+        "src/win/process.c"
+      ],
+      "bytesRead": 191591,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5188",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "search",
+      "expectedPaths": [
+        "src/unix/stream.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "src/idna.c",
+        "src/win/pipe.c",
+        "src/queue.h",
+        "src/win/process.c"
+      ],
+      "bytesRead": 191591,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    },
+    {
+      "caseId": "libuv-pr-5188",
+      "repo": "libuv",
+      "profile": "codemap-0.9.1",
+      "mode": "context",
+      "expectedPaths": [
+        "src/unix/stream.c"
+      ],
+      "filesRead": [
+        "src/unix/stream.c",
+        "docs/code/proc-streams/test.c",
+        "src/idna.c",
+        "src/win/pipe.c",
+        "src/queue.h"
+      ],
+      "bytesRead": 146773,
+      "missingPaths": [],
+      "success": true,
+      "recall": 1
+    }
+  ]
+}

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.0 - 2026-08-26
+
+- Add a frozen, CLI-black-box external navigation holdout covering 40 merged changes across six previously unused public repositories. On the first unseen run, CodeMap 0.9.1 search→context reached 0.425 complete success versus 0.250 for the lexical baseline while using 74.2% fewer estimated read tokens; the manifest hash, exhaustive oracle disposition audit, full deterministic result artifact, per-repo metrics, paired exact test, and claim limits preserve the directional result without overstating statistical or end-to-end coding evidence.
+- Ship `codemap usage-report` as an aggregate-only view of the local telemetry log, with repository/date/join-window filters and text or JSON output. The public report excludes raw queries, targets, result paths, paths/IDs per repository, process/session identifiers, exact timestamps, and the state directory, and does not record its own invocation.
+- Make the installed `npm run report:usage` script use the packaged CLI instead of a source-only script, validate event timestamps before sequence analysis, prevent unrelated repo-less events from joining, correlate context with any applicable prior impression in logarithmic lookup time, and audit the packaged report's privacy shape.
+
 ## 0.9.1 - 2026-08-25
 
 - Honor nested `.gitignore` files with local last-match-wins negations so ignored credentials and generated files below packages cannot enter the index.

@@ -3,6 +3,7 @@ import { isAbsolute, resolve } from "node:path";
 import { codeMapNavigationNudge } from "../application/navigation-nudge.ts";
 import { codeMapContext, codeMapIndex, codeMapSearch, codeMapStatus } from "../application/operations.ts";
 import { codeMapPackageVersion } from "../application/package-info.ts";
+import { runUsageReportCli } from "./usage-report.ts";
 
 // Every operation issued from this surface is tagged so telemetry can distinguish CLI from MCP/Pi.
 const ADAPTER = "cli" as const;
@@ -31,6 +32,7 @@ Usage:
   codemap context <path|query> [opts]  Read-first package for a target
   codemap status [options]             Approval / index / staleness
   codemap index [--approve] [options]  Index or refresh the repo (approve once)
+  codemap usage-report [options]       Aggregate local adoption and quality signals safely
   codemap nudge-check '<command>'      Passive hint if a grep/rg/find is broad and the repo is indexed
 
 Options:
@@ -201,6 +203,7 @@ export function runCli(argv: string[], io: { cwd?: string } = {}): CliResult {
   const [command, ...rest] = argv;
   if (command === undefined || command === "--help" || command === "-h" || command === "help") return ok(USAGE);
   if (command === "--version" || command === "-v" || command === "version") return ok(codeMapPackageVersion());
+  if (command === "usage-report") return runUsageReportCli(rest);
 
   let parsed: ParsedArgs;
   try {

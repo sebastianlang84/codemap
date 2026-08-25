@@ -1,6 +1,6 @@
 # ADR 0001 — Local usage telemetry for codemap
 
-Status: **Accepted** (phase 1 implemented)
+Status: **Accepted** (phases 1 and 2 implemented)
 Date: 2026-07-15
 
 ## Context
@@ -42,6 +42,10 @@ Binding constraints:
 Rollout is phased: phase 1 = raw log; phase 2 = offline analyzer/reports; phase 4 =
 harness-side `shadow_search` hook for the two questions the tool cannot observe from inside its
 own process (agent takes grep instead / never starts codemap).
+
+Phase 2 shipped as the aggregate-only `codemap usage-report`. It performs the funnel and
+search→context joins locally but exposes none of the raw query, path, repo, session, or exact-time
+fields in text or JSON output.
 
 ## Consequences
 

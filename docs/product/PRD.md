@@ -18,6 +18,7 @@ Canonical detailed docs:
 - User behavior and commands: [`../user/usage.md`](../user/usage.md)
 - Developer architecture and schema: [`../developer/architecture.md`](../developer/architecture.md)
 - Search-quality benchmark: [`../developer/search-quality.md`](../developer/search-quality.md)
+- External holdout: [`../developer/external-holdout.md`](../developer/external-holdout.md)
 - Future work: [`roadmap.md`](roadmap.md)
 
 ## 2. Problem
@@ -265,6 +266,7 @@ V1 is successful if:
 - Indexing skips unsafe/irrelevant files by default.
 - Search returns useful path/chunk/snippet results.
 - Context output gives agents a better read-first set than raw `rg`.
+- A frozen external-repository holdout measures navigation success and read cost before its cases are inspected or used for tuning.
 - Results include line ranges and truncation-safe snippets.
 - Status clearly reports stale/missing/unsafe index states.
 - No daemon, remote service, or embedding runtime is required.
@@ -273,7 +275,7 @@ V1 is successful if:
 
 Tests should assert external behavior and contracts: indexed files, skipped files, tool outputs, warnings, and ranking order for representative cases.
 
-The canonical maintainer testing policy lives in [`../developer/architecture.md#testing-policy`](../developer/architecture.md#testing-policy). Search-quality gates live in [`../developer/search-quality.md`](../developer/search-quality.md).
+The canonical maintainer testing policy lives in [`../developer/architecture.md#testing-policy`](../developer/architecture.md#testing-policy). Search-quality gates live in [`../developer/search-quality.md`](../developer/search-quality.md); external generalization evidence and its claim boundary live in [`../developer/external-holdout.md`](../developer/external-holdout.md).
 
 ## 16. Resolved defaults
 

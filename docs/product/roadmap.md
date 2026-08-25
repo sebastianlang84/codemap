@@ -36,6 +36,8 @@ The previous prioritized TDD slices are complete and kept here as delivery histo
 | Keep ranking explain out of the product surface | Search pipeline/ranking Modules | `SearchResult` remains compact | Decision: do not add user-facing explain fields; use quality gates for ranking guardrails instead | n/a |
 | Expand deterministic search-quality gates | Search quality metrics Module and benchmark script | `npm run bench:search-quality:gate` | New regression cases cover implementation entrypoints, related tests/docs, and lockfile/generated-file noise | `npm run bench:search-quality:gate -- /path/to/repo` |
 | Freeze a semantic-retrieval comparison track | Versioned dev/holdout corpus and semantic benchmark script | `npm run bench:semantic-quality:gate` | The lexical profile records quality, false positives, latency, RAM, and index size without adding embeddings to production | `npm run bench:semantic-quality:gate` |
+| Measure external navigation generalization | Frozen 40-change corpus from six previously unused public repos | `npm run eval:external-holdout:gate` | First unseen run: directional 0.425 complete success and ~29.4k estimated read tokens for 0.9.1 context versus 0.250 and ~114.2k for lexical; paired exact p=0.065, so not significant at 0.05 | [`external holdout`](../developer/external-holdout.md) |
+| Expose product-use evidence safely | Aggregate-only local usage-report projection | `codemap usage-report` | No queries, targets, paths, repo IDs, sessions, exact timestamps, or state directory in text/JSON output | `npm test -- --test-name-pattern='usage report|anonym'` |
 
 Architecture rule for future slices: keep host-neutral use cases in `src/application/`, retrieval/storage mechanics in `src/core/`, and host concerns in the CLI/MCP/Pi adapters. Add a seam only when it improves locality or enables a real adapter.
 
@@ -49,11 +51,12 @@ CodeMap's intended sweet spot is narrower than a full AI IDE or code-search serv
 
 Near-term improvement priorities:
 
-1. **Make the current lightweight workflow honest and strong**: keep search/context evals, preserve visible search hits in scripted read plans, and add an externally versioned unseen holdout before claiming broad bug-report navigation.
+1. **Make the current lightweight workflow honest and strong**: keep search/context evals and preserve visible search hits in scripted read plans. The first external holdout is complete and now inspected regression evidence; pair the next material ranking change with a fresh untouched corpus before making another generalization claim.
 2. **Add relationships only as measured verticals**: route↔handler, UI↔API, provider/hook↔consumer, and config-key↔usage should each get a fixture or real-repo case before any broad heuristic ships.
 3. **Improve structural extraction pragmatically**: revisit optional `ast-grep`/Tree-sitter-style extraction for imports, exports, route declarations, and test-subject detection only with a concrete eval miss; the first symbol-indexing prototype was removed after it failed the keep rule.
 4. **Keep semantic/vector retrieval optional**: embeddings may help vague vocabulary mismatch, but exact path/symbol, lexical FTS, and deterministic relationships must remain the default and fallback.
 5. **Expose only proven surfaces**: prefer internal eval utilities and docs over new prompt-facing tools/parameters until a measured miss requires an API change.
+6. **Connect navigation to product outcomes**: add a bounded end-to-end agent-task replay that measures successful patches/tests and CodeMap use, rather than treating file-navigation success as the final outcome.
 
 Main known weakness: quality depends on parser/import recognition, test conventions, and eval coverage. For large polyglot repos, the next durable lever is better structural extraction under the same local/no-daemon/no-mandatory-model constraints, not a broad knowledge graph.
 

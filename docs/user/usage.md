@@ -28,6 +28,7 @@ CodeMap is not a semantic memory system. `pi-memory` stores durable decisions an
 | Monorepo scoping | Limits status/index/search/context to a subtree. | `--path-prefix services/api` |
 | Stale warnings | Warns instead of silently refreshing old results. | Refresh with `codemap index` |
 | Noise handling | Keeps lockfiles/generated/build/minified files from dominating ordinary results. | Automatic; explicit lockfile queries still work. |
+| Aggregate usage report | Shows local adoption, outcomes, activation, refresh, and search→context signals without raw queries, paths, repo IDs, sessions, or exact timestamps. | `codemap usage-report` |
 
 ## Install
 
@@ -36,7 +37,7 @@ CodeMap is not a semantic memory system. `pi-memory` stores durable decisions an
 CodeMap requires Node ≥ 22.13:
 
 ```bash
-npm install -g github:sebastianlang84/codemap
+npm install -g github:sebastianlang84/codemap#v0.10.0
 codemap --help
 ```
 
@@ -208,6 +209,7 @@ The CLI is the scriptable interface. MCP and Pi expose the same operations as st
 | Index | `codemap index [--repo <path>] [--approve] [--path-prefix <subtree>]` | `codemap_index({ repoPath?, approveRepo?, pathPrefix? })` | `scanned`, `indexed`, `skipped`, `removed`, `warnings`, `skippedReasons`, `root`, `dbPath`, `pathPrefix` |
 | Search | `codemap search [--repo <path>] [--path-prefix <subtree>] <query>` | `codemap_search({ repoPath?, query, limit?, pathPrefix? })` | `results[]` with `path`, `language`, `startLine`, `endLine`, `kind`, `snippet`, `score`, plus stale warnings |
 | Context | `codemap context [--repo <path>] [--path-prefix <subtree>] <path-or-query>` | `codemap_context({ repoPath?, target, limit?, pathPrefix? })` | fused `readFirst[]`, `targetForm`, `contextTarget`, optional `readPlan`, related tests/docs, stale diagnostics, warnings |
+| Usage report | `codemap usage-report [--repo <path>] [--since YYYY-MM-DD] [--window <minutes>]` | — | aggregate-only counts, outcomes, activation funnel, stale→refresh behavior, and search→context joins |
 
 The Pi slash-command forms are `/codemap-status`, `/codemap-index`, `/codemap-search`, and `/codemap-context`; they use `--repo-path` and `--approve-repo` instead of the shorter CLI flags.
 
@@ -252,7 +254,17 @@ Re-indexing is incremental: unchanged files are skipped, changed files are refre
 
 CodeMap records local usage events by default in `usage.jsonl` beside its state database. Events can contain raw queries, targets, result paths, absolute repo paths, adapter/session hints, and latency; they never contain result snippets and are never uploaded. The log is mode `0600`, rotates at 32 MB to one `usage.jsonl.1` generation, and never affects command results.
 
-Set `CODEMAP_TELEMETRY=0` to disable all writes. Delete `usage.jsonl` and `usage.jsonl.1` from the active state directory to remove existing events.
+Inspect product use locally with:
+
+```bash
+codemap usage-report
+codemap usage-report --since 2026-08-01 --json
+codemap usage-report --repo /path/to/repo --window 30
+```
+
+The report reads both log generations and emits only aggregates. It omits raw queries, targets, result paths, absolute paths, repository identifiers, process/session identifiers, exact timestamps, and the state directory. `--repo` filters before aggregation; `--since` uses a UTC date; `--window` controls the search/context and stale/refresh join window in minutes. Running the report itself does not add a telemetry event.
+
+Set `CODEMAP_TELEMETRY=0` to disable future writes. It does not erase existing events. Delete `usage.jsonl` and `usage.jsonl.1` from the active state directory to remove them.
 
 ## Ranking behavior in plain language
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -142,4 +142,93 @@ test("cli --limit rejects non-positive-integers before they reach SQL", (t) => {
   runCli(["index", "--approve", "--state-dir", stateDir], io);
   const ok = runCli(["search", "renderWidget", "--limit", "1", "--state-dir", stateDir], io);
   assert.equal(ok.code, 0);
+});
+
+test("cli usage-report reads both generations and emits aggregate-only JSON without logging itself", (t) => {
+  const { root, stateDir } = cliRepo(t);
+  const privateQuery = "private-customer-secret";
+  const privatePath = "/home/alice/private/repo/src/customer.ts";
+  const older = JSON.stringify({
+    v: 1,
+    ts: "2026-08-23T10:00:00.000Z",
+    tool_version: "0.9.1",
+    command: "search",
+    adapter: "cli",
+    repo_key: "0123456789abcdef01234567",
+    repo_root: root,
+    query: privateQuery,
+    outcome: "ok",
+    latency_ms: 12,
+    results: [{ path: privatePath, score: 12, kind: "text", language: "typescript" }],
+  });
+  const current = JSON.stringify({
+    v: 1,
+    ts: "2026-08-24T11:00:00.000Z",
+    tool_version: "0.9.1",
+    command: "context",
+    adapter: "mcp",
+    repo_key: "0123456789abcdef01234567",
+    repo_root: root,
+    target: privatePath,
+    target_form: "path",
+    resolved_path: privatePath,
+    outcome: "ok",
+    latency_ms: 20,
+  });
+  writeFileSync(join(stateDir, "usage.jsonl.1"), `${older}\n`);
+  writeFileSync(join(stateDir, "usage.jsonl"), `${current}\n`);
+  const before = `${current}\n`;
+
+  const result = runCli(["usage-report", "--json", "--state-dir", stateDir], { cwd: root });
+  assert.equal(result.code, 0);
+  const report = JSON.parse(result.out) as {
+    privacy: string;
+    period: { firstDate: string; lastDate: string };
+    overview: { totalEvents: number; distinctRepos: number; byCommand: Record<string, number> };
+  };
+  assert.equal(report.privacy, "aggregate");
+  assert.deepEqual(report.period, { firstDate: "2026-08-23", lastDate: "2026-08-24" });
+  assert.equal(report.overview.totalEvents, 2);
+  assert.equal(report.overview.distinctRepos, 1);
+  assert.deepEqual(report.overview.byCommand, { context: 1, search: 1 });
+  for (const secret of [stateDir, root, privateQuery, privatePath, "0123456789abcdef01234567"]) {
+    assert.equal(result.out.includes(secret), false, `usage report leaked ${secret}`);
+  }
+  assert.equal(readFileSync(join(stateDir, "usage.jsonl"), "utf8"), before);
+
+  const filtered = runCli(["usage-report", "--repo", root, "--since", "2026-08-24", "--json", "--state-dir", stateDir], { cwd: root });
+  assert.equal(filtered.code, 0);
+  assert.equal(JSON.parse(filtered.out).overview.totalEvents, 1);
+  assert.deepEqual(JSON.parse(filtered.out).period, { firstDate: "2026-08-24", lastDate: "2026-08-24" });
+});
+
+test("cli usage-report has stable empty JSON and strict filters", (t) => {
+  const stateDir = mkdtempSync(join(tmpdir(), "pi-codemap-empty-usage-"));
+  t.after(() => rmSync(stateDir, { recursive: true, force: true }));
+
+  const empty = runCli(["usage-report", "--json", "--state-dir", stateDir], { cwd: stateDir });
+  assert.equal(empty.code, 0);
+  assert.equal(JSON.parse(empty.out).overview.totalEvents, 0);
+
+  for (const args of [
+    ["--since", "not-a-date"],
+    ["--since", "2026-02-30"],
+    ["--window", "0"],
+    ["--window", "1.5"],
+    ["--nope"],
+    ["unexpected"],
+  ]) {
+    const invalid = runCli(["usage-report", ...args, "--state-dir", stateDir], { cwd: stateDir });
+    assert.equal(invalid.code, 2, args.join(" "));
+  }
+
+  const badRepo = runCli(["usage-report", "--repo", join(stateDir, "missing"), "--state-dir", stateDir]);
+  assert.equal(badRepo.code, 1);
+  assert.equal(badRepo.err, "--repo must be an existing Git repository or a 24-character repository key");
+
+  mkdirSync(join(stateDir, "usage.jsonl"));
+  const unreadable = runCli(["usage-report", "--state-dir", stateDir]);
+  assert.equal(unreadable.code, 1);
+  assert.equal(unreadable.err, "Unable to read the local usage telemetry log");
+  assert.equal(unreadable.err.includes(stateDir), false);
 });
