@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,7 +10,9 @@ import {
   evaluateAgentImpactPilotGate,
   hashAgentImpactJson,
   parseAgentImpactManifest,
+  parseAgentImpactCheckpoint,
   parseClaudeJson,
+  retryableAgentImpactInfrastructure,
   stableAgentImpactEvidence,
   summarizeAgentImpact,
   type AgentImpactManifest,
@@ -38,7 +41,23 @@ test("v2 smoke manifest remains reproducible with its original hash and default 
   const raw = readFileSync(new URL("../scripts/eval-agent-impact-smoke-v2.manifest.json", import.meta.url), "utf8");
   const v2 = parseAgentImpactManifest(raw);
   assert.equal(v2.agent.navigationWorkflow, "search-then-context");
+  assert.deepEqual(v2.tasks[0]!.setupFiles, []);
   assert.equal(hashAgentImpactJson(JSON.parse(raw)), "ad98383dff18f1bdc604a0f2c77d45564c95439436fcac1944ce563fae6d3310");
+});
+
+test("development pilot freezes twelve tasks and every injected dependency lock", () => {
+  const raw = readFileSync(new URL("../scripts/eval-agent-impact-pilot.manifest.json", import.meta.url), "utf8");
+  const pilot = parseAgentImpactManifest(raw);
+  assert.equal(pilot.corpus.purpose, "development-pilot");
+  assert.equal(pilot.tasks.length, 12);
+  assert.equal(pilot.pilotGate.minValidPairs, 12);
+  assert.equal(hashAgentImpactJson(JSON.parse(raw)), "727db942501d0e0308aaafd01dbc0a1cdcfa214ad48f74ef9d10cd0d02f3a16a");
+  for (const task of pilot.tasks) {
+    for (const file of task.setupFiles) {
+      const bytes = readFileSync(new URL(`../${file.source}`, import.meta.url));
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), file.sha256, `${task.id} setup lock`);
+    }
+  }
 });
 
 test("agent-impact manifest rejects shell strings, path escapes, duplicate ids, and abbreviated SHAs", () => {
@@ -57,6 +76,14 @@ test("agent-impact manifest rejects shell strings, path escapes, duplicate ids, 
   const shortSha = cloneManifest();
   shortSha.tasks[0]!.baseCommit = "d39e8ad";
   assert.throws(() => parseAgentImpactManifest(JSON.stringify(shortSha)), /40-character Git SHA/);
+
+  const setupEscape = cloneManifest();
+  setupEscape.tasks[0]!.setupFiles = [{ source: "../lock", target: "package-lock.json", sha256: "a".repeat(64) }];
+  assert.throws(() => parseAgentImpactManifest(JSON.stringify(setupEscape)), /must stay inside/);
+
+  const badSetupHash = cloneManifest();
+  badSetupHash.tasks[0]!.setupFiles = [{ source: "lock", target: "package-lock.json", sha256: "short" }];
+  assert.throws(() => parseAgentImpactManifest(JSON.stringify(badSetupHash)), /must be SHA-256/);
 });
 
 test("Claude result parser records observed Opus model, cost, tokens, turns, and tool calls", () => {
@@ -93,6 +120,27 @@ test("Claude result parser accepts stream-json JSONL", () => {
   const usage = parseClaudeJson(rows.map((item) => JSON.stringify(item)).join("\n"));
   assert.equal(usage.toolCalls.Read, 1);
   assert.equal(usage.costUsd, 0.1);
+});
+
+test("checkpoint parser resumes only unique runs from the same frozen manifest", () => {
+  const result = run("one", "baseline", true, {}, 10);
+  const raw = JSON.stringify({ manifestSha256: "frozen", results: [result] });
+  assert.deepEqual(parseAgentImpactCheckpoint(raw, "frozen", new Set(["one"])), [result]);
+  assert.throws(() => parseAgentImpactCheckpoint(raw, "other", new Set(["one"])), /hash mismatch/);
+  assert.throws(() => parseAgentImpactCheckpoint(raw, "frozen", new Set(["two"])), /unknown run/);
+  assert.throws(
+    () => parseAgentImpactCheckpoint(JSON.stringify({ manifestSha256: "frozen", results: [result, result] }), "frozen", new Set(["one"])),
+    /duplicate run/,
+  );
+});
+
+test("resume retries only infrastructure failures that consumed no provider budget", () => {
+  const freeInfrastructure = { ...run("one", "baseline", false, {}, 0), infrastructureError: "disk full" };
+  freeInfrastructure.usage.costUsd = 0;
+  const paidInfrastructure = { ...run("one", "codemap", false, {}, 0), infrastructureError: "provider error" };
+  assert.equal(retryableAgentImpactInfrastructure(freeInfrastructure), true);
+  assert.equal(retryableAgentImpactInfrastructure(paidInfrastructure), false);
+  assert.equal(retryableAgentImpactInfrastructure(run("two", "baseline", false, {}, 0)), false);
 });
 
 test("paired summary keeps harness validity separate from directional treatment effect", () => {

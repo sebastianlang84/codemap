@@ -1,0 +1,1179 @@
+{
+  "agent": {
+    "claudeCodeVersion": "2.1.245 (Claude Code)",
+    "effort": "medium",
+    "isolationConfigSha256": "25133e526efa94007d54100b693afbe47f683043b2a8682133475a3aff72e16f",
+    "maxBudgetUsdPerRun": 2,
+    "navigationWorkflow": "context-first",
+    "provider": "claude-code",
+    "requestedModel": "opus"
+  },
+  "claimBoundary": "Directional development evidence only; it cannot support a generalization claim.",
+  "codemapProfile": {
+    "expectedVersion": "0.10.0",
+    "gitCommit": "94d361641a7be333c7b9fac872c6df16a221fb14"
+  },
+  "corpus": {
+    "frozenAt": "2026-08-26",
+    "id": "agent-impact-development-pilot-v1",
+    "orderSeed": 120826,
+    "purpose": "development-pilot",
+    "selectionProtocol": "Twelve executable historical bug fixes across Express, Fastify, and Flask, selected before agent execution from the inspected external-navigation corpus. Every task has a separate upstream regression-test file, a full base/fix commit, repeated named base-failure/reference-pass oracles, and a lock-frozen dependency tree. Ten tasks are new to the agent replay; Express 7181 and Fastify 6942 are retained as smoke calibration cases. Go, Rust, and C candidates are excluded because their toolchains are unavailable on this host.",
+    "version": 1
+  },
+  "gate": {
+    "issues": [],
+    "passed": true
+  },
+  "manifestSha256": "727db942501d0e0308aaafd01dbc0a1cdcfa214ad48f74ef9d10cd0d02f3a16a",
+  "oracles": [
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "express-pr-7377",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "express-pr-7181",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6965",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6942",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6892",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6889",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6881",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6865",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6846",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6803",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "flask-pr-6096",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "flask-pr-5818",
+      "valid": true
+    }
+  ],
+  "plannedRuns": 24,
+  "results": [
+    {
+      "addedLines": 55,
+      "agentDurationMs": 56327,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "express",
+      "runOrder": 1,
+      "success": true,
+      "taskId": "express-pr-7377",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 12599,
+        "cacheReadInputTokens": 106267,
+        "costUsd": 0.25866349999999994,
+        "inputTokens": 28,
+        "isError": false,
+        "outputTokens": 3176,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 9,
+          "Edit": 3,
+          "Read": 2
+        },
+        "turns": 15
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 31,
+      "agentDurationMs": 36155,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/request.js",
+        "test/req.fresh.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 410,
+      "mode": "codemap",
+      "repo": "express",
+      "runOrder": 2,
+      "success": true,
+      "taskId": "express-pr-7377",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 5527,
+        "cacheReadInputTokens": 78309,
+        "costUsd": 0.1419945,
+        "inputTokens": 24,
+        "isError": false,
+        "outputTokens": 1898,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 7,
+          "Edit": 2,
+          "Read": 2
+        },
+        "turns": 12
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 58,
+      "agentDurationMs": 240947,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 352,
+      "mode": "codemap",
+      "repo": "express",
+      "runOrder": 3,
+      "success": true,
+      "taskId": "express-pr-7181",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 35190,
+        "cacheReadInputTokens": 724128,
+        "costUsd": 1.105869,
+        "inputTokens": 76,
+        "isError": false,
+        "outputTokens": 15661,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 33,
+          "Edit": 2,
+          "Read": 2
+        },
+        "turns": 38
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 103,
+      "agentDurationMs": 179969,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/utils.js",
+        "test/req.query.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "express",
+      "runOrder": 4,
+      "success": true,
+      "taskId": "express-pr-7181",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 28354,
+        "cacheReadInputTokens": 440751,
+        "costUsd": 0.7976855000000002,
+        "inputTokens": 54,
+        "isError": false,
+        "outputTokens": 11740,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 23,
+          "Edit": 2,
+          "Read": 1
+        },
+        "turns": 27
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 37,
+      "agentDurationMs": 284050,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/four-oh-four.js",
+        "test/404s.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 5,
+      "success": true,
+      "taskId": "fastify-pr-6965",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 18426,
+        "cacheReadInputTokens": 327950,
+        "costUsd": 0.49584,
+        "inputTokens": 46,
+        "isError": false,
+        "outputTokens": 5895,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 19,
+          "Edit": 3,
+          "Grep": 1,
+          "Read": 1
+        },
+        "turns": 25
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 38,
+      "agentDurationMs": 140793,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/four-oh-four.js",
+        "test/404s.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 508,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 6,
+      "success": true,
+      "taskId": "fastify-pr-6965",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 22853,
+        "cacheReadInputTokens": 424409,
+        "costUsd": 0.5999545000000001,
+        "inputTokens": 54,
+        "isError": false,
+        "outputTokens": 6358,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 23,
+          "Edit": 3
+        },
+        "turns": 27
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 30,
+      "agentDurationMs": 172498,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "docs/Reference/Reply.md",
+        "docs/Reference/Request.md",
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 4,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 492,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 7,
+      "success": true,
+      "taskId": "fastify-pr-6942",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 23678,
+        "cacheReadInputTokens": 522419,
+        "costUsd": 0.6843544999999999,
+        "inputTokens": 58,
+        "isError": false,
+        "outputTokens": 7443,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 26,
+          "Edit": 3
+        },
+        "turns": 30
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 23,
+      "agentDurationMs": 121873,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js",
+        "test/internals/reply.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 8,
+      "success": true,
+      "taskId": "fastify-pr-6942",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 28425,
+        "cacheReadInputTokens": 439803,
+        "costUsd": 0.6434915000000001,
+        "inputTokens": 38,
+        "isError": false,
+        "outputTokens": 5566,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 13,
+          "Edit": 3,
+          "Grep": 2,
+          "Read": 2
+        },
+        "turns": 21
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 15,
+      "agentDurationMs": 198519,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/decorate.js",
+        "test/decorator-instance-properties.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 9,
+      "success": true,
+      "taskId": "fastify-pr-6892",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 21906,
+        "cacheReadInputTokens": 442605,
+        "costUsd": 0.6636825,
+        "inputTokens": 54,
+        "isError": false,
+        "outputTokens": 8922,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 23,
+          "Edit": 2,
+          "Read": 1
+        },
+        "turns": 27
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 8,
+      "agentDurationMs": 222133,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/decorate.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 0.5,
+      "forbiddenChanges": [],
+      "indexDurationMs": 534,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 10,
+      "success": true,
+      "taskId": "fastify-pr-6892",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 15736,
+        "cacheReadInputTokens": 217767,
+        "costUsd": 0.3923485,
+        "inputTokens": 36,
+        "isError": false,
+        "outputTokens": 5037,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 15,
+          "Edit": 2
+        },
+        "turns": 18
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 46,
+      "agentDurationMs": 233984,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 537,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 11,
+      "success": true,
+      "taskId": "fastify-pr-6889",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 14568,
+        "cacheReadInputTokens": 199747,
+        "costUsd": 0.3623335000000001,
+        "inputTokens": 36,
+        "isError": false,
+        "outputTokens": 4664,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 14,
+          "Edit": 3
+        },
+        "turns": 18
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 34,
+      "agentDurationMs": 215629,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 12,
+      "success": true,
+      "taskId": "fastify-pr-6889",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 23292,
+        "cacheReadInputTokens": 409297,
+        "costUsd": 0.6618835000000001,
+        "inputTokens": 48,
+        "isError": false,
+        "outputTokens": 8963,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 13,
+          "Edit": 7,
+          "Grep": 4,
+          "Read": 1
+        },
+        "turns": 26
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 82,
+      "agentDurationMs": 330484,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/hooks.js",
+        "test/hooks.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 0.5,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 13,
+      "success": true,
+      "taskId": "fastify-pr-6881",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 29512,
+        "cacheReadInputTokens": 672174,
+        "costUsd": 0.929257,
+        "inputTokens": 70,
+        "isError": false,
+        "outputTokens": 11908,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 29,
+          "Edit": 3,
+          "Grep": 2,
+          "Read": 1
+        },
+        "turns": 36
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 42,
+      "agentDurationMs": 617162,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/hooks.js",
+        "test/fix-6881.test.js",
+        "test/fixtures/"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 4,
+      "expectedPathRecall": 0.5,
+      "forbiddenChanges": [],
+      "indexDurationMs": 535,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 14,
+      "success": false,
+      "taskId": "fastify-pr-6881",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 44066,
+        "cacheReadInputTokens": 1136075,
+        "costUsd": 1.4474025000000001,
+        "inputTokens": 86,
+        "isError": false,
+        "outputTokens": 17531,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 39,
+          "Edit": 1,
+          "Write": 2
+        },
+        "turns": 43
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 144,
+      "agentDurationMs": 123219,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 21,
+      "expectedPathRecall": 0.6667,
+      "forbiddenChanges": [],
+      "indexDurationMs": 520,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 15,
+      "success": false,
+      "taskId": "fastify-pr-6865",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 14441,
+        "cacheReadInputTokens": 198718,
+        "costUsd": 0.4172490000000001,
+        "inputTokens": 36,
+        "isError": false,
+        "outputTokens": 6932,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 11,
+          "Edit": 4,
+          "Read": 2
+        },
+        "turns": 18
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 90,
+      "agentDurationMs": 129175,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/content-type.js",
+        "test/content-type.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 9,
+      "expectedPathRecall": 0.6667,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 16,
+      "success": false,
+      "taskId": "fastify-pr-6865",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 15396,
+        "cacheReadInputTokens": 209253,
+        "costUsd": 0.42385649999999997,
+        "inputTokens": 34,
+        "isError": false,
+        "outputTokens": 6604,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 8,
+          "Edit": 6,
+          "Grep": 1,
+          "Read": 2
+        },
+        "turns": 18
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 30,
+      "agentDurationMs": 44717,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 17,
+      "success": true,
+      "taskId": "fastify-pr-6846",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 8520,
+        "cacheReadInputTokens": 113830,
+        "costUsd": 0.21470499999999995,
+        "inputTokens": 28,
+        "isError": false,
+        "outputTokens": 2898,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 10,
+          "Edit": 2,
+          "Grep": 2
+        },
+        "turns": 15
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 26,
+      "agentDurationMs": 56691,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/content-type-parser.js",
+        "test/content-parser.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 493,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 18,
+      "success": true,
+      "taskId": "fastify-pr-6846",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 9807,
+        "cacheReadInputTokens": 128721,
+        "costUsd": 0.25425549999999997,
+        "inputTokens": 30,
+        "isError": false,
+        "outputTokens": 3667,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 10,
+          "Edit": 2,
+          "Grep": 1,
+          "Read": 2
+        },
+        "turns": 16
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 59,
+      "agentDurationMs": 46637,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/plugin-override.js",
+        "test/route-prefix.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 470,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 19,
+      "success": true,
+      "taskId": "fastify-pr-6803",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 8272,
+        "cacheReadInputTokens": 110135,
+        "costUsd": 0.21160250000000003,
+        "inputTokens": 28,
+        "isError": false,
+        "outputTokens": 2947,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 9,
+          "Edit": 1,
+          "Grep": 1,
+          "Read": 2
+        },
+        "turns": 14
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 26,
+      "agentDurationMs": 145621,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "lib/plugin-override.js",
+        "test/route-prefix.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 20,
+      "success": true,
+      "taskId": "fastify-pr-6803",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 6560,
+        "cacheReadInputTokens": 81708,
+        "costUsd": 0.157814,
+        "inputTokens": 22,
+        "isError": false,
+        "outputTokens": 2050,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 8,
+          "Edit": 1,
+          "Grep": 1,
+          "Read": 1
+        },
+        "turns": 12
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 50,
+      "agentDurationMs": 134391,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "CHANGES.rst",
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 4,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "flask",
+      "runOrder": 21,
+      "success": true,
+      "taskId": "flask-pr-6096",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 21809,
+        "cacheReadInputTokens": 627938,
+        "costUsd": 0.712574,
+        "inputTokens": 78,
+        "isError": false,
+        "outputTokens": 7205,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 29,
+          "Edit": 8,
+          "Read": 1
+        },
+        "turns": 39
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 32,
+      "agentDurationMs": 115991,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "CHANGES.rst",
+        "src/flask/app.py",
+        "src/flask/testing.py",
+        "tests/test_basic.py",
+        "tests/test_testing.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 5,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 189,
+      "mode": "codemap",
+      "repo": "flask",
+      "runOrder": 22,
+      "success": true,
+      "taskId": "flask-pr-6096",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 21080,
+        "cacheReadInputTokens": 506088,
+        "costUsd": 0.617444,
+        "inputTokens": 70,
+        "isError": false,
+        "outputTokens": 6130,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 26,
+          "Edit": 8
+        },
+        "turns": 35
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 111,
+      "agentDurationMs": 217488,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "CHANGES.rst",
+        "docs/shell.rst",
+        "docs/testing.rst",
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "tests/test_reqctx.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1
+      },
+      "deletedLines": 37,
+      "expectedPathRecall": 0.6,
+      "forbiddenChanges": [],
+      "indexDurationMs": 183,
+      "mode": "codemap",
+      "repo": "flask",
+      "runOrder": 23,
+      "success": false,
+      "taskId": "flask-pr-5818",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 35322,
+        "cacheReadInputTokens": 690219,
+        "costUsd": 1.1717245000000003,
+        "inputTokens": 54,
+        "isError": false,
+        "outputTokens": 18925,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 23,
+          "Edit": 2,
+          "Write": 2
+        },
+        "turns": 28
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 115,
+      "agentDurationMs": 133597,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "CHANGES.rst",
+        "docs/shell.rst",
+        "docs/testing.rst",
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "tests/test_reqctx.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 41,
+      "expectedPathRecall": 0.6,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "flask",
+      "runOrder": 24,
+      "success": false,
+      "taskId": "flask-pr-5818",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 24416,
+        "cacheReadInputTokens": 343884,
+        "costUsd": 0.6728770000000001,
+        "inputTokens": 40,
+        "isError": false,
+        "outputTokens": 10263,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 18,
+          "Edit": 1
+        },
+        "turns": 20
+      },
+      "verifierExitCode": 1
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "agentDurationRatio": 1.1263,
+    "baselineSuccessRate": 0.8333,
+    "budgetExhaustedRuns": 0,
+    "crossArmContamination": 0,
+    "exactTwoSidedP": 1,
+    "losingTasks": [
+      "fastify-pr-6881"
+    ],
+    "losses": 1,
+    "tasks": 12,
+    "ties": 11,
+    "tokenRatio": 1.164,
+    "totalCostUsd": 14.0389,
+    "treatmentAdoptionRate": 1,
+    "treatmentSuccessRate": 0.75,
+    "validPairs": 12,
+    "wins": 0
+  },
+  "worstCaseBudgetUsd": 48
+}

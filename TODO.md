@@ -4,13 +4,13 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 ## Nächster Slice
 
-Ein 12-Task-Development-Pilot für den neuen End-to-End-Agenten-Replay ist der nächste Slice. Vor
-dem ersten Agentenlauf werden Task-Auswahl, vollständige Commits, benannte Hidden-Test-Oracles,
-gegenbalancierte Reihenfolge und Gesamtbudget eingefroren. Dependency-Trees müssen lock-frozen
-sein; der Zwei-Task-Smoke mit `npm install --no-package-lock` belegt nur den Harness. Der Pilot
-entscheidet über Adoption, Scoring, Varianz und Kosten, nicht über Produktwirkung. Erst danach darf
-ein frischer, unangetasteter Holdout von ungefähr 40 Tasks Produktwirkung prüfen. Details und die
-roten/grünen Smoke-Ergebnisse: [`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md).
+Der 12-Task-Development-Pilot ist abgeschlossen: 0 Wins, 1 Loss, 11 Ties; CodeMap brauchte 16,4 %
+mehr Tokens, 12,6 % mehr Agentenzeit und 11,7 % mehr Kosten. Das ist kein Produktwirkungsbeleg. Der
+einzige Loss führte zu einem behaltenen, regressionsfreien Retrieval-Fix für Singular/Plural-
+Modulnamen. Als Nächstes diesen Hebel in einem begrenzten Development-Replay gegen Hidden Tests
+bestätigen oder verwerfen. Erst ein positiver Task-Signal rechtfertigt den frischen, unangetasteten
+Holdout von ungefähr 40 Tasks. Details und vollständige Evidenz:
+[`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md).
 
 Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro
 Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik, keine breite Heuristik ohne

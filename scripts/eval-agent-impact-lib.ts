@@ -19,6 +19,7 @@ export interface AgentImpactTask {
   hiddenTestPaths: string[];
   expectedBaseFailure: string;
   forbiddenChangePaths: string[];
+  setupFiles: Array<{ source: string; target: string; sha256: string }>;
   setup: AgentImpactCommand;
   verify: AgentImpactCommand;
 }
@@ -175,6 +176,7 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
 
   if (!Array.isArray(root.tasks) || root.tasks.length === 0) throw new Error("tasks must be non-empty");
   const tasks = root.tasks.map((item, index) => parseTask(item, index, repoIds));
+  root.tasks = tasks;
   unique(tasks.map((item) => item.id), "task id");
   const remoteByRepo = new Map(repositories.map((item) => [item.id, item.remote.replace(/\.git$/, "")]));
   for (const task of tasks) {
@@ -227,6 +229,32 @@ export function parseClaudeJson(raw: string): AgentUsage {
     isError: result.is_error === true || (typeof result.subtype === "string" && result.subtype !== "success"),
     toolCalls: sortRecord(toolCalls),
   };
+}
+
+export function parseAgentImpactCheckpoint(
+  raw: string,
+  expectedManifestSha256: string,
+  allowedTaskIds: Set<string>,
+): AgentImpactRunResult[] {
+  const value = record(JSON.parse(raw), "checkpoint");
+  if (value.manifestSha256 !== expectedManifestSha256) throw new Error("Checkpoint manifest hash mismatch");
+  if (!Array.isArray(value.results)) throw new Error("Checkpoint results are invalid");
+  const seen = new Set<string>();
+  for (const item of value.results) {
+    const result = record(item, "checkpoint result");
+    const taskId = string(result.taskId, "checkpoint result.taskId");
+    if (!allowedTaskIds.has(taskId) || (result.mode !== "baseline" && result.mode !== "codemap")) {
+      throw new Error("Checkpoint contains an unknown run");
+    }
+    const key = `${taskId}\0${result.mode}`;
+    if (seen.has(key)) throw new Error(`Checkpoint contains duplicate run ${taskId}/${result.mode}`);
+    seen.add(key);
+  }
+  return value.results as AgentImpactRunResult[];
+}
+
+export function retryableAgentImpactInfrastructure(result: AgentImpactRunResult): boolean {
+  return Boolean(result.infrastructureError) && result.usage.costUsd === 0;
 }
 
 export function summarizeAgentImpact(
@@ -346,6 +374,15 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
   const hiddenTestPaths = paths(task.hiddenTestPaths, `tasks[${index}].hiddenTestPaths`);
   const expectedBaseFailure = string(task.expectedBaseFailure, `tasks[${index}].expectedBaseFailure`);
   const forbiddenChangePaths = paths(task.forbiddenChangePaths, `tasks[${index}].forbiddenChangePaths`, true);
+  const setupFiles = optionalArray(task.setupFiles, `tasks[${index}].setupFiles`).map((item, fileIndex) => {
+    const entry = record(item, `tasks[${index}].setupFiles[${fileIndex}]`);
+    const source = repoPath(entry.source, `tasks[${index}].setupFiles[${fileIndex}].source`);
+    const target = repoPath(entry.target, `tasks[${index}].setupFiles[${fileIndex}].target`);
+    const sha256 = string(entry.sha256, `tasks[${index}].setupFiles[${fileIndex}].sha256`);
+    if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error(`tasks[${index}].setupFiles[${fileIndex}].sha256 must be SHA-256`);
+    return { source, target, sha256 };
+  });
+  unique(setupFiles.map((item) => item.target), `tasks[${index}].setupFiles target`);
   return {
     id,
     repo,
@@ -357,9 +394,16 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     hiddenTestPaths,
     expectedBaseFailure,
     forbiddenChangePaths,
+    setupFiles,
     setup: command(task.setup, `tasks[${index}].setup`),
     verify: command(task.verify, `tasks[${index}].verify`),
   };
+}
+
+function optionalArray(value: unknown, label: string): unknown[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
+  return value;
 }
 
 function command(value: unknown, label: string): AgentImpactCommand {

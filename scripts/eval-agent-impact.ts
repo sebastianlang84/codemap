@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync, spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,7 +10,9 @@ import {
   evaluateAgentImpactPilotGate,
   hashAgentImpactJson,
   parseAgentImpactManifest,
+  parseAgentImpactCheckpoint,
   parseClaudeJson,
+  retryableAgentImpactInfrastructure,
   stableAgentImpactEvidence,
   summarizeAgentImpact,
   type AgentImpactCommand,
@@ -33,6 +36,7 @@ interface ParsedArgs {
   keepWorkdir: boolean;
   offline: boolean;
   evidenceOutput?: string;
+  resume: boolean;
   help: boolean;
 }
 
@@ -70,6 +74,14 @@ const modes: AgentImpactMode[] = args.mode === "all" ? ["baseline", "codemap"] :
 const plannedRuns = selectedTasks.length * modes.length;
 const worstCaseBudgetUsd = round(plannedRuns * manifest.agent.maxBudgetUsdPerRun, 2);
 
+if (args.resume && !args.evidenceOutput) throw new Error("--resume requires --evidence-output");
+if (args.evidenceOutput && (selectedTasks.length !== manifest.tasks.length || modes.length !== 2 || args.validateOnly)) {
+  throw new Error("Evidence output requires every manifest task in both modes");
+}
+if (args.evidenceOutput && existsSync(args.evidenceOutput) && !args.resume) {
+  throw new Error(`Evidence output already exists; pass --resume to continue: ${args.evidenceOutput}`);
+}
+
 if (args.dryRun) {
   console.log(JSON.stringify({
     manifest: manifest.corpus,
@@ -97,12 +109,24 @@ let report: Record<string, unknown> | undefined;
 try {
   const repositoryCaches = new Map(manifest.repositories.map((repo) => [repo.id, ensureRepositoryCache(repo.id, repo.remote, args)]));
   const profile = args.validateOnly ? undefined : ensureCodeMapProfile(manifest, args);
-  const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot));
-  const results: AgentImpactRunResult[] = [];
+  const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir));
+  const results = !args.validateOnly && args.resume ? loadCheckpoint(args.evidenceOutput!, manifestSha256, manifest) : [];
+  const agentReport = {
+    provider: manifest.agent.provider,
+    requestedModel: manifest.agent.model,
+    effort: manifest.agent.effort,
+    navigationWorkflow: manifest.agent.navigationWorkflow,
+    claudeCodeVersion: commandVersion(resolveClaudeBin()),
+    maxBudgetUsdPerRun: manifest.agent.maxBudgetUsdPerRun,
+    isolationConfigSha256: hashAgentImpactJson(claudeSettings()),
+  };
   if (!args.validateOnly) {
     const schedule = scheduleRuns(selectedTasks, modes, manifest.corpus.orderSeed);
+    const completed = new Set(results.map((item) => runKey(item.taskId, item.mode)));
+    if (results.length > 0) console.error(`[agent-impact] resumed ${results.length}/${schedule.length} runs`);
     for (let index = 0; index < schedule.length; index++) {
       const item = schedule[index]!;
+      if (completed.has(runKey(item.task.id, item.mode))) continue;
       console.error(`[agent-impact] ${index + 1}/${schedule.length} ${item.task.id}/${item.mode}`);
       results.push(runAgentAttempt({
         task: item.task,
@@ -112,41 +136,19 @@ try {
         repoCache: repositoryCaches.get(item.task.repo)!,
         profileDir: profile!,
         runRoot,
+        keepWorkdir: args.keepWorkdir,
       }));
+      if (args.evidenceOutput) {
+        report = buildReport(manifest, manifestSha256, agentReport, plannedRuns, worstCaseBudgetUsd, oracles, results, args.keepWorkdir ? runRoot : undefined);
+        writeEvidence(args.evidenceOutput, report);
+        console.error(`[agent-impact] checkpoint ${results.length}/${schedule.length}`);
+      }
     }
   }
-  const summary = summarizeAgentImpact(results, manifest.agent.navigationWorkflow);
-  const gate = evaluateAgentImpactPilotGate(manifest, oracles, summary);
-  report = {
-    schemaVersion: 1,
-    generatedAt: new Date().toISOString(),
-    corpus: manifest.corpus,
-    manifestSha256,
-    codemapProfile: manifest.codemapProfile,
-    agent: {
-      provider: manifest.agent.provider,
-      requestedModel: manifest.agent.model,
-      effort: manifest.agent.effort,
-      navigationWorkflow: manifest.agent.navigationWorkflow,
-      claudeCodeVersion: commandVersion(resolveClaudeBin()),
-      maxBudgetUsdPerRun: manifest.agent.maxBudgetUsdPerRun,
-      isolationConfigSha256: hashAgentImpactJson(claudeSettings()),
-    },
-    plannedRuns,
-    worstCaseBudgetUsd,
-    oracles,
-    results,
-    summary,
-    gate,
-    claimBoundary: claimBoundary(manifest.corpus.purpose),
-    ...(args.keepWorkdir ? { workdir: runRoot } : {}),
-  };
+  report = buildReport(manifest, manifestSha256, agentReport, plannedRuns, worstCaseBudgetUsd, oracles, results, args.keepWorkdir ? runRoot : undefined);
+  const gate = report.gate as ReturnType<typeof evaluateAgentImpactPilotGate>;
   if (args.evidenceOutput) {
-    if (args.validateOnly || selectedTasks.length !== manifest.tasks.length || modes.length !== 2) {
-      throw new Error("Evidence output requires every manifest task in both modes");
-    }
-    const stable = stableAgentImpactEvidence(report);
-    writeFileSync(args.evidenceOutput, `${JSON.stringify(stable, null, 2)}\n`);
+    const stable = writeEvidence(args.evidenceOutput, report);
     console.error(`[agent-impact] evidence ${args.evidenceOutput} sha256=${hashAgentImpactJson(stable)}`);
   }
   console.log(JSON.stringify(report, null, 2));
@@ -157,10 +159,63 @@ try {
   else console.error(`[agent-impact] kept ${runRoot}`);
 }
 
-function validateOracle(task: AgentImpactTask, repoCache: string, parent: string): OracleValidationResult {
-  const base = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-base`, task.baseCommit);
-  const fixed = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-fix`, task.fixCommit);
+function buildReport(
+  manifest: AgentImpactManifest,
+  manifestSha256: string,
+  agent: Record<string, unknown>,
+  plannedRuns: number,
+  worstCaseBudgetUsd: number,
+  oracles: OracleValidationResult[],
+  results: AgentImpactRunResult[],
+  workdir?: string,
+): Record<string, unknown> {
+  const summary = summarizeAgentImpact(results, manifest.agent.navigationWorkflow);
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    corpus: manifest.corpus,
+    manifestSha256,
+    codemapProfile: manifest.codemapProfile,
+    agent,
+    plannedRuns,
+    worstCaseBudgetUsd,
+    oracles,
+    results,
+    summary,
+    gate: evaluateAgentImpactPilotGate(manifest, oracles, summary),
+    claimBoundary: claimBoundary(manifest.corpus.purpose),
+    ...(workdir ? { workdir } : {}),
+  };
+}
+
+function writeEvidence(path: string, report: Record<string, unknown>): unknown {
+  const stable = stableAgentImpactEvidence(report);
+  mkdirSync(dirname(path), { recursive: true });
+  const temporary = `${path}.tmp`;
+  writeFileSync(temporary, `${JSON.stringify(stable, null, 2)}\n`);
+  renameSync(temporary, path);
+  return stable;
+}
+
+function loadCheckpoint(path: string, expectedManifestSha256: string, manifest: AgentImpactManifest): AgentImpactRunResult[] {
+  if (!existsSync(path)) return [];
+  const loaded = parseAgentImpactCheckpoint(readFileSync(path, "utf8"), expectedManifestSha256, new Set(manifest.tasks.map((task) => task.id)));
+  const retained = loaded.filter((result) => !retryableAgentImpactInfrastructure(result));
+  const retrying = loaded.length - retained.length;
+  if (retrying > 0) console.error(`[agent-impact] retrying ${retrying} zero-cost infrastructure runs`);
+  return retained;
+}
+
+function runKey(taskId: string, mode: AgentImpactMode): string {
+  return `${taskId}\0${mode}`;
+}
+
+function validateOracle(task: AgentImpactTask, repoCache: string, parent: string, keepWorkdir: boolean): OracleValidationResult {
+  let base: PreparedWorkspace | undefined;
+  let fixed: PreparedWorkspace | undefined;
   try {
+    base = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-base`, task.baseCommit);
+    fixed = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-fix`, task.fixCommit);
     applyHiddenTests(task, repoCache, base.repo);
     const baseResults = [runSpec(task.verify, base.repo, baseEnv()), runSpec(task.verify, base.repo, baseEnv())];
     const fixResults = [runSpec(task.verify, fixed.repo, baseEnv()), runSpec(task.verify, fixed.repo, baseEnv())];
@@ -192,6 +247,11 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
       valid: false,
       error: error instanceof Error ? error.message : String(error),
     };
+  } finally {
+    if (!keepWorkdir) {
+      if (base) rmSync(base.root, { recursive: true, force: true });
+      if (fixed) rmSync(fixed.root, { recursive: true, force: true });
+    }
   }
 }
 
@@ -203,8 +263,9 @@ function runAgentAttempt(options: {
   repoCache: string;
   profileDir: string;
   runRoot: string;
+  keepWorkdir: boolean;
 }): AgentImpactRunResult {
-  const { task, mode, runOrder, manifest, repoCache, profileDir, runRoot } = options;
+  const { task, mode, runOrder, manifest, repoCache, profileDir, runRoot, keepWorkdir } = options;
   let workspace: PreparedWorkspace | undefined;
   let usage = emptyUsage();
   let indexDurationMs = 0;
@@ -267,6 +328,8 @@ function runAgentAttempt(options: {
       codemapCommands: workspace ? readCallLog(workspace.callLog) : {},
       usage,
     };
+  } finally {
+    if (workspace && !keepWorkdir) rmSync(workspace.root, { recursive: true, force: true });
   }
 }
 
@@ -335,6 +398,7 @@ function prepareWorkspace(task: AgentImpactTask, repoCache: string, parent: stri
   const callLog = join(root, "codemap-calls.log");
   mkdirSync(repo, { recursive: true });
   materializeSnapshot(repoCache, commit, repo);
+  applySetupFiles(task, repo);
   execFileSync("git", ["init", "--quiet"], { cwd: repo });
   execFileSync("git", ["add", "."], { cwd: repo });
   execFileSync("git", ["-c", "user.name=CodeMap Eval", "-c", "user.email=codemap@example.invalid", "commit", "--quiet", "-m", "base snapshot"], { cwd: repo });
@@ -344,6 +408,18 @@ function prepareWorkspace(task: AgentImpactTask, repoCache: string, parent: stri
   if (dirty.trim()) throw new Error(`${task.id} setup changed tracked workspace: ${dirty.trim()}`);
   mkdirSync(stateDir, { recursive: true });
   return { root, repo, stateDir, callLog };
+}
+
+function applySetupFiles(task: AgentImpactTask, workspace: string): void {
+  for (const file of task.setupFiles) {
+    const source = join(repoRoot, file.source);
+    const bytes = readFileSync(source);
+    const actual = createHash("sha256").update(bytes).digest("hex");
+    if (actual !== file.sha256) throw new Error(`${task.id} setup file hash ${actual} != ${file.sha256}: ${file.source}`);
+    const target = join(workspace, file.target);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, bytes);
+  }
 }
 
 function materializeSnapshot(repoCache: string, commit: string, target: string): void {
@@ -614,6 +690,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     qualityGate: false,
     keepWorkdir: false,
     offline: false,
+    resume: false,
     help: false,
   };
   for (let index = 0; index < raw.length; index++) {
@@ -638,6 +715,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     else if (arg === "--quality-gate") parsed.qualityGate = true;
     else if (arg === "--keep-workdir") parsed.keepWorkdir = true;
     else if (arg === "--offline") parsed.offline = true;
+    else if (arg === "--resume") parsed.resume = true;
     else if (arg === "--help" || arg === "-h") parsed.help = true;
     else throw new Error(`Unknown option: ${arg}`);
   }
@@ -651,7 +729,7 @@ function parsePositive(value: string, label: string): number {
 }
 
 function printHelp(): void {
-  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and worst-case paid budget\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Required cap approval; must cover worst case\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Write stable aggregate evidence for a full paired run\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
+  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and worst-case paid budget\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Required cap approval; must cover worst case\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
 }
 
 function tail(value: string, length = 1200): string {

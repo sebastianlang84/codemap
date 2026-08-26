@@ -82,8 +82,8 @@ export function scoreSearchRow(row: SearchRow, plan: QueryPlan, boost: number): 
   const basenameCoverage = termCoverage(basename, plan.coreTerms);
   const basenameDepth = lowerPath.split("/").length - 1;
   const exactFilenameScore = basename === plan.normalized ? Math.max(1, 4 - basenameDepth) : 0;
-  const exactModuleNameScore = exactBasenameStemMatch(basename, plan.coreTerms) ? 8 : 0;
   const codeLike = isCodeLikePath(lowerPath);
+  const exactModuleNameScore = basenameStemScore(basename, plan.coreTerms, codeLike);
   const sourceLike = /(^|\/)src\//.test(lowerPath);
   const testLike = /(^|\/)(?:test|tests|__tests__)\//.test(lowerPath) || /(?:^|[._-])test\./.test(basename);
   const docLike = /(^|\/)(?:readme|architecture|changelog|todo)(?:\.|$)|\.(?:md|mdx|rst|txt)$/.test(lowerPath);
@@ -243,9 +243,16 @@ function explicitNoiseIntents(plan: QueryPlan): { lockfile: boolean; generated: 
   };
 }
 
-function exactBasenameStemMatch(basename: string, terms: string[]): boolean {
+function basenameStemScore(basename: string, terms: string[], codeLike: boolean): number {
   const stem = basename.replace(/(?:\.[^.]+)+$/, "");
-  return stem.length > 1 && terms.includes(stem);
+  if (stem.length <= 1) return 0;
+  if (terms.includes(stem)) return 8;
+  return codeLike && terms.some((term) => simplePluralPair(stem, term)) ? 16 : 0;
+}
+
+function simplePluralPair(left: string, right: string): boolean {
+  const [singular, plural] = left.length < right.length ? [left, right] : [right, left];
+  return singular.length >= 4 && !singular.endsWith("s") && plural === `${singular}s`;
 }
 
 function termCoverage(text: string, terms: string[]): number {

@@ -38,7 +38,10 @@ npm run eval:agent-impact -- \
 
 Use `--offline` only with an existing `--cache-dir`. A paid run refuses to start unless the approved
 amount covers the manifest's worst case. `--task` and `--mode` are diagnostic subsets and cannot
-write aggregate evidence.
+write aggregate evidence. Full paired runs checkpoint atomically after every attempt. `--resume`
+keeps completed paid attempts from a matching manifest and retries only infrastructure failures that
+recorded zero provider cost. Unless `--keep-workdir` is set, each oracle and attempt workspace is
+removed immediately so large dependency trees do not accumulate in the temporary filesystem.
 
 ## Smoke results
 
@@ -64,6 +67,45 @@ the evidence is [`agent-impact-smoke-v3-result.json`](agent-impact-smoke-v3-resu
 used CodeMap and all four patches passed. Treatment cost was $1.5719 versus $1.3441 for control
 (1.169×). The sample is too small and stochastic for a quality, latency, or cost claim.
 
+## Development pilot result
+
+The frozen 12-task pilot ran 24 Claude Opus 5 attempts at medium effort across Express, Fastify, and
+Flask. Ten tasks were new agent replays; two were smoke calibration cases. Every base failed its
+named hidden assertion twice and every upstream reference fix passed twice. Eight npm dependency
+trees were injected from checked-in SHA-256-pinned locks; both Flask tasks used their upstream
+`uv.lock`.
+
+| Metric | Baseline | CodeMap 0.10.0 context-first |
+| --- | ---: | ---: |
+| Hidden-test success | 10/12 | 9/12 |
+| Provider cost | $6.6323 | $7.4065 |
+| Total tokens | 4,540,405 | 5,285,056 |
+| Agent time | 1,974,352 ms | 2,223,698 ms |
+| Mean expected-path recall | 0.8972 | 0.8556 |
+
+Paired outcome: **0 wins, 1 loss, 11 ties** (`p=1.0`). Treatment adoption was 12/12, baseline
+contamination 0, budget exhaustion 0, and the harness gate passed. CodeMap used 1.164× the tokens,
+1.126× the agent time, and 1.117× the cost. Total spend was $14.0389 against a $48 worst-case cap.
+Both arms failed `fastify-pr-6865` and `flask-pr-5818`; only CodeMap failed `fastify-pr-6881`.
+
+The manifest SHA-256 is
+`727db942501d0e0308aaafd01dbc0a1cdcfa214ad48f74ef9d10cd0d02f3a16a`; the evidence is
+[`agent-impact-pilot-v1-result.json`](agent-impact-pilot-v1-result.json), SHA-256
+`8f9d2a7899c4fe997f7282a415acf83a9a137d8df9984c72d6508464dfcdf147`.
+
+### Kept retrieval follow-up
+
+The losing Fastify task exposed a concrete navigation miss. On its frozen base snapshot, the exact
+bug-report query omitted `lib/hooks.js` from the eight-file CodeMap read plan and anchored on an
+unrelated request-error test. One post-pilot lever now treats a simple singular/plural match between
+a query term and a code module basename as strong filename evidence. The same query then includes
+`lib/hooks.js` second in the read plan. A red-to-green synthetic regression pins the behavior.
+
+The fixed search-quality suites were unchanged, the fixture agent-navigation context remained 1.0
+success/recall with no forbidden reads, and the 24-case local real-repo gate remained 7 wins, 0
+losses, and 17 ties. This proves the retrieval correction without a measured regression. The agent
+task was not rerun, so it does not prove that the correction changes coding-task success.
+
 ## Interpretation and next gate
 
 The replay and its isolation work. The first workflow exposed a real search-to-context drop-off;
@@ -71,9 +113,9 @@ the simpler workflow removed that drop-off in the repeat smoke. Neither run show
 gain, and v3 used more tokens, time, and money. Therefore this evidence does not justify a ranking
 change or a user-facing workflow change.
 
-The next experiment is a 12-task development pilot selected before execution across several
-repositories and task shapes. Dependency trees must be frozen, every task needs a repeated named
-base failure plus repeated reference pass, and the manifest must set a hard total budget. Its job is
-to validate adoption, scoring, variance, and operational cost. Only after that pilot may a fresh,
-untouched approximately 40-task corpus test product effect; its primary outcome is paired hidden-test
+The pilot rejects a product-effect claim for the 0.10.0 context-first workflow: it produced no task
+win, one task loss, and higher resource use. Do not tune broad ranking or spend a fresh holdout on
+that unchanged profile. First confirm whether the kept module-name retrieval correction changes
+hidden-test outcomes on a bounded development replay. Only a positive development signal justifies
+a fresh, untouched approximately 40-task corpus; its primary outcome remains paired hidden-test
 success, with tokens, cost, time, and CodeMap use as secondary outcomes.

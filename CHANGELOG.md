@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.10.1 - 2026-08-26
+
+- Improve natural bug-report navigation when a singular query term names a plural code module, while keeping documentation out of the stronger basename signal. On the frozen Fastify loss case, `lib/hooks.js` moves from outside the eight-file context plan to its second read; fixed search gates stay unchanged and the 24-case local navigation gate remains 7 wins, 0 losses, and 17 ties.
+- Add a lock-frozen 12-task end-to-end agent-impact pilot with atomic checkpoints and safe resume. Claude Opus 5 at medium effort produced 0 CodeMap wins, 1 loss, and 11 ties versus baseline while using more tokens, time, and cost, so the checked-in result explicitly rejects a product-effect claim for the 0.10.0 workflow.
+
 ## 0.10.0 - 2026-08-26
 
 - Add a frozen, CLI-black-box external navigation holdout covering 40 merged changes across six previously unused public repositories. On the first unseen run, CodeMap 0.9.1 search→context reached 0.425 complete success versus 0.250 for the lexical baseline while using 74.2% fewer estimated read tokens; the manifest hash, exhaustive oracle disposition audit, full deterministic result artifact, per-repo metrics, paired exact test, and claim limits preserve the directional result without overstating statistical or end-to-end coding evidence.

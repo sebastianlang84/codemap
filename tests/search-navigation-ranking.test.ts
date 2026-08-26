@@ -374,3 +374,30 @@ def send_telegram(text):
   const results = searchCodeMap({ cwd: root, query: "telegram delivery log host lock", limit: 5 });
   assert.equal(results[0]?.path, "src/newsletter_writer/delivery.py", JSON.stringify(results.map((result) => ({ path: result.path, score: result.score }))));
 });
+
+test("query context keeps a plural module-name source amid bug-report distractors", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-plural-module-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  mkdirSync(join(root, "lib"), { recursive: true });
+  mkdirSync(join(root, "test"), { recursive: true });
+  mkdirSync(join(root, "examples", "benchmark"), { recursive: true });
+  mkdirSync(join(root, "types"), { recursive: true });
+  mkdirSync(join(root, "docs", "Reference"), { recursive: true });
+
+  writeFileSync(join(root, "lib", "hooks.js"), "async function hookRunner (fn) { return fn() }\nmodule.exports = hookRunner\n");
+  writeFileSync(join(root, "lib", "log-controller.js"), "class LogController { writeHeadError (error) { return error } }\n");
+  writeFileSync(join(root, "examples", "benchmark", "hooks-benchmark-async-await.js"), "async function asyncHook () { return true }\n");
+  writeFileSync(join(root, "types", "logger.d.ts"), "declare function writeHeadError(error: Error): void\n");
+  writeFileSync(join(root, "docs", "Reference", "Hooks.md"), "# Hooks\n\nAsync hooks run before writeHead.\n");
+  writeFileSync(join(root, "test", "request-error.test.js"), "class Reply { write () { return 'async hook' } }\n");
+  for (let index = 0; index < 8; index++) {
+    writeFileSync(join(root, "test", `noise-${index}.test.js`), `function case${index} () { return 'throws when using async hook' }\n`);
+  }
+  indexRepo({ cwd: root, approve: true });
+
+  const result = codemapContext({ cwd: root, target: "uncatchable throws in writeHead when using async hook", limit: 8 });
+  const paths = result.readFirst.map((item) => item.path);
+  assert.ok(paths.includes("lib/hooks.js"), JSON.stringify(paths));
+  assert.notEqual(paths[0], "docs/Reference/Hooks.md", JSON.stringify(paths));
+});

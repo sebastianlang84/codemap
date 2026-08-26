@@ -1,0 +1,255 @@
+{
+  "$comment": "Frozen development pilot. It validates adoption, scoring, variance, and cost; it is not untouched product-effect evidence.",
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-development-pilot-v1",
+    "version": 1,
+    "frozenAt": "2026-08-26",
+    "purpose": "development-pilot",
+    "selectionProtocol": "Twelve executable historical bug fixes across Express, Fastify, and Flask, selected before agent execution from the inspected external-navigation corpus. Every task has a separate upstream regression-test file, a full base/fix commit, repeated named base-failure/reference-pass oracles, and a lock-frozen dependency tree. Ten tasks are new to the agent replay; Express 7181 and Fastify 6942 are retained as smoke calibration cases. Go, Rust, and C candidates are excluded because their toolchains are unavailable on this host.",
+    "orderSeed": 120826
+  },
+  "agent": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "medium",
+    "navigationWorkflow": "context-first",
+    "maxBudgetUsdPerRun": 2,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "94d361641a7be333c7b9fac872c6df16a221fb14",
+    "expectedVersion": "0.10.0"
+  },
+  "repositories": [
+    { "id": "express", "remote": "https://github.com/expressjs/express.git" },
+    { "id": "fastify", "remote": "https://github.com/fastify/fastify.git" },
+    { "id": "flask", "remote": "https://github.com/pallets/flask.git" }
+  ],
+  "tasks": [
+    {
+      "id": "express-pr-7377",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/7377",
+      "prompt": "feat: allow conditional revalidation for QUERY requests (v4)",
+      "baseCommit": "715101bd27ec9c14a7ccc8a37c476f330d98ad53",
+      "fixCommit": "61ccf2ea8c1bd19cbca6acfb7cd276c5fcd410d3",
+      "expectedPaths": ["lib/request.js", "test/req.fresh.js"],
+      "hiddenTestPaths": ["test/req.fresh.js"],
+      "expectedBaseFailure": "should return true for a QUERY request with a body when the resource is not modified",
+      "forbiddenChangePaths": ["History.md", "package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/express-7377.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "1f053ec2a1f9affacd380946b7e3d12a81ba89edf22b27053f67d75ebbc82528"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "./node_modules/.bin/mocha", "args": ["--require", "test/support/env", "--reporter", "dot", "--bail", "--check-leaks", "test/req.fresh.js"], "timeoutMs": 120000 }
+    },
+    {
+      "id": "express-pr-7181",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/7181",
+      "prompt": "fix: restore array parsing for req.query repeated keys (#7147)",
+      "baseCommit": "d39e8ad1778a0b8a606a5a7b17096d0cc5ec722d",
+      "fixCommit": "8d09bfe6d88983da5c3e12cfdd54782c4dc675db",
+      "expectedPaths": ["lib/utils.js", "test/req.query.js"],
+      "hiddenTestPaths": ["test/req.query.js"],
+      "expectedBaseFailure": "should parse more than 20 repeated values as an array",
+      "forbiddenChangePaths": ["History.md", "package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/express-7181.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "22887ac150bcb96b1c4dec2d1073fbf0743adf26ebfc6212e4fb1d4d8c05a1f3"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "./node_modules/.bin/mocha", "args": ["--require", "test/support/env", "--reporter", "dot", "--bail", "--check-leaks", "test/req.query.js"], "timeoutMs": 120000 }
+    },
+    {
+      "id": "fastify-pr-6965",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6965",
+      "prompt": "fix: callNotFound should run not-found preHandler regardless of registration order",
+      "baseCommit": "83e69762aff047940b376fc2a266d143499ef727",
+      "fixCommit": "4176096a31f5b4c31512c36f578b08a596a72435",
+      "expectedPaths": ["lib/four-oh-four.js", "test/404s.test.js"],
+      "hiddenTestPaths": ["test/404s.test.js"],
+      "expectedBaseFailure": "preHandler hook in setNotFoundHandler should be called when callNotFound and the route is registered first",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6965.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "31e110ea0d1407b42bc296a21d2cf4eaff3234828954d46f08b95372c53a5553"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/404s.test.js"], "timeoutMs": 180000 }
+    },
+    {
+      "id": "fastify-pr-6942",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6942",
+      "prompt": "fix(content-type): return undefined for invalid media types",
+      "baseCommit": "eaff726a68c629c1aedc99f96b3c4b95dfdb38d1",
+      "fixCommit": "15c2fb1933461f846a6160923a2bc4e091039826",
+      "expectedPaths": ["lib/content-type.js", "test/content-type.test.js"],
+      "hiddenTestPaths": ["test/content-type.test.js"],
+      "expectedBaseFailure": "returns empty instance for empty value",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6942.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "4b881654ed78b434f69ae9c1600ac5c3e14441b173c8e12c102fef8f60a4b9dd"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/content-type.test.js"], "timeoutMs": 120000 }
+    },
+    {
+      "id": "fastify-pr-6892",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6892",
+      "prompt": "fix: recognize constructor-assigned built-in properties as decorators",
+      "baseCommit": "a2f590563f111ebc8e92b8f17701909e9b19d4b7",
+      "fixCommit": "27938ac777c15482a81881b29f86c82b025f7fae",
+      "expectedPaths": ["lib/decorate.js", "test/decorator-instance-properties.test.js"],
+      "hiddenTestPaths": ["test/decorator-instance-properties.test.js"],
+      "expectedBaseFailure": "decorateRequest accepts built-in request properties as dependencies",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6892-6846.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "f84c914f097d891437bf1fa9deb5c54b4b6e88901543d036c3da5efcc2606a57"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/decorator-instance-properties.test.js"], "timeoutMs": 120000 }
+    },
+    {
+      "id": "fastify-pr-6889",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6889",
+      "prompt": "fix: do not force close in-flight connections when forceCloseConnections is 'idle'",
+      "baseCommit": "74c44c94afea276256721316d25218d1cdd1aae4",
+      "fixCommit": "9ba6d6016fa932118e6cb2a2f68617cab0824f12",
+      "expectedPaths": ["fastify.js", "test/close.test.js"],
+      "hiddenTestPaths": ["test/close.test.js"],
+      "expectedBaseFailure": "does not destroy connections with in-flight requests (forceCloseConnections - idle)",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6889.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "07b4259f3dd034b38168c4a4337285655aa09f3b564b34f29d671c2ea290f286"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/close.test.js"], "timeoutMs": 180000 }
+    },
+    {
+      "id": "fastify-pr-6881",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6881",
+      "prompt": "fix: uncatchable throws in writeHead when using async hook",
+      "baseCommit": "b6cdc6a40598d15f38fe7d399eb17f4b84b7bf06",
+      "fixCommit": "01ca8393b9d10a897f0d2daedbe2f9eb90076ef5",
+      "expectedPaths": ["lib/hooks.js", "test/reply-error.test.js"],
+      "hiddenTestPaths": ["test/reply-error.test.js"],
+      "expectedBaseFailure": "should catch error when setting invalid header on async preSerializeation hook",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6881-6865.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "256838a34d800f727e7d027e5740f57977a4f702e5eb787fcb7b30c660ec80a5"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/reply-error.test.js"], "timeoutMs": 180000 }
+    },
+    {
+      "id": "fastify-pr-6865",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6865",
+      "prompt": "fix: honor quoted-string in Content-Type parameter values",
+      "baseCommit": "01ca8393b9d10a897f0d2daedbe2f9eb90076ef5",
+      "fixCommit": "29bdcbb91f1318dc90ae8c0e52ab6f4e13c42744",
+      "expectedPaths": ["lib/content-type.js", "test/content-type.test.js", "test/internals/reply.test.js"],
+      "hiddenTestPaths": ["test/content-type.test.js", "test/internals/reply.test.js"],
+      "expectedBaseFailure": "preserves a semicolon inside a quoted parameter value",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6881-6865.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "256838a34d800f727e7d027e5740f57977a4f702e5eb787fcb7b30c660ec80a5"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/content-type.test.js", "test/internals/reply.test.js"], "timeoutMs": 180000 }
+    },
+    {
+      "id": "fastify-pr-6846",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6846",
+      "prompt": "fix: reset lastIndex before testing global/sticky content-type RegExp parsers",
+      "baseCommit": "27938ac777c15482a81881b29f86c82b025f7fae",
+      "fixCommit": "16a74e7cb2d1abdc2feca9097f2936fe8b851a5c",
+      "expectedPaths": ["lib/content-type-parser.js", "test/content-parser.test.js"],
+      "hiddenTestPaths": ["test/content-parser.test.js"],
+      "expectedBaseFailure": "content-type match - RegExp with global flag",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6892-6846.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "f84c914f097d891437bf1fa9deb5c54b4b6e88901543d036c3da5efcc2606a57"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/content-parser.test.js"], "timeoutMs": 180000 }
+    },
+    {
+      "id": "fastify-pr-6803",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6803",
+      "prompt": "fix: avoid double slash when joining nested prefixes",
+      "baseCommit": "8b9c07b645a8156c23a1d2619267fc84ea879250",
+      "fixCommit": "2f597a9297a3020a9f30bf5548a8442c28ddb1c1",
+      "expectedPaths": ["lib/plugin-override.js", "test/route-prefix.test.js"],
+      "hiddenTestPaths": ["test/route-prefix.test.js"],
+      "expectedBaseFailure": "Prefix with trailing / and nested prefix without leading /",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [{
+        "source": "scripts/fixtures/agent-impact-locks/fastify-6803.package-lock.json",
+        "target": "package-lock.json",
+        "sha256": "e0c6dba7d49ce7fa3c7ac5c28e5b18185da80229c79c9128bb51d3eaf9ca13fe"
+      }],
+      "setup": { "file": "npm", "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], "timeoutMs": 300000 },
+      "verify": { "file": "node", "args": ["--test", "test/route-prefix.test.js"], "timeoutMs": 180000 }
+    },
+    {
+      "id": "flask-pr-6096",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/6096",
+      "prompt": "Fix .partition(':') usage on potential IPv6 addresses",
+      "baseCommit": "514fc6b3e8402e4c646d5284e97a4f0ab50a7c4b",
+      "fixCommit": "05e9c6bd630ecf4ec0ec884b1fc7901663737bc7",
+      "expectedPaths": ["src/flask/app.py", "src/flask/testing.py", "tests/test_basic.py", "tests/test_testing.py"],
+      "hiddenTestPaths": ["tests/test_basic.py", "tests/test_testing.py"],
+      "expectedBaseFailure": "test_session_transaction_ipv6",
+      "forbiddenChangePaths": ["pyproject.toml", "uv.lock"],
+      "setup": { "file": "uv", "args": ["sync", "--frozen"], "timeoutMs": 300000 },
+      "verify": { "file": ".venv/bin/pytest", "args": ["-q", "tests/test_basic.py", "tests/test_testing.py"], "timeoutMs": 180000 }
+    },
+    {
+      "id": "flask-pr-5818",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/pull/5818",
+      "prompt": "pass context through dispatch methods",
+      "baseCommit": "88a65bb374e87a18816a780dbd4ae69d307aa85c",
+      "fixCommit": "70d04b5a2620705011e65f79ccfd52caa86f5d6a",
+      "expectedPaths": ["src/flask/app.py", "src/flask/ctx.py", "src/flask/templating.py", "tests/test_reqctx.py", "tests/test_subclassing.py"],
+      "hiddenTestPaths": ["tests/test_reqctx.py", "tests/test_subclassing.py"],
+      "expectedBaseFailure": "test_suppressed_exception_logging",
+      "forbiddenChangePaths": ["pyproject.toml", "uv.lock"],
+      "setup": { "file": "uv", "args": ["sync", "--frozen"], "timeoutMs": 300000 },
+      "verify": { "file": ".venv/bin/pytest", "args": ["-q", "tests/test_reqctx.py", "tests/test_subclassing.py"], "timeoutMs": 180000 }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 12,
+    "minTreatmentAdoptionRate": 1,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  }
+}
