@@ -60,6 +60,18 @@ test("development pilot freezes twelve tasks and every injected dependency lock"
   }
 });
 
+test("module-name confirmation freezes three paired replicas and the released CodeMap profile", () => {
+  const raw = readFileSync(new URL("../scripts/eval-agent-impact-confirmation.manifest.json", import.meta.url), "utf8");
+  const confirmation = parseAgentImpactManifest(raw);
+  assert.equal(confirmation.corpus.purpose, "development-pilot");
+  assert.equal(confirmation.tasks.length, 3);
+  assert.equal(confirmation.pilotGate.minValidPairs, 3);
+  assert.equal(confirmation.codemapProfile.expectedVersion, "0.10.1");
+  assert.equal(confirmation.codemapProfile.gitCommit, "493de82ab0e6f982f605454bf7e38e75824b4ae4");
+  assert.equal(new Set(confirmation.tasks.map((task) => task.baseCommit)).size, 1);
+  assert.equal(hashAgentImpactJson(JSON.parse(raw)), "b5dd1a08c1b607e1855c215dec6de00f248df602ec90ba5ad376f8b316f656a9");
+});
+
 test("agent-impact manifest rejects shell strings, path escapes, duplicate ids, and abbreviated SHAs", () => {
   const shellString = cloneManifest();
   (shellString.tasks[0] as unknown as Record<string, unknown>).setup = "npm ci && curl example.invalid";

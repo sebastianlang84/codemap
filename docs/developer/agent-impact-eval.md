@@ -103,8 +103,32 @@ a query term and a code module basename as strong filename evidence. The same qu
 
 The fixed search-quality suites were unchanged, the fixture agent-navigation context remained 1.0
 success/recall with no forbidden reads, and the 24-case local real-repo gate remained 7 wins, 0
-losses, and 17 ties. This proves the retrieval correction without a measured regression. The agent
-task was not rerun, so it does not prove that the correction changes coding-task success.
+losses, and 17 ties. This proves the retrieval correction without a measured regression. The
+coding-task confirmation below tests the narrower product-effect hypothesis.
+
+### Module-name confirmation
+
+Three independent paired replays repeated the sole pilot treatment loss against the released
+CodeMap 0.10.1 profile. Task, oracle, order, profile, budget, and the decision rule were frozen
+before execution. The hypothesis required three valid pairs, full treatment adoption, no
+contamination or budget exhaustion, treatment success at least equal to baseline, and more paired
+wins than losses.
+
+The gate failed. Only two pairs were valid, with **1 win and 1 loss**; both arms succeeded once and
+failed once. Treatment adoption was 2/2 in the valid pairs, baseline contamination and budget
+exhaustion were zero, and CodeMap used 1.052× the tokens and 0.975× the agent time. Total spend was
+$4.3134 against a $12 cap. The third CodeMap attempt ended in a provider API error after $0.7084 of
+usage; its baseline also ended in a zero-cost API error. The frozen protocol permits retry only for
+zero-cost failures, so the pair remains invalid and was not rerun.
+
+The manifest SHA-256 is
+`b5dd1a08c1b607e1855c215dec6de00f248df602ec90ba5ad376f8b316f656a9`; the evidence is
+[`agent-impact-confirmation-v1-result.json`](agent-impact-confirmation-v1-result.json), stable
+SHA-256 `92c4f80538189657298e4f44c21ff6c8efd4b8d73cc4953a47a5db724d33dbff`.
+
+This result does not confirm a coding-task benefit from the module-name correction. It also does
+not justify removing the deterministic, regression-tested retrieval fix: the bounded agent replay
+is inconclusive about causal effect, while the retrieval behavior remains directly verified.
 
 ## Interpretation and next gate
 
@@ -114,8 +138,10 @@ gain, and v3 used more tokens, time, and money. Therefore this evidence does not
 change or a user-facing workflow change.
 
 The pilot rejects a product-effect claim for the 0.10.0 context-first workflow: it produced no task
-win, one task loss, and higher resource use. Do not tune broad ranking or spend a fresh holdout on
-that unchanged profile. First confirm whether the kept module-name retrieval correction changes
-hidden-test outcomes on a bounded development replay. Only a positive development signal justifies
-a fresh, untouched approximately 40-task corpus; its primary outcome remains paired hidden-test
-success, with tokens, cost, time, and CodeMap use as secondary outcomes.
+win, one task loss, and higher resource use. The 0.10.1 module-name confirmation did not clear its
+predeclared gate: its two valid pairs split 1–1 and its third pair was invalid. Do not rerun the same
+case to seek a favorable score, and do not spend a fresh approximately 40-task holdout on this
+profile. A new development experiment needs a different, reproducible agent-task miss and one
+corresponding lever. Only a positive signal on fresh development cases justifies the untouched
+holdout; its primary outcome remains paired hidden-test success, with tokens, cost, time, and
+CodeMap use as secondary outcomes.

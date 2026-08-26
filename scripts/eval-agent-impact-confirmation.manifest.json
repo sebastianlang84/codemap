@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-module-name-confirmation-v1",
+    "version": 1,
+    "frozenAt": "2026-08-26",
+    "purpose": "development-pilot",
+    "selectionProtocol": "Three independent paired replays of the sole v1 pilot treatment loss, Fastify PR 6881, after the deterministic singular/plural module-name retrieval fix. The task, repeated named oracle, order, CodeMap 0.10.1 profile, and budget were frozen before execution. The retrieval-impact hypothesis is supported only if all three pairs are valid, treatment adoption is 1, contamination and budget exhaustion are 0, treatment success is at least baseline success, and paired wins exceed losses. Infrastructure failures may be resumed only when provider cost is zero; every other result is retained.",
+    "orderSeed": 2608261
+  },
+  "agent": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "medium",
+    "navigationWorkflow": "context-first",
+    "maxBudgetUsdPerRun": 2,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "493de82ab0e6f982f605454bf7e38e75824b4ae4",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "fastify-pr-6881-r1",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6881",
+      "prompt": "fix: uncatchable throws in writeHead when using async hook",
+      "baseCommit": "b6cdc6a40598d15f38fe7d399eb17f4b84b7bf06",
+      "fixCommit": "01ca8393b9d10a897f0d2daedbe2f9eb90076ef5",
+      "expectedPaths": ["lib/hooks.js", "test/reply-error.test.js"],
+      "hiddenTestPaths": ["test/reply-error.test.js"],
+      "expectedBaseFailure": "should catch error when setting invalid header on async preSerializeation hook",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-6881-6865.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "256838a34d800f727e7d027e5740f57977a4f702e5eb787fcb7b30c660ec80a5"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": ["--test", "test/reply-error.test.js"],
+        "timeoutMs": 180000
+      }
+    },
+    {
+      "id": "fastify-pr-6881-r2",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6881",
+      "prompt": "fix: uncatchable throws in writeHead when using async hook",
+      "baseCommit": "b6cdc6a40598d15f38fe7d399eb17f4b84b7bf06",
+      "fixCommit": "01ca8393b9d10a897f0d2daedbe2f9eb90076ef5",
+      "expectedPaths": ["lib/hooks.js", "test/reply-error.test.js"],
+      "hiddenTestPaths": ["test/reply-error.test.js"],
+      "expectedBaseFailure": "should catch error when setting invalid header on async preSerializeation hook",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-6881-6865.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "256838a34d800f727e7d027e5740f57977a4f702e5eb787fcb7b30c660ec80a5"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": ["--test", "test/reply-error.test.js"],
+        "timeoutMs": 180000
+      }
+    },
+    {
+      "id": "fastify-pr-6881-r3",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6881",
+      "prompt": "fix: uncatchable throws in writeHead when using async hook",
+      "baseCommit": "b6cdc6a40598d15f38fe7d399eb17f4b84b7bf06",
+      "fixCommit": "01ca8393b9d10a897f0d2daedbe2f9eb90076ef5",
+      "expectedPaths": ["lib/hooks.js", "test/reply-error.test.js"],
+      "hiddenTestPaths": ["test/reply-error.test.js"],
+      "expectedBaseFailure": "should catch error when setting invalid header on async preSerializeation hook",
+      "forbiddenChangePaths": ["package.json", "package-lock.json"],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-6881-6865.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "256838a34d800f727e7d027e5740f57977a4f702e5eb787fcb7b30c660ec80a5"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": ["--test", "test/reply-error.test.js"],
+        "timeoutMs": 180000
+      }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 3,
+    "minTreatmentAdoptionRate": 1,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  }
+}

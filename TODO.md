@@ -5,11 +5,13 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 ## Nächster Slice
 
 Der 12-Task-Development-Pilot ist abgeschlossen: 0 Wins, 1 Loss, 11 Ties; CodeMap brauchte 16,4 %
-mehr Tokens, 12,6 % mehr Agentenzeit und 11,7 % mehr Kosten. Das ist kein Produktwirkungsbeleg. Der
-einzige Loss führte zu einem behaltenen, regressionsfreien Retrieval-Fix für Singular/Plural-
-Modulnamen. Als Nächstes diesen Hebel in einem begrenzten Development-Replay gegen Hidden Tests
-bestätigen oder verwerfen. Erst ein positiver Task-Signal rechtfertigt den frischen, unangetasteten
-Holdout von ungefähr 40 Tasks. Details und vollständige Evidenz:
+mehr Tokens, 12,6 % mehr Agentenzeit und 11,7 % mehr Kosten. Der daraus entstandene, regressionsfreie
+Retrieval-Fix für Singular/Plural-Modulnamen bestand seine begrenzte Bestätigung nicht: zwei gültige
+Paare teilten sich in 1 Win und 1 Loss, das dritte Paar war nach Provider-Fehlern ungültig. Das ist
+kein Produktwirkungsbeleg. Den gleichen Fall nicht wiederholen und den unangetasteten Holdout von
+ungefähr 40 Tasks noch nicht ausgeben. Als Nächstes einen anderen reproduzierbaren Agent-Task-Miss
+samt genau einem Hebel und frischen Development-Cases finden; erst ein positives Signal öffnet den
+Holdout. Details und vollständige Evidenz:
 [`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md).
 
 Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro
