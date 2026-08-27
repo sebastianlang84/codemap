@@ -73,20 +73,43 @@ export function parseNestedWorktrees(root: string, porcelain: string): string[] 
     // invoked from inside a worktree and the main repository is the outsider (and lies outside root).
     if (worktree === canonicalRoot) continue;
     if (!worktree.startsWith(`${canonicalRoot}/`)) continue;
-    nested.push(relative(canonicalRoot, worktree).split("\\").join("/"));
+    nested.push(toPosix(relative(canonicalRoot, worktree)));
   }
   return nested;
 }
 
 // Resolve symlinks on both sides before comparing: `git worktree list` reports real paths, while a
 // root under a symlinked temp dir does not, and a textual prefix check would then never match.
+//
+// Two Windows-only details, each of which alone made the prefix test below unmatchable — so nested
+// worktrees were never detected on Windows and every one of them stayed indexed as a second copy:
+//
+//   - `realpathSync.native` is used ahead of the JS implementation because only the native one
+//     expands 8.3 short names (`C:\Users\SEBAST~1\...`, which `os.tmpdir()` returns). `git worktree
+//     list` always reports the long form, so the two sides disagreed on a short-named root.
+//   - The result is normalised to forward slashes, because `resolve`/`realpathSync` return
+//     backslashes on Windows while the prefix test joins with `/`.
 function canonicalPath(path: string): string {
   const absolute = resolve(path);
+  return toPosix(realpath(absolute));
+}
+
+function realpath(absolute: string): string {
   try {
-    return realpathSync(absolute);
+    return realpathSync.native(absolute);
   } catch {
-    return absolute;
+    // A path that does not exist (or an unreadable parent): fall back to the JS implementation, then
+    // to the unresolved path, rather than dropping the entry.
+    try {
+      return realpathSync(absolute);
+    } catch {
+      return absolute;
+    }
   }
+}
+
+function toPosix(path: string): string {
+  return path.split("\\").join("/");
 }
 
 export function detectLanguage(path: string): string {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -57,4 +57,21 @@ test("scanRepo flags an out-of-repo pathPrefix as incomplete", (t) => {
   const result = scanRepo(dir, { pathPrefix: "../outside" });
   assert.equal(result.incomplete, true);
   assert.equal(result.files.length, 0);
+});
+
+test("scanRepo accepts an in-repo pathPrefix and scans only that subtree", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "pi-codemap-scan-scoped-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  mkdirSync(join(dir, "src"), { recursive: true });
+  writeFileSync(join(dir, "src", "a.ts"), "export const a = 1;\n");
+  writeFileSync(join(dir, "root.ts"), "export const outside = 1;\n");
+
+  const result = scanRepo(dir, { pathPrefix: "src" });
+
+  // The rejection case above had no accepting counterpart, which is how a Windows-only defect
+  // survived: the check compared `resolve()` output (backslashes there) against a `/`-joined prefix,
+  // so every valid prefix was rejected as "outside repository" and the scan yielded nothing.
+  assert.deepEqual(result.warnings, [], "a valid prefix produces no warning");
+  assert.equal(result.incomplete, false);
+  assert.deepEqual(result.files.map((file) => file.relPath), ["src/a.ts"]);
 });

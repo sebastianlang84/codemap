@@ -132,7 +132,11 @@ export function* scanRepoStream(
     if (prefix) {
       const repoRoot = resolve(root);
       const scopedRoot = resolve(root, prefix);
-      if (scopedRoot !== repoRoot && !scopedRoot.startsWith(`${repoRoot}/`)) {
+      // Compare in one separator: `resolve` returns backslashes on Windows, so a `/`-joined prefix
+      // test rejected every valid `--path-prefix` there as "outside repository".
+      const posixRepoRoot = repoRoot.split("\\").join("/");
+      const posixScopedRoot = scopedRoot.split("\\").join("/");
+      if (scopedRoot !== repoRoot && !posixScopedRoot.startsWith(`${posixRepoRoot}/`)) {
         state.incomplete = true;
         state.warnings.push(`Invalid pathPrefix outside repository: ${options.pathPrefix}`);
       } else {
