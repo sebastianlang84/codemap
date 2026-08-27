@@ -1,0 +1,4 @@
+# `dist/` is a checked-in build artefact: `scripts/build.mjs` always writes LF, so any line-ending
+# conversion makes a fresh build differ from HEAD in files holding multi-line template literals
+# (usage text, SQL) while `git diff` shows nothing. Eleven files were in that state.
+dist/** -text
