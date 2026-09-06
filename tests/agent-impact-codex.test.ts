@@ -4,8 +4,8 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth } from "../scripts/eval-agent-impact-codex.ts";
-import { parseAgentImpactManifest, summarizeAgentImpact, retryableAgentImpactInfrastructure } from "../scripts/eval-agent-impact-lib.ts";
+import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "../scripts/eval-agent-impact-codex.ts";
+import { parseAgentImpactManifest, summarizeAgentImpact, retryableAgentImpactInfrastructure, agentImpactTreatmentInstruction } from "../scripts/eval-agent-impact-lib.ts";
 
 const manifest = parseAgentImpactManifest(readFileSync("scripts/eval-agent-impact-luna.manifest.json", "utf8"));
 const previous = parseAgentImpactManifest(readFileSync("scripts/eval-agent-impact-optional.manifest.json", "utf8"));
@@ -80,7 +80,7 @@ test("filesystem container hides host worktrees while allowing attempt and syste
     mkdirSync(join(root, "bin"));
     writeFileSync(join(root, "bin", "codemap"), "#!/bin/sh\necho fixture\n", { mode: 0o700 });
     const args = codexContainerArgs("/usr/bin/node", root, profile);
-    const result = spawnSync("bwrap", [...args, "-e", `const fs=require('fs'); if(fs.existsSync('/home/wasti/dev/codemap'))process.exit(2); fs.writeFileSync(${JSON.stringify(join(root, "written"))},'ok'); const cp=require('child_process'); if(cp.execFileSync('/bin/bash',['-lc','codemap'],{encoding:'utf8'}).trim()!=='fixture')process.exit(3)`], { encoding: "utf8" });
+    const result = spawnSync("bwrap", [...args, "-e", `const fs=require('fs'); if(fs.existsSync('/home/wasti/dev/codemap'))process.exit(2); fs.writeFileSync(${JSON.stringify(join(root, "written"))},'ok'); const cp=require('child_process'); if(cp.execFileSync('/bin/bash',['-lc','codemap'],{encoding:'utf8'}).trim()!=='fixture')process.exit(3); cp.execFileSync('/bin/bash',['-lc','rg --version'])`], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(readFileSync(join(root, "written"), "utf8"), "ok");
   } finally { rmSync(root, { recursive: true, force: true }); rmSync(profile, { recursive: true, force: true }); }
@@ -105,4 +105,30 @@ test("Codex sandbox permits local HTTP regression tests only with network enable
       if (enabled) assert.equal(result.stdout.trim(), "ok");
     }
   } finally { rmSync(root, { recursive: true, force: true }); rmSync(profile, { recursive: true, force: true }); }
+});
+
+
+test("navigation preflight checks both arms without counting harness calls as adoption", t => {
+  const binary = join(process.env.HOME!, ".local/bin/codex");
+  if (!existsSync(binary)) { t.skip("Codex CLI not installed"); return; }
+  const root = mkdtempSync(join(tmpdir(), "codemap-nav-test-"));
+  const profile = mkdtempSync(join(tmpdir(), "codemap-profile-test-"));
+  try {
+    mkdirSync(join(root, "bin"));
+    writeFileSync(join(root, "example.js"), "const present = true;\n");
+    const env = { PATH: "/usr/local/bin:/usr/bin:/bin", CODEMAP_CALL_LOG: join(root, "agent-calls.log") };
+    verifyCodexSandbox(binary, root, root, profile, env, false);
+    writeFileSync(join(root, "bin", "codemap"), '#!/bin/sh\necho status >> "$CODEMAP_CALL_LOG"\necho {}\n', { mode: 0o700 });
+    verifyCodexSandbox(binary, root, root, profile, env, true);
+    assert.equal(existsSync(env.CODEMAP_CALL_LOG), false);
+    assert.match(readFileSync(join(root, "preflight-calls.log"), "utf8"), /status/);
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(profile, { recursive: true, force: true }); }
+});
+
+
+test("location-first is explicit and leaves the frozen optional prompt unchanged", () => {
+  const candidate = parseAgentImpactManifest(JSON.stringify({ ...manifest, agent: { ...manifest.agent, navigationWorkflow: "location-first" } }));
+  assert.match(agentImpactTreatmentInstruction(candidate), /<trusted-hit-path>:<start>-<end>/);
+  assert.match(agentImpactTreatmentInstruction(candidate), /--json --limit 1/);
+  assert.match(agentImpactTreatmentInstruction(manifest), /^CodeMap is optional:/);
 });

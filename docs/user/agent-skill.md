@@ -5,7 +5,8 @@ canonical source is [`skills/navigating-with-codemap/SKILL.md`](../../skills/nav
 It uses only the public `codemap` CLI and contains no runtime-specific paths, tool names, hooks, or
 configuration.
 
-The skill is optional. CodeMap itself works without it.
+The skill is optional. CodeMap itself works without it. It passes trusted search locations
+(`path:start-end`) to context with `--limit 1`, expanding related context only when needed.
 
 Its trigger description asks compatible skill loaders to activate it whenever an agent is
 navigating code or is considering `grep`, `rg`/ripgrep, `find`, `fd`, globbing, or another broad file

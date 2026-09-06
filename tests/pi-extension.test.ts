@@ -265,7 +265,7 @@ test("registers only codemap tools with compact complete prompt guidance", () =>
     codemap_status: ["approval", "stale", "full=true", "pathPrefix"],
     codemap_index: ["approveRepo", "stale", "pathPrefix"],
     codemap_search: ["indexed", "query", "stale", "pathPrefix"],
-    codemap_context: ["read-first", "indexed", "read substitute", "pathPrefix"],
+    codemap_context: ["read-first", "path:start-end", "limit 1", "source excerpts", "pathPrefix"],
   };
   // The token budget is measured and gated by scripts/check-token-injection.ts. What stays enforced
   // here are the *function* contracts that keep

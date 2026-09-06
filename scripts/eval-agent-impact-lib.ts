@@ -38,7 +38,7 @@ export interface AgentImpactManifest {
     provider: "claude-code" | "codex-cli";
     model: string;
     effort: "medium" | "high";
-    navigationWorkflow: "search-then-context" | "context-first" | "optional";
+    navigationWorkflow: "search-then-context" | "context-first" | "optional" | "location-first";
     maxBudgetUsdPerRun: number | null;
     timeoutMs: number;
   };
@@ -160,7 +160,7 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
     throw new Error("agent.effort must be medium, or high for Codex CLI");
   }
   const navigationWorkflow = agent.navigationWorkflow ?? "search-then-context";
-  if (navigationWorkflow !== "search-then-context" && navigationWorkflow !== "context-first" && navigationWorkflow !== "optional") {
+  if (navigationWorkflow !== "search-then-context" && navigationWorkflow !== "context-first" && navigationWorkflow !== "optional" && navigationWorkflow !== "location-first") {
     throw new Error("agent.navigationWorkflow is unsupported");
   }
   agent.navigationWorkflow = navigationWorkflow;
@@ -609,6 +609,9 @@ export function evaluateAgentImpactEfficiencyGate(
 }
 
 export function agentImpactTreatmentInstruction(manifest: AgentImpactManifest): string {
+  if (manifest.agent.navigationWorkflow === "location-first") {
+    return 'For initial code navigation, use codemap search "<task terms>" --json, then codemap context "<trusted-hit-path>:<start>-<end>" --json --limit 1 to read the hit. Increase the limit only for related context. Use ordinary tools if results are weak or for exhaustive matches; read known files directly.';
+  }
   if (manifest.agent.navigationWorkflow === "optional") {
     return 'CodeMap is optional: codemap search "<query>" finds code; codemap context "<symbol or path>" --json returns source excerpts and related files. Use it when helpful, or use ordinary tools directly.';
   }

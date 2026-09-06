@@ -5,7 +5,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth } from "./eval-agent-impact-codex.ts";
+import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "./eval-agent-impact-codex.ts";
 import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
 import { createAgentImpactTraceDir, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 
@@ -299,6 +299,10 @@ function runAgentAttempt(options: {
     workspace = prepareWorkspace(task, repoCache, runRoot, `run-${runOrder}-${task.id}-${mode}`, task.baseCommit);
     const env = agentEnv(workspace, mode, profileDir);
     if (mode === "codemap") indexDurationMs = prepareCodeMap(workspace, profileDir, env);
+    if (isCodex) {
+      verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, profileDir, env, mode === "codemap");
+      console.error(`[agent-impact] sandbox preflight passed: ${task.id} ${mode}`);
+    }
     const agentStartedAt = performance.now();
     const child = isCodex ? runCodex(task, mode, manifest, workspace, env, profileDir) : runClaude(task, mode, manifest, workspace, env);
     const agentDurationMs = Math.round(performance.now() - agentStartedAt);

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Align the bundled skill and tool hints with location-preserving context and a one-excerpt initial limit.
+
 - Accept search locations (`path:line` or `path:start-end`) as context targets, preserving the indexed hit instead of returning the file header.
 
 - Narrow nested function-symbol context to the complete function instead of its enclosing chunk; retain indexed fallback when boundaries cannot be recognized.

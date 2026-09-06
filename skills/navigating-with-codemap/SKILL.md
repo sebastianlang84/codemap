@@ -9,7 +9,7 @@ description: Locate repository implementations, symbols, imports, callers, and t
 
 1. Check `codemap status --json` unless readiness is already known. If stale, refresh the approved index with `codemap index`.
 2. When ready, run `codemap search "<task terms>" --json`.
-3. For matched code, run `codemap context "<symbol or original query>" --json`. For file relationships, use `codemap context "<trusted-hit-path>" --json`; path targets start at the file header.
+3. Pass a trusted hit location to `codemap context "<path>:<start>-<end>" --json --limit 1` for its source. Symbols or the original query also work; plain paths start at the file header. Increase the limit only for related context.
 4. Re-query once with concrete terms, then fall back if results remain weak.
 
 Use exhaustive search for every literal/regex match, logs, or non-code config. Read known files directly;

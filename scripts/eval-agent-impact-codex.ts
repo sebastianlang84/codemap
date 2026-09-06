@@ -1,4 +1,5 @@
-import { copyFileSync, chmodSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { copyFileSync, chmodSync, existsSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import type { AgentUsage } from "./eval-agent-impact-lib.ts";
 
@@ -37,6 +38,10 @@ export function codexArguments(model: string, workspace: string, effort: "medium
 export function codexContainerArgs(binary: string, root: string, profile: string): string[] {
   const executable = realpathSync(binary);
   mkdirSync(join(root, "bin"), { recursive: true });
+  const ripgrep = (process.env.PATH ?? "").split(":").map(path => join(path, "rg")).find(existsSync);
+  if (!ripgrep) throw new Error("ripgrep is required for both evaluation arms");
+  copyFileSync(realpathSync(ripgrep), join(root, "bin", "rg"));
+  chmodSync(join(root, "bin", "rg"), 0o700);
   mkdirSync(join(root, "home"), { recursive: true });
   mkdirSync(join(root, "codex-home"), { recursive: true });
   return ["--die-with-parent", "--unshare-pid", "--proc", "/proc", "--dev", "/dev",
@@ -96,4 +101,21 @@ export function redactCodexAuth(output: string, home: string): string {
 
 export function codexContainerEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return { ...env, HOME: "/home/codemap", USERPROFILE: "/home/codemap", CODEX_HOME: "/home/codemap/.codex" };
+}
+
+
+export function verifyCodexSandbox(binary: string, root: string, workspace: string, profile: string, env: NodeJS.ProcessEnv, treatment: boolean): void {
+  const probe = `const cp=require('node:child_process');
+    cp.execFileSync('/bin/bash',['-lc','rg --version && rg --files | head -1 && node --version && npm --version']);
+    if (${treatment}) cp.execFileSync('/bin/bash',['-lc','codemap status --json']);
+    const s=require('node:http').createServer((q,r)=>r.end('ok'));
+    s.on('error',()=>process.exit(1));
+    s.listen(0,'127.0.0.1',async()=>{try{const r=await fetch('http://127.0.0.1:'+s.address().port);if(await r.text()!=='ok')process.exitCode=1;}finally{s.close()}});`;
+  const result = spawnSync("bwrap", [...codexContainerArgs(binary, root, profile),
+    "sandbox", "-P", "fixture", "-C", workspace,
+    "-c", 'permissions.fixture.extends=":workspace"',
+    "-c", 'permissions.fixture.network.enabled=true',
+    "--", process.execPath, "-e", probe,
+  ], { cwd: workspace, env: codexContainerEnv({ ...env, CODEMAP_CALL_LOG: join(root, "preflight-calls.log") }), encoding: "utf8", timeout: 20000 });
+  if (result.status !== 0) throw new Error("Codex sandbox preflight failed: " + (result.stderr ?? "").slice(-2000));
 }
