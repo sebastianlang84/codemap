@@ -170,4 +170,23 @@ success. Acceptance requires four valid pairs, full adoption, zero contamination
 more wins than losses, and token/time ratios at most 1.10. Eight attempts have a $16 maximum budget.
 Provider failures remain censored; only zero-cost infrastructure failures may be resumed. The
 comparison measures the current workflow, not the isolated causal effect of the excerpt fix.
-No untouched holdout is used. Results are pending.
+No untouched holdout is used.
+
+All four oracles passed: each base failed twice and its reference fix passed twice. All eight agent
+attempts then failed before inference, with zero cost and zero valid pairs. A separate isolated
+provider check returned: `Failed to authenticate: OAuth session expired and could not be refreshed`.
+The [checkpoint](agent-impact-excerpts-v1-result.json) is infrastructure-failure evidence, not a
+quality result. Do not interpret its zero success/adoption rates as measured agent performance.
+
+After the operator renews Claude authentication, resume the same frozen run:
+
+```bash
+npm run eval:agent-impact -- \
+  --manifest scripts/eval-agent-impact-excerpts.manifest.json \
+  --approve-budget-usd 16 --quality-gate --resume \
+  --evidence-output docs/developer/agent-impact-excerpts-v1-result.json
+```
+
+The local run reused `~/.cache/codemap/external-holdout-v1` via `--cache-dir` and `--offline`.
+The default cache is also supported and will fetch the pinned repositories when needed.
+No model substitution, task changes, or product-effect decision is justified by this auth failure.

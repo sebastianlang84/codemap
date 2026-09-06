@@ -1,0 +1,380 @@
+{
+  "agent": {
+    "claudeCodeVersion": "2.1.261 (Claude Code)",
+    "effort": "medium",
+    "isolationConfigSha256": "25133e526efa94007d54100b693afbe47f683043b2a8682133475a3aff72e16f",
+    "maxBudgetUsdPerRun": 2,
+    "navigationWorkflow": "context-first",
+    "provider": "claude-code",
+    "requestedModel": "opus"
+  },
+  "claimBoundary": "Directional development evidence only; it cannot support a generalization claim.",
+  "codemapProfile": {
+    "expectedVersion": "0.10.1",
+    "gitCommit": "feb680e5021ee9ffa17dab539f2b7d1e86f62b44"
+  },
+  "corpus": {
+    "frozenAt": "2026-09-06",
+    "id": "agent-impact-matched-chunks-v1",
+    "orderSeed": 6092026,
+    "purpose": "development-pilot",
+    "selectionProtocol": "Four Fastify runtime fixes from the cached upstream history, in descending history order, excluding all prior agent-impact and external-navigation cases, changes without a separate regression test, documentation/types-only changes, and unnumbered commits. Selected before inspecting CodeMap output or running agents. Base must fail its named hidden assertion twice and reference fix must pass twice. Success requires four valid pairs, full context adoption, no baseline contamination or budget exhaustion, more paired wins than losses, and token/time ratios <= 1.10. All outcomes retained; only zero-cost infrastructure failures may be resumed. This compares the current CodeMap workflow with no CodeMap, not an isolated old-versus-new chunk ablation. No untouched holdout is consumed.",
+    "version": 1
+  },
+  "gate": {
+    "issues": [
+      {
+        "actual": 0,
+        "expected": ">= 4",
+        "metric": "validPairs"
+      },
+      {
+        "actual": 0,
+        "expected": ">= 1",
+        "metric": "treatmentAdoptionRate"
+      }
+    ],
+    "passed": false
+  },
+  "manifestSha256": "d3f20148c9f0afab19039bd930e6a6f6352c8bce2097199241bdef0334775fd4",
+  "oracles": [
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6719",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6940",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6860",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6845",
+      "valid": true
+    }
+  ],
+  "plannedRuns": 8,
+  "results": [
+    {
+      "addedLines": 0,
+      "agentDurationMs": 419,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "infrastructureError": "agent exit 1",
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 1,
+      "success": false,
+      "taskId": "fastify-pr-6719",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 384,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 486,
+      "infrastructureError": "agent exit 1",
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 2,
+      "success": false,
+      "taskId": "fastify-pr-6719",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 389,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 495,
+      "infrastructureError": "agent exit 1",
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 3,
+      "success": false,
+      "taskId": "fastify-pr-6940",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 386,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "infrastructureError": "agent exit 1",
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 4,
+      "success": false,
+      "taskId": "fastify-pr-6940",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 391,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "infrastructureError": "agent exit 1",
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 5,
+      "success": false,
+      "taskId": "fastify-pr-6860",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 394,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 495,
+      "infrastructureError": "agent exit 1",
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 6,
+      "success": false,
+      "taskId": "fastify-pr-6860",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 396,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 539,
+      "infrastructureError": "agent exit 1",
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 7,
+      "success": false,
+      "taskId": "fastify-pr-6845",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 404,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "infrastructureError": "agent exit 1",
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 8,
+      "success": false,
+      "taskId": "fastify-pr-6845",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "agentDurationRatio": null,
+    "baselineSuccessRate": 0,
+    "budgetExhaustedRuns": 0,
+    "crossArmContamination": 0,
+    "exactTwoSidedP": 1,
+    "losingTasks": [],
+    "losses": 0,
+    "tasks": 4,
+    "ties": 0,
+    "tokenRatio": null,
+    "totalCostUsd": 0,
+    "treatmentAdoptionRate": 0,
+    "treatmentSuccessRate": 0,
+    "validPairs": 0,
+    "wins": 0
+  },
+  "worstCaseBudgetUsd": 16
+}
