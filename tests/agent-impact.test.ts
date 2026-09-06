@@ -72,6 +72,26 @@ test("module-name confirmation freezes three paired replicas and the released Co
   assert.equal(hashAgentImpactJson(JSON.parse(raw)), "b5dd1a08c1b607e1855c215dec6de00f248df602ec90ba5ad376f8b316f656a9");
 });
 
+test("matched-chunk pilot freezes fresh tasks and dependency locks", () => {
+  const raw = readFileSync(new URL("../scripts/eval-agent-impact-excerpts.manifest.json", import.meta.url), "utf8");
+  const pilot = parseAgentImpactManifest(raw);
+  assert.equal(hashAgentImpactJson(JSON.parse(raw)), "d3f20148c9f0afab19039bd930e6a6f6352c8bce2097199241bdef0334775fd4");
+  assert.equal(pilot.tasks.length, 4);
+  assert.equal(pilot.pilotGate.minValidPairs, 4);
+  const priorSources = new Set<string>();
+  for (const file of ["eval-agent-impact.manifest.json", "eval-agent-impact-smoke-v2.manifest.json", "eval-agent-impact-pilot.manifest.json", "eval-agent-impact-confirmation.manifest.json", "eval-external-holdout.manifest.json"]) {
+    const previous = JSON.parse(readFileSync(new URL(`../scripts/${file}`, import.meta.url), "utf8"));
+    for (const task of previous.tasks ?? previous.cases) priorSources.add(task.sourceUrl);
+  }
+  for (const task of pilot.tasks) {
+    assert.ok(!priorSources.has(task.sourceUrl), `${task.id} was previously used`);
+    for (const file of task.setupFiles) {
+      const bytes = readFileSync(new URL(`../${file.source}`, import.meta.url));
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), file.sha256, `${task.id} setup lock`);
+    }
+  }
+});
+
 test("agent-impact manifest rejects shell strings, path escapes, duplicate ids, and abbreviated SHAs", () => {
   const shellString = cloneManifest();
   (shellString.tasks[0] as unknown as Record<string, unknown>).setup = "npm ci && curl example.invalid";

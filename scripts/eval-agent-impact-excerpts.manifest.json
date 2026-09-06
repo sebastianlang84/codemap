@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-matched-chunks-v1",
+    "version": 1,
+    "frozenAt": "2026-09-06",
+    "purpose": "development-pilot",
+    "selectionProtocol": "Four Fastify runtime fixes from the cached upstream history, in descending history order, excluding all prior agent-impact and external-navigation cases, changes without a separate regression test, documentation/types-only changes, and unnumbered commits. Selected before inspecting CodeMap output or running agents. Base must fail its named hidden assertion twice and reference fix must pass twice. Success requires four valid pairs, full context adoption, no baseline contamination or budget exhaustion, more paired wins than losses, and token/time ratios <= 1.10. All outcomes retained; only zero-cost infrastructure failures may be resumed. This compares the current CodeMap workflow with no CodeMap, not an isolated old-versus-new chunk ablation. No untouched holdout is consumed.",
+    "orderSeed": 6092026
+  },
+  "agent": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "medium",
+    "navigationWorkflow": "context-first",
+    "maxBudgetUsdPerRun": 2,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "feb680e5021ee9ffa17dab539f2b7d1e86f62b44",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "fastify-pr-6719",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6719",
+      "prompt": "Fix prefix route options url",
+      "baseCommit": "d693f43d890f07a8852b4737b048ed76458139a2",
+      "fixCommit": "6e95cb9f6de47deaf145138661c70a1eec34ec97",
+      "expectedPaths": [
+        "lib/route.js",
+        "test/route-prefix.test.js"
+      ],
+      "hiddenTestPaths": [
+        "test/route-prefix.test.js"
+      ],
+      "expectedBaseFailure": "reports the canonical route url for hidden prefix trailing slash route",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-excerpts-6719.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "6b06e11af1af3027e35ed256dc21fa2059ab2bf9f9f681040071a781abf0039c"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/route-prefix.test.js"
+        ],
+        "timeoutMs": 180000
+      }
+    },
+    {
+      "id": "fastify-pr-6940",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6940",
+      "prompt": "fix: run preClose hook exactly once per declaring instance",
+      "baseCommit": "9a1535bcfe2a780cc6f9c6555df86e5072ca9a29",
+      "fixCommit": "f5ef34443c5be0cfc7fbde44f84253ef5d0ec66e",
+      "expectedPaths": [
+        "fastify.js",
+        "test/close.test.js"
+      ],
+      "hiddenTestPaths": [
+        "test/close.test.js"
+      ],
+      "expectedBaseFailure": "preClose runs exactly once with a child plugin",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-excerpts-6719.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "6b06e11af1af3027e35ed256dc21fa2059ab2bf9f9f681040071a781abf0039c"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/close.test.js"
+        ],
+        "timeoutMs": 180000
+      }
+    },
+    {
+      "id": "fastify-pr-6860",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6860",
+      "prompt": "fix: remove raw response headers",
+      "baseCommit": "ed664c344f4d7e0171f252d5e886db6d7d241770",
+      "fixCommit": "e4ffc205328db294d550c5855d2573b33f5e9d62",
+      "expectedPaths": [
+        "lib/reply.js",
+        "test/internals/reply.test.js"
+      ],
+      "hiddenTestPaths": [
+        "test/internals/reply.test.js"
+      ],
+      "expectedBaseFailure": "reply.removeHeader removes raw headers",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-excerpts-6860.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "125df81f6ab4336e503bf2e2486fb7d74ce750627537e2e8087422ae398f4381"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/internals/reply.test.js"
+        ],
+        "timeoutMs": 180000
+      }
+    },
+    {
+      "id": "fastify-pr-6845",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6845",
+      "prompt": "fix: clear trailer state when removing all trailers",
+      "baseCommit": "043baf988048c08ee87190193089a3b714f163fe",
+      "fixCommit": "7299a57d3fdce7da49f2c6d19ba08dc673e53f22",
+      "expectedPaths": [
+        "lib/reply.js",
+        "test/reply-trailers.test.js"
+      ],
+      "hiddenTestPaths": [
+        "test/reply-trailers.test.js"
+      ],
+      "expectedBaseFailure": "remove all trailers should behave like no trailers were registered",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-6892-6846.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "f84c914f097d891437bf1fa9deb5c54b4b6e88901543d036c3da5efcc2606a57"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/reply-trailers.test.js"
+        ],
+        "timeoutMs": 180000
+      }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 4,
+    "minTreatmentAdoptionRate": 1,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  }
+}

@@ -156,3 +156,18 @@ a separate regression covers a function after a 90-line header and a matched nei
 This establishes excerpt correctness, not an end-to-end task or token-saving benefit.
 Validation: all 261 tests and `verify:local` gates passed; local navigation remained
 7 wins, 0 losses, 17 ties. The original query now returns lines 85–143.
+
+### Frozen excerpt-workflow pilot
+
+Manifest: [`eval-agent-impact-excerpts.manifest.json`](../../scripts/eval-agent-impact-excerpts.manifest.json),
+SHA-256 `d3f20148c9f0afab19039bd930e6a6f6352c8bce2097199241bdef0334775fd4`.
+Four Fastify fixes are new to both checked-in navigation and agent corpora. Selection uses cached
+history order and executable separate regression tests, not CodeMap output. Dependency locks are
+pinned. This remains a single-repository development sample.
+
+The existing context-first/no-CodeMap protocol is unchanged. Primary outcome is paired hidden-test
+success. Acceptance requires four valid pairs, full adoption, zero contamination/budget exhaustion,
+more wins than losses, and token/time ratios at most 1.10. Eight attempts have a $16 maximum budget.
+Provider failures remain censored; only zero-cost infrastructure failures may be resumed. The
+comparison measures the current workflow, not the isolated causal effect of the excerpt fix.
+No untouched holdout is used. Results are pending.
