@@ -1,0 +1,230 @@
+{
+  "sourceInventory": "agent-impact-luna-traces.json",
+  "method": "SHA-256 verified traces; completed command events; Unicode character counts of recorded aggregated_output, not model tokens. Large output threshold: 60000 characters. Ordinals are one-based within each run.",
+  "runs": [
+    {
+      "runOrder": 1,
+      "taskId": "express-pr-4893",
+      "mode": "baseline",
+      "commands": 11,
+      "rgMissingEvents": 1,
+      "outputCharacters": 110468,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 9,
+          "characters": 66308
+        }
+      ]
+    },
+    {
+      "runOrder": 2,
+      "taskId": "express-pr-4893",
+      "mode": "codemap",
+      "commands": 10,
+      "rgMissingEvents": 1,
+      "outputCharacters": 111755,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 7,
+          "characters": 66292
+        }
+      ]
+    },
+    {
+      "runOrder": 3,
+      "taskId": "express-pr-6903",
+      "mode": "codemap",
+      "commands": 9,
+      "rgMissingEvents": 1,
+      "outputCharacters": 96192,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 8,
+          "characters": 65325
+        }
+      ]
+    },
+    {
+      "runOrder": 4,
+      "taskId": "express-pr-6903",
+      "mode": "baseline",
+      "commands": 9,
+      "rgMissingEvents": 1,
+      "outputCharacters": 104580,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 8,
+          "characters": 65325
+        }
+      ]
+    },
+    {
+      "runOrder": 5,
+      "taskId": "express-pr-4885",
+      "mode": "baseline",
+      "commands": 8,
+      "rgMissingEvents": 1,
+      "outputCharacters": 80678,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 7,
+          "characters": 64675
+        }
+      ]
+    },
+    {
+      "runOrder": 6,
+      "taskId": "express-pr-4885",
+      "mode": "codemap",
+      "commands": 8,
+      "rgMissingEvents": 1,
+      "outputCharacters": 78879,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 7,
+          "characters": 64666
+        }
+      ]
+    },
+    {
+      "runOrder": 7,
+      "taskId": "express-pr-6073",
+      "mode": "codemap",
+      "commands": 14,
+      "rgMissingEvents": 1,
+      "outputCharacters": 126621,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 12,
+          "characters": 64589
+        }
+      ]
+    },
+    {
+      "runOrder": 8,
+      "taskId": "express-pr-6073",
+      "mode": "baseline",
+      "commands": 15,
+      "rgMissingEvents": 1,
+      "outputCharacters": 139701,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 14,
+          "characters": 64589
+        }
+      ]
+    },
+    {
+      "runOrder": 9,
+      "taskId": "fastify-pr-6483",
+      "mode": "baseline",
+      "commands": 12,
+      "rgMissingEvents": 1,
+      "outputCharacters": 300186,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 9,
+          "characters": 176824
+        }
+      ]
+    },
+    {
+      "runOrder": 10,
+      "taskId": "fastify-pr-6483",
+      "mode": "codemap",
+      "commands": 21,
+      "rgMissingEvents": 1,
+      "outputCharacters": 307973,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 18,
+          "characters": 175858
+        }
+      ]
+    },
+    {
+      "runOrder": 11,
+      "taskId": "fastify-pr-6838",
+      "mode": "codemap",
+      "commands": 14,
+      "rgMissingEvents": 1,
+      "outputCharacters": 237072,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 13,
+          "characters": 174908
+        }
+      ]
+    },
+    {
+      "runOrder": 12,
+      "taskId": "fastify-pr-6838",
+      "mode": "baseline",
+      "commands": 17,
+      "rgMissingEvents": 1,
+      "outputCharacters": 228580,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 14,
+          "characters": 174982
+        }
+      ]
+    },
+    {
+      "runOrder": 13,
+      "taskId": "fastify-pr-6680",
+      "mode": "baseline",
+      "commands": 17,
+      "rgMissingEvents": 1,
+      "outputCharacters": 283652,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 16,
+          "characters": 174849
+        }
+      ]
+    },
+    {
+      "runOrder": 14,
+      "taskId": "fastify-pr-6680",
+      "mode": "codemap",
+      "commands": 21,
+      "rgMissingEvents": 1,
+      "outputCharacters": 288015,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 19,
+          "characters": 174880
+        }
+      ]
+    },
+    {
+      "runOrder": 15,
+      "taskId": "fastify-pr-6753",
+      "mode": "codemap",
+      "commands": 11,
+      "rgMissingEvents": 1,
+      "outputCharacters": 270602,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 8,
+          "characters": 175941
+        }
+      ]
+    },
+    {
+      "runOrder": 16,
+      "taskId": "fastify-pr-6753",
+      "mode": "baseline",
+      "commands": 13,
+      "rgMissingEvents": 1,
+      "outputCharacters": 270172,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 11,
+          "characters": 176290
+        }
+      ]
+    }
+  ]
+}

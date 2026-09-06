@@ -9,6 +9,8 @@ mit optionalem CodeMap +21,9 % Tokens und +12,3 % Agentenzeit. CodeMap-Nutzung: 
 Kein Nutzenbeleg; die Suchqualität selbst wurde mangels Nutzung nicht bewertet.
 Das Fortsetzungskriterium ist verfehlt: Fehlerpflege, kein automatischer weiterer Pilot oder Ausbau.
 Die lokal geprüfte Korrektur verschachtelter Funktionsausschnitte bleibt bestehen.
+Trace-Audit: `rg` fehlte in allen 16 Läufen; der Vergleich belegt keinen Effekt gegenüber
+einem Agenten mit funktionierendem ripgrep. Details und lokale Ansatzpunkte im Ergebnisbericht.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
