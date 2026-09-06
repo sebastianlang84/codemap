@@ -98,7 +98,7 @@
     },
     {
       "addedLines": 0,
-      "agentDurationMs": 2670,
+      "agentDurationMs": 2708,
       "agentExitCode": 1,
       "authentication": "setup-token",
       "changedPaths": [],
@@ -108,7 +108,7 @@
       "deletedLines": 0,
       "expectedPathRecall": 0,
       "forbiddenChanges": [],
-      "indexDurationMs": 484,
+      "indexDurationMs": 478,
       "infrastructureError": "agent exit 1",
       "mode": "codemap",
       "repo": "fastify",

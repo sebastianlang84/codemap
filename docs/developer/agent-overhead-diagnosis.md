@@ -120,3 +120,7 @@ The token has a recognizable OAuth prefix, but completeness and server validity 
 No personal credential file was read or linked by the runner. This confirms early failure handling,
 not successful live authentication. Replace the supplied token with the complete setup-token
 output before retrying. The completed control remains unchanged.
+
+The OpenBao-backed retry also returned HTTP 401 before paid usage. The supplied value matched
+the local token file; secret delivery succeeded, provider authentication did not. Total cost
+remains $0.516341. Replace the invalid token before another retry.
