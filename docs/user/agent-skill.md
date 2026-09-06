@@ -8,8 +8,9 @@ configuration.
 The skill is optional. CodeMap itself works without it.
 
 Its trigger description asks compatible skill loaders to activate it whenever an agent is
-navigating code or is considering `grep`, `rg`, `find`, `fd`, globbing, or another broad file
-search. Activation remains controlled by the target infrastructure: a portable skill cannot
+navigating code or is considering `grep`, `rg`/ripgrep, `find`, `fd`, globbing, or another broad file
+search for code navigation. Log searches, exhaustive literal/regex scans, and direct reads of known
+files are excluded. Activation remains controlled by the target infrastructure: a portable skill cannot
 intercept a command attempt or guarantee point-of-use loading. Deterministic command interception
 would require a runtime-specific hook and is intentionally outside this harness-agnostic artifact.
 

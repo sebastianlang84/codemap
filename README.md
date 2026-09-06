@@ -1,15 +1,15 @@
 # CodeMap
 
-**A fast, local, deterministic map of a repository — so a coding agent finds the right files before it reads or edits them.**
+**Local, deterministic repository navigation for coding agents.**
 
-CodeMap indexes code and plain-text project files into a local SQLite/FTS database. An agent then asks *"where is this feature/symbol/endpoint/config, and what should I read first?"* and gets a ranked answer plus the related files (imports, callers, tests, docs, config) — instead of running many broad `grep`/`find` passes and reading whole files to orient itself.
+CodeMap indexes code and plain-text project files into a local SQLite/FTS database. The CLI returns ranked files, symbols, code chunks, and related imports, tests, docs, and configuration.
 
 The **standalone `codemap` CLI is the primary interface**. The same operations are also available through a native MCP server (Claude Code, Codex, Cursor, or any MCP host) and an optional Pi extension (tools + slash commands).
 
 ## Why it's worth using
 
-- **Cheaper, sharper navigation than raw grep.** One ranked query replaces several `grep`/`find` passes and speculative full-file reads. For an LLM agent that directly means fewer tool calls and fewer tokens spent just finding where to work.
-- **Read-first context, not just hits.** For a target file CodeMap returns its imports, reverse-imports/callers, C/C++ header↔source pairs, nearby config, sibling tests, and related docs — the neighborhood you'd otherwise reconstruct by hand.
+- **Ranked navigation.** Search by symbol, path fragment, or task terms. Lower agent token use and better task completion are evaluation goals, not established general benefits.
+- **Read-first context, not just hits.** For a target file CodeMap returns its imports, reverse imports, C/C++ header↔source pairs, nearby config, sibling tests, and related docs.
 - **Deterministic and private.** No embeddings, no model downloads, no daemon, no network. The same query gives the same ranked result, and repository content never leaves your machine.
 - **Honest about freshness.** It flags when the index has drifted from the working tree instead of silently returning stale results.
 
@@ -25,103 +25,40 @@ The **standalone `codemap` CLI is the primary interface**. The same operations a
 
 - **Not semantic search.** V1 ranking is lexical/FTS + local heuristics. Query with real tokens (symbol names, path fragments, feature words), not vague natural-language questions. No embeddings or conceptual-similarity matching.
 - **Not a compiler-accurate index.** Symbols come from cheap regexes and relationships from import/include text matching — not a full AST or call graph. It will miss dynamic dispatch, macro-generated code, and exotic path aliases.
-- **Not a file reader or editor.** It tells you *where to look*; you still open and edit files with your normal tools. Treat its context as a read-first list, not a substitute for reading.
-- **Not a memory system.** It indexes rebuildable repo state. Durable decisions and handoffs belong in `pi-memory`.
+- **Bounded context, no editing.** It returns selected excerpts and related paths. Use normal file tools for complete source and edits.
+- **Not a memory system.** It indexes rebuildable repository state; keep durable decisions in your project documentation or agent memory.
 - **Not auto-refreshing.** You re-index after changes; it warns when stale rather than watching the tree in the background.
 
-```text
-pi-memory stores durable decisions and handoffs.
-CodeMap indexes the current (rebuildable) repo state and helps you navigate it.
-```
+## Evidence and limits
 
-## Benchmarks
+- **External navigation holdout, 2026-08-25:** 40 changes across six repositories, with a five-file budget. The evaluated CodeMap profile found all expected paths in 42.5% of cases versus 25.0% for the lexical baseline, using 74.2% fewer estimated read tokens. These are scripted navigation results; the paired success difference was not significant at 0.05. [Method and results](docs/developer/external-holdout.md).
+- **Agent pilot:** on 12 coding tasks, CodeMap produced 0 paired wins, 1 loss, and 11 ties, using 16.4% more tokens. The subsequent retrieval-fix follow-up did not confirm a task-success benefit. [Agent-impact evaluation](docs/developer/agent-impact-eval.md).
+- **Local regression snapshot, 2026-09-06:** 24 navigation cases retain 7 wins, 0 losses, and 17 ties versus search-only. Query context now preserves matched code excerpts; JavaScript/Python gates check the required lines and function content. The excerpt fix has not been evaluated for end-to-end agent benefit.
 
-The strongest generalization evidence is the frozen **external holdout** first run from 2026-08-25: 40 merged changes from six public repositories that had not been used to develop CodeMap. Each mode received the same five-file read budget; the query was the change title, and the expected paths were source, test, or config files changed by the fix and already present before it.
-
-| Mode | Complete success | Expected-path recall | Avg files | Avg est. tokens read |
-|---|---:|---:|---:|---:|
-| frozen lexical baseline | 0.250 | 0.358 | 5.000 | ~114,200 |
-| CodeMap 0.9.0 search→context | 0.400 | **0.584** | 4.925 | ~32,400 |
-| CodeMap 0.9.1 search→context | **0.425** | 0.572 | 5.000 | **~29,400** |
-
-Under the same five-file cap, 0.9.1 improved complete success by **17.5 percentage points** and used **74.2% fewer estimated read tokens** than the lexical baseline. Both modes averaged exactly five files, so that token delta comes from file size, not fewer selected files. The lexical baseline searches every tracked text file, like a broad `rg`; CodeMap applies its documented index exclusions, so the result measures the whole product workflow rather than an identical candidate corpus. The paired success signal versus lexical was 9 wins, 2 losses, and 29 ties (exact two-sided p=0.065), directional but not significant at 0.05.
-
-Against 0.9.0, 0.9.1 gained only one net case: 3 wins, 2 losses, and 35 ties (+2.5 points, exact p=1.0), while expected-path recall fell 1.25 points. That is not evidence of a statistically reliable version-to-version gain. CodeMap 0.10.0 ships the same navigation implementation as 0.9.1; its product changes are the evidence harness and aggregate usage report. This holdout is a navigation proxy, not proof of end-to-end coding-task or test success. The corpus became inspected regression evidence after its first run, so a future broad generalization claim requires another untouched holdout. See the [external holdout report](docs/developer/external-holdout.md).
-
-The longer-running local **real-repo navigation eval** complements that result: it indexes five maintainer repositories, gives every mode the same budget of five files to read, and checks whether the mode found the right entry file plus its required read-first neighbors. Three modes are compared:
-
-- **`lexical`** — a stand-in for raw `grep`/`rg`: score tracked files by keyword match and read the top ones.
-- **`codemap_search`** — read only CodeMap's top ranked search hits.
-- **`codemap_search_context`** — the intended workflow: search for an entry point, then call `codemap_context` on the top hit to pull in its related files, all within the same 5-file budget.
-
-Baseline cohort (full local suite, 2026-07-14):
-
-| Mode | Success | Expected recall | Context recall | Avg files read |
-|---|---:|---:|---:|---:|
-| `lexical` (grep/rg-like) | 0.125 | 0.448 | 0.521 | 5.0 |
-| `codemap_search` | 0.500 | 0.823 | 0.708 | 4.9 |
-| `codemap_search_context` | **0.750** | **0.927** | **0.896** | 5.0 |
-
-- *Success* = found the right entry file **and** all required neighbors **and** read no forbidden/noisy file.
-- *Expected recall* = share of the entry + required context files actually read.
-- *Context recall* = share of just the required neighboring files (tests, config, docs, imports) read.
-
-> These are a **dated local snapshot**, not a universal accuracy claim. The five evaluated repositories evolve independently, so reruns can expose new convention-linked neighbors or stale ground truth. The 2026-07-14 run passed the local quality gate with 6 search+context wins, 0 losses, and 18 ties against search-only across all 24 paired cases.
-
-### What this means in plain terms
-
-Give an agent five files' worth of attention and point it at a real task:
-
-- **Plain grep-style search gets it fully right about 1 in 8 times** (success 0.125). It lands on roughly half the required files (recall ~0.45–0.52) and frequently spends budget on noisy hits.
-- **CodeMap's ranked search alone reaches 1 in 2 tasks** (success 0.500) and raises expected recall to 0.823 by pushing likely targets above keyword noise.
-- **The full search-then-context workflow reaches 3 in 4 tasks** (success 0.750) with 0.927 expected recall and no forbidden reads in this cohort, using the same five-file budget.
-
-Put differently: against the grep-like baseline, the intended workflow improves complete-task success by 0.625 and expected recall by 0.479 — **without spending a larger reading budget**. It still has visible misses, but substantially reduces speculative reads before an agent can start real work.
-
-The gain also holds on the deliberately harder 16-task **natural-language development-regression cohort** (symptom-style queries with no function/class names to grep for). These cases have been inspected and tuned against, so they are regression evidence, not a sealed holdout or an unseen-generalization claim.
-
-### Read cost
-
-Success and recall say whether the agent found the right files; the same eval also measures how many bytes/tokens it *read* to get there, under the identical 5-file budget. Full local suite, 2026-07-14 (weighted estimate across all 24 cases):
-
-| Mode | Est. tokens read | vs. lexical |
-|---|---:|---:|
-| `lexical` (grep/rg-like) | ~51,800 | 1.0× |
-| `codemap_search` | ~11,600 | **~4.5× fewer** |
-| `codemap_search_context` | ~11,200 | **~4.6× fewer** |
-
-Because ranked search points the agent at the *right* files, it spends its 5-file budget on small, relevant sources instead of large speculative reads — roughly a 4–5× cut in tokens read for the same number of files. This is the concrete token payoff behind the success/recall numbers above.
-
-These numbers are reproducible locally and gated in CI-style checks:
+Maintainer evaluations run from a source checkout:
 
 ```bash
-npm run eval:external-holdout:gate      # source checkout only; downloads/caches pinned snapshots
-npm run eval:real-repo-navigation       # real repos vs rg-like baseline
-npm run eval:agent-navigation           # deterministic checked-in fixture
-npm run bench:search-quality            # ranking / top-1 / recall benchmark
-npm run bench:semantic-quality          # fixed lexical development split for semantic variants
+npm run verify:local                   # tests and deterministic quality gates
+npm run eval:external-holdout:gate     # downloads/caches pinned historical snapshots
 ```
-
-Full methodology, per-cohort tables, miss taxonomy, and known limitations live in
-[`docs/developer/external-holdout.md`](docs/developer/external-holdout.md),
-[`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) and
-[`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md).
 
 ## Install
 
 ### Standalone CLI (recommended)
 
-Requires **Node ≥ 22.13** (CodeMap uses the built-in `node:sqlite`; this release is the first Node 22 version where it is available without an opt-in flag).
+Use a Node.js version satisfying [`engines.node` in package.json](package.json). CodeMap uses the built-in `node:sqlite`.
 
 ```bash
-# Installs a `codemap` command on your PATH
-npm install -g github:sebastianlang84/codemap#v0.10.0
+# Install the current main branch
+npm install -g github:sebastianlang84/codemap
 
 # …or link a development checkout
 git clone https://github.com/sebastianlang84/codemap ~/dev/codemap
 cd ~/dev/codemap
 npm install && npm run build && npm link
 ```
+
+For a pinned installation, select an existing [release tag](https://github.com/sebastianlang84/codemap/tags).
 
 Then, inside any Git repository:
 
@@ -134,26 +71,35 @@ codemap status                  # approval / index / staleness (add --json anywh
 codemap usage-report            # aggregate local adoption and navigation signals
 ```
 
-**Optional agent skill.** The package includes a harness-agnostic
-[`navigating-with-codemap`](skills/navigating-with-codemap/SKILL.md) skill that routes ranked code
-navigation through the CLI while preserving exhaustive text search for literal and regex scans.
-Deploy it by copy or symlink at global or repository-local scope according to the target
-infrastructure's skill discovery rules; see the
-[`agent skill deployment guide`](docs/user/agent-skill.md).
+Indexing and navigation run locally. The first index requires user approval via `--approve`;
+refresh an approved index after changes with `codemap index`.
 
-Everything is local-only and never leaves your machine; the first index requires `--approve`.
+### Agent skill for CLI discovery
+
+The package includes [`navigating-with-codemap`](skills/navigating-with-codemap/SKILL.md).
+Its frontmatter names `grep`, `rg`/ripgrep, `find`, `fd`, and glob searches for code navigation.
+The workflow covers readiness, search, context, stale-index refresh, and exhaustive-search fallbacks.
+
+**Installing the CLI does not activate the skill.** Copy or symlink only its directory into your
+agent's global or repository-local skill discovery directory. From this checkout, for example:
+
+```bash
+# Replace the destination with your agent's actual skill discovery directory.
+cp -R skills/navigating-with-codemap /path/to/agent/skills/
+```
+
+For a global npm installation, the source directory is
+`$(npm root -g)/@sebastianlang84/codemap/skills/navigating-with-codemap`.
+See the [deployment guide](docs/user/agent-skill.md) for copying, symlinking, and updates.
+The agent must discover the skill; trigger wording alone cannot guarantee that it loads.
 
 ### As an MCP server (native tools in Claude Code, Codex, Cursor)
 
-Installing the package (above) also puts a `codemap-mcp` command on your PATH. It speaks the Model Context Protocol over stdio, so an MCP host can expose the same four `codemap_*` tools **natively** — the agent sees them in its tool list and calls them itself, with no `CLAUDE.md`/`AGENTS.md` note and no shell parsing. It adds **no runtime dependency** (plain JSON-RPC over stdin/stdout).
+The package also provides `codemap-mcp`, a stdio MCP server exposing `codemap_status`,
+`codemap_search`, `codemap_context`, and `codemap_index`. Register it in your MCP host to expose
+native tools instead of CLI commands.
 
-Claude Code:
-
-```bash
-claude mcp add codemap -- codemap-mcp
-```
-
-Any MCP host (Codex, Cursor, …) via config:
+For hosts whose configuration uses `mcpServers`:
 
 ```json
 {
@@ -163,7 +109,9 @@ Any MCP host (Codex, Cursor, …) via config:
 }
 ```
 
-The server operates on the directory it is launched in. Most hosts (e.g. Claude Code) start MCP servers in the project directory; if yours does not, pass `repoPath` in the tool call (or the agent will see `readiness: not a git repository`). The agent gets `codemap_status`, `codemap_search`, `codemap_context`, and `codemap_index` (call `codemap_index` with `approveRepo: true` once to approve local indexing). This is the alternative to the CLI-plus-`AGENTS.md` route: use MCP when you want first-class, self-served tools; use the CLI when you want an explicit, scriptable command. One caveat: if your host *defers* MCP tools (lists them by name but loads schemas on demand, e.g. some large tool inventories in Claude Code), the agent pays an extra step before the first call and the server's instructions are injected every session — there the CLI-plus-`AGENTS.md` route is leaner, so prefer it and skip the MCP registration.
+Launch the server in the target repository, or pass `repoPath` in tool calls. First-time indexing
+requires user approval and `approveRepo: true`. MCP registration is optional; the CLI and bundled
+skill work independently of it.
 
 ### As a Pi extension
 
@@ -184,7 +132,7 @@ The four navigation commands default to the current directory and accept `--json
 | Command | Purpose |
 |---|---|
 | `codemap search <query> [--limit N]` | Ranked paths, symbols, and chunks. |
-| `codemap context <path\|query> [--limit N]` | Read-first target file plus related imports, callers, tests, docs, config. |
+| `codemap context <path\|query> [--limit N]` | Matched code excerpts for queries; file relationships for paths. |
 | `codemap status [--full]` | Approval, index counts, and staleness (`--full` does a working-tree scan). |
 | `codemap index [--approve]` | Build or refresh the index (`--approve` required the first time). |
 | `codemap usage-report [--since YYYY-MM-DD] [--window N]` | Aggregate local usage, activation, freshness, and search→context signals without exposing raw telemetry fields. |
@@ -206,21 +154,23 @@ State resolution is `--state-dir` → `CODEMAP_HOME` → `$XDG_DATA_HOME/codemap
 
 ## Strengths and limitations at a glance
 
-**Strengths:** fast lexical/FTS search; symbol-aware for TypeScript, JavaScript, Python, C/C++, Go, Rust, Java, Kotlin, Ruby, and PHP; relationship-aware read-first context; deterministic and reproducible; zero infrastructure and a tiny dependency footprint; monorepo scoping and cross-repo targeting; explicit stale-index warnings.
+**Strengths:** ranked lexical/FTS search; symbol-aware for TypeScript, JavaScript, Python, C/C++, Go, Rust, Java, Kotlin, Ruby, and PHP; relationship-aware read-first context; deterministic and reproducible; zero infrastructure and a tiny dependency footprint; monorepo scoping and cross-repo targeting; explicit stale-index warnings.
 
-**Limitations:** no semantic/NL search; heuristic (non-AST) symbols and relationships; language support is tiered (only TypeScript/JavaScript/Python have structured code chunking); manual re-index; per-repo approval and Node ≥ 22.13 required.
+**Limitations:** no semantic/NL search; heuristic (non-AST) symbols and relationships; language support is tiered (only TypeScript/JavaScript/Python have structured code chunking); manual re-index; per-repo approval and a compatible Node.js runtime required.
 
 The full, current capability list lives in [`docs/user/usage.md`](docs/user/usage.md).
 
 ## Documentation map
 
 - [`docs/user/usage.md`](docs/user/usage.md) — features, workflows, commands/tools, examples, compatibility.
+- [`docs/user/agent-skill.md`](docs/user/agent-skill.md) — install and update the bundled CLI navigation skill.
 - [`docs/user/migrating-from-pi-extension.md`](docs/user/migrating-from-pi-extension.md) — upgrade existing Git, npm, Pi, local-development, and state installations.
 - [`docs/product/PRD.md`](docs/product/PRD.md) — product contract, scope, goals, constraints, success metrics.
 - [`docs/product/roadmap.md`](docs/product/roadmap.md) — future/non-V1 ideas, deferred questions, delivery history.
 - [`docs/developer/architecture.md`](docs/developer/architecture.md) — storage, schema, scanner/index/search/context architecture, adapter boundary, testing policy.
 - [`docs/developer/search-quality.md`](docs/developer/search-quality.md) — maintainer notes for ranking/search-quality benchmark usage.
 - [`docs/developer/external-holdout.md`](docs/developer/external-holdout.md) — frozen public-repo holdout method, first-run evidence, and claim limits.
+- [`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md) — coding-task results and current limits.
 - [`docs/developer/agent-navigation-eval.md`](docs/developer/agent-navigation-eval.md) — deterministic eval comparing lexical, search-only, and search-plus-context navigation.
 - [`docs/developer/real-repo-navigation-eval.md`](docs/developer/real-repo-navigation-eval.md) — local real-repo eval measuring navigation value against rg-like lexical baselines.
 - [`docs/developer/qmd-research.md`](docs/developer/qmd-research.md) — prior-art notes from `tobi/qmd` and implications for chunking, vector search, models, and lightweight defaults.

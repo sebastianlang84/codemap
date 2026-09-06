@@ -11,13 +11,13 @@ test("bundled navigation skill is harness-agnostic and CLI-first", () => {
   const source = readFileSync(skillPath, "utf8");
 
   assert.match(source, /^---\nname: navigating-with-codemap\ndescription: .+\n---\n/);
+  const description = source.match(/^description: (.+)$/m)![1];
   for (const command of ["codemap status", "codemap search", "codemap context", "codemap index"]) {
     assert.match(source, new RegExp(command.replace(" ", "\\s+")), `missing ${command}`);
   }
-  for (const fallback of ["grep", "rg", "find", "fd", "glob"]) {
-    assert.match(source, new RegExp(`\\b${fallback}\\b`, "i"), `trigger does not name ${fallback}`);
+  for (const fallback of ["grep", "rg", "ripgrep", "find", "fd", "glob"]) {
+    assert.match(description, new RegExp(`\\b${fallback}\\b`, "i"), `frontmatter trigger does not name ${fallback}`);
   }
-  assert.match(source, /Load this skill before running those fallback commands/);
   assert.match(source, /literal(?: or |\/)regex match/);
   assert.match(source, /fall back/i);
 

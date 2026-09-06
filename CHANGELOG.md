@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Review the bundled CLI navigation skill: keep search-tool triggers in frontmatter, clarify refresh and query/path context behavior, and scope text-search fallbacks. Update README skill deployment, link canonical version requirements, and replace general token-saving claims with measured navigation and agent-task results.
+
 - Preserve matched code chunks in query-form context, including function bodies and relationship reasons, instead of replacing search hits with file headers. Context quality gates now check required lines and code for JavaScript and Python symbol queries.
 
 - Mark the checked-in `dist/` build artefact `-text` in `.gitattributes` and normalise it to the line endings `scripts/build.mjs` actually writes. On a Windows checkout with `core.autocrlf=true`, eleven built files -- every one holding a multi-line template literal (CLI usage text, SQL) -- reported as modified after any build while `git diff` printed nothing, so a real change to `dist/` was indistinguishable from the noise. Content is unchanged: the whole delta is carriage returns.
