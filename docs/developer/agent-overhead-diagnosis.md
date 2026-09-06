@@ -110,3 +110,13 @@ The runner now requires a separate setup token and creates no credential links o
 replacement/cleanup without touching personal state, conflicting auth sources, private token files,
 output redaction and refusal before model setup when the token is absent. A real authenticated
 run remains pending owner authorization through `claude setup-token`.
+
+### Setup-token attempt
+
+The supplied private token file passed local format/permission checks. The resumed treatment
+used `authentication: setup-token` but returned `401 OAuth access token is invalid` before any
+tool calls or paid usage. Total cost remains $0.516341; there is still no valid comparison pair.
+The token has a recognizable OAuth prefix, but completeness and server validity are unverified.
+No personal credential file was read or linked by the runner. This confirms early failure handling,
+not successful live authentication. Replace the supplied token with the complete setup-token
+output before retrying. The completed control remains unchanged.

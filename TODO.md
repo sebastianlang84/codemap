@@ -11,7 +11,8 @@ fest. Zuerst vorhandene Läufe untersuchen; noch kein weiterer bezahlter Pilot.
 keine Tool-Traces. Kostenunterschiede sind ausgewertet; ihre Ursache bleibt offen.
 Optionale lokale Ablaufaufzeichnung ist implementiert und mit Fixtures geprüft.
 
-- [ ] Separates Automatisierungstoken mit `claude setup-token` bereitstellen;
+- [ ] Automatisierungstoken prüfen/ersetzen: der Setup-Token-Versuch erhielt HTTP 401
+  ohne Modellkosten. Vollständiges Token aus `claude setup-token` bereitstellen;
   [sichere Einrichtung](docs/developer/agent-impact-eval.md#automation-authentication).
   Danach den eingefrorenen Diagnose-Paarlauf mit `--resume` fortsetzen.
   Kontrolllauf und Trace sind erhalten ($0,516341); CodeMap scheiterte an Authentifizierung ohne
