@@ -5,13 +5,13 @@
     "version": 1,
     "frozenAt": "2026-09-06",
     "purpose": "development-pilot",
-    "selectionProtocol": "Four fresh numbered runtime fixes per repository in descending cached main history, excluding every previous agent-impact/external-navigation case, duplicates, changes without separate regression tests, behavior-equivalent refactors, cosmetic-only serialization, and mixed refactors requiring internal implementation APIs. Selection precedes CodeMap output and paid attempts. Behavior prompts cover upstream assertions without source locations. Validate base-fail/reference-pass twice; no paid retries or outcome-based replacements. This estimates optional CodeMap versus an ordinary adaptive agent, not the isolated effect of the nested-function fix. All assigned pairs count, including CodeMap non-use. See docs/developer/agent-impact-optional.md for exclusions and decision rule. Supersedes the unrun Claude plan at user request: Codex gpt-5.6-luna, medium, same task definitions and CodeMap profile. Primary efficiency target is total tokens, not unreported USD cost. Actual response model is not exposed by Codex exec; requested model is pinned, observed reroutes invalidate a run.",
+    "selectionProtocol": "Four fresh numbered runtime fixes per repository in descending cached main history, excluding every previous agent-impact/external-navigation case, duplicates, changes without separate regression tests, behavior-equivalent refactors, cosmetic-only serialization, and mixed refactors requiring internal implementation APIs. Selection precedes CodeMap output and paid attempts. Behavior prompts cover upstream assertions without source locations. Validate base-fail/reference-pass twice; no paid retries or outcome-based replacements. This estimates optional CodeMap versus an ordinary adaptive agent, not the isolated effect of the nested-function fix. All assigned pairs count, including CodeMap non-use. See docs/developer/agent-impact-optional.md for exclusions and decision rule. Supersedes the unrun Claude plan at user request: Codex gpt-5.6-luna, high (explicit user request), same task definitions and CodeMap profile. Primary efficiency target is total tokens, not unreported USD cost. Actual response model is not exposed by Codex exec; requested model is pinned, observed reroutes invalidate a run.",
     "orderSeed": 6092026
   },
   "agent": {
     "provider": "codex-cli",
     "model": "gpt-5.6-luna",
-    "effort": "medium",
+    "effort": "high",
     "navigationWorkflow": "optional",
     "maxBudgetUsdPerRun": null,
     "timeoutMs": 900000

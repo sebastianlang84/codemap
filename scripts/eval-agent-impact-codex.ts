@@ -16,10 +16,10 @@ export function prepareCodexHome(root: string, sourceHome: string): NodeJS.Proce
   return { HOME: home, USERPROFILE: home, CODEX_HOME: codexHome };
 }
 
-export function codexArguments(model: string, workspace: string): string[] {
+export function codexArguments(model: string, workspace: string, effort: "medium" | "high"): string[] {
   return ["exec", "--ignore-user-config", "--ignore-rules", "--strict-config", "--json",
     "--model", model, "--sandbox", "workspace-write", "--cd", workspace, "--add-dir", dirname(workspace),
-    "-c", 'model_reasoning_effort="medium"', "-c", 'approval_policy="never"',
+    "-c", `model_reasoning_effort="${effort}"`, "-c", 'approval_policy="never"',
     "-c", 'cli_auth_credentials_store="file"',
     "-c", 'project_doc_max_bytes=0',
     "-c", 'skills.include_instructions=false',

@@ -14,7 +14,8 @@ test("Luna preserves tasks and candidate; costs remain unavailable", () => {
   assert.deepEqual(manifest.tasks, previous.tasks);
   assert.deepEqual(manifest.codemapProfile, previous.codemapProfile);
   assert.equal(manifest.agent.model, "gpt-5.6-luna");
-  assert.equal(manifest.agent.effort, "medium");
+  assert.equal(manifest.agent.effort, "high");
+  assert.ok(codexArguments(manifest.agent.model, "/tmp/fixture", "medium").includes('model_reasoning_effort="medium"'));
   assert.equal(manifest.agent.maxBudgetUsdPerRun, null);
   assert.equal(manifest.efficiencyGate!.maxCostRatio, null);
   assert.equal(manifest.efficiencyGate!.maxTokenRatio, .85);
@@ -60,11 +61,11 @@ test("Codex uses isolated private login copy and explicit model, sandbox and con
     assert.equal(redactCodexAuth(`output ${token}`, env.CODEX_HOME!), "output [REDACTED]");
     writeFileSync(join(env.CODEX_HOME!, "auth.json"), "{}");
     assert.match(readFileSync(join(root, "auth.json"), "utf8"), /chatgpt/);
-    const args = codexArguments(manifest.agent.model, root);
+    const args = codexArguments(manifest.agent.model, root, manifest.agent.effort);
     assert.ok(args.includes("gpt-5.6-luna"));
     assert.ok(args.includes("--ignore-user-config"));
     assert.ok(args.includes("workspace-write"));
-    assert.ok(args.includes('model_reasoning_effort="medium"'));
+    assert.ok(args.includes('model_reasoning_effort="high"'));
     writeFileSync(join(root, "auth.json"), '{"auth_mode":"apikey"}');
     assert.throws(() => prepareCodexHome(join(root, "other"), root), /ChatGPT login/);
   } finally { rmSync(root, { recursive: true, force: true }); }

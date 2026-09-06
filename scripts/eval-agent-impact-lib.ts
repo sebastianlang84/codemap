@@ -37,7 +37,7 @@ export interface AgentImpactManifest {
   agent: {
     provider: "claude-code" | "codex-cli";
     model: string;
-    effort: "medium";
+    effort: "medium" | "high";
     navigationWorkflow: "search-then-context" | "context-first" | "optional";
     maxBudgetUsdPerRun: number | null;
     timeoutMs: number;
@@ -156,7 +156,9 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   const agent = record(root.agent, "agent");
   if (agent.provider !== "claude-code" && agent.provider !== "codex-cli") throw new Error("Unsupported agent provider");
   string(agent.model, "agent.model");
-  if (agent.effort !== "medium") throw new Error("agent.effort must be medium");
+  if (agent.effort !== "medium" && !(agent.provider === "codex-cli" && agent.effort === "high")) {
+    throw new Error("agent.effort must be medium, or high for Codex CLI");
+  }
   const navigationWorkflow = agent.navigationWorkflow ?? "search-then-context";
   if (navigationWorkflow !== "search-then-context" && navigationWorkflow !== "context-first" && navigationWorkflow !== "optional") {
     throw new Error("agent.navigationWorkflow is unsupported");

@@ -135,7 +135,7 @@ try {
     navigationWorkflow: manifest.agent.navigationWorkflow,
     ...(isCodex ? { codexVersion: commandVersion(resolveCodexBin()), modelEvidence: "requested-only; CLI does not report response model" } : { claudeCodeVersion: commandVersion(resolveClaudeBin()) }),
     maxBudgetUsdPerRun: manifest.agent.maxBudgetUsdPerRun,
-    isolationConfigSha256: hashAgentImpactJson(isCodex ? codexArguments(manifest.agent.model, "<workspace>") : claudeSettings()),
+    isolationConfigSha256: hashAgentImpactJson(isCodex ? codexArguments(manifest.agent.model, "<workspace>", manifest.agent.effort) : claudeSettings()),
   };
   if (!args.validateOnly && manifest.efficiencyGate && oracles.some((item) => !item.valid)) {
     throw new Error("Refusing paid efficiency evaluation: invalid regression oracle");
@@ -771,7 +771,7 @@ function agentPrompt(task: AgentImpactTask, mode: AgentImpactMode, manifest: Age
 
 function runCodex(task: AgentImpactTask, mode: AgentImpactMode, manifest: AgentImpactManifest, workspace: PreparedWorkspace, env: NodeJS.ProcessEnv, profile: string): CommandResult {
   const child = spawnSync("timeout", ["--signal=TERM", "--kill-after=10s", `${Math.ceil(manifest.agent.timeoutMs / 1000)}s`,
-    "bwrap", ...codexContainerArgs(resolveCodexBin(), workspace.root, profile), ...codexArguments(manifest.agent.model, workspace.repo)], {
+    "bwrap", ...codexContainerArgs(resolveCodexBin(), workspace.root, profile), ...codexArguments(manifest.agent.model, workspace.repo, manifest.agent.effort)], {
     cwd: workspace.repo, env: codexContainerEnv(env), input: agentPrompt(task, mode, manifest), encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024, timeout: manifest.agent.timeoutMs + 20_000,
   });

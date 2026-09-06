@@ -10,7 +10,7 @@ Ein Vorteil im Agentenlauf ist noch ungemessen. Der verworfene kompakte Renderer
 die globale CodeMap-Nutzung bleibt optional.
 
 - [ ] Den [Codex-Luna-Vergleich](docs/developer/agent-impact-luna.md) durchführen und auswerten:
-  acht unveränderte Aufgaben, 16 Läufe, medium. Primär mindestens 15 % weniger Tokens ohne
+  acht unveränderte Aufgaben, 16 Läufe, high auf ausdrücklichen Nutzerwunsch. Primär mindestens 15 % weniger Tokens ohne
   Aufgabenverlust; keine Dollarfreigabe. Der ungestartete Claude-Plan ist ersetzt.
   Ein echter Versuch scheiterte am inzwischen korrigierten Tool-Host-Mount; keine gültigen Paare.
   Vor Neustart den Bootstrap-Befund beachten, keinen stillen Retry zählen.
