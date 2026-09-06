@@ -1,4 +1,4 @@
-import { copyFileSync, chmodSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { copyFileSync, chmodSync, existsSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { AgentUsage } from "./eval-agent-impact-lib.ts";
 
@@ -42,6 +42,7 @@ export function codexContainerArgs(binary: string, root: string, profile: string
     "--bind", root, root, "--ro-bind", profile, profile,
     "--bind", join(root, "home"), "/home/codemap",
     "--bind", join(root, "codex-home"), "/home/codemap/.codex",
+    ...(existsSync(join(root, "bin", "codemap")) ? ["--ro-bind", join(root, "bin", "codemap"), "/usr/local/bin/codemap"] : []),
     "--ro-bind", executable, executable, "--", executable];
 }
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, statSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -72,8 +72,10 @@ test("filesystem container hides host worktrees while allowing attempt and syste
   const root = mkdtempSync(join(tmpdir(), "codemap-bwrap-test-"));
   const profile = mkdtempSync(join(tmpdir(), "codemap-profile-test-"));
   try {
+    mkdirSync(join(root, "bin"));
+    writeFileSync(join(root, "bin", "codemap"), "#!/bin/sh\necho fixture\n", { mode: 0o700 });
     const args = codexContainerArgs("/usr/bin/node", root, profile);
-    const result = spawnSync("bwrap", [...args, "-e", `const fs=require('fs'); if(fs.existsSync('/home/wasti/dev/codemap'))process.exit(2); fs.writeFileSync(${JSON.stringify(join(root, "written"))},'ok')`], { encoding: "utf8" });
+    const result = spawnSync("bwrap", [...args, "-e", `const fs=require('fs'); if(fs.existsSync('/home/wasti/dev/codemap'))process.exit(2); fs.writeFileSync(${JSON.stringify(join(root, "written"))},'ok'); const cp=require('child_process'); if(cp.execFileSync('/bin/bash',['-lc','codemap'],{encoding:'utf8'}).trim()!=='fixture')process.exit(3)`], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(readFileSync(join(root, "written"), "utf8"), "ok");
   } finally { rmSync(root, { recursive: true, force: true }); rmSync(profile, { recursive: true, force: true }); }
