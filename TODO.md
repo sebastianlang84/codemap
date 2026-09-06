@@ -2,24 +2,20 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Nächster Slice
+## Nächster Slice: Agenten-Mehraufwand erklären
 
-Der 12-Task-Development-Pilot ist abgeschlossen: 0 Wins, 1 Loss, 11 Ties; CodeMap brauchte 16,4 %
-mehr Tokens, 12,6 % mehr Agentenzeit und 11,7 % mehr Kosten. Der daraus entstandene, regressionsfreie
-Retrieval-Fix für Singular/Plural-Modulnamen bestand seine begrenzte Bestätigung nicht: zwei gültige
-Paare teilten sich in 1 Win und 1 Loss, das dritte Paar war nach Provider-Fehlern ungültig. Das ist
-kein Produktwirkungsbeleg. Den gleichen Fall nicht wiederholen und den unangetasteten Holdout von
-ungefähr 40 Tasks noch nicht ausgeben. Der Vier-Fälle-Pilot zum aktuellen Kontext-Workflow
-ist abgeschlossen:
-0 Wins, 0 Losses, 4 Ties; CodeMap brauchte 39,7 % mehr Tokens und 8,5 % mehr Agentenzeit.
-Vor einem weiteren bezahlten Pilot
-zusätzliche Navigationsarbeit reproduzieren und genau einen Hebel mit neuen Fällen festlegen.
-Details und vollständige Evidenz:
-[`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md).
+Die [Roadmap](docs/product/roadmap.md#agent-benefit-recovery-plan) legt Reihenfolge und Stop-Regeln
+fest. Zuerst vorhandene Läufe untersuchen; noch kein weiterer bezahlter Pilot.
 
-Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro
-Konvention ein Fixture oder Real-Repo-Case und eine eigene Metrik, keine breite Heuristik ohne
-messbaren Context-Gewinn.
+- [ ] Verfügbare Tool-Traces des 12- und Vier-Fälle-Piloten inventarisieren; Messlücken benennen.
+- [ ] Gepaarte Abläufe nach Indexierung, Suche, Lesen, Änderungen und Tests aufschlüsseln.
+  Zusätzliche und eingesparte Arbeit anhand konkreter Aufrufe belegen; Cache-Tokens separat zeigen.
+- [ ] Einen Diagnosebericht unter `docs/developer/` ablegen und im Eval-Leitfaden verlinken:
+  Reproduktion, ein möglicher Hebel, lokales Erfolgskriterium oder begründeter Stopp.
+- [ ] Bei fehlenden Traces zuerst minimale lokale Eval-Aufzeichnung mit Fixtures prüfen.
+
+Globale Pflichtnutzung auszusetzen ist eine Empfehlung, noch keine umgesetzte Host-Änderung.
+Neue Ranking-/Struktur-/Skill-Arbeit wartet auf die Diagnose.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
@@ -106,7 +102,13 @@ mitindexiert — nach einer Überarbeitung `codemap index` laufen lassen und nac
 - [ ] Review-Cleanup ohne Produktverhalten nur bei einem konkreten Review-Befund durchführen.
   - `codemap_context` und das Gesamtbudget liegen nahe am Token-Gate; neue Parameter, Guidelines oder öffentliche Tools brauchen eine explizite Budgetentscheidung.
 
-## Discoverability: agents under-use codemap even when the rule mandates it
+## Historical discoverability notes
+
+The following July observations and host-state descriptions are historical, not verified current
+state or active adoption work. They do not establish an end-to-end benefit. The
+[recovery plan](docs/product/roadmap.md#agent-benefit-recovery-plan) supersedes their test priorities.
+
+### Agents under-use codemap even when the rule mandates it
 
 > **Resolved 2026-07-19:** the owner rejected the proposed global `PreToolUse` gate as too invasive
 > and runtime-specific. CodeMap instead bundles an optional, harness-agnostic

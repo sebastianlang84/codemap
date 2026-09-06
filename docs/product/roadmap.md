@@ -45,26 +45,88 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ## Future work
 
-### Positioning and improvement plan
+### Agent benefit recovery plan
 
-CodeMap's intended sweet spot is narrower than a full AI IDE or code-search server: it sits between `rg`/`ctags` and systems like Cursor, Cody, Sourcegraph, or OpenGrok. `rg` gives fast text hits; CodeMap should turn those hits into an agent read plan. `ctags` gives symbols; CodeMap combines symbols with tests, docs, configs, imports, staleness, and read-budget ordering. LSP/IDEs remain better for interactive rename/diagnostics; CodeMap should stay headless, local, and host-neutral.
+Status: planned, 2026-09-06. This sequence takes priority over the capability ideas below.
+Goal: reduce the work needed to produce correct patches, with a measured advantage over an agent
+using its normal search/read tools. More CodeMap use is not a success metric.
 
-Near-term improvement priorities:
+Baseline: the 12-task pilot had 0 wins and 1 loss with 16.4% more tokens; the fresh four-task
+pilot tied all outcomes with 39.7% more tokens. The module-name confirmation was inconclusive.
+[Agent evidence](../developer/agent-impact-eval.md) and
+[positive scripted navigation evidence](../developer/external-holdout.md) measure different things.
+No single cause of the agent overhead has been established.
 
-1. **Make the current lightweight workflow honest and strong**: keep search/context evals and preserve visible search hits in scripted read plans. The first external holdout is complete and now inspected regression evidence; pair the next material ranking change with a fresh untouched corpus before making another generalization claim.
-2. **Add relationships only as measured verticals**: route↔handler, UI↔API, provider/hook↔consumer, and config-key↔usage should each get a fixture or real-repo case before any broad heuristic ships.
-3. **Improve structural extraction pragmatically**: revisit optional `ast-grep`/Tree-sitter-style extraction for imports, exports, route declarations, and test-subject detection only with a concrete eval miss; the first symbol-indexing prototype was removed after it failed the keep rule.
-4. **Keep semantic/vector retrieval optional**: embeddings may help vague vocabulary mismatch, but exact path/symbol, lexical FTS, and deterministic relationships must remain the default and fallback.
-5. **Expose only proven surfaces**: prefer internal eval utilities and docs over new prompt-facing tools/parameters until a measured miss requires an API change.
-6. **Connect navigation to product outcomes**: the bounded end-to-end replay now measures hidden-test success, CodeMap use, tokens, cost, time, and changed paths. The completed 12-task development pilot produced 0 wins, 1 loss, and 11 ties while increasing tokens, time, and cost. Its loss yielded a deterministic module-name retrieval fix, but the bounded confirmation did not clear its gate: two valid pairs split 1–1 and a third was invalid after provider failures. Do not spend the untouched holdout on this profile; require a different reproducible task miss, one corresponding lever, and a positive fresh development signal first. See [`agent-impact-eval.md`](../developer/agent-impact-eval.md).
+#### 1. Diagnose existing runs before spending again
 
-Main known weakness: quality depends on parser/import recognition, test conventions, and eval coverage. For large polyglot repos, the next durable lever is better structural extraction under the same local/no-daemon/no-mandatory-model constraints, not a broad knowledge graph.
+- Inventory retained tool traces for the 12-task and four-task pilots. Record unavailable data;
+  aggregate Bash counts and total tokens cannot establish repeated reads or their cause.
+- Compare paired timelines: setup/indexing, discovery, source reads, edits, tests and retries.
+  Record time to the first relevant source read, repeated file/line reads, irrelevant output,
+  and operations that CodeMap actually replaces. Separate cached tokens, uncached tokens,
+  output tokens, provider cost, agent time and index/setup time; avoid double-counting indexing.
+- Classify misses as retrieval, insufficient excerpts, unnecessary expansion, redundant workflow,
+  or implementation/test reasoning. Trace evidence supports a hypothesis, not causal attribution.
+- Deliver one short diagnostic report under `docs/developer/`, linked from the evaluation guide:
+  paired evidence, missing observations, one reproducible source of avoidable work, and a candidate
+  change. Inspect all available pairs, including wins and cheaper treatment runs.
+
+Exit: one trace-backed hypothesis and a local reproduction. If traces are missing, add minimal
+opt-in trace capture to the isolated eval runner and verify it with fixtures. Keep raw content
+local and out of commits; do not manufacture a diagnosis or silently buy replacement runs.
+
+#### 2. Test one change locally
+
+Choose the smallest change that addresses the diagnosis. Candidates, not commitments:
+smaller context expansion, a complete relevant excerpt, or selective use after ordinary discovery
+fails. A workflow change and a ranking change are separate experiments.
+
+Freeze the reproduction and expected removed work before editing. Keep the change only if it
+removes that work while retaining required code evidence and passing existing retrieval,
+context, token-injection and relevant runtime checks. Local correctness alone does not authorize
+wider adoption. Record the baseline, diff, regressions and keep/discard decision with the diagnosis.
+
+#### 3. Measure a fresh agent comparison
+
+Only after step 2 passes, freeze one development experiment: eight new tasks from at least two
+repositories, selected without candidate-output inspection; include straightforward lookups and
+harder discovery. Pin model, effort, prompts, commits, dependency locks, order and hidden tests.
+Compare normal agent tools against the same tools plus the single candidate change. Keep the
+untouched holdout unused. Record index readiness and report cold setup separately from warm use.
+
+Before execution, declare one primary target: task success or efficiency. Proposed continuation
+criteria, to freeze in the manifest before any run:
+
+- Success target: more paired wins than losses; token, provider-cost and time ratios each <= 1.10.
+- Efficiency target: no paired success losses; provider cost or agent time (choose one upfront)
+  improves by at least 15%; the other resource and total tokens each have ratios <= 1.10.
+- All eight pairs must be valid. Report every pair and per-repository results; provider failures
+  remain invalid, and existing paid-failure retry restrictions apply. Optional use is evaluated
+  as assigned, including non-use, rather than filtering to successful CodeMap invocations.
+
+These are proposed engineering thresholds, not evidence of statistical significance. Freeze a
+worst-case spend cap and obtain budget approval before launch; roadmap approval is not paid-run
+approval. A passing development result only permits planning independent confirmation.
+
+#### 4. Continue, narrow, or stop
+
+- Pass: confirm the unchanged candidate on an untouched corpus. Freeze sample size, uncertainty
+  analysis and acceptance criteria before spending; only confirmed benefit supports default use,
+  and only for the tested task scope. Test skill routing separately if that becomes the lever.
+- Fail or inconclusive: stop this recovery cycle and enter maintenance-only mode. No repeated
+  tuning on these tasks, larger feature programme or automatic second paid pilot.
+- No actionable diagnosis: stop before step 3. Reopen only for a new reproducible user need.
+
+Recommendation pending a separate host-policy change: remove mandatory CodeMap-first use and
+keep the CLI available on demand. This roadmap does not change global agent rules or uninstall
+anything. Preserve verified fixes and evidence. Embeddings, graph expansion, parser rewrites and
+stronger skill activation remain deferred until a diagnosis specifically justifies them.
 
 ### Product direction for arbitrary repos
 
 CodeMap should improve arbitrary, non-CodeMap-optimized repositories without requiring `.codemap` folders, curated benchmark files, or manually maintained file links. Its product identity is **agent navigation**, not a general code-retrieval system: an agent asks, CodeMap returns a useful entry point, nearby files to read first, and enough internal reasons to debug bad rankings.
 
-Think in two tracks:
+Deferred possibilities after the recovery gates pass:
 
 - **A: get more out of the current lightweight baseline** — stronger file-role/noise handling for lockfiles/generated/vendor/build outputs, better ranking diagnostics, deterministic read-first relationships from imports, reverse imports, sibling tests, nearby configs, paths, symbols, and precise stale-index status.
 - **B: add new capabilities when A is insufficient** — optional structural search (`ast-grep`) and optional semantic/vector search. PRD/feature-idea → code discovery across different vocabulary belongs here; do not promise it as a lexical feature.

@@ -132,6 +132,10 @@ is inconclusive about causal effect, while the retrieval behavior remains direct
 
 ## Interpretation and next gate
 
+The [agent benefit recovery plan](../product/roadmap.md#agent-benefit-recovery-plan) governs the
+next work: diagnose retained traces, test one local change, then decide whether a fresh paid
+comparison is justified. No further paid run is authorized by that plan alone.
+
 The replay and its isolation work. The first workflow exposed a real search-to-context drop-off;
 the simpler workflow removed that drop-off in the repeat smoke. Neither run showed a task-success
 gain, and v3 used more tokens, time, and money. Therefore this evidence does not justify a ranking
