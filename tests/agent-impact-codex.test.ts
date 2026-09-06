@@ -65,6 +65,8 @@ test("Codex uses isolated private login copy and explicit model, sandbox and con
     assert.ok(args.includes("gpt-5.6-luna"));
     assert.ok(args.includes("--ignore-user-config"));
     assert.ok(args.includes("workspace-write"));
+    assert.ok(args.includes("sandbox_workspace_write.network_access=true"));
+    assert.ok(args.includes('web_search="disabled"'));
     assert.ok(args.includes('model_reasoning_effort="high"'));
     writeFileSync(join(root, "auth.json"), '{"auth_mode":"apikey"}');
     assert.throws(() => prepareCodexHome(join(root, "other"), root), /ChatGPT login/);

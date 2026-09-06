@@ -21,6 +21,8 @@ export function codexArguments(model: string, workspace: string, effort: "medium
     "--model", model, "--sandbox", "workspace-write", "--cd", workspace, "--add-dir", dirname(workspace),
     "-c", `model_reasoning_effort="${effort}"`, "-c", 'approval_policy="never"',
     "-c", 'cli_auth_credentials_store="file"',
+    "-c", 'sandbox_workspace_write.network_access=true',
+    "-c", 'web_search="disabled"',
     "-c", 'project_doc_max_bytes=0',
     "-c", 'skills.include_instructions=false',
     "-c", 'suppress_unstable_features_warning=true',
@@ -30,7 +32,7 @@ export function codexArguments(model: string, workspace: string, effort: "medium
     "-"];
 }
 
-// The model process needs network access; its shell uses Codex's network-disabled sandbox.
+// Local HTTP regression tests need socket access in both arms.
 // Only this attempt, the pinned CodeMap profile, system runtime and Codex executable are visible.
 export function codexContainerArgs(binary: string, root: string, profile: string): string[] {
   const executable = realpathSync(binary);

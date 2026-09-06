@@ -1,0 +1,273 @@
+{
+  "agent": {
+    "codexVersion": "codex-cli 0.153.4",
+    "effort": "high",
+    "isolationConfigSha256": "9e4f623108273f3ec96865618e66ae66b2c139746d8e10c853bdc4bc0cbaf84f",
+    "maxBudgetUsdPerRun": null,
+    "modelEvidence": "requested-only; CLI does not report response model",
+    "navigationWorkflow": "optional",
+    "provider": "codex-cli",
+    "requestedModel": "gpt-5.6-luna"
+  },
+  "claimBoundary": "Directional development evidence only; it cannot support a generalization claim.",
+  "codemapProfile": {
+    "expectedVersion": "0.10.1",
+    "gitCommit": "91cbdc0a2da280a4ea7a3e74c80c6fd4489c695c"
+  },
+  "corpus": {
+    "frozenAt": "2026-09-06",
+    "id": "agent-impact-luna-v1",
+    "orderSeed": 6092026,
+    "purpose": "development-pilot",
+    "selectionProtocol": "Four fresh numbered runtime fixes per repository in descending cached main history, excluding every previous agent-impact/external-navigation case, duplicates, changes without separate regression tests, behavior-equivalent refactors, cosmetic-only serialization, and mixed refactors requiring internal implementation APIs. Selection precedes CodeMap output and paid attempts. Behavior prompts cover upstream assertions without source locations. Validate base-fail/reference-pass twice; no paid retries or outcome-based replacements. This estimates optional CodeMap versus an ordinary adaptive agent, not the isolated effect of the nested-function fix. All assigned pairs count, including CodeMap non-use. See docs/developer/agent-impact-optional.md for exclusions and decision rule. Supersedes the unrun Claude plan at user request: Codex gpt-5.6-luna, high (explicit user request), same task definitions and CodeMap profile. Primary efficiency target is total tokens, not unreported USD cost. Actual response model is not exposed by Codex exec; requested model is pinned, observed reroutes invalidate a run.",
+    "version": 1
+  },
+  "efficiencyGate": {
+    "issues": [
+      {
+        "actual": "express-pr-4893",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "express-pr-6903",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "express-pr-4885",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "express-pr-6073",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "fastify-pr-6483",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "fastify-pr-6838",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "fastify-pr-6680",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "fastify-pr-6753",
+        "expected": "one valid run per arm",
+        "metric": "completePairs"
+      },
+      {
+        "actual": "unavailable",
+        "expected": "<= 0.85",
+        "metric": "tokenRatio"
+      },
+      {
+        "actual": "unavailable",
+        "expected": "<= 1.1",
+        "metric": "agentDurationRatio"
+      }
+    ],
+    "passed": false
+  },
+  "gate": {
+    "issues": [
+      {
+        "actual": 0,
+        "expected": ">= 8",
+        "metric": "validPairs"
+      }
+    ],
+    "passed": false
+  },
+  "manifestSha256": "30c6a10b620725b7b8c69aaf4a09a5c044bca2dd5bf7a75d9f9ab03ddf17f119",
+  "oracles": [
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "express-pr-4893",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "express-pr-6903",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "express-pr-4885",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "express-pr-6073",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6483",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6838",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6680",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6753",
+      "valid": true
+    }
+  ],
+  "plannedRuns": 16,
+  "results": [
+    {
+      "addedLines": 35,
+      "agentDurationMs": 207130,
+      "agentExitCode": 0,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.send.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "express",
+      "runOrder": 1,
+      "success": true,
+      "taskId": "express-pr-4893",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 447744,
+        "costUsd": null,
+        "inputTokens": 40512,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 10067,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 16
+        },
+        "turns": 1
+      },
+      "verifierExitCode": 0
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "agentDurationRatio": null,
+    "baselineSuccessRate": 0,
+    "budgetExhaustedRuns": 0,
+    "crossArmContamination": 0,
+    "exactTwoSidedP": 1,
+    "losingTasks": [],
+    "losses": 0,
+    "tasks": 1,
+    "ties": 0,
+    "tokenRatio": null,
+    "totalCostUsd": null,
+    "treatmentAdoptionRate": 0,
+    "treatmentSuccessRate": 0,
+    "validPairs": 0,
+    "wins": 0
+  },
+  "worstCaseBudgetUsd": null
+}

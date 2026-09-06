@@ -1,6 +1,6 @@
 # Optional CodeMap with Codex Luna
 
-Status: runner adapted and locally verified. One real baseline attempt hit a now-corrected
+Status: v2 running after socket access correction. The [aborted v1 high-effort attempt](agent-impact-luna-network-aborted-result.json) is excluded: local HTTP tests hit listen EPERM. V2 restarts both arms with identical corrected test conditions. One real baseline attempt hit a now-corrected
 [tool-host isolation failure](agent-impact-luna-bootstrap-audit.json); no valid paired result
 and no automatic retry. That bootstrap used medium; it is not a high-effort result. Raw original evidence is retained, including its incomplete error classification.
 
@@ -11,8 +11,8 @@ eight tasks, dependency locks and the pinned CodeMap candidate from the previous
 Their [oracle validation](agent-impact-optional-readiness.json) remains applicable;
 tests enforce identical task definitions. Previous Claude results remain separate.
 
-Freeze before model calls: 16 attempts, 15 minutes per attempt, no automatic retries after
-provider work or unknown usage. Primary target: total-token ratio <= 0.85, zero paired
+Freeze before model calls: 16 attempts, 15 minutes per attempt, no outcome-driven retries. Infrastructure corrections must retain excluded evidence and
+restart both arms under a newly identified protocol. Primary target: total-token ratio <= 0.85, zero paired
 success losses, agent-time ratio <= 1.10. All eight pairs must be valid, traces complete,
 with no control-arm CodeMap use. Optional non-use counts as assigned. These are development
 continuation thresholds, not statistical significance or evidence of saved subscription quota.
@@ -27,8 +27,9 @@ invalidates a run. This is a weaker model-verification boundary than the Claude 
 Each attempt uses an isolated filesystem containing system runtime, its workspace, the
 pinned CodeMap profile and the Codex executable. Personal instructions, skills and config
 are suppressed. A private disposable login copy permits authentication without modifying
-the user's original credentials. Codex shell execution uses workspace-write with network
-disabled; the model process retains network access. Traces stay outside Git.
+the user's original credentials. Codex shell execution uses workspace-write with socket access enabled for local HTTP tests;
+web search is disabled. Task instructions prohibit history and external-workspace retrieval;
+check raw traces for external retrieval before interpreting results. Traces stay outside Git.
 
 Local preparation does not call a model:
 
