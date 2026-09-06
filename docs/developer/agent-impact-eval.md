@@ -261,3 +261,5 @@ Directories/files use private permissions where supported. No per-tool wall-cloc
 added, and a runner crash before the provider returns can still lose its buffered output.
 
 The next frozen development comparison is [optional CodeMap on eight fresh tasks](agent-impact-optional.md). It adds an optional workflow and a separate efficiency gate; historical manifest behavior remains unchanged.
+
+The unrun Claude proposal is superseded by [Codex with gpt-5.6-luna](agent-impact-luna.md): same tasks, token-primary gate, no invented USD accounting.

@@ -108,8 +108,9 @@ criteria, to freeze in the manifest before any run:
   remain invalid, and existing paid-failure retry restrictions apply. Optional use is evaluated
   as assigned, including non-use, rather than filtering to successful CodeMap invocations.
 
-The [frozen optional comparison](../developer/agent-impact-optional.md) selects provider cost
-as its primary efficiency target. These are engineering thresholds, not evidence of statistical significance. Freeze a
+The [Codex Luna comparison](../developer/agent-impact-luna.md) selects total tokens
+as its primary efficiency target (>=15% reduction, no paired losses, time ratio <=1.10).
+It replaces the unrun Claude cost-target proposal at user request; Codex reports no USD cost. These are engineering thresholds, not evidence of statistical significance. Freeze a
 worst-case spend cap and obtain budget approval before launch; roadmap approval is not paid-run
 approval. A passing development result only permits planning independent confirmation.
 

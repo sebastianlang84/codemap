@@ -5,6 +5,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth } from "./eval-agent-impact-codex.ts";
 import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
 import { createAgentImpactTraceDir, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 
@@ -43,6 +44,7 @@ interface ParsedArgs {
   traceDir?: string;
   resume: boolean;
   help: boolean;
+  runCodex: boolean;
 }
 
 interface CommandResult {
@@ -77,7 +79,8 @@ const manifestSha256 = hashAgentImpactJson(JSON.parse(manifestRaw));
 const selectedTasks = selectTasks(manifest, args.taskIds);
 const modes: AgentImpactMode[] = args.mode === "all" ? ["baseline", "codemap"] : [args.mode];
 const plannedRuns = selectedTasks.length * modes.length;
-const worstCaseBudgetUsd = round(plannedRuns * manifest.agent.maxBudgetUsdPerRun, 2);
+const isCodex = manifest.agent.provider === "codex-cli";
+const worstCaseBudgetUsd = manifest.agent.maxBudgetUsdPerRun === null ? null : round(plannedRuns * manifest.agent.maxBudgetUsdPerRun, 2);
 
 if (args.resume && !args.evidenceOutput) throw new Error("--resume requires --evidence-output");
 if (args.evidenceOutput && (selectedTasks.length !== manifest.tasks.length || modes.length !== 2 || args.validateOnly)) {
@@ -100,15 +103,16 @@ if (args.dryRun) {
   process.exit(0);
 }
 
-if (!args.validateOnly && (args.approveBudgetUsd === undefined || args.approveBudgetUsd < worstCaseBudgetUsd)) {
-  throw new Error(`Refusing ${plannedRuns} paid runs with worst-case $${worstCaseBudgetUsd.toFixed(2)}; pass --approve-budget-usd ${worstCaseBudgetUsd.toFixed(2)} or more`);
+if (!args.validateOnly && isCodex && !args.runCodex) throw new Error("Pass --run-codex to start the fixed Codex comparison; no USD cost estimate is available");
+if (!args.validateOnly && !isCodex && (args.approveBudgetUsd === undefined || args.approveBudgetUsd < worstCaseBudgetUsd!)) {
+  throw new Error(`Refusing ${plannedRuns} paid runs with worst-case $${worstCaseBudgetUsd!.toFixed(2)}; pass --approve-budget-usd ${worstCaseBudgetUsd!.toFixed(2)} or more`);
 }
 
 if (manifest.efficiencyGate && !args.validateOnly && (!args.traceDir || !args.evidenceOutput)) {
   throw new Error("Efficiency evaluation requires --trace-dir and --evidence-output");
 }
 
-const automationToken = args.validateOnly ? undefined : agentImpactToken(process.env);
+const automationToken = args.validateOnly || isCodex ? undefined : agentImpactToken(process.env);
 
 mkdirSync(args.cacheDir, { recursive: true });
 const traceDir = args.traceDir && !args.validateOnly ? createAgentImpactTraceDir(args.traceDir, manifestSha256) : undefined;
@@ -129,9 +133,9 @@ try {
     requestedModel: manifest.agent.model,
     effort: manifest.agent.effort,
     navigationWorkflow: manifest.agent.navigationWorkflow,
-    claudeCodeVersion: commandVersion(resolveClaudeBin()),
+    ...(isCodex ? { codexVersion: commandVersion(resolveCodexBin()), modelEvidence: "requested-only; CLI does not report response model" } : { claudeCodeVersion: commandVersion(resolveClaudeBin()) }),
     maxBudgetUsdPerRun: manifest.agent.maxBudgetUsdPerRun,
-    isolationConfigSha256: hashAgentImpactJson(claudeSettings()),
+    isolationConfigSha256: hashAgentImpactJson(isCodex ? codexArguments(manifest.agent.model, "<workspace>") : claudeSettings()),
   };
   if (!args.validateOnly && manifest.efficiencyGate && oracles.some((item) => !item.valid)) {
     throw new Error("Refusing paid efficiency evaluation: invalid regression oracle");
@@ -153,7 +157,7 @@ try {
         profileDir: profile!,
         runRoot,
         keepWorkdir: args.keepWorkdir,
-      }), authentication: "setup-token" });
+      }), authentication: isCodex ? "codex-login" : "setup-token" });
       if (args.evidenceOutput) {
         report = buildReport(manifest, manifestSha256, agentReport, plannedRuns, worstCaseBudgetUsd, oracles, results, args.keepWorkdir ? runRoot : undefined);
         writeEvidence(args.evidenceOutput, report);
@@ -184,12 +188,13 @@ function buildReport(
   manifestSha256: string,
   agent: Record<string, unknown>,
   plannedRuns: number,
-  worstCaseBudgetUsd: number,
+  worstCaseBudgetUsd: number | null,
   oracles: OracleValidationResult[],
   results: AgentImpactRunResult[],
   workdir?: string,
 ): Record<string, unknown> {
   const summary = summarizeAgentImpact(results, manifest.agent.navigationWorkflow);
+  if (manifest.agent.provider === "codex-cli") summary.totalCostUsd = null;
   return {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
@@ -295,18 +300,20 @@ function runAgentAttempt(options: {
     const env = agentEnv(workspace, mode, profileDir);
     if (mode === "codemap") indexDurationMs = prepareCodeMap(workspace, profileDir, env);
     const agentStartedAt = performance.now();
-    const child = runClaude(task, mode, manifest, workspace, env);
+    const child = isCodex ? runCodex(task, mode, manifest, workspace, env, profileDir) : runClaude(task, mode, manifest, workspace, env);
     const agentDurationMs = Math.round(performance.now() - agentStartedAt);
+    let traceError: string | undefined;
     if (traceDir) {
       try {
         writeAgentImpactTrace(traceDir, { taskId: task.id, mode, runOrder, agentDurationMs, indexDurationMs, ...child });
       } catch (error) {
         // A diagnostic write failure must not turn a paid attempt into a zero-cost retry.
+        traceError = `trace not saved: ${message(error)}`;
         console.error(`[agent-impact] TRACE NOT SAVED for run ${runOrder}: ${message(error)}`);
       }
     }
     try {
-      usage = parseClaudeJson(child.stdout);
+      usage = isCodex ? parseCodexJson(child.stdout, manifest.agent.model) : parseClaudeJson(child.stdout);
     } catch (error) {
       return failedRun(task, mode, runOrder, workspace.repo, usage, child, agentDurationMs, indexDurationMs, `provider parse: ${message(error)}`);
     }
@@ -314,12 +321,12 @@ function runAgentAttempt(options: {
     applyHiddenTests(task, repoCache, workspace.repo);
     const verifier = runSpec(task.verify, workspace.repo, baseEnv());
     const codemapCommands = readCallLog(workspace.callLog);
-    const budgetExhausted = child.status !== 0 && (/budget/i.test(usage.terminalReason) || usage.costUsd >= manifest.agent.maxBudgetUsdPerRun * 0.95);
-    const infrastructureError = budgetExhausted
+    const budgetExhausted = !isCodex && child.status !== 0 && (/budget/i.test(usage.terminalReason) || (usage.costUsd ?? 0) >= manifest.agent.maxBudgetUsdPerRun! * 0.95);
+    const infrastructureError = traceError ?? (isCodex && /model[ _]rerout/i.test(child.stderr + child.stdout) ? "Codex model rerouted" : budgetExhausted
       ? "budget exhausted"
       : child.status !== 0 || child.timedOut || child.error || usage.isError
         ? [child.timedOut ? "agent timeout" : undefined, child.status !== 0 ? `agent exit ${child.status}` : undefined, child.error].filter(Boolean).join("; ") || "provider error"
-        : undefined;
+        : undefined);
     return {
       taskId: task.id,
       repo: task.repo,
@@ -365,14 +372,7 @@ function runAgentAttempt(options: {
 function runClaude(task: AgentImpactTask, mode: AgentImpactMode, manifest: AgentImpactManifest, workspace: PreparedWorkspace, env: NodeJS.ProcessEnv): CommandResult {
   const claude = resolveClaudeBin();
   const seconds = Math.ceil(manifest.agent.timeoutMs / 1000);
-  const prompt = [
-    "Implement the requested fix in this repository. Work autonomously. Run the relevant tests.",
-    "Do not inspect git history, commits, remotes, or files outside this workspace. Do not commit or push. Do not install dependencies; they are already prepared.",
-    mode === "codemap"
-      ? agentImpactTreatmentInstruction(manifest)
-      : "CodeMap is unavailable in this control run. Use the repository's normal local navigation tools and do not invoke codemap.",
-    `Task: ${task.prompt}`,
-  ].join("\n\n");
+  const prompt = agentPrompt(task, mode, manifest);
   const values = [
     "--signal=TERM",
     "--kill-after=10s",
@@ -512,8 +512,8 @@ function prepareCodeMap(workspace: PreparedWorkspace, profileDir: string, env: N
 
 function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDir: string): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
-    ...withoutClaudeAuth(process.env),
-    ...isolatedAgentImpactClaude(workspace.root, claudeSettings(), automationToken!),
+    ...(isCodex ? { LANG: "C.UTF-8", TERM: "dumb" } : withoutClaudeAuth(process.env)),
+    ...(isCodex ? prepareCodexHome(workspace.root, process.env.CODEX_HOME ?? join(realHome, ".codex")) : isolatedAgentImpactClaude(workspace.root, claudeSettings(), automationToken!)),
     PATH: sanitizedPath(),
     CODEMAP_HOME: workspace.stateDir,
     CODEMAP_TELEMETRY: "0",
@@ -617,7 +617,7 @@ function emptyUsage(): AgentUsage {
     outputTokens: 0,
     cacheReadInputTokens: 0,
     cacheCreationInputTokens: 0,
-    costUsd: 0,
+    costUsd: isCodex ? null : 0,
     turns: 0,
     terminalReason: "unknown",
     isError: false,
@@ -698,6 +698,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     offline: false,
     resume: false,
     help: false,
+    runCodex: false,
   };
   for (let index = 0; index < raw.length; index++) {
     const arg = raw[index]!;
@@ -722,6 +723,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     else if (arg === "--quality-gate") parsed.qualityGate = true;
     else if (arg === "--keep-workdir") parsed.keepWorkdir = true;
     else if (arg === "--offline") parsed.offline = true;
+    else if (arg === "--run-codex") parsed.runCodex = true;
     else if (arg === "--resume") parsed.resume = true;
     else if (arg === "--help" || arg === "-h") parsed.help = true;
     else throw new Error(`Unknown option: ${arg}`);
@@ -736,7 +738,7 @@ function parsePositive(value: string, label: string): number {
 }
 
 function printHelp(): void {
-  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and worst-case paid budget\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Required cap approval; must cover worst case\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
+  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and provider limits\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Claude USD-equivalent limiter\n  --run-codex                   Start fixed Codex runs using existing login\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
 }
 
 function tail(value: string, length = 1200): string {
@@ -750,4 +752,30 @@ function message(error: unknown): string {
 function round(value: number, digits: number): number {
   const factor = 10 ** digits;
   return Math.round(value * factor) / factor;
+}
+
+function resolveCodexBin(): string {
+  return resolve(process.env.CODEMAP_EVAL_CODEX_BIN ?? join(realHome, ".local", "bin", "codex"));
+}
+
+function agentPrompt(task: AgentImpactTask, mode: AgentImpactMode, manifest: AgentImpactManifest): string {
+  return [
+    "Implement the requested fix in this repository. Work autonomously. Run the relevant tests.",
+    "Do not inspect git history, commits, remotes, or files outside this workspace. Do not commit or push. Do not install dependencies; they are already prepared.",
+    mode === "codemap"
+      ? agentImpactTreatmentInstruction(manifest)
+      : "CodeMap is unavailable in this control run. Use the repository's normal local navigation tools and do not invoke codemap.",
+    `Task: ${task.prompt}`,
+  ].join("\n\n");
+}
+
+function runCodex(task: AgentImpactTask, mode: AgentImpactMode, manifest: AgentImpactManifest, workspace: PreparedWorkspace, env: NodeJS.ProcessEnv, profile: string): CommandResult {
+  const child = spawnSync("timeout", ["--signal=TERM", "--kill-after=10s", `${Math.ceil(manifest.agent.timeoutMs / 1000)}s`,
+    "bwrap", ...codexContainerArgs(resolveCodexBin(), workspace.root, profile), ...codexArguments(manifest.agent.model, workspace.repo)], {
+    cwd: workspace.repo, env: codexContainerEnv(env), input: agentPrompt(task, mode, manifest), encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024, timeout: manifest.agent.timeoutMs + 20_000,
+  });
+  return { status: child.status, stdout: redactCodexAuth(child.stdout ?? "", env.CODEX_HOME!), stderr: redactCodexAuth(child.stderr ?? "", env.CODEX_HOME!),
+    timedOut: child.status === 124 || child.signal === "SIGTERM" || child.signal === "SIGKILL",
+    ...(child.error ? { error: child.error.message } : {}) };
 }

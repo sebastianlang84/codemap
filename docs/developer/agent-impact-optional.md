@@ -1,6 +1,9 @@
 # Optional CodeMap: frozen development comparison
 
-Status: [8/8 oracles validated](agent-impact-optional-readiness.json): each base fails twice,
+Status: Superseded before execution by the [Codex Luna comparison](agent-impact-luna.md).
+Historical Claude proposal below; no launch or budget request is pending.
+
+[8/8 oracles validated](agent-impact-optional-readiness.json): each base fails twice,
 each reference fix passes twice. Paid execution requires separate approval; no product benefit claimed.
 The [manifest](../../scripts/eval-agent-impact-optional.manifest.json) pins eight tasks,
 CodeMap, model, effort, prompts, dependencies, order seed and regression tests.

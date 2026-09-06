@@ -99,7 +99,7 @@ test("trace diagnostic freezes a fresh pair and its dependency lock", () => {
   const diagnostic = parseAgentImpactManifest(raw);
   assert.equal(hashAgentImpactJson(JSON.parse(raw)), "f6acb032959afcf08bd49a48b0437be03af7b91c085693b792dc138cb370fe82");
   assert.equal(diagnostic.tasks.length, 1);
-  assert.equal(diagnostic.agent.maxBudgetUsdPerRun * 2, 4);
+  assert.equal(diagnostic.agent.maxBudgetUsdPerRun! * 2, 4);
   const task = diagnostic.tasks[0]!;
   for (const file of ["eval-agent-impact.manifest.json", "eval-agent-impact-smoke-v2.manifest.json", "eval-agent-impact-pilot.manifest.json", "eval-agent-impact-confirmation.manifest.json", "eval-agent-impact-excerpts.manifest.json", "eval-external-holdout.manifest.json"]) {
     const previous = JSON.parse(readFileSync(new URL(`../scripts/${file}`, import.meta.url), "utf8"));
@@ -389,7 +389,7 @@ test("optional corpus freezes eight tasks, two repos and verified dependency loc
   assert.equal(hashAgentImpactJson(optionalManifest), "088da06123016c965934f14bfc65431b1385340230719ac5869ecded7c49b22f");
   assert.equal(optionalManifest.tasks.length, 8);
   assert.equal(new Set(optionalManifest.tasks.map(task => task.repo)).size, 2);
-  assert.equal(optionalManifest.tasks.length * 2 * optionalManifest.agent.maxBudgetUsdPerRun, 32);
+  assert.equal(optionalManifest.tasks.length * 2 * optionalManifest.agent.maxBudgetUsdPerRun!, 32);
   assert.equal(optionalManifest.pilotGate.minValidPairs, 8);
   assert.equal(optionalManifest.pilotGate.minTreatmentAdoptionRate, 0);
   for (const task of optionalManifest.tasks) for (const file of task.setupFiles) {

@@ -35,11 +35,11 @@ export interface AgentImpactManifest {
     orderSeed: number;
   };
   agent: {
-    provider: "claude-code";
+    provider: "claude-code" | "codex-cli";
     model: string;
     effort: "medium";
     navigationWorkflow: "search-then-context" | "context-first" | "optional";
-    maxBudgetUsdPerRun: number;
+    maxBudgetUsdPerRun: number | null;
     timeoutMs: number;
   };
   codemapProfile: {
@@ -49,7 +49,7 @@ export interface AgentImpactManifest {
   repositories: Array<{ id: string; remote: string }>;
   tasks: AgentImpactTask[];
   efficiencyGate?: {
-    maxCostRatio: number;
+    maxCostRatio: number | null;
     maxTokenRatio: number;
     maxAgentDurationRatio: number;
     maxPairedLosses: number;
@@ -75,11 +75,13 @@ export interface OracleValidationResult {
 
 export interface AgentUsage {
   actualModel: string;
+  requestedModel?: string;
+  modelEvidence?: "requested-only";
   inputTokens: number;
   outputTokens: number;
   cacheReadInputTokens: number;
   cacheCreationInputTokens: number;
-  costUsd: number;
+  costUsd: number | null;
   turns: number;
   terminalReason: string;
   isError: boolean;
@@ -87,7 +89,7 @@ export interface AgentUsage {
 }
 
 export interface AgentImpactRunResult {
-  authentication?: "setup-token";
+  authentication?: "setup-token" | "codex-login";
   taskId: string;
   repo: string;
   mode: AgentImpactMode;
@@ -119,7 +121,7 @@ export interface AgentImpactSummary {
   treatmentSuccessRate: number;
   treatmentAdoptionRate: number;
   crossArmContamination: number;
-  totalCostUsd: number;
+  totalCostUsd: number | null;
   tokenRatio: number | null;
   agentDurationRatio: number | null;
   budgetExhaustedRuns: number;
@@ -152,7 +154,7 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   nonNegativeInteger(corpus.orderSeed, "corpus.orderSeed");
 
   const agent = record(root.agent, "agent");
-  if (agent.provider !== "claude-code") throw new Error("agent.provider must be claude-code");
+  if (agent.provider !== "claude-code" && agent.provider !== "codex-cli") throw new Error("Unsupported agent provider");
   string(agent.model, "agent.model");
   if (agent.effort !== "medium") throw new Error("agent.effort must be medium");
   const navigationWorkflow = agent.navigationWorkflow ?? "search-then-context";
@@ -160,7 +162,9 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
     throw new Error("agent.navigationWorkflow is unsupported");
   }
   agent.navigationWorkflow = navigationWorkflow;
-  positiveNumber(agent.maxBudgetUsdPerRun, "agent.maxBudgetUsdPerRun");
+  if (agent.provider === "codex-cli") {
+    if (agent.maxBudgetUsdPerRun !== null) throw new Error("Codex CLI has no USD budget limiter; maxBudgetUsdPerRun must be null");
+  } else positiveNumber(agent.maxBudgetUsdPerRun, "agent.maxBudgetUsdPerRun");
   positiveInteger(agent.timeoutMs, "agent.timeoutMs");
 
   const profile = record(root.codemapProfile, "codemapProfile");
@@ -202,6 +206,7 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   if (root.efficiencyGate !== undefined) {
     const efficiency = record(root.efficiencyGate, "efficiencyGate");
     for (const key of ["maxCostRatio", "maxTokenRatio", "maxAgentDurationRatio"]) {
+      if (key === "maxCostRatio" && agent.provider === "codex-cli" && efficiency[key] === null) continue;
       positiveNumber(efficiency[key], `efficiencyGate.${key}`);
     }
     nonNegativeInteger(efficiency.maxPairedLosses, "efficiencyGate.maxPairedLosses");
@@ -331,7 +336,7 @@ export function summarizeAgentImpact(
     treatmentSuccessRate: roundRate(treatmentPasses, validPairs),
     treatmentAdoptionRate: roundRate(adopted, validPairs),
     crossArmContamination: contamination,
-    totalCostUsd: round(results.reduce((sum, item) => sum + item.usage.costUsd, 0), 4),
+    totalCostUsd: results.some(item => item.usage.costUsd === null) ? null : round(results.reduce((sum, item) => sum + (item.usage.costUsd ?? 0), 0), 4),
     tokenRatio: baselineTokens > 0 ? round(treatmentTokens / baselineTokens, 4) : null,
     agentDurationRatio: baselineDuration > 0 ? round(treatmentDuration / baselineDuration, 4) : null,
     budgetExhaustedRuns,
@@ -573,13 +578,17 @@ export function evaluateAgentImpactEfficiencyGate(
       continue;
     }
     const a = baseline[0]!, b = treatment[0]!;
-    if (a.usage.actualModel !== manifest.agent.model || b.usage.actualModel !== manifest.agent.model) {
-      issues.push(issue("actualModel", manifest.agent.model, task.id));
+    const matchesModel = (usage: AgentUsage) => manifest.agent.provider === "codex-cli"
+      ? usage.requestedModel === manifest.agent.model && usage.modelEvidence === "requested-only"
+      : usage.actualModel === manifest.agent.model;
+    if (!matchesModel(a.usage) || !matchesModel(b.usage)) {
+      issues.push(issue(manifest.agent.provider === "codex-cli" ? "requestedModel" : "actualModel", manifest.agent.model, task.id));
     }
-    if (a.authentication !== "setup-token" || b.authentication !== "setup-token") {
-      issues.push(issue("authentication", "setup-token in both arms", task.id));
+    const auth = manifest.agent.provider === "codex-cli" ? "codex-login" : "setup-token";
+    if (a.authentication !== auth || b.authentication !== auth) {
+      issues.push(issue("authentication", `${auth} in both arms`, task.id));
     }
-    baselineCost += a.usage.costUsd; treatmentCost += b.usage.costUsd;
+    baselineCost += a.usage.costUsd ?? NaN; treatmentCost += b.usage.costUsd ?? NaN;
     baselineTokens += totalTokens(a.usage); treatmentTokens += totalTokens(b.usage);
     baselineTime += a.agentDurationMs; treatmentTime += b.agentDurationMs;
     losses += Number(a.success && !b.success);
@@ -589,6 +598,7 @@ export function evaluateAgentImpactEfficiencyGate(
     ["tokenRatio", treatmentTokens, baselineTokens, threshold.maxTokenRatio],
     ["agentDurationRatio", treatmentTime, baselineTime, threshold.maxAgentDurationRatio],
   ] as const) {
+    if (maximum === null) continue;
     const ratio = denominator > 0 ? numerator / denominator : NaN;
     if (!Number.isFinite(ratio) || ratio > maximum) issues.push(issue(metric, `<= ${maximum}`, Number.isFinite(ratio) ? ratio : "unavailable"));
   }
