@@ -12,6 +12,11 @@ Die lokal geprüfte Korrektur verschachtelter Funktionsausschnitte bleibt besteh
 Trace-Audit: `rg` fehlte in allen 16 Läufen; der Vergleich belegt keinen Effekt gegenüber
 einem Agenten mit funktionierendem ripgrep. Details und lokale Ansatzpunkte im Ergebnisbericht.
 
+- [ ] Konkreten Kontext-Miss beheben: Suchtrefferbereich beim Übergang zu Dateikontext erhalten.
+  [Validator-Probe](docs/developer/validator-context-probe.md): relevanter Test bei Zeile 695,
+  Dateikontext liefert nur den Anfang. Bestehendes Kontext-/Navigationscorpus bleibt Gate;
+  keine automatische neue Modellserie.
+
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) erklärt

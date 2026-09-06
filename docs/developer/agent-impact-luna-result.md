@@ -88,3 +88,6 @@ automatic model rerun. No retrieval/ranking change is supported by this audit.
 
 Decision: no demonstrated advantage and no adoption. Close this recovery cycle; maintenance
 only, no automatic further paid experiment or feature expansion based on these cases.
+
+Follow-up: [local validator context probe](validator-context-probe.md) found no advantage
+and reproduced loss of the search-hit region during path-only context retrieval.
