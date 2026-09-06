@@ -170,3 +170,23 @@ The runner no longer symlinks personal credentials into disposable configs. A
 [matching upstream report](https://github.com/anthropics/claude-code/issues/76561) describes atomic
 replacement detaching such links; dummy-file reproduction confirms the mechanism, not the cause
 of the earlier personal-login outage. [Automation setup](agent-impact-eval.md#automation-authentication).
+
+## Compact-source experiment
+
+Frozen before candidate implementation: [manifest](../../scripts/eval-context-delivery.manifest.json),
+baseline `aabb399`. One rendering change only: keep existing context order and warnings, replace
+metadata-only rows with complete code chunks that fit an 8 KiB UTF-8 output cap. Keep oversized
+chunks and documentation as path/range omission notices. Do not change ranking, queries, index,
+chunk selection, skill, or runtime defaults. This is an internal local prototype, not a CLI flag.
+
+Five positive cases require exact source ranges: the observed Fastify task, a trusted warning
+path, a trusted Fastify symbol, and JavaScript/Python symbols after long headers. Two controls
+require honest omission for oversized code and an empty result for an absent symbol. Fastify is
+pinned; synthetic files and required ranges are stored in the manifest. These are development
+cases, not untouched holdout evidence.
+
+Keep only if all five cases deliver every required source line, each output stays within 8 KiB
+with at most 2 KiB of unrelated source, and both controls pass. Compare metadata output, full JSON
+and the candidate on identical packages. Source availability is a proxy for an avoidable file
+read, not proof that an agent omits it. Any failed criterion ends this attempt without another
+paid run or tuning these cases. No new agent budget is authorized.
