@@ -2,20 +2,12 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Agenten-Nutzen: Diagnose abgeschlossen, kein weiterer Pilot
+## Agenten-Nutzen: Wartung
 
-Der [Diagnosebericht](docs/developer/agent-overhead-diagnosis.md#completed-fresh-trace-pair)
-enthält den vollständigen Paarlauf und den lokalen Ausgabe-Vergleich. Der Agent las nach dem
-CodeMap-Leseplan weiter mit normalen Werkzeugen; ein pauschales `--json` vergrößert die Ausgabe
-stark. Noch kein Workflow-Kandidat besteht das lokale Gate der
-[Roadmap](docs/product/roadmap.md#agent-benefit-recovery-plan).
-
-- [ ] Nur bei einem neuen reproduzierbaren Bedarf einen kompakten Quelltext-Kandidaten lokal
-  prüfen: erforderlicher Code erhalten, irrelevante Ausgabe begrenzt, ersetzte Leseoperation
-  nachgewiesen. Keine weitere bezahlte Messung ohne bestandenes lokales Gate und Budgetfreigabe.
-
-Globale Pflichtnutzung auszusetzen bleibt eine Empfehlung; die Host-Regeln sind unverändert.
-Ranking-/Struktur-/Skill-Ausbau bleibt zurückgestellt.
+Der [lokale Ausgabeversuch](docs/developer/agent-overhead-diagnosis.md#result-discard)
+bestand 2 von 5 Nutzfällen und wurde verworfen. Der Verbesserungszyklus ist beendet.
+Kein weiterer bezahlter Pilot und kein Ranking-/Struktur-/Skill-Ausbau ohne neuen,
+separat begründeten Bedarf. Die globale CodeMap-Pflicht wurde aufgehoben.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

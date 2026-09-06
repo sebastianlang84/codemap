@@ -47,11 +47,10 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Agent benefit recovery plan
 
-Status: diagnosis completed, 2026-09-06; no workflow candidate passed the local gate.
-The [trace and output comparison](../developer/agent-overhead-diagnosis.md#completed-fresh-trace-pair)
-rejects blanket JSON delivery and records a separate verified CLI pipe fix. No paid expansion;
-maintenance only unless a new reproducible need justifies reopening the workflow experiment.
-This sequence takes priority over the capability ideas below.
+Status: recovery attempt closed, 2026-09-06; maintenance only. The final
+[compact-source experiment](../developer/agent-overhead-diagnosis.md#result-discard) passed
+2/5 positive cases and was discarded. No paid expansion or output feature is shipped.
+Reopen only for a new separately scoped need. The sequence below remains the evaluation policy.
 Goal: reduce the work needed to produce correct patches, with a measured advantage over an agent
 using its normal search/read tools. More CodeMap use is not a success metric.
 
@@ -121,9 +120,8 @@ approval. A passing development result only permits planning independent confirm
   tuning on these tasks, larger feature programme or automatic second paid pilot.
 - No actionable diagnosis: stop before step 3. Reopen only for a new reproducible user need.
 
-Recommendation pending a separate host-policy change: remove mandatory CodeMap-first use and
-keep the CLI available on demand. This roadmap does not change global agent rules or uninstall
-anything. Preserve verified fixes and evidence. Embeddings, graph expansion, parser rewrites and
+Owner-approved host-policy change completed on 2026-09-06: CodeMap-first is no longer mandatory;
+the CLI remains available on demand. Preserve verified fixes and evidence. Embeddings, graph expansion, parser rewrites and
 stronger skill activation remain deferred until a diagnosis specifically justifies them.
 
 ### Product direction for arbitrary repos

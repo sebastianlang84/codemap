@@ -190,3 +190,43 @@ with at most 2 KiB of unrelated source, and both controls pass. Compare metadata
 and the candidate on identical packages. Source availability is a proxy for an avoidable file
 read, not proof that an agent omits it. Any failed criterion ends this attempt without another
 paid run or tuning these cases. No new agent budget is authorized.
+
+### Result: discard
+
+[Reproduction script](../../scripts/eval-context-delivery.py),
+[results](context-delivery-v1-result.json). Freeze commit: `9f96354`. Two executions agree on all
+coverage, source-byte, compact-output-byte and gate metrics. JSON byte counts/hashes can vary
+with temporary paths and index timestamps. No paid calls or runtime changes.
+
+| Case | Compact bytes | Required source complete | Source bytes outside required ranges | Gate |
+|---|---:|---|---:|---|
+| Fastify task terms | 5,822 | no | 2,919 | fail |
+| Fastify warning path | 7,968 | yes | 5,112 | fail |
+| Fastify method symbol | 7,082 | no | 6,724 | fail |
+| JavaScript after header | 72 | yes | 0 | pass |
+| Python after header | 93 | yes | 0 | pass |
+
+Both safety controls pass: oversized source is explicitly omitted, and the absent symbol returns
+no source. The positive gate passes 2/5. Metadata-only baseline supplies required code in 0/5;
+full JSON supplies it in 4/5 but passes both byte caps in only 2/5. “Outside required ranges” is
+a deterministic budget proxy, not a semantic judgment that every extra line is useless.
+
+The Fastify natural-language package lacks the method body. For the exact method symbol, the
+package contains the enclosing `fastify.js:90–848` chunk (24,912 source bytes), too large for the
+frozen limit; the renderer correctly omits it. The warning-path case supplies the requested
+file but expands into too much additional source. Rendering alone does not resolve these cases.
+
+Discard the prototype for product use and close this recovery attempt. Keep script, manifest and
+result only as reproducible evidence; no CLI flag, ranking, chunking or skill change is shipped.
+Reopening requires a new separately scoped need, not another tuning pass on these failed cases.
+The global CodeMap-first rule was removed with owner approval on 2026-09-06; CodeMap remains
+available on demand. This host-policy change is not part of the local output comparison.
+
+Reproduce offline from an existing Fastify Git cache (no dependency installation):
+
+```sh
+python3 scripts/eval-context-delivery.py --fastify-cache /path/to/fastify-cache --output /tmp/context-delivery-result.json
+```
+
+The script runs the frozen baseline CLI in disposable repositories and records `keep` or
+`discard`; a completed rejected experiment still exits zero. Errors produce a nonzero exit.

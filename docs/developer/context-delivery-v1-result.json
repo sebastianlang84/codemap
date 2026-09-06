@@ -1,0 +1,426 @@
+{
+  "experiment": "compact-context-delivery-v1",
+  "manifestSha256": "ddaf8c1209920d28c968ad50f7ae3db211d1ec363937e828875515289dc3c5c2",
+  "baselineCommit": "aabb3998cb5cd2b7b271843c596ce754b1f1109c",
+  "candidateScriptSha256": "d9dfdd388504223e957680d65d8f431e59a9471d203099d4ef797aa26a1569ca",
+  "positivePasses": 2,
+  "positiveCases": 5,
+  "controlPasses": 2,
+  "controlCases": 2,
+  "decision": "discard",
+  "claimBoundary": "Local source availability only; no observed agent read savings.",
+  "cases": [
+    {
+      "id": "fastify-task",
+      "expect": "complete",
+      "readPlan": [
+        {
+          "path": "lib/warnings.js",
+          "start": 1,
+          "end": 76,
+          "sourceBytes": 2580,
+          "emitted": true
+        },
+        {
+          "path": "docs/Reference/Warnings.md",
+          "start": 16,
+          "end": 41,
+          "sourceBytes": 1205,
+          "emitted": false
+        },
+        {
+          "path": "docs/Reference/Server.md",
+          "start": 1252,
+          "end": 2518,
+          "sourceBytes": 40535,
+          "emitted": false
+        },
+        {
+          "path": "docs/Reference/Validation-and-Serialization.md",
+          "start": 152,
+          "end": 696,
+          "sourceBytes": 14617,
+          "emitted": false
+        },
+        {
+          "path": "lib/plugin-override.js",
+          "start": 76,
+          "end": 91,
+          "sourceBytes": 535,
+          "emitted": true
+        },
+        {
+          "path": "fastify.js",
+          "start": 1,
+          "end": 80,
+          "sourceBytes": 2382,
+          "emitted": true
+        },
+        {
+          "path": "types/instance.d.ts",
+          "start": 631,
+          "end": 710,
+          "sourceBytes": 2856,
+          "emitted": false
+        },
+        {
+          "path": "fastify.d.ts",
+          "start": 71,
+          "end": 150,
+          "sourceBytes": 3135,
+          "emitted": false
+        }
+      ],
+      "variants": {
+        "plain": {
+          "bytes": 491,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 97,
+          "passed": false,
+          "outputSha256": "0a9e1546999afc40d7668ba97cdc1a2ce9a821e9ac52888547b13ab23c3bf5a4"
+        },
+        "json": {
+          "bytes": 82961,
+          "unrelatedSourceBytes": 65269,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 22,
+          "passed": false,
+          "outputSha256": "2bbe195bb7d70b8e5450c52256443a01d073dcf6de2ad3dfa27e4c30e19902cc"
+        },
+        "compact": {
+          "bytes": 5822,
+          "unrelatedSourceBytes": 2919,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 22,
+          "passed": false,
+          "outputSha256": "de491fd7346800d845180e5438c6c5ddf23e59ba2c14a764f9867cc2ed778041"
+        }
+      }
+    },
+    {
+      "id": "fastify-warning-path",
+      "expect": "complete",
+      "readPlan": [
+        {
+          "path": "lib/warnings.js",
+          "start": 1,
+          "end": 76,
+          "sourceBytes": 2580,
+          "emitted": true
+        },
+        {
+          "path": "test/internals/content-type-parser.test.js",
+          "start": 1,
+          "end": 46,
+          "sourceBytes": 1212,
+          "emitted": true
+        },
+        {
+          "path": "lib/content-type-parser.js",
+          "start": 1,
+          "end": 32,
+          "sourceBytes": 834,
+          "emitted": true
+        },
+        {
+          "path": "lib/config-validator.js",
+          "start": 1,
+          "end": 9,
+          "sourceBytes": 2397,
+          "emitted": true
+        },
+        {
+          "path": "docs/Reference/Warnings.md",
+          "start": 1,
+          "end": 15,
+          "sourceBytes": 420,
+          "emitted": false
+        },
+        {
+          "path": "lib/route.js",
+          "start": 1,
+          "end": 76,
+          "sourceBytes": 2062,
+          "emitted": false
+        },
+        {
+          "path": "lib/server.js",
+          "start": 1,
+          "end": 22,
+          "sourceBytes": 668,
+          "emitted": true
+        },
+        {
+          "path": "lib/validation.js",
+          "start": 1,
+          "end": 17,
+          "sourceBytes": 386,
+          "emitted": false
+        }
+      ],
+      "variants": {
+        "plain": {
+          "bytes": 434,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 75,
+          "passed": false,
+          "outputSha256": "dac8f9b9823dbf4173baba33cf175ebf73cf639df83fb7b10d994aa2b4bcb154"
+        },
+        "json": {
+          "bytes": 20169,
+          "unrelatedSourceBytes": 7980,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": false,
+          "outputSha256": "cca935fc207a031951938e86910678dc3e77d2ec9d67c069e33b895a48a07092"
+        },
+        "compact": {
+          "bytes": 7968,
+          "unrelatedSourceBytes": 5112,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": false,
+          "outputSha256": "252d5fb458913c71619a5b7e919ac7fbbbfc8c91e516ba4a69e152d9bc17f8fb"
+        }
+      }
+    },
+    {
+      "id": "fastify-symbol",
+      "expect": "complete",
+      "readPlan": [
+        {
+          "path": "fastify.js",
+          "start": 90,
+          "end": 848,
+          "sourceBytes": 24912,
+          "emitted": false
+        },
+        {
+          "path": "test/http-methods/custom-http-methods.test.js",
+          "start": 86,
+          "end": 115,
+          "sourceBytes": 773,
+          "emitted": true
+        },
+        {
+          "path": "test/http-methods/copy.test.js",
+          "start": 1,
+          "end": 36,
+          "sourceBytes": 698,
+          "emitted": true
+        },
+        {
+          "path": "test/http-methods/lock.test.js",
+          "start": 1,
+          "end": 80,
+          "sourceBytes": 2514,
+          "emitted": true
+        },
+        {
+          "path": "test/http-methods/mkcalendar.test.js",
+          "start": 1,
+          "end": 80,
+          "sourceBytes": 2737,
+          "emitted": true
+        },
+        {
+          "path": "test/http-methods/propfind.test.js",
+          "start": 1,
+          "end": 80,
+          "sourceBytes": 2555,
+          "emitted": false
+        },
+        {
+          "path": "test/fastify-instance.test.js",
+          "start": 1,
+          "end": 80,
+          "sourceBytes": 1771,
+          "emitted": false
+        },
+        {
+          "path": "types/instance.d.ts",
+          "start": 631,
+          "end": 710,
+          "sourceBytes": 2856,
+          "emitted": false
+        }
+      ],
+      "variants": {
+        "plain": {
+          "bytes": 587,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 22,
+          "passed": false,
+          "outputSha256": "029177cb201f9589438982ae1f040273ac5d5afee1b4fa039eab196d4a139180"
+        },
+        "json": {
+          "bytes": 53144,
+          "unrelatedSourceBytes": 38094,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": false,
+          "outputSha256": "e8fdbf59fdd3f563b00317f884eb4b7166e578fc88485b8e178c29dcf6436cbc"
+        },
+        "compact": {
+          "bytes": 7082,
+          "unrelatedSourceBytes": 6724,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 22,
+          "passed": false,
+          "outputSha256": "472c342d295ecc766a07a5b15313ef85cba48813255e294a77dea4cb1ac7cc20"
+        }
+      }
+    },
+    {
+      "id": "late-js-symbol",
+      "expect": "complete",
+      "readPlan": [
+        {
+          "path": "ledger.ts",
+          "start": 91,
+          "end": 93,
+          "sourceBytes": 55,
+          "emitted": true
+        }
+      ],
+      "variants": {
+        "plain": {
+          "bytes": 51,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 3,
+          "passed": false,
+          "outputSha256": "1b0c8cbbd545b67026b50320118746e1d31c3edb3d382b21cc2657674bfb6e53"
+        },
+        "json": {
+          "bytes": 1415,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": true,
+          "outputSha256": "008d896500090e92dbcb93f44c96be49e592ce8f45956fa5bb80bae3ec2f52ba"
+        },
+        "compact": {
+          "bytes": 72,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": true,
+          "outputSha256": "bc5922577217b6f2466feec5159591c35cbca8347febc0567f790ab576baaa1b"
+        }
+      }
+    },
+    {
+      "id": "late-python-symbol",
+      "expect": "complete",
+      "readPlan": [
+        {
+          "path": "delivery.py",
+          "start": 91,
+          "end": 93,
+          "sourceBytes": 74,
+          "emitted": true
+        }
+      ],
+      "variants": {
+        "plain": {
+          "bytes": 53,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 3,
+          "passed": false,
+          "outputSha256": "18c82a9207b4c25848685ebe50b918aff88e76bb716575ebf043d70f5b56390e"
+        },
+        "json": {
+          "bytes": 1451,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": true,
+          "outputSha256": "320c8de209a75ee16950da86ca9311bee632310ed7f8d89ab72c96a7b53541ea"
+        },
+        "compact": {
+          "bytes": 93,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": true,
+          "outputSha256": "97a71ec88f12e7442857f10e247d6dff36bc90e5c2409aa2013c1a7842d602f5"
+        }
+      }
+    },
+    {
+      "id": "oversized-source",
+      "expect": "omitted",
+      "readPlan": [
+        {
+          "path": "large.ts",
+          "start": 1,
+          "end": 353,
+          "sourceBytes": 35998,
+          "emitted": false
+        }
+      ],
+      "variants": {
+        "plain": {
+          "bytes": 50,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 353,
+          "passed": false,
+          "outputSha256": "21dd60dc29e5406928a924e0c7b33b7d173d9d9b22b08ba9feb4cd2a5bea6202"
+        },
+        "json": {
+          "bytes": 39071,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": true,
+          "missingRequiredLineCount": 0,
+          "passed": false,
+          "outputSha256": "9204279994e0e9c165d7ea1a448a5343610ac3300b3674997f4f9c92968d39de"
+        },
+        "compact": {
+          "bytes": 32,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 353,
+          "passed": true,
+          "outputSha256": "fe8b5062bb05e13e90b9de858b9fa7ae4ccf79b7486b5d72e9611e5b4d3506d8"
+        }
+      }
+    },
+    {
+      "id": "no-match",
+      "expect": "empty",
+      "readPlan": [],
+      "variants": {
+        "plain": {
+          "bytes": 20,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 0,
+          "passed": true,
+          "outputSha256": "ea2c88361ae9d75d90ef2b8733b48143d6ed1ca77cf5a6c5bb0299d7b7f1c27b"
+        },
+        "json": {
+          "bytes": 359,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 0,
+          "passed": false,
+          "outputSha256": "b54467bb3ec347a720cc409e73bd11eac8a2df48ded82d16a632c93beb570b5a"
+        },
+        "compact": {
+          "bytes": 20,
+          "unrelatedSourceBytes": 0,
+          "requiredSourceComplete": false,
+          "missingRequiredLineCount": 0,
+          "passed": true,
+          "outputSha256": "ea2c88361ae9d75d90ef2b8733b48143d6ed1ca77cf5a6c5bb0299d7b7f1c27b"
+        }
+      }
+    }
+  ]
+}
