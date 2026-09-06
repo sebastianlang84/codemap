@@ -1,4 +1,4 @@
-import { copyFileSync, chmodSync, existsSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { copyFileSync, chmodSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { AgentUsage } from "./eval-agent-impact-lib.ts";
 
@@ -23,6 +23,7 @@ export function codexArguments(model: string, workspace: string): string[] {
     "-c", 'cli_auth_credentials_store="file"',
     "-c", 'project_doc_max_bytes=0',
     "-c", 'skills.include_instructions=false',
+    "-c", 'suppress_unstable_features_warning=true',
     "-c", 'shell_environment_policy.inherit="all"',
     "--enable", "skip_host_skill_discovery",
     ...["plugins", "apps", "memories", "hooks", "skill_search", "skill_mcp_dependency_install", "multi_agent"].flatMap(feature => ["--disable", feature]),
@@ -33,6 +34,7 @@ export function codexArguments(model: string, workspace: string): string[] {
 // Only this attempt, the pinned CodeMap profile, system runtime and Codex executable are visible.
 export function codexContainerArgs(binary: string, root: string, profile: string): string[] {
   const executable = realpathSync(binary);
+  mkdirSync(join(root, "bin"), { recursive: true });
   mkdirSync(join(root, "home"), { recursive: true });
   mkdirSync(join(root, "codex-home"), { recursive: true });
   return ["--die-with-parent", "--unshare-pid", "--proc", "/proc", "--dev", "/dev",
@@ -42,8 +44,8 @@ export function codexContainerArgs(binary: string, root: string, profile: string
     "--bind", root, root, "--ro-bind", profile, profile,
     "--bind", join(root, "home"), "/home/codemap",
     "--bind", join(root, "codex-home"), "/home/codemap/.codex",
-    ...(existsSync(join(root, "bin", "codemap")) ? ["--ro-bind", join(root, "bin", "codemap"), "/usr/local/bin/codemap"] : []),
-    "--ro-bind", executable, executable, "--", executable];
+    "--ro-bind", join(root, "bin"), "/usr/local/bin",
+    "--ro-bind", dirname(executable), dirname(executable), "--", executable];
 }
 
 export function parseCodexJson(raw: string, requestedModel: string): AgentUsage {
@@ -75,7 +77,7 @@ export function parseCodexJson(raw: string, requestedModel: string): AgentUsage 
     costUsd: null,
     turns: completed.length,
     terminalReason: "completed",
-    isError: events.some(event => event.type === "error" || event.type === "turn.failed"),
+    isError: events.some(event => event.type === "error" || event.type === "turn.failed" || (event.item?.type === "error" && !event.item.message?.startsWith("Under-development features enabled:"))),
     toolCalls,
   };
 }

@@ -41,6 +41,8 @@ test("Codex accounting does not double-count cache or reasoning or invent cost/m
   assert.equal(usage.actualModel, "unknown");
   assert.equal(usage.requestedModel, "gpt-5.6-luna");
   assert.equal(usage.toolCalls.command_execution, 1);
+  const hostFailure = JSON.stringify({ type: "item.completed", item: { type: "error", message: "Code Mode is unavailable: host executable was not found" } });
+  assert.equal(parseCodexJson(hostFailure + "\n" + output({ input_tokens: 1, cached_input_tokens: 0, output_tokens: 1 }), "gpt-5.6-luna").isError, true);
   const run = { usage, infrastructureError: "provider parse" } as Parameters<typeof retryableAgentImpactInfrastructure>[0];
   assert.equal(retryableAgentImpactInfrastructure(run), false);
   assert.equal(summarizeAgentImpact([{ ...run, taskId: "one", mode: "baseline", codemapCommands: {} }]).totalCostUsd, null);

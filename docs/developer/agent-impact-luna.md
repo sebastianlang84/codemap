@@ -1,5 +1,9 @@
 # Optional CodeMap with Codex Luna
 
+Status: runner adapted and locally verified. One real baseline attempt hit a now-corrected
+[tool-host isolation failure](agent-impact-luna-bootstrap-audit.json); no valid paired result
+and no automatic retry. Raw original evidence is retained, including its incomplete error classification.
+
 Replaces the unrun Claude proposal at the user's request. Both arms use Codex CLI,
 `gpt-5.6-luna`, medium effort and the existing ChatGPT login. No Claude token or API-key
 billing. The [manifest](../../scripts/eval-agent-impact-luna.manifest.json) preserves all

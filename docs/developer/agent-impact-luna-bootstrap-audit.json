@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "status": "infrastructure failure; not product evidence",
+  "sourceReport": "agent-impact-luna-bootstrap-result.json",
+  "rawTrace": "/tmp/codemap-agent-traces/agent-impact-bMvnLs/run-1.json",
+  "completedModelAttempts": 1,
+  "validPairs": 0,
+  "reason": "Codex code-mode host was not mounted. CLI exited successfully after reporting unavailable tools; original report missed this infrastructure classification.",
+  "correction": "Mount complete Codex binary directory; classify tool-host error events as provider errors; expose CodeMap in login shells.",
+  "verification": [
+    "Codex debug prompt-input succeeds in isolated environment without personal instructions",
+    "Codex code-mode-host --help succeeds inside container",
+    "Full baseline/treatment pipeline passes simulated-provider fixture",
+    "No repeat model attempt after infrastructure failure"
+  ],
+  "quotaUsage": {
+    "actualModel": "unknown",
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 39936,
+    "costUsd": null,
+    "inputTokens": 12774,
+    "isError": false,
+    "modelEvidence": "requested-only",
+    "outputTokens": 585,
+    "requestedModel": "gpt-5.6-luna",
+    "terminalReason": "completed",
+    "toolCalls": {},
+    "turns": 1
+  }
+}
