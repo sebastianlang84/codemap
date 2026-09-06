@@ -55,3 +55,46 @@ test("query context retains matched neighbor code and its relationship reasons",
   assert.ok(result.readFirst.some((item) => item.reasons?.some((reason) =>
     reason.kind === "import" || reason.kind === "reverse_import")));
 });
+
+test("nested function context excludes its enclosing factory while preserving the full body", (t) => {
+  const root = fixtureRepo(t);
+  const prefix = ['export function createServer() {', ...Array.from({ length: 90 }, (_, i) => `  // setup ${i}`)];
+  const body = [
+    '  function addHttpMethod(method, { hasBody = false } = {}) {',
+    '    const literal = "}";',
+    '    if (hasBody) { return { method, literal }; }',
+    '    return method;',
+    '  }',
+  ].join('\n');
+  writeFileSync(join(root, "src/core/server.ts"), `${prefix.join('\n')}\n${body}\n  return addHttpMethod;\n}\n`);
+  indexRepo({ cwd: root });
+  const result = codemapContext({ cwd: root, target: 'addHttpMethod' });
+  const item = result.readFirst.find(item => item.path === 'src/core/server.ts');
+  assert.ok(item && 'text' in item);
+  assert.equal(item.startLine, 92);
+  assert.equal(item.endLine, 96);
+  assert.equal(item.text, body);
+  assert.ok(item.reasons?.some(reason => reason.kind === 'search_result'));
+  const parent = codemapContext({ cwd: root, target: 'createServer' }).readFirst[0];
+  assert.ok(parent && 'text' in parent && parent.text.includes('return addHttpMethod;'));
+});
+
+test("nested Python function context keeps its body without the enclosing function", (t) => {
+  const root = fixtureRepo(t);
+  const body = '    def send_delivery(message):\n        result = message.strip()\n        return result';
+  writeFileSync(join(root, 'src/core/nested.py'), `def create_delivery():\n    client = None\n${body}\n    return send_delivery\n`);
+  indexRepo({ cwd: root });
+  const item = codemapContext({ cwd: root, target: 'send_delivery' }).readFirst[0];
+  assert.ok(item && 'text' in item);
+  assert.equal(item.startLine, 3);
+  assert.equal(item.endLine, 5);
+  assert.equal(item.text, body);
+});
+
+test("function refinement falls back for unsupported or incomplete declarations", async () => {
+  const { functionChunkAtLine } = await import('../src/core/chunker.ts');
+  assert.equal(functionChunkAtLine('function broken() {\n  return 1;', 'javascript', 1), undefined);
+  assert.equal(functionChunkAtLine('fn example() {}', 'rust', 1), undefined);
+  assert.equal(functionChunkAtLine('const value = 1;', 'javascript', 1), undefined);
+  assert.equal(functionChunkAtLine('function complete() {}', 'javascript', 0), undefined);
+});

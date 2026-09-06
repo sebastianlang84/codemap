@@ -68,7 +68,7 @@ function chunkStructuredCode(lines: string[], language: string): Chunk[] {
 
     if (i > cursor) chunks.push(...chunkFixed(lines.slice(cursor, i), "text", cursor).map(({ ordinal: _ordinal, ...chunk }) => chunk));
 
-    const end = language === "python" || language === "py" ? pythonBlockEnd(lines, i) : braceBlockEnd(lines, i);
+    const end = language === "python" || language === "py" ? pythonBlockEnd(lines, i) : (braceBlockEnd(lines, i) ?? i);
     chunks.push({ startLine: i + 1, endLine: end + 1, kind, text: lines.slice(i, end + 1).join("\n") });
     cursor = end + 1;
     i = end;
@@ -91,6 +91,18 @@ function structureKind(line: string, language: string): "function" | "class" | u
   return undefined;
 }
 
+// Refine a symbol's point location without changing the indexed partition or ranking.
+export function functionChunkAtLine(text: string, language: string, line: number): Chunk | undefined {
+  if (!structuredLanguages.has(language)) return undefined;
+  const lines = text.split(/\r?\n/);
+  const start = line - 1;
+  if (start < 0 || start >= lines.length || structureKind(lines[start], language) !== "function") return undefined;
+  const end = language === "python" || language === "py"
+    ? pythonBlockEnd(lines, start) : braceBlockEnd(lines, start);
+  if (end === undefined) return undefined;
+  return { ordinal: 0, startLine: line, endLine: end + 1, kind: "function", text: lines.slice(start, end + 1).join("\n") };
+}
+
 function isConstArrowDeclaration(line: string): boolean {
   const declaration = line.match(/^\s*(export\s+)?const\s+[A-Za-z_$][\w$]*/);
   if (!declaration) return false;
@@ -105,7 +117,7 @@ function assignmentRhs(rest: string): string | undefined {
   return undefined;
 }
 
-function braceBlockEnd(lines: string[], start: number): number {
+function braceBlockEnd(lines: string[], start: number): number | undefined {
   let depth = 0;
   let bodyStarted = false;
   const state: BraceScanState = { blockComment: false, quote: undefined, escape: false };
@@ -117,7 +129,7 @@ function braceBlockEnd(lines: string[], start: number): number {
     if (delta.opened && hasBodyOpen(lines[i])) bodyStarted = true;
     if (bodyStarted && depth <= 0) return i;
   }
-  return start;
+  return undefined;
 }
 
 interface BraceScanState {

@@ -62,7 +62,7 @@ function chunkStructuredCode(lines, language) {
             continue;
         if (i > cursor)
             chunks.push(...chunkFixed(lines.slice(cursor, i), "text", cursor).map(({ ordinal: _ordinal, ...chunk }) => chunk));
-        const end = language === "python" || language === "py" ? pythonBlockEnd(lines, i) : braceBlockEnd(lines, i);
+        const end = language === "python" || language === "py" ? pythonBlockEnd(lines, i) : (braceBlockEnd(lines, i) ?? i);
         chunks.push({ startLine: i + 1, endLine: end + 1, kind, text: lines.slice(i, end + 1).join("\n") });
         cursor = end + 1;
         i = end;
@@ -88,6 +88,20 @@ function structureKind(line, language) {
     if (isConstArrowDeclaration(line))
         return "function";
     return undefined;
+}
+// Refine a symbol's point location without changing the indexed partition or ranking.
+export function functionChunkAtLine(text, language, line) {
+    if (!structuredLanguages.has(language))
+        return undefined;
+    const lines = text.split(/\r?\n/);
+    const start = line - 1;
+    if (start < 0 || start >= lines.length || structureKind(lines[start], language) !== "function")
+        return undefined;
+    const end = language === "python" || language === "py"
+        ? pythonBlockEnd(lines, start) : braceBlockEnd(lines, start);
+    if (end === undefined)
+        return undefined;
+    return { ordinal: 0, startLine: line, endLine: end + 1, kind: "function", text: lines.slice(start, end + 1).join("\n") };
 }
 function isConstArrowDeclaration(line) {
     const declaration = line.match(/^\s*(export\s+)?const\s+[A-Za-z_$][\w$]*/);
@@ -119,7 +133,7 @@ function braceBlockEnd(lines, start) {
         if (bodyStarted && depth <= 0)
             return i;
     }
-    return start;
+    return undefined;
 }
 function braceDelta(line, state) {
     let depth = 0;

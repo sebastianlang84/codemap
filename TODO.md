@@ -2,12 +2,15 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Agenten-Nutzen: Wartung
+## Agenten-Nutzen: lokale Korrektur geprüft
 
-Der [lokale Ausgabeversuch](docs/developer/agent-overhead-diagnosis.md#result-discard)
-bestand 2 von 5 Nutzfällen und wurde verworfen. Der Verbesserungszyklus ist beendet.
-Kein weiterer bezahlter Pilot und kein Ranking-/Struktur-/Skill-Ausbau ohne neuen,
-separat begründeten Bedarf. Die globale CodeMap-Pflicht wurde aufgehoben.
+Die [Auswahl verschachtelter Funktionen](docs/developer/agent-overhead-diagnosis.md#nested-function-selection-follow-up)
+ist lokal korrigiert: vollständiger Fastify-Funktionskörper statt umschließendem Abschnitt.
+Ein Vorteil im Agentenlauf ist noch ungemessen. Der verworfene kompakte Renderer bleibt verworfen;
+die globale CodeMap-Nutzung bleibt optional.
+
+- [ ] Vor weiterer bezahlter Evaluation eine neue, unabhängige Vergleichsserie mit festem
+  Erfolgskriterium und Budget zur Freigabe vorlegen. Keine Wiederholung alter Fälle als Nutzenbeleg.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

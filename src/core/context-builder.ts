@@ -1,4 +1,4 @@
-import { snippet } from "./chunker.ts";
+import { functionChunkAtLine, snippet } from "./chunker.ts";
 import { openRepoDb } from "./db.ts";
 import { fullIndexHealth, readIndexStatusCounts } from "./index-health.ts";
 import {
@@ -306,7 +306,13 @@ function matchedChunkForItem(db: ReturnType<typeof openRepoDb>, item: CodeMapRea
     order by c.start_line desc, c.ordinal limit 1
   `).get(item.path, item.startLine, item.endLine) as
     { startLine: number; endLine: number; kind: string; text: string } | undefined;
-  return row ? { ...item, ...row, snippet: snippet(row.text) } : item;
+  if (!row) return item;
+  if (item.kind === "function" && item.startLine === item.endLine && item.startLine > row.startLine) {
+    const inner = functionChunkAtLine(row.text, item.language, item.startLine - row.startLine + 1);
+    if (inner) return { ...item, startLine: row.startLine + inner.startLine - 1,
+      endLine: row.startLine + inner.endLine - 1, kind: inner.kind, text: inner.text, snippet: snippet(inner.text) };
+  }
+  return { ...item, ...row, snippet: snippet(row.text) };
 }
 
 function firstChunkForPath(db: ReturnType<typeof openRepoDb>, item: RelatedPath): CodeMapReadFirstChunk[] {

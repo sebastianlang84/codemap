@@ -47,10 +47,10 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Agent benefit recovery plan
 
-Status: recovery attempt closed, 2026-09-06; maintenance only. The final
-[compact-source experiment](../developer/agent-overhead-diagnosis.md#result-discard) passed
-2/5 positive cases and was discarded. No paid expansion or output feature is shipped.
-Reopen only for a new separately scoped need. The sequence below remains the evaluation policy.
+Status: a separately authorized nested-function correction passed local checks on 2026-09-06;
+[scope and evidence](../developer/agent-overhead-diagnosis.md#nested-function-selection-follow-up).
+The previous compact renderer remains discarded. No new paid comparison is authorized and no
+end-to-end benefit is established. The sequence below remains the evaluation policy.
 Goal: reduce the work needed to produce correct patches, with a measured advantage over an agent
 using its normal search/read tools. More CodeMap use is not a success metric.
 

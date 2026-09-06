@@ -230,3 +230,33 @@ python3 scripts/eval-context-delivery.py --fastify-cache /path/to/fastify-cache 
 
 The script runs the frozen baseline CLI in disposable repositories and records `keep` or
 `discard`; a completed rejected experiment still exits zero. Errors produce a nonzero exit.
+
+## Nested-function selection follow-up
+
+Owner reopened this narrowly scoped need after the literature review. Frozen baseline: `04a137c`.
+Target: exact function-symbol context, including nested JavaScript/Python declarations. Change
+only the source span delivered for a point function hit inside an indexed enclosing chunk.
+No ranking, read-plan, index, CLI-format or skill changes; no paid calls.
+
+Local acceptance: the pinned Fastify PR 6879 base must return exactly `fastify.js:826–847` for
+`addHttpMethod`, with every source line intact and at least 90% fewer target-source bytes than
+its enclosing chunk. Synthetic JavaScript/Python cases must retain complete nested bodies;
+parent-function and direct-file requests must retain their existing scope. Unrecognized or
+incomplete declarations must keep the indexed fallback. Existing retrieval/context/navigation
+and token gates must pass. This tests source selection, not agent savings or the original
+natural-language query. Keep only if all checks pass.
+
+[Local result](nested-function-context-result.json): `addHttpMethod` changes from lines 90–848
+(24,912 source bytes) to exactly 826–847 (727 bytes), a 97.1% reduction in the target excerpt.
+Source matches the pinned file byte-for-byte; selected file order is unchanged. The change
+runs on existing indexed text and needs no index migration. Query-independent file requests
+and outer-function requests keep their existing scope.
+
+This fixes the observed enclosing-chunk defect. It does not fix the original task-word query,
+remove broad neighboring context, or prove that a coding agent reads less. Closure variables
+outside the selected function can still require another read. The discarded compact renderer
+remains discarded; no automatic paid continuation follows from this local correction.
+
+Decision: keep this source-selection correction. Both new nested-body regressions failed on
+the baseline and pass after the change. All 274 tests and `verify:local` gates pass; real-repo
+navigation remains 7 wins, 0 losses and 17 ties. Agent benefit remains unmeasured.

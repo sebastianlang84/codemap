@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Narrow nested function-symbol context to the complete function instead of its enclosing chunk; retain indexed fallback when boundaries cannot be recognized.
+
 - Let CLI output drain before exit so large JSON responses remain complete when piped.
 
 - Review the bundled CLI navigation skill: keep search-tool triggers in frontmatter, clarify refresh and query/path context behavior, and scope text-search fallbacks. Update README skill deployment, link canonical version requirements, and replace general token-saving claims with measured navigation and agent-task results.

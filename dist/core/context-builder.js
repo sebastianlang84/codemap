@@ -1,4 +1,4 @@
-import { snippet } from "./chunker.js";
+import { functionChunkAtLine, snippet } from "./chunker.js";
 import { openRepoDb } from "./db.js";
 import { fullIndexHealth, readIndexStatusCounts } from "./index-health.js";
 import { findIndexedRelationships, isConfigReadFirstPath, isNoisyIndexedPath, isNoisyReadFirstPath, isTestReadFirstPath, mergeRelatedPaths, nearConfigReason, relatedDocReason, relatedTestReason, sameDirReason, searchResultReason, targetReason, testOfReason, } from "./relationships.js";
@@ -212,7 +212,15 @@ function matchedChunkForItem(db, item) {
     where f.path = ? and c.start_line <= ? and c.end_line >= ?
     order by c.start_line desc, c.ordinal limit 1
   `).get(item.path, item.startLine, item.endLine);
-    return row ? { ...item, ...row, snippet: snippet(row.text) } : item;
+    if (!row)
+        return item;
+    if (item.kind === "function" && item.startLine === item.endLine && item.startLine > row.startLine) {
+        const inner = functionChunkAtLine(row.text, item.language, item.startLine - row.startLine + 1);
+        if (inner)
+            return { ...item, startLine: row.startLine + inner.startLine - 1,
+                endLine: row.startLine + inner.endLine - 1, kind: inner.kind, text: inner.text, snippet: snippet(inner.text) };
+    }
+    return { ...item, ...row, snippet: snippet(row.text) };
 }
 function firstChunkForPath(db, item) {
     const row = db.prepare(`

@@ -1,0 +1,21 @@
+{
+  "baselineCommit": "04a137ce3cc3233dceafc153e3841a6c86bb42ee",
+  "repository": "fastify",
+  "baseCommit": "b93d611c7cefc2cd4a0b6f05cc864f2b6c397a6d",
+  "query": "addHttpMethod",
+  "path": "fastify.js",
+  "fileSha256": "80ae891ccd6e81dbae7188493b13f7a8a385fb4bb2fd97cab6a48b32bc2d0022",
+  "before": {
+    "startLine": 90,
+    "endLine": 848,
+    "sourceBytes": 24912
+  },
+  "after": {
+    "startLine": 826,
+    "endLine": 847,
+    "sourceBytes": 727
+  },
+  "sourceMatchesFile": true,
+  "orderedPathsUnchanged": true,
+  "claimBoundary": "Exact function-symbol source selection; no agent-savings measurement."
+}
