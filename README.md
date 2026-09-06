@@ -66,6 +66,7 @@ Then, inside any Git repository:
 ```bash
 codemap index --approve         # one-time: approve + build the local index
 codemap search auth middleware  # ranked files/symbols/chunks
+codemap context src/app/auth.ts:42 --json # preserve a trusted search location
 codemap context src/app/auth.ts # read-first files + related tests/docs/imports
 codemap context "where auth tokens are refreshed" # fused query-driven read plan
 codemap status                  # approval / index / staleness (add --json anywhere)

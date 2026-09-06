@@ -46,6 +46,10 @@ test("cli index/search/context/status round-trip on an isolated state dir", (t) 
   assert.equal(context.code, 0);
   assert.match(context.out, /src\/widget\.ts:\d+-\d+ \[[a-z]+\] \(target\)/);
 
+  const located = runCli(["context", "src/widget.ts:1", "--json", "--state-dir", stateDir], io);
+  assert.equal(located.code, 0);
+  assert.equal(JSON.parse(located.out).contextTarget, "src/widget.ts");
+
   const status = runCli(["status", "--state-dir", stateDir], io);
   assert.equal(status.code, 0);
   assert.match(status.out, /readiness: ready/);

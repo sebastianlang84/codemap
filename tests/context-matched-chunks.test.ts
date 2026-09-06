@@ -98,3 +98,36 @@ test("function refinement falls back for unsupported or incomplete declarations"
   assert.equal(functionChunkAtLine('const value = 1;', 'javascript', 1), undefined);
   assert.equal(functionChunkAtLine('function complete() {}', 'javascript', 0), undefined);
 });
+
+test("context accepts a search location beyond the header and rejects unavailable ranges", (t) => {
+  const root = fixtureRepo(t);
+  const path = "src/core/ledger.ts";
+  const header = Array.from({ length: 100 }, () => "// introduction").join("\n");
+  const body = "export function preserveLocation() {\n  return 'selected body';\n}";
+  writeFileSync(join(root, path), `${header}\n${body}\n`);
+  indexRepo({ cwd: root });
+  const hit = searchCodeMap({ cwd: root, query: "preserveLocation" })[0]!;
+  for (const location of [`${path}:${hit.startLine}`, `${path}:${hit.startLine}-${hit.endLine}`]) {
+    const result = codemapContext({ cwd: root, target: location, limit: 1 });
+    assert.equal(result.targetForm, "path");
+    assert.equal(result.contextTarget, path);
+    assert.equal(result.readFirst.length, 1);
+    assert.ok("text" in result.readFirst[0]! && result.readFirst[0].text.includes(body));
+  }
+  for (const suffix of ["0", "103-101", "9999", "9007199254740992"]) {
+    assert.throws(() => codemapContext({ cwd: root, target: `${path}:${suffix}` }));
+  }
+  assert.throws(() => codemapContext({ cwd: root, target: `${path}:101`, pathPrefix: "other/" }));
+  assert.throws(() => codemapContext({ cwd: root, target: "missing.ts:101" }));
+  assert.equal(codemapContext({ cwd: root, target: path, limit: 1 }).readFirst[0]?.startLine, 1);
+});
+
+
+test("literal colon-number filenames take precedence over location parsing", (t) => {
+  const root = fixtureRepo(t);
+  const path = "src/core/note:42.md";
+  writeFileSync(join(root, path), "# Literal file\nSelected literal filename.\n");
+  indexRepo({ cwd: root });
+  const result = codemapContext({ cwd: root, target: path, limit: 1 });
+  assert.equal(result.contextTarget, path);
+});

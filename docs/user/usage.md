@@ -320,3 +320,16 @@ Future/non-V1 ideas are tracked in [`../product/roadmap.md`](../product/roadmap.
 ## Compatibility
 
 Use `codemap search|context|status|index` in a shell, `codemap_*` tools in MCP or Pi, and `/codemap-*` commands in the Pi TUI. Every adapter executes the same shared operations. All require a Git repository and per-repo approval before indexing.
+
+### Preserve a search location
+
+Pass the location from a trusted search hit directly:
+
+```sh
+codemap context test/example.test.js:695-764 --json
+```
+
+`path:line` and `path:start-end` select an indexed chunk covering those lines.
+Use `--limit 1` for just that chunk. Missing or uncovered locations fail explicitly;
+refresh a stale index before reusing line numbers. Exact indexed filenames take precedence,
+including filenames with numeric colon suffixes. Plain paths still start at the file header.

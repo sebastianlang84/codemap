@@ -1,0 +1,38 @@
+{
+  "baseCommit": "ff7eff5eec8a820b2c6f79b477e1a784bbf42341",
+  "comparison": "Same build and fixture; plain path versus explicit search location. Limits recorded separately. Source bytes only; no agent savings claim.",
+  "results": [
+    {
+      "target": "test/schema-special-usage.test.js",
+      "limit": 8,
+      "startLine": 1,
+      "endLine": 80,
+      "sourceBytes": 10279,
+      "coversSearchHit": false
+    },
+    {
+      "target": "test/schema-special-usage.test.js",
+      "limit": 1,
+      "startLine": 1,
+      "endLine": 80,
+      "sourceBytes": 1797,
+      "coversSearchHit": false
+    },
+    {
+      "target": "test/schema-special-usage.test.js:695-764",
+      "limit": 8,
+      "startLine": 695,
+      "endLine": 764,
+      "sourceBytes": 5714,
+      "coversSearchHit": true
+    },
+    {
+      "target": "test/schema-special-usage.test.js:695-764",
+      "limit": 1,
+      "startLine": 695,
+      "endLine": 764,
+      "sourceBytes": 1854,
+      "coversSearchHit": true
+    }
+  ]
+}

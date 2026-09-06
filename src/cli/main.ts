@@ -29,7 +29,7 @@ const USAGE = `codemap — local SQLite/FTS repo map for coding agents
 
 Usage:
   codemap search <query> [options]     Find files, symbols, and chunks
-  codemap context <path|query> [opts]  Read-first package for a target
+  codemap context <path[:line[-end]]|query> [opts]  Read-first package for a target
   codemap status [options]             Approval / index / staleness
   codemap index [--approve] [options]  Index or refresh the repo (approve once)
   codemap usage-report [options]       Aggregate local adoption and quality signals safely

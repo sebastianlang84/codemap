@@ -48,3 +48,27 @@ python3 scripts/probe-validator-context.py \
   --cli ~/.cache/codemap/external-holdout-v1/profiles/codemap-0.10.1-91cbdc0a2da2/dist/cli/bin.js \
   --output /tmp/validator-context-probe.json
 ```
+
+## Location handoff repair
+
+Context now accepts the location printed by search. On the same Fastify fixture,
+`context test/schema-special-usage.test.js:695-764 --json` retains lines 695–764;
+the plain path still selects 1–80. At the unchanged default limit, returned source
+falls from 10,279 to 5,714 bytes. With `--limit 1`, the located chunk is 1,854 bytes.
+[Measured outputs](validator-location-result.json). This preserves the search-hit chunk,
+not the entire enclosing test (which starts at 692); no agent-savings claim.
+
+Reproduce with the current built CLI against the pinned fixture, using the same
+`--repo` and `--state-dir` for these targets:
+
+```sh
+codemap context test/schema-special-usage.test.js --json
+codemap context test/schema-special-usage.test.js:695-764 --json
+codemap context test/schema-special-usage.test.js:695-764 --json --limit 1
+```
+
+The original frozen probe remains unchanged. Regression coverage includes a hit beyond
+the header, line/range forms, invalid or unavailable locations, scope filtering, literal
+colon-number filenames and the CLI. All 285 tests and the search, semantic, context,
+navigation and token-injection gates passed. Ranking and agent adoption remain unproven;
+no model rerun was started.

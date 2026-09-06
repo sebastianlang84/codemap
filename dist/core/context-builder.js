@@ -130,6 +130,30 @@ function normalizeContextRequest(options) {
     };
 }
 function readFirstItems(db, request, warnings, cwd, stateDir) {
+    // Exact filenames win, including filenames with colon-number suffixes.
+    const exact = db.prepare("select id from files where path = ? and path like ? escape '\\'")
+        .get(request.target, request.pathFilter);
+    const location = !exact && /^(.*):([0-9]+)(?:-([0-9]+))?$/.exec(request.target);
+    if (location) {
+        const start = Number(location[2]);
+        const end = Number(location[3] ?? location[2]);
+        if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 1 || end < start) {
+            throw new Error("Context location requires positive, ordered line numbers");
+        }
+        const chunk = db.prepare(`
+      select f.path, f.language, c.start_line as startLine, c.end_line as endLine, c.kind, c.text
+      from files f join chunks c on c.file_id = f.id
+      where f.path = ? and f.path like ? escape '\\' and c.start_line <= ? and c.end_line >= ?
+      order by c.start_line desc, c.ordinal limit 1
+    `).get(location[1], request.pathFilter, start, end);
+        if (!chunk)
+            throw new Error(`No indexed chunk covers ${request.target}; check the location and refresh the index`);
+        return {
+            base: chunk.path,
+            items: [{ ...chunk, snippet: snippet(chunk.text), reasons: [targetReason(chunk.path)] }],
+            direct: true,
+        };
+    }
     // Deterministic target resolution: an exact path wins, then the shortest path, then lexicographic.
     // Without ORDER BY the old `limit 1` returned whichever row SQLite scanned first — for an ambiguous
     // basename (e.g. two `operations.ts`) that anchor was unspecified, the exact "wrong-anchor" failure
