@@ -11,10 +11,11 @@ fest. Zuerst vorhandene Läufe untersuchen; noch kein weiterer bezahlter Pilot.
 keine Tool-Traces. Kostenunterschiede sind ausgewertet; ihre Ursache bleibt offen.
 Optionale lokale Ablaufaufzeichnung ist implementiert und mit Fixtures geprüft.
 
-- [ ] Einen frischen diagnostischen Paarlauf mit Trace-Aufzeichnung, Manifest und Kostenobergrenze
-  vorbereiten; Budget vor Ausführung freigeben lassen. Keine Wiederholung der alten Fälle.
-- [ ] Daraus zusätzliche/eingesparte Arbeit belegen und genau einen lokalen Verbesserungsversuch
-  ableiten. Ohne Reproduktion nicht zum achtteiligen Produktvergleich wechseln.
+- [ ] Nach `claude auth login` den eingefrorenen Diagnose-Paarlauf mit `--resume` fortsetzen.
+  Kontrolllauf und Trace sind erhalten ($0,516341); CodeMap scheiterte an Authentifizierung ohne
+  Kosten. [Teilbefund und Grenzen](docs/developer/agent-overhead-diagnosis.md#fresh-trace-pair-blocked-after-control).
+- [ ] Danach zusätzliche/eingesparte Arbeit vergleichen; wegen unvollständiger Aufgabenbeschreibung
+  den versteckten Testerfolg nicht als isolierten Navigationsbeleg behandeln.
 
 Globale Pflichtnutzung auszusetzen ist eine Empfehlung, noch keine umgesetzte Host-Änderung.
 Neue Ranking-/Struktur-/Skill-Arbeit wartet auf die Diagnose.

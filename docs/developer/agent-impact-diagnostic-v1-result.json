@@ -1,0 +1,152 @@
+{
+  "agent": {
+    "claudeCodeVersion": "2.1.263 (Claude Code)",
+    "effort": "medium",
+    "isolationConfigSha256": "25133e526efa94007d54100b693afbe47f683043b2a8682133475a3aff72e16f",
+    "maxBudgetUsdPerRun": 2,
+    "navigationWorkflow": "context-first",
+    "provider": "claude-code",
+    "requestedModel": "opus"
+  },
+  "claimBoundary": "Directional development evidence only; it cannot support a generalization claim.",
+  "codemapProfile": {
+    "expectedVersion": "0.10.1",
+    "gitCommit": "feb680e5021ee9ffa17dab539f2b7d1e86f62b44"
+  },
+  "corpus": {
+    "frozenAt": "2026-09-06",
+    "id": "agent-impact-trace-diagnostic-v1",
+    "orderSeed": 6092026,
+    "purpose": "development-pilot",
+    "selectionProtocol": "One fresh numbered Fastify runtime fix in descending cached history order, excluding all prior agent-impact and external-navigation tasks and changes without a separate runtime regression test. Selected before inspecting CodeMap output. PR 6837 was excluded because it has no regression test. This is trace diagnosis, not product-effect confirmation. Require base-fail/reference-pass twice, one valid pair and complete raw tool traces. Classify setup, discovery, reads, edits, tests and retries; identify added/replaced work or record no actionable diagnosis. Retain either outcome and obey existing paid-failure retry restrictions. Runtime oracle excludes upstream docs and type-only changes. No untouched holdout is consumed.",
+    "version": 1
+  },
+  "gate": {
+    "issues": [
+      {
+        "actual": 0,
+        "expected": ">= 1",
+        "metric": "validPairs"
+      },
+      {
+        "actual": 0,
+        "expected": ">= 1",
+        "metric": "treatmentAdoptionRate"
+      }
+    ],
+    "passed": false
+  },
+  "manifestSha256": "f6acb032959afcf08bd49a48b0437be03af7b91c085693b792dc138cb370fe82",
+  "oracles": [
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "fastify-pr-6879",
+      "valid": true
+    }
+  ],
+  "plannedRuns": 2,
+  "results": [
+    {
+      "addedLines": 64,
+      "agentDurationMs": 122233,
+      "agentExitCode": 0,
+      "changedPaths": [
+        "docs/Reference/Server.md",
+        "docs/Reference/Warnings.md",
+        "fastify.js",
+        "lib/warnings.js",
+        "test/http-methods/custom-http-methods.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 1,
+      "success": false,
+      "taskId": "fastify-pr-6879",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "claude-opus-5",
+        "cacheCreationInputTokens": 21747,
+        "cacheReadInputTokens": 262662,
+        "costUsd": 0.516341,
+        "inputTokens": 38,
+        "isError": false,
+        "outputTokens": 6694,
+        "terminalReason": "completed",
+        "toolCalls": {
+          "Bash": 14,
+          "Edit": 6,
+          "Grep": 2
+        },
+        "turns": 23
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 0,
+      "agentDurationMs": 759,
+      "agentExitCode": 1,
+      "changedPaths": [],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 0,
+      "forbiddenChanges": [],
+      "indexDurationMs": 500,
+      "infrastructureError": "agent exit 1",
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 2,
+      "success": false,
+      "taskId": "fastify-pr-6879",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUsd": 0,
+        "inputTokens": 0,
+        "isError": true,
+        "outputTokens": 0,
+        "terminalReason": "api_error",
+        "toolCalls": {},
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "agentDurationRatio": null,
+    "baselineSuccessRate": 0,
+    "budgetExhaustedRuns": 0,
+    "crossArmContamination": 0,
+    "exactTwoSidedP": 1,
+    "losingTasks": [],
+    "losses": 0,
+    "tasks": 1,
+    "ties": 0,
+    "tokenRatio": null,
+    "totalCostUsd": 0.5163,
+    "treatmentAdoptionRate": 0,
+    "treatmentSuccessRate": 0,
+    "validPairs": 0,
+    "wins": 0
+  },
+  "worstCaseBudgetUsd": 4
+}

@@ -71,3 +71,28 @@ paired task and identify work replaced or added. Raw output can reveal repeated 
 context and test retries, but the synchronous runner does not provide per-event timestamps or
 survive a runner crash with a partial stream. Exact time-to-first-read remains unmeasured.
 A diagnostic run is not the eight-task product comparison; step 2 still needs a reproducible cause.
+
+## Fresh trace pair: blocked after control
+
+The [frozen diagnostic manifest](../../scripts/eval-agent-impact-diagnostic.manifest.json) selects
+Fastify PR 6879, absent from previous corpora. Both oracle repetitions failed on base and passed
+on the reference fix. Freeze commit: `ea5048d`; manifest SHA-256:
+`f6acb032959afcf08bd49a48b0437be03af7b91c085693b792dc138cb370fe82`.
+The authorized pair cap is $4; the CodeMap profile remains the excerpt pilot's pinned profile.
+
+[Partial evidence](agent-impact-diagnostic-v1-result.json): the baseline completed in 122,233 ms,
+with 23 provider turns, 22 tool calls and $0.516341 cost. Its hidden test failed. The CodeMap
+attempt failed authentication before any paid usage; there is no valid pair or cost comparison.
+
+The baseline trace locates the runtime implementation in its fifth tool invocation, before the
+first edit. It adds a warning and tests, then runs several test commands. The prompt only asks
+for an HTTP-method override warning, while the hidden oracle requires `FastifyDeprecation`,
+`FSTDEP025` and `overrideExisting`. The agent instead implements `FastifyWarning`/`FSTWRN005`.
+This is an under-specified acceptance contract, not evidence that navigation caused the failure.
+Keep the frozen prompt/oracle unchanged; limit this pair to diagnostic observations.
+
+Raw traces remain local under `/tmp/codemap-agent-traces/agent-impact-wFZW2X/`.
+Baseline trace SHA-256:
+`6e162e0b536d9c3e093900b706ac62dc2968c4740964638ccd29653c5c11bff6`.
+After `claude auth login`, resume the same evidence with `--resume` and `--trace-dir`;
+only the zero-cost treatment failure is retryable. Preserve the completed paid control.
