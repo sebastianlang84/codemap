@@ -145,3 +145,14 @@ profile. A new development experiment needs a different, reproducible agent-task
 corresponding lever. Only a positive signal on fresh development cases justifies the untouched
 holdout; its primary outcome remains paired hidden-test success, with tokens, cost, time, and
 CodeMap use as secondary outcomes.
+
+## Matched-chunk development follow-up
+
+On 2026-09-06, a local symbol query found `buildSearchContextReadPlan` at line 85,
+but query-form context replaced it with the file header at lines 1–53. The correction
+selects the indexed chunk containing the search hit without changing the file read plan.
+New JavaScript/Python excerpt gates fail on the previous implementation and pass with the fix;
+a separate regression covers a function after a 90-line header and a matched neighbor.
+This establishes excerpt correctness, not an end-to-end task or token-saving benefit.
+Validation: all 261 tests and `verify:local` gates passed; local navigation remained
+7 wins, 0 losses, 17 ties. The original query now returns lines 85–143.

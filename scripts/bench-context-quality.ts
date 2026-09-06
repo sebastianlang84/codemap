@@ -14,11 +14,13 @@ import type { CodeMapContextReasonKind } from "../src/core/relationships.ts";
 interface ExpectedNeighbor {
   path: string;
   reasonKinds?: CodeMapContextReasonKind[];
+  excerpt?: { startLine: number; endLine: number; text: string };
 }
 
 interface ContextQualityCase {
   name: string;
   target: string;
+  query?: string;
   pathPrefix?: string;
   limit?: number;
   required: ExpectedNeighbor[];
@@ -29,7 +31,8 @@ interface ContextQualityCaseReport {
   name: string;
   target: string;
   pathPrefix: string;
-  readFirst: Array<{ path: string; reasons: CodeMapContextReasonKind[] }>;
+  readFirst: Array<{ path: string; startLine: number; endLine: number; reasons: CodeMapContextReasonKind[] }>;
+  missingExcerpts: string[];
   targetFirst: boolean;
   required: number;
   foundRequired: number;
@@ -86,6 +89,24 @@ interface ParsedArgs {
 
 const fixtureRoot = fileURLToPath(new URL("../tests/fixtures/context-quality", import.meta.url));
 const fixtureCases: ContextQualityCase[] = [
+  {
+    name: "symbol query retains JavaScript function body instead of imports",
+    target: "src/budget-renderer.js",
+    query: "renderBudget",
+    limit: 1,
+    required: [{ path: "src/budget-renderer.js", excerpt: {
+      startLine: 5, endLine: 8, text: "return formatBudget(total, appConfig.currency);",
+    } }],
+  },
+  {
+    name: "symbol query retains Python function body instead of imports",
+    target: "pkg/service.py",
+    query: "build_service",
+    limit: 1,
+    required: [{ path: "pkg/service.py", excerpt: {
+      startLine: 4, endLine: 5, text: 'return {"name": util.normalize_name(name)}',
+    } }],
+  },
   {
     name: "js target includes direct imports, reverse test importer, config, and doc",
     target: "src/budget-renderer.js",
@@ -211,12 +232,16 @@ function evaluateCase(root: string, fixturePathPrefix: string, qualityCase: Cont
   const latencySamplesMs: number[] = [];
   let context: ReturnType<typeof codemapContext> | undefined;
   for (let i = 0; i < iterations; i++) {
-    const [latencyMs, nextContext] = timed(() => codemapContext({ cwd: root, target, pathPrefix, stateDir, limit: qualityCase.limit ?? 8 }));
+    const [latencyMs, nextContext] = timed(() => codemapContext({ cwd: root, target: qualityCase.query ?? target, pathPrefix, stateDir, limit: qualityCase.limit ?? 8 }));
     latencySamplesMs.push(roundMs(latencyMs));
     context = nextContext;
   }
   if (!context) throw new Error("Context benchmark requires at least one iteration");
-  const readFirst = context.readFirst.map((item) => ({ path: item.path, reasons: item.reasons?.map((reason) => reason.kind) ?? [] }));
+  const readFirst = context.readFirst.map((item) => ({ path: item.path, startLine: item.startLine, endLine: item.endLine, reasons: item.reasons?.map((reason) => reason.kind) ?? [] }));
+  const missingExcerpts = expected.filter(({ path, excerpt }) => excerpt && !context.readFirst.some((item) =>
+    item.path === path && item.startLine <= excerpt.startLine && item.endLine >= excerpt.endLine
+    && "text" in item && item.text.includes(excerpt.text),
+  )).map((item) => item.path);
   const readFirstPaths = new Set(readFirst.map((item) => item.path));
   const missingRequired = expected.filter((item) => !readFirstPaths.has(item.path)).map((item) => item.path);
   const missingReasonKinds: Array<{ path: string; reasonKind: CodeMapContextReasonKind }> = [];
@@ -235,6 +260,7 @@ function evaluateCase(root: string, fixturePathPrefix: string, qualityCase: Cont
     target,
     pathPrefix,
     readFirst,
+    missingExcerpts,
     targetFirst: readFirst[0]?.path === target,
     required: expected.length,
     foundRequired: expected.length - missingRequired.length,
@@ -286,6 +312,7 @@ function evaluateGate(report: ContextQualityReport, maxP95LatencyMs: number): { 
   if (metrics.pathPrefixLeakRate > 0) issues.push({ label: report.root, metric: "pathPrefixLeakRate", expected: "0", actual: metrics.pathPrefixLeakRate });
   if (metrics.p95LatencyMs > maxP95LatencyMs) issues.push({ label: report.root, metric: "p95LatencyMs", expected: `<= ${maxP95LatencyMs}`, actual: metrics.p95LatencyMs });
   for (const qualityCase of report.cases) {
+    for (const path of qualityCase.missingExcerpts) issues.push({ label: qualityCase.name, metric: "missingExcerpt", expected: "required lines and code in readFirst", actual: path });
     for (const path of qualityCase.missingRequired) issues.push({ label: qualityCase.name, metric: "missingRequired", expected: "present in readFirst", actual: path });
     for (const missing of qualityCase.missingReasonKinds) issues.push({ label: qualityCase.name, metric: "missingReasonKind", expected: `${missing.reasonKind} on ${missing.path}`, actual: qualityCase.readFirst.find((item) => item.path === missing.path)?.reasons.join(",") ?? "missing" });
     for (const path of qualityCase.noiseLeaks) issues.push({ label: qualityCase.name, metric: "noiseLeak", expected: "no noisy readFirst path", actual: path });

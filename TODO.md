@@ -9,9 +9,9 @@ mehr Tokens, 12,6 % mehr Agentenzeit und 11,7 % mehr Kosten. Der daraus entstand
 Retrieval-Fix für Singular/Plural-Modulnamen bestand seine begrenzte Bestätigung nicht: zwei gültige
 Paare teilten sich in 1 Win und 1 Loss, das dritte Paar war nach Provider-Fehlern ungültig. Das ist
 kein Produktwirkungsbeleg. Den gleichen Fall nicht wiederholen und den unangetasteten Holdout von
-ungefähr 40 Tasks noch nicht ausgeben. Als Nächstes einen anderen reproduzierbaren Agent-Task-Miss
-samt genau einem Hebel und frischen Development-Cases finden; erst ein positives Signal öffnet den
-Holdout. Details und vollständige Evidenz:
+ungefähr 40 Tasks noch nicht ausgeben. Als Nächstes den neuen Fundstellenverlust als Kandidaten
+für frische Agent-Development-Cases prüfen: Die Korrektur ist deterministisch abgesichert, ihre Wirkung auf abgeschlossene Aufgaben
+noch offen. Erst ein positives Signal öffnet den Holdout. Details und vollständige Evidenz:
 [`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md).
 
 Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro

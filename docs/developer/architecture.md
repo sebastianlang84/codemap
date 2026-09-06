@@ -192,7 +192,9 @@ Search-quality gates and diagnostics are documented in [`search-quality.md`](sea
 
 ## Context builder
 
-`codemap_context` builds a compact read-first package. Exact indexed paths/symbols expand directly. Broad queries run ranked search, expand the top target, and merge visible search evidence with graph/convention neighbors under one limit; `targetForm`, `contextTarget`, and `readPlan` make that routing explicit.
+`codemap_context` builds a compact read-first package. Indexed file targets expand directly. Broad queries run ranked search, expand the top target, and merge visible search evidence with graph/convention neighbors under one limit; `targetForm`, `contextTarget`, and `readPlan` make that routing explicit.
+
+For query targets, each selected search hit keeps the indexed chunk containing its matched lines, including symbol bodies, while retaining relationship reasons. Direct file targets still start at the file header. The context quality gate checks required lines and code content for JavaScript and Python symbol queries.
 
 For direct file targets, context can include:
 

@@ -44,9 +44,17 @@ function buildCodeMapContextInternal(options, inheritedDiagnostics, depth = 0) {
             for (const item of anchored.readFirst)
                 if (!itemByPath.has(item.path))
                     itemByPath.set(item.path, item);
-            for (const item of readFirst.items)
-                if (!itemByPath.has(item.path))
-                    itemByPath.set(item.path, item);
+            const seenSearchPaths = new Set();
+            for (const item of readFirst.items) {
+                if (seenSearchPaths.has(item.path))
+                    continue;
+                seenSearchPaths.add(item.path);
+                const related = itemByPath.get(item.path);
+                itemByPath.set(item.path, {
+                    ...matchedChunkForItem(db, item),
+                    reasons: [...(related?.reasons ?? []), ...(item.reasons ?? [])],
+                });
+            }
             return {
                 target: request.target,
                 targetForm: "query",
@@ -195,6 +203,16 @@ function localReadFirstItems(db, input) {
     if (items.length < limit)
         items.push(...laterTargetItems.slice(0, Math.max(0, limit - items.length)));
     return items.slice(0, limit);
+}
+function matchedChunkForItem(db, item) {
+    // Symbol hits may contain only a signature; return the indexed chunk around that hit.
+    const row = db.prepare(`
+    select c.start_line as startLine, c.end_line as endLine, c.kind, c.text
+    from files f join chunks c on c.file_id = f.id
+    where f.path = ? and c.start_line <= ? and c.end_line >= ?
+    order by c.start_line desc, c.ordinal limit 1
+  `).get(item.path, item.startLine, item.endLine);
+    return row ? { ...item, ...row, snippet: snippet(row.text) } : item;
 }
 function firstChunkForPath(db, item) {
     const row = db.prepare(`

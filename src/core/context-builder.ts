@@ -107,7 +107,16 @@ function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDi
       const readPlan = explainSearchContextReadPlan(readFirst.items.map((item) => item.path), anchored.readFirst, request.limit);
       const itemByPath = new Map<string, CodeMapReadFirstItem>();
       for (const item of anchored.readFirst) if (!itemByPath.has(item.path)) itemByPath.set(item.path, item);
-      for (const item of readFirst.items) if (!itemByPath.has(item.path)) itemByPath.set(item.path, item);
+      const seenSearchPaths = new Set<string>();
+      for (const item of readFirst.items) {
+        if (seenSearchPaths.has(item.path)) continue;
+        seenSearchPaths.add(item.path);
+        const related = itemByPath.get(item.path);
+        itemByPath.set(item.path, {
+          ...matchedChunkForItem(db, item),
+          reasons: [...(related?.reasons ?? []), ...(item.reasons ?? [])],
+        });
+      }
       return {
         target: request.target,
         targetForm: "query",
@@ -286,6 +295,18 @@ function localReadFirstItems(db: ReturnType<typeof openRepoDb>, input: LocalRead
   if (items.length < limit) items.push(...dedupeReadFirstItems(weakItems, items).slice(0, Math.max(0, limit - items.length)));
   if (items.length < limit) items.push(...laterTargetItems.slice(0, Math.max(0, limit - items.length)));
   return items.slice(0, limit);
+}
+
+function matchedChunkForItem(db: ReturnType<typeof openRepoDb>, item: CodeMapReadFirstItem): CodeMapReadFirstItem {
+  // Symbol hits may contain only a signature; return the indexed chunk around that hit.
+  const row = db.prepare(`
+    select c.start_line as startLine, c.end_line as endLine, c.kind, c.text
+    from files f join chunks c on c.file_id = f.id
+    where f.path = ? and c.start_line <= ? and c.end_line >= ?
+    order by c.start_line desc, c.ordinal limit 1
+  `).get(item.path, item.startLine, item.endLine) as
+    { startLine: number; endLine: number; kind: string; text: string } | undefined;
+  return row ? { ...item, ...row, snippet: snippet(row.text) } : item;
 }
 
 function firstChunkForPath(db: ReturnType<typeof openRepoDb>, item: RelatedPath): CodeMapReadFirstChunk[] {
