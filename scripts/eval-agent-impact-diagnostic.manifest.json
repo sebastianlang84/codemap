@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-trace-diagnostic-v1",
+    "version": 1,
+    "frozenAt": "2026-09-06",
+    "purpose": "development-pilot",
+    "selectionProtocol": "One fresh numbered Fastify runtime fix in descending cached history order, excluding all prior agent-impact and external-navigation tasks and changes without a separate runtime regression test. Selected before inspecting CodeMap output. PR 6837 was excluded because it has no regression test. This is trace diagnosis, not product-effect confirmation. Require base-fail/reference-pass twice, one valid pair and complete raw tool traces. Classify setup, discovery, reads, edits, tests and retries; identify added/replaced work or record no actionable diagnosis. Retain either outcome and obey existing paid-failure retry restrictions. Runtime oracle excludes upstream docs and type-only changes. No untouched holdout is consumed.",
+    "orderSeed": 6092026
+  },
+  "agent": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "medium",
+    "navigationWorkflow": "context-first",
+    "maxBudgetUsdPerRun": 2,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "feb680e5021ee9ffa17dab539f2b7d1e86f62b44",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "fastify-pr-6879",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6879",
+      "prompt": "fix: add http method override warning",
+      "baseCommit": "b93d611c7cefc2cd4a0b6f05cc864f2b6c397a6d",
+      "fixCommit": "0e9a3b35d8b13c9f261bf29bef46168a5d43c28f",
+      "expectedPaths": [
+        "fastify.js",
+        "lib/warnings.js",
+        "test/http-methods/custom-http-methods.test.js"
+      ],
+      "hiddenTestPaths": [
+        "test/http-methods/custom-http-methods.test.js"
+      ],
+      "expectedBaseFailure": "addHttpMethod warns when overriding an existing method",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-6892-6846.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "f84c914f097d891437bf1fa9deb5c54b4b6e88901543d036c3da5efcc2606a57"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/http-methods/custom-http-methods.test.js"
+        ],
+        "timeoutMs": 180000
+      }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 1,
+    "minTreatmentAdoptionRate": 1,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  }
+}

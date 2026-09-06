@@ -92,6 +92,23 @@ test("matched-chunk pilot freezes fresh tasks and dependency locks", () => {
   }
 });
 
+test("trace diagnostic freezes a fresh pair and its dependency lock", () => {
+  const raw = readFileSync(new URL("../scripts/eval-agent-impact-diagnostic.manifest.json", import.meta.url), "utf8");
+  const diagnostic = parseAgentImpactManifest(raw);
+  assert.equal(hashAgentImpactJson(JSON.parse(raw)), "f6acb032959afcf08bd49a48b0437be03af7b91c085693b792dc138cb370fe82");
+  assert.equal(diagnostic.tasks.length, 1);
+  assert.equal(diagnostic.agent.maxBudgetUsdPerRun * 2, 4);
+  const task = diagnostic.tasks[0]!;
+  for (const file of ["eval-agent-impact.manifest.json", "eval-agent-impact-smoke-v2.manifest.json", "eval-agent-impact-pilot.manifest.json", "eval-agent-impact-confirmation.manifest.json", "eval-agent-impact-excerpts.manifest.json", "eval-external-holdout.manifest.json"]) {
+    const previous = JSON.parse(readFileSync(new URL(`../scripts/${file}`, import.meta.url), "utf8"));
+    assert.ok(!(previous.tasks ?? previous.cases).some((item: { sourceUrl: string }) => item.sourceUrl === task.sourceUrl));
+  }
+  for (const file of task.setupFiles) {
+    const bytes = readFileSync(new URL(`../${file.source}`, import.meta.url));
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), file.sha256);
+  }
+});
+
 test("agent-impact manifest rejects shell strings, path escapes, duplicate ids, and abbreviated SHAs", () => {
   const shellString = cloneManifest();
   (shellString.tasks[0] as unknown as Record<string, unknown>).setup = "npm ci && curl example.invalid";
