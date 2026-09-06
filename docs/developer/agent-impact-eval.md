@@ -172,21 +172,37 @@ Provider failures remain censored; only zero-cost infrastructure failures may be
 comparison measures the current workflow, not the isolated causal effect of the excerpt fix.
 No untouched holdout is used.
 
-All four oracles passed: each base failed twice and its reference fix passed twice. All eight agent
-attempts then failed before inference, with zero cost and zero valid pairs. A separate isolated
-provider check returned: `Failed to authenticate: OAuth session expired and could not be refreshed`.
-The [checkpoint](agent-impact-excerpts-v1-result.json) is infrastructure-failure evidence, not a
-quality result. Do not interpret its zero success/adoption rates as measured agent performance.
+All four oracles passed: each base failed twice and its reference fix passed twice. The initial
+attempt produced eight zero-cost authentication failures, preserved in commit `c5e3d62`. After
+operator login, the unchanged manifest resumed successfully. All eight attempts used Claude Opus 5
+through Claude Code 2.1.261 at medium effort, with Node 22.23.2.
 
-After the operator renews Claude authentication, resume the same frozen run:
+| Metric | No CodeMap | CodeMap |
+| --- | ---: | ---: |
+| Hidden-test success | 3/4 | 3/4 |
+| Total tokens, including cache tokens | 962,194 | 1,344,343 |
+| Agent time | 698,354 ms | 757,717 ms |
+| Provider cost | $1.6218 | $1.9543 |
 
-```bash
-npm run eval:agent-impact -- \
-  --manifest scripts/eval-agent-impact-excerpts.manifest.json \
-  --approve-budget-usd 16 --quality-gate --resume \
-  --evidence-output docs/developer/agent-impact-excerpts-v1-result.json
-```
+| Task | No CodeMap | CodeMap |
+| --- | --- | --- |
+| Route URL, Fastify 6719 | fail | fail |
+| preClose, Fastify 6940 | pass | pass |
+| Raw headers, Fastify 6860 | pass | pass |
+| Trailer state, Fastify 6845 | pass | pass |
 
-The local run reused `~/.cache/codemap/external-holdout-v1` via `--cache-dir` and `--offline`.
-The default cache is also supported and will fetch the pinned repositories when needed.
-No model substitution, task changes, or product-effect decision is justified by this auth failure.
+All four pairs were valid: **0 wins, 0 losses, 4 ties**. Context adoption was 4/4, baseline
+contamination and budget exhaustion were zero. The harness gate passed, but the predeclared
+product criteria failed: there were no extra task successes and the token ratio was 1.3972,
+above 1.10. The time ratio was 1.0850. Total cost was $3.5761 against the $16 cap.
+
+The [completed evidence](agent-impact-excerpts-v1-result.json) has stable SHA-256
+`9ea18b977ae4c8ef981b76207dd559e1990f129bee7b7405267969d049a70fcf`.
+Manifest hash, recomputed summary, gate, model consistency, and all eight attempts were checked.
+The runner and prompts were unchanged. The bundled skill was not part of this experiment.
+
+Decision: no positive product-effect signal and no holdout expansion. Keep the independently
+verified excerpt correction; this small, single-repository workflow comparison neither isolates
+its causal effect nor establishes universal equivalence. Before another paid pilot, identify a
+reproducible source of extra navigation work and freeze a distinct development experiment. Do not
+repeat these tasks merely to seek a favorable result.

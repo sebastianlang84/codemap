@@ -9,11 +9,12 @@ mehr Tokens, 12,6 % mehr Agentenzeit und 11,7 % mehr Kosten. Der daraus entstand
 Retrieval-Fix für Singular/Plural-Modulnamen bestand seine begrenzte Bestätigung nicht: zwei gültige
 Paare teilten sich in 1 Win und 1 Loss, das dritte Paar war nach Provider-Fehlern ungültig. Das ist
 kein Produktwirkungsbeleg. Den gleichen Fall nicht wiederholen und den unangetasteten Holdout von
-ungefähr 40 Tasks noch nicht ausgeben. Der neue Vier-Fälle-Pilot zum Fundstellen-Fix ist
-eingefroren; alle Kontrolltests bestehen.
-Die Agentenläufe sind durch eine abgelaufene Claude-Anmeldung blockiert (acht kostenfreie
-Fehler, keine gültigen Paare). Nach erneuter Anmeldung unverändert mit `--resume` fortsetzen.
-Erst ein positives Signal öffnet den Holdout. Details und vollständige Evidenz:
+ungefähr 40 Tasks noch nicht ausgeben. Der Vier-Fälle-Pilot zum aktuellen Kontext-Workflow
+ist abgeschlossen:
+0 Wins, 0 Losses, 4 Ties; CodeMap brauchte 39,7 % mehr Tokens und 8,5 % mehr Agentenzeit.
+Vor einem weiteren bezahlten Pilot
+zusätzliche Navigationsarbeit reproduzieren und genau einen Hebel mit neuen Fällen festlegen.
+Details und vollständige Evidenz:
 [`docs/developer/agent-impact-eval.md`](docs/developer/agent-impact-eval.md).
 
 Weitere Konventions-/Targeting-Arbeit erst bei einem neuen konkreten Eval-Miss auswählen; pro

@@ -33,7 +33,8 @@ The **standalone `codemap` CLI is the primary interface**. The same operations a
 
 - **External navigation holdout, 2026-08-25:** 40 changes across six repositories, with a five-file budget. The evaluated CodeMap profile found all expected paths in 42.5% of cases versus 25.0% for the lexical baseline, using 74.2% fewer estimated read tokens. These are scripted navigation results; the paired success difference was not significant at 0.05. [Method and results](docs/developer/external-holdout.md).
 - **Agent pilot:** on 12 coding tasks, CodeMap produced 0 paired wins, 1 loss, and 11 ties, using 16.4% more tokens. The subsequent retrieval-fix follow-up did not confirm a task-success benefit. [Agent-impact evaluation](docs/developer/agent-impact-eval.md).
-- **Local regression snapshot, 2026-09-06:** 24 navigation cases retain 7 wins, 0 losses, and 17 ties versus search-only. Query context now preserves matched code excerpts; JavaScript/Python gates check the required lines and function content. The excerpt fix has not been evaluated for end-to-end agent benefit.
+- **Fresh agent follow-up, 2026-09-06:** four tasks produced the same 3/4 successes with and without CodeMap, with 39.7% more tokens and 8.5% more agent time for CodeMap. The predeclared product criteria were not met. [Completed results](docs/developer/agent-impact-eval.md#frozen-excerpt-workflow-pilot).
+- **Local regression snapshot, 2026-09-06:** 24 navigation cases retain 7 wins, 0 losses, and 17 ties versus search-only. Query context now preserves matched code excerpts; JavaScript/Python gates check the required lines and function content. These checks establish navigation and excerpt correctness; the agent follow-up does not isolate the excerpt fix.
 
 Maintainer evaluations run from a source checkout:
 
