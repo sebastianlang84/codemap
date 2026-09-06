@@ -2,18 +2,13 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Agenten-Nutzen: lokale Korrektur geprüft
+## Agenten-Nutzen: Vergleich abgeschlossen
 
-Die [Auswahl verschachtelter Funktionen](docs/developer/agent-overhead-diagnosis.md#nested-function-selection-follow-up)
-ist lokal korrigiert: vollständiger Fastify-Funktionskörper statt umschließendem Abschnitt.
-Ein Vorteil im Agentenlauf ist noch ungemessen. Der verworfene kompakte Renderer bleibt verworfen;
-die globale CodeMap-Nutzung bleibt optional.
-
-- [ ] Den [Codex-Luna-Vergleich](docs/developer/agent-impact-luna.md) durchführen und auswerten:
-  acht unveränderte Aufgaben, 16 Läufe, high auf ausdrücklichen Nutzerwunsch. Primär mindestens 15 % weniger Tokens ohne
-  Aufgabenverlust; keine Dollarfreigabe. Der ungestartete Claude-Plan ist ersetzt.
-  v2 korrigiert zusätzlich die zuvor blockierten lokalen HTTP-Testserver. Frühere Anläufe bleiben
-  separat dokumentiert und zählen nicht als Vergleich.
+[Luna-high v2](docs/developer/agent-impact-luna-result.md): beide Varianten 8/8 Aufgaben gelöst,
+mit optionalem CodeMap +21,9 % Tokens und +12,3 % Agentenzeit. CodeMap-Nutzung: 0/8.
+Kein Nutzenbeleg; die Suchqualität selbst wurde mangels Nutzung nicht bewertet.
+Das Fortsetzungskriterium ist verfehlt: Fehlerpflege, kein automatischer weiterer Pilot oder Ausbau.
+Die lokal geprüfte Korrektur verschachtelter Funktionsausschnitte bleibt bestehen.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

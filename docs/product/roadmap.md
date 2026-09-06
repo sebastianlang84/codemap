@@ -91,6 +91,11 @@ wider adoption. Record the baseline, diff, regressions and keep/discard decision
 
 #### 3. Measure a fresh agent comparison
 
+Completed: [Luna-high v2](../developer/agent-impact-luna-result.md), eight valid pairs,
+both arms 8/8 solved, optional treatment +21.9% tokens and +12.3% agent time, zero CodeMap
+use. The efficiency gate failed. This recovery cycle is closed under step 4; no retrieval-quality
+conclusion follows from non-use.
+
 Only after step 2 passes, freeze one development experiment: eight new tasks from at least two
 repositories, selected without candidate-output inspection; include straightforward lookups and
 harder discovery. Pin model, effort, prompts, commits, dependency locks, order and hidden tests.
@@ -110,9 +115,8 @@ criteria, to freeze in the manifest before any run:
 
 The [Codex Luna comparison](../developer/agent-impact-luna.md) selects total tokens
 as its primary efficiency target (>=15% reduction, no paired losses, time ratio <=1.10).
-It replaces the unrun Claude cost-target proposal at user request; Codex reports no USD cost. These are engineering thresholds, not evidence of statistical significance. Freeze a
-worst-case spend cap and obtain budget approval before launch; roadmap approval is not paid-run
-approval. A passing development result only permits planning independent confirmation.
+It replaces the unrun Claude cost-target proposal at user request; Codex reports no USD cost. These are engineering thresholds, not evidence of statistical significance. For metered API experiments, freeze a spend cap before launch. The completed Codex
+subscription run used attempt/time limits; its USD cost is unreported. A passing development result only permits planning independent confirmation.
 
 #### 4. Continue, narrow, or stop
 

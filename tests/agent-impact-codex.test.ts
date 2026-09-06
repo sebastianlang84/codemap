@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { codexArguments, codexContainerArgs, parseCodexJson, prepareCodexHome, redactCodexAuth } from "../scripts/eval-agent-impact-codex.ts";
+import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth } from "../scripts/eval-agent-impact-codex.ts";
 import { parseAgentImpactManifest, summarizeAgentImpact, retryableAgentImpactInfrastructure } from "../scripts/eval-agent-impact-lib.ts";
 
 const manifest = parseAgentImpactManifest(readFileSync("scripts/eval-agent-impact-luna.manifest.json", "utf8"));
@@ -83,5 +83,26 @@ test("filesystem container hides host worktrees while allowing attempt and syste
     const result = spawnSync("bwrap", [...args, "-e", `const fs=require('fs'); if(fs.existsSync('/home/wasti/dev/codemap'))process.exit(2); fs.writeFileSync(${JSON.stringify(join(root, "written"))},'ok'); const cp=require('child_process'); if(cp.execFileSync('/bin/bash',['-lc','codemap'],{encoding:'utf8'}).trim()!=='fixture')process.exit(3)`], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(readFileSync(join(root, "written"), "utf8"), "ok");
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(profile, { recursive: true, force: true }); }
+});
+
+// Uses the installed CLI without model calls; CI without Codex skips this host check.
+test("Codex sandbox permits local HTTP regression tests only with network enabled", t => {
+  const binary = join(process.env.HOME!, ".local/bin/codex");
+  if (!existsSync(binary)) { t.skip("Codex CLI not installed"); return; }
+  const root = mkdtempSync(join(tmpdir(), "codemap-socket-test-"));
+  const profile = mkdtempSync(join(tmpdir(), "codemap-profile-test-"));
+  try {
+    const probe = "const s=require('node:http').createServer((q,r)=>r.end('ok'));s.on('error',()=>process.exit(1));s.listen(0,'127.0.0.1',async()=>{const r=await fetch('http://127.0.0.1:'+s.address().port);console.log(await r.text());s.close()})";
+    for (const enabled of [false, true]) {
+      const result = spawnSync("bwrap", [...codexContainerArgs(binary, root, profile),
+        "sandbox", "-P", "fixture", "-C", root,
+        "-c", 'permissions.fixture.extends=":workspace"',
+        "-c", `permissions.fixture.network.enabled=${enabled}`,
+        "--", process.execPath, "-e", probe,
+      ], { cwd: root, env: codexContainerEnv({ PATH: "/usr/bin:/bin" }), encoding: "utf8", timeout: 10000 });
+      assert.equal(result.status, enabled ? 0 : 1, result.stderr);
+      if (enabled) assert.equal(result.stdout.trim(), "ok");
+    }
   } finally { rmSync(root, { recursive: true, force: true }); rmSync(profile, { recursive: true, force: true }); }
 });

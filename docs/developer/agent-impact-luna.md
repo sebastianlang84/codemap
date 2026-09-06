@@ -1,8 +1,9 @@
 # Optional CodeMap with Codex Luna
 
-Status: v2 running after socket access correction. The [aborted v1 high-effort attempt](agent-impact-luna-network-aborted-result.json) is excluded: local HTTP tests hit listen EPERM. V2 restarts both arms with identical corrected test conditions. One real baseline attempt hit a now-corrected
-[tool-host isolation failure](agent-impact-luna-bootstrap-audit.json); no valid paired result
-and no automatic retry. That bootstrap used medium; it is not a high-effort result. Raw original evidence is retained, including its incomplete error classification.
+Status: [v2 completed](agent-impact-luna-result.md), eight valid pairs. Efficiency gate failed;
+CodeMap was never used. Earlier [medium tool-host failure](agent-impact-luna-bootstrap-audit.json)
+and [high-effort network-policy failure](agent-impact-luna-network-aborted-result.json) are
+excluded and retained separately.
 
 Replaces the unrun Claude proposal at the user's request. Both arms use Codex CLI,
 `gpt-5.6-luna`, high effort (explicit user request) and the existing ChatGPT login. No Claude token or API-key
@@ -38,7 +39,7 @@ npm run eval:agent-impact -- --manifest scripts/eval-agent-impact-luna.manifest.
 node --experimental-strip-types --test tests/agent-impact-codex.test.ts tests/agent-impact.test.ts
 ```
 
-Run the fixed comparison:
+Recorded invocation (completed evidence must not be overwritten):
 
 ```sh
 npm run eval:agent-impact -- \

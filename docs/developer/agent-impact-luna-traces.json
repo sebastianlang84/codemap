@@ -1,0 +1,124 @@
+{
+  "manifestSha256": "7fb40b3de573162bb2353749328da3443f3363489bc10d779d9722ca9c9e64a2",
+  "privateArchive": "/home/wasti/.agents/state/codemap/evals/luna-v2-7fb40b3de573",
+  "traceCount": 16,
+  "commandEventsReviewed": 210,
+  "externalRetrievalPatternMatches": [],
+  "sandboxDenialMatches": [],
+  "traces": [
+    {
+      "runOrder": 1,
+      "taskId": "express-pr-4893",
+      "mode": "baseline",
+      "file": "run-1.json",
+      "sha256": "1a1b68a14d87da0f2c79774576c431d2ee4edee57a525a39cb4099969aa0e93d"
+    },
+    {
+      "runOrder": 2,
+      "taskId": "express-pr-4893",
+      "mode": "codemap",
+      "file": "run-2.json",
+      "sha256": "159df75c5a4fc4dfbd93831f4b0989287a68a3b340cb92665c8f961b6cc5ef22"
+    },
+    {
+      "runOrder": 3,
+      "taskId": "express-pr-6903",
+      "mode": "codemap",
+      "file": "run-3.json",
+      "sha256": "9411422cd97e03d0847087e6df35e5ae045da4f9c9fa4d513a33b4ef019e0afc"
+    },
+    {
+      "runOrder": 4,
+      "taskId": "express-pr-6903",
+      "mode": "baseline",
+      "file": "run-4.json",
+      "sha256": "33c9f1c12c227d2a1b16b53ef37bb4646454eba85d06a2c09cb6fb6c67f96206"
+    },
+    {
+      "runOrder": 5,
+      "taskId": "express-pr-4885",
+      "mode": "baseline",
+      "file": "run-5.json",
+      "sha256": "01fdcac4b7888a24f8df3f6530eaca99e0bf866e31f73f4ea12a46f83ab8f230"
+    },
+    {
+      "runOrder": 6,
+      "taskId": "express-pr-4885",
+      "mode": "codemap",
+      "file": "run-6.json",
+      "sha256": "41f249a2e57cf147b90ff6c8190a787e98a54aa59a28ab6ae7640a0f33d9e5ea"
+    },
+    {
+      "runOrder": 7,
+      "taskId": "express-pr-6073",
+      "mode": "codemap",
+      "file": "run-7.json",
+      "sha256": "b980d30926effe3c907934abcaf3ebed461a32a8692faeaefac870166ac991a9"
+    },
+    {
+      "runOrder": 8,
+      "taskId": "express-pr-6073",
+      "mode": "baseline",
+      "file": "run-8.json",
+      "sha256": "fabd42a054e5e41357cfd1a5b9bb041d885e6c0860a401a3d36ec2b549f60059"
+    },
+    {
+      "runOrder": 9,
+      "taskId": "fastify-pr-6483",
+      "mode": "baseline",
+      "file": "run-9.json",
+      "sha256": "f3fd0ea0215c0814b434015dd2ef7d1fbb069040e9b9a375701fefaada98c102"
+    },
+    {
+      "runOrder": 10,
+      "taskId": "fastify-pr-6483",
+      "mode": "codemap",
+      "file": "run-10.json",
+      "sha256": "aeb6ee86a9531292c68d6682d2aef9a465fe06245ddb3c983a39df119406836a"
+    },
+    {
+      "runOrder": 11,
+      "taskId": "fastify-pr-6838",
+      "mode": "codemap",
+      "file": "run-11.json",
+      "sha256": "dae88c16ceb5b125d49c73c9d406c4a79474959a7838731d5849f26bd00c6434"
+    },
+    {
+      "runOrder": 12,
+      "taskId": "fastify-pr-6838",
+      "mode": "baseline",
+      "file": "run-12.json",
+      "sha256": "d1e8e3b2b4ed0b28a018748c17a21e68b68b3abf510c86ec37cbfb6a481d9261"
+    },
+    {
+      "runOrder": 13,
+      "taskId": "fastify-pr-6680",
+      "mode": "baseline",
+      "file": "run-13.json",
+      "sha256": "a29cb444bf8abdf23dbd1fc33f13476e0ee60039440fc30f824a97a3aba20403"
+    },
+    {
+      "runOrder": 14,
+      "taskId": "fastify-pr-6680",
+      "mode": "codemap",
+      "file": "run-14.json",
+      "sha256": "ec9389d7e3ab9b0061e044dce25c9ffe88bbb36c9e2d4ad6f5a6d69279c1bd67"
+    },
+    {
+      "runOrder": 15,
+      "taskId": "fastify-pr-6753",
+      "mode": "codemap",
+      "file": "run-15.json",
+      "sha256": "82168690126aac325e9ba048f423885382b629e80d0c2d08db73b457b9a63858"
+    },
+    {
+      "runOrder": 16,
+      "taskId": "fastify-pr-6753",
+      "mode": "baseline",
+      "file": "run-16.json",
+      "sha256": "a6521f41d6b9b1e5f62f801393dd9b6ea82ec893d4bf86ee2675ea10a9c4f6c5"
+    }
+  ],
+  "codeMapCommandMentions": 0,
+  "tokenTotalsMatchRawCliUsage": true
+}

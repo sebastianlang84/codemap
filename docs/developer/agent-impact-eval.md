@@ -263,3 +263,5 @@ added, and a runner crash before the provider returns can still lose its buffere
 The next frozen development comparison is [optional CodeMap on eight fresh tasks](agent-impact-optional.md). It adds an optional workflow and a separate efficiency gate; historical manifest behavior remains unchanged.
 
 The unrun Claude proposal is superseded by [Codex with gpt-5.6-luna](agent-impact-luna.md): same tasks, token-primary gate, no invented USD accounting.
+
+[Luna-high v2 result](agent-impact-luna-result.md): 8/8 success in both arms, zero optional CodeMap use, token/time efficiency gate failed.
