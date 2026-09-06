@@ -38,7 +38,7 @@ export interface AgentImpactManifest {
     provider: "claude-code";
     model: string;
     effort: "medium";
-    navigationWorkflow: "search-then-context" | "context-first";
+    navigationWorkflow: "search-then-context" | "context-first" | "optional";
     maxBudgetUsdPerRun: number;
     timeoutMs: number;
   };
@@ -48,6 +48,12 @@ export interface AgentImpactManifest {
   };
   repositories: Array<{ id: string; remote: string }>;
   tasks: AgentImpactTask[];
+  efficiencyGate?: {
+    maxCostRatio: number;
+    maxTokenRatio: number;
+    maxAgentDurationRatio: number;
+    maxPairedLosses: number;
+  };
   pilotGate: {
     minValidPairs: number;
     minTreatmentAdoptionRate: number;
@@ -150,7 +156,7 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   string(agent.model, "agent.model");
   if (agent.effort !== "medium") throw new Error("agent.effort must be medium");
   const navigationWorkflow = agent.navigationWorkflow ?? "search-then-context";
-  if (navigationWorkflow !== "search-then-context" && navigationWorkflow !== "context-first") {
+  if (navigationWorkflow !== "search-then-context" && navigationWorkflow !== "context-first" && navigationWorkflow !== "optional") {
     throw new Error("agent.navigationWorkflow is unsupported");
   }
   agent.navigationWorkflow = navigationWorkflow;
@@ -193,6 +199,13 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   rate(gate.minTreatmentAdoptionRate, "pilotGate.minTreatmentAdoptionRate");
   nonNegativeInteger(gate.maxCrossArmContamination, "pilotGate.maxCrossArmContamination");
   nonNegativeInteger(gate.maxBudgetExhaustedRuns, "pilotGate.maxBudgetExhaustedRuns");
+  if (root.efficiencyGate !== undefined) {
+    const efficiency = record(root.efficiencyGate, "efficiencyGate");
+    for (const key of ["maxCostRatio", "maxTokenRatio", "maxAgentDurationRatio"]) {
+      positiveNumber(efficiency[key], `efficiencyGate.${key}`);
+    }
+    nonNegativeInteger(efficiency.maxPairedLosses, "efficiencyGate.maxPairedLosses");
+  }
   return value as AgentImpactManifest;
 }
 
@@ -295,7 +308,9 @@ export function summarizeAgentImpact(
     treatmentTokens += totalTokens(treatment.usage);
     baselineDuration += baseline.agentDurationMs;
     treatmentDuration += treatment.agentDurationMs;
-    const followedWorkflow = navigationWorkflow === "context-first"
+    const followedWorkflow = navigationWorkflow === "optional"
+      ? (treatment.codemapCommands.search ?? 0) + (treatment.codemapCommands.context ?? 0) > 0
+      : navigationWorkflow === "context-first"
       ? (treatment.codemapCommands.context ?? 0) > 0
       : (treatment.codemapCommands.search ?? 0) > 0 && (treatment.codemapCommands.context ?? 0) > 0;
     if (followedWorkflow) adopted++;
@@ -535,4 +550,58 @@ function round(value: number, digits: number): number {
 
 function issue(metric: string, expected: string, actual: number | string): AgentImpactGate["issues"][number] {
   return { metric, expected, actual };
+}
+
+// Evaluate every assigned pair; optional non-use is not an exclusion criterion.
+export function evaluateAgentImpactEfficiencyGate(
+  manifest: AgentImpactManifest,
+  results: AgentImpactRunResult[],
+): AgentImpactGate {
+  const threshold = manifest.efficiencyGate;
+  if (!threshold) throw new Error("efficiencyGate is required");
+  const issues: AgentImpactGate["issues"] = [];
+  let baselineCost = 0, treatmentCost = 0;
+  let baselineTokens = 0, treatmentTokens = 0;
+  let baselineTime = 0, treatmentTime = 0;
+  let losses = 0;
+  for (const task of manifest.tasks) {
+    const pair = results.filter((run) => run.taskId === task.id);
+    const baseline = pair.filter((run) => run.mode === "baseline");
+    const treatment = pair.filter((run) => run.mode === "codemap");
+    if (baseline.length !== 1 || treatment.length !== 1 || pair.some((run) => run.infrastructureError)) {
+      issues.push(issue("completePairs", "one valid run per arm", task.id));
+      continue;
+    }
+    const a = baseline[0]!, b = treatment[0]!;
+    if (a.usage.actualModel !== manifest.agent.model || b.usage.actualModel !== manifest.agent.model) {
+      issues.push(issue("actualModel", manifest.agent.model, task.id));
+    }
+    if (a.authentication !== "setup-token" || b.authentication !== "setup-token") {
+      issues.push(issue("authentication", "setup-token in both arms", task.id));
+    }
+    baselineCost += a.usage.costUsd; treatmentCost += b.usage.costUsd;
+    baselineTokens += totalTokens(a.usage); treatmentTokens += totalTokens(b.usage);
+    baselineTime += a.agentDurationMs; treatmentTime += b.agentDurationMs;
+    losses += Number(a.success && !b.success);
+  }
+  for (const [metric, numerator, denominator, maximum] of [
+    ["costRatio", treatmentCost, baselineCost, threshold.maxCostRatio],
+    ["tokenRatio", treatmentTokens, baselineTokens, threshold.maxTokenRatio],
+    ["agentDurationRatio", treatmentTime, baselineTime, threshold.maxAgentDurationRatio],
+  ] as const) {
+    const ratio = denominator > 0 ? numerator / denominator : NaN;
+    if (!Number.isFinite(ratio) || ratio > maximum) issues.push(issue(metric, `<= ${maximum}`, Number.isFinite(ratio) ? ratio : "unavailable"));
+  }
+  if (losses > threshold.maxPairedLosses) issues.push(issue("pairedLosses", `<= ${threshold.maxPairedLosses}`, losses));
+  return { passed: issues.length === 0, issues };
+}
+
+export function agentImpactTreatmentInstruction(manifest: AgentImpactManifest): string {
+  if (manifest.agent.navigationWorkflow === "optional") {
+    return 'CodeMap is optional: codemap search "<query>" finds code; codemap context "<symbol or path>" --json returns source excerpts and related files. Use it when helpful, or use ordinary tools directly.';
+  }
+  if (manifest.agent.navigationWorkflow === "context-first") {
+    return `CodeMap ${manifest.codemapProfile.expectedVersion} is available. Start repository navigation with codemap context "<task terms>" before ordinary fallback tools; it returns a fused search-and-neighbor read plan.`;
+  }
+  return `CodeMap ${manifest.codemapProfile.expectedVersion} is available. Start repository navigation with codemap search, then use codemap context on a trusted hit before ordinary fallback tools.`;
 }

@@ -94,7 +94,8 @@ wider adoption. Record the baseline, diff, regressions and keep/discard decision
 Only after step 2 passes, freeze one development experiment: eight new tasks from at least two
 repositories, selected without candidate-output inspection; include straightforward lookups and
 harder discovery. Pin model, effort, prompts, commits, dependency locks, order and hidden tests.
-Compare normal agent tools against the same tools plus the single candidate change. Keep the
+Compare normal agent tools against the current optional CodeMap workflow. This does not isolate
+the nested-function fix from the navigation-policy change. Keep the
 untouched holdout unused. Record index readiness and report cold setup separately from warm use.
 
 Before execution, declare one primary target: task success or efficiency. Proposed continuation
@@ -107,7 +108,8 @@ criteria, to freeze in the manifest before any run:
   remain invalid, and existing paid-failure retry restrictions apply. Optional use is evaluated
   as assigned, including non-use, rather than filtering to successful CodeMap invocations.
 
-These are proposed engineering thresholds, not evidence of statistical significance. Freeze a
+The [frozen optional comparison](../developer/agent-impact-optional.md) selects provider cost
+as its primary efficiency target. These are engineering thresholds, not evidence of statistical significance. Freeze a
 worst-case spend cap and obtain budget approval before launch; roadmap approval is not paid-run
 approval. A passing development result only permits planning independent confirmation.
 

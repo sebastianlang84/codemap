@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "status": "ready for budget approval; no paid runs",
+  "manifestSha256": "088da06123016c965934f14bfc65431b1385340230719ac5869ecded7c49b22f",
+  "plannedRuns": 16,
+  "worstCaseBudgetUsd": 32,
+  "oracles": [
+    {
+      "taskId": "express-pr-4893",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    },
+    {
+      "taskId": "express-pr-6903",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    },
+    {
+      "taskId": "express-pr-4885",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    },
+    {
+      "taskId": "express-pr-6073",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    },
+    {
+      "taskId": "fastify-pr-6483",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    },
+    {
+      "taskId": "fastify-pr-6838",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    },
+    {
+      "taskId": "fastify-pr-6680",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    },
+    {
+      "taskId": "fastify-pr-6753",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true
+    }
+  ],
+  "validationProvenance": {
+    "firstSevenManifestSha256": "4044e2b408738ab2ff241f7fd4b04313049b8ca09ca7f5ab45e746edb4f3720f",
+    "replacementManifestSha256": "088da06123016c965934f14bfc65431b1385340230719ac5869ecded7c49b22f",
+    "note": "First seven task specifications and lock bytes unchanged. Replacement validated separately with final manifest."
+  },
+  "paidRuns": 0
+}

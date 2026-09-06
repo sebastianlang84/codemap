@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "stage": "preflight exclusion; no paid attempts",
+  "manifestSha256": "4044e2b408738ab2ff241f7fd4b04313049b8ca09ca7f5ab45e746edb4f3720f",
+  "excludedOracle": {
+    "taskId": "fastify-pr-6810",
+    "baseHiddenTestExitCodes": [
+      0,
+      0
+    ],
+    "referenceFixExitCodes": [
+      0,
+      0
+    ],
+    "baseFailureKind": "other",
+    "baseFails": false,
+    "referencePasses": true,
+    "valid": false
+  },
+  "replacement": "fastify-pr-6753",
+  "reason": "Base passed twice; next eligible numbered fix selected before any candidate output or paid run."
+}

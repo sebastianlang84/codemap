@@ -8,6 +8,8 @@ import test from "node:test";
 
 import {
   evaluateAgentImpactPilotGate,
+  evaluateAgentImpactEfficiencyGate,
+  agentImpactTreatmentInstruction,
   hashAgentImpactJson,
   parseAgentImpactManifest,
   parseAgentImpactCheckpoint,
@@ -338,3 +340,69 @@ function guardCall(guard: URL, workspace: string, payload: Record<string, unknow
     encoding: "utf8",
   });
 }
+
+const optionalManifest = parseAgentImpactManifest(readFileSync(new URL("../scripts/eval-agent-impact-optional.manifest.json", import.meta.url), "utf8"));
+
+test("optional workflow permits non-use without dropping pairs", () => {
+  const results = [run("one", "baseline", true, {}, 100), run("one", "codemap", true, {}, 80)];
+  const summary = summarizeAgentImpact(results, "optional");
+  assert.equal(summary.validPairs, 1);
+  assert.equal(summary.treatmentAdoptionRate, 0);
+  assert.equal(summary.tokenRatio, 0.8);
+  results[1]!.codemapCommands = { context: 1 };
+  assert.equal(summarizeAgentImpact(results, "optional").treatmentAdoptionRate, 1);
+  assert.match(agentImpactTreatmentInstruction(optionalManifest), /optional/);
+  assert.match(agentImpactTreatmentInstruction(optionalManifest), /--json/);
+  assert.doesNotMatch(agentImpactTreatmentInstruction(optionalManifest), /Start repository navigation/);
+});
+
+test("efficiency gate requires savings, all pairs, matching model/auth and zero paired losses", () => {
+  const results = optionalManifest.tasks.flatMap(task => ["baseline", "codemap"].map(mode => {
+    const result = run(task.id, mode as "baseline" | "codemap", true, {}, mode === "baseline" ? 100 : 80);
+    result.authentication = "setup-token";
+    result.usage.costUsd = mode === "baseline" ? 1 : 0.8;
+    return result;
+  }));
+  const gate = () => evaluateAgentImpactEfficiencyGate(optionalManifest, results);
+  assert.equal(gate().passed, true);
+  results[1]!.usage.costUsd = 2;
+  assert.ok(gate().issues.some(issue => issue.metric === "costRatio"));
+  results[1]!.usage.costUsd = .8;
+  results[1]!.success = false;
+  assert.ok(gate().issues.some(issue => issue.metric === "pairedLosses"));
+  results[1]!.success = true;
+  results[1]!.usage.actualModel = "other";
+  assert.ok(gate().issues.some(issue => issue.metric === "actualModel"));
+  results[1]!.usage.actualModel = "claude-opus-5";
+  delete results[1]!.authentication;
+  assert.ok(gate().issues.some(issue => issue.metric === "authentication"));
+  results[1]!.authentication = "setup-token";
+  results[1]!.usage.inputTokens = 1000;
+  results[1]!.agentDurationMs = 1000;
+  assert.ok(gate().issues.some(issue => issue.metric === "tokenRatio"));
+  assert.ok(gate().issues.some(issue => issue.metric === "agentDurationRatio"));
+  results.pop();
+  assert.ok(gate().issues.some(issue => issue.metric === "completePairs"));
+});
+
+test("optional corpus freezes eight tasks, two repos and verified dependency locks", () => {
+  assert.equal(hashAgentImpactJson(optionalManifest), "088da06123016c965934f14bfc65431b1385340230719ac5869ecded7c49b22f");
+  assert.equal(optionalManifest.tasks.length, 8);
+  assert.equal(new Set(optionalManifest.tasks.map(task => task.repo)).size, 2);
+  assert.equal(optionalManifest.tasks.length * 2 * optionalManifest.agent.maxBudgetUsdPerRun, 32);
+  assert.equal(optionalManifest.pilotGate.minValidPairs, 8);
+  assert.equal(optionalManifest.pilotGate.minTreatmentAdoptionRate, 0);
+  for (const task of optionalManifest.tasks) for (const file of task.setupFiles) {
+    assert.equal(createHash("sha256").update(readFileSync(new URL(`../${file.source}`, import.meta.url))).digest("hex"), file.sha256);
+  }
+});
+
+test("efficiency run refuses missing traces before any authentication or paid child", () => {
+  const result = spawnSync(process.execPath, [
+    "--experimental-strip-types", "scripts/eval-agent-impact.ts",
+    "--manifest", "scripts/eval-agent-impact-optional.manifest.json",
+    "--approve-budget-usd", "32",
+  ], { encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /requires --trace-dir and --evidence-output/);
+});

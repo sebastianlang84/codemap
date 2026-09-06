@@ -10,6 +10,8 @@ import { createAgentImpactTraceDir, writeAgentImpactTrace } from "./eval-agent-i
 
 import {
   evaluateAgentImpactPilotGate,
+  evaluateAgentImpactEfficiencyGate,
+  agentImpactTreatmentInstruction,
   hashAgentImpactJson,
   parseAgentImpactManifest,
   parseAgentImpactCheckpoint,
@@ -102,6 +104,10 @@ if (!args.validateOnly && (args.approveBudgetUsd === undefined || args.approveBu
   throw new Error(`Refusing ${plannedRuns} paid runs with worst-case $${worstCaseBudgetUsd.toFixed(2)}; pass --approve-budget-usd ${worstCaseBudgetUsd.toFixed(2)} or more`);
 }
 
+if (manifest.efficiencyGate && !args.validateOnly && (!args.traceDir || !args.evidenceOutput)) {
+  throw new Error("Efficiency evaluation requires --trace-dir and --evidence-output");
+}
+
 const automationToken = args.validateOnly ? undefined : agentImpactToken(process.env);
 
 mkdirSync(args.cacheDir, { recursive: true });
@@ -127,6 +133,9 @@ try {
     maxBudgetUsdPerRun: manifest.agent.maxBudgetUsdPerRun,
     isolationConfigSha256: hashAgentImpactJson(claudeSettings()),
   };
+  if (!args.validateOnly && manifest.efficiencyGate && oracles.some((item) => !item.valid)) {
+    throw new Error("Refusing paid efficiency evaluation: invalid regression oracle");
+  }
   if (!args.validateOnly) {
     const schedule = scheduleRuns(selectedTasks, modes, manifest.corpus.orderSeed);
     const completed = new Set(results.map((item) => runKey(item.taskId, item.mode)));
@@ -150,6 +159,10 @@ try {
         writeEvidence(args.evidenceOutput, report);
         console.error(`[agent-impact] checkpoint ${results.length}/${schedule.length}`);
       }
+      if (manifest.efficiencyGate && results.at(-1)?.infrastructureError) {
+        console.error("[agent-impact] stopping efficiency evaluation after infrastructure failure");
+        break;
+      }
     }
   }
   report = buildReport(manifest, manifestSha256, agentReport, plannedRuns, worstCaseBudgetUsd, oracles, results, args.keepWorkdir ? runRoot : undefined);
@@ -159,7 +172,7 @@ try {
     console.error(`[agent-impact] evidence ${args.evidenceOutput} sha256=${hashAgentImpactJson(stable)}`);
   }
   console.log(JSON.stringify(report, null, 2));
-  if (args.qualityGate && !args.validateOnly && !gate.passed) process.exitCode = 1;
+  if (args.qualityGate && !args.validateOnly && (!gate.passed || (report.efficiencyGate && !(report.efficiencyGate as { passed: boolean }).passed))) process.exitCode = 1;
   if (oracles.some((item) => !item.valid)) process.exitCode = 1;
 } finally {
   if (!args.keepWorkdir) rmSync(runRoot, { recursive: true, force: true });
@@ -190,6 +203,7 @@ function buildReport(
     results,
     summary,
     gate: evaluateAgentImpactPilotGate(manifest, oracles, summary),
+    ...(manifest.efficiencyGate ? { efficiencyGate: evaluateAgentImpactEfficiencyGate(manifest, results) } : {}),
     claimBoundary: claimBoundary(manifest.corpus.purpose),
     ...(workdir ? { workdir } : {}),
   };
@@ -355,7 +369,7 @@ function runClaude(task: AgentImpactTask, mode: AgentImpactMode, manifest: Agent
     "Implement the requested fix in this repository. Work autonomously. Run the relevant tests.",
     "Do not inspect git history, commits, remotes, or files outside this workspace. Do not commit or push. Do not install dependencies; they are already prepared.",
     mode === "codemap"
-      ? treatmentInstruction(manifest)
+      ? agentImpactTreatmentInstruction(manifest)
       : "CodeMap is unavailable in this control run. Use the repository's normal local navigation tools and do not invoke codemap.",
     `Task: ${task.prompt}`,
   ].join("\n\n");
@@ -397,13 +411,6 @@ function runClaude(task: AgentImpactTask, mode: AgentImpactMode, manifest: Agent
     timedOut: child.status === 124 || child.signal === "SIGTERM" || child.signal === "SIGKILL",
     ...(child.error ? { error: child.error.message } : {}),
   };
-}
-
-function treatmentInstruction(manifest: AgentImpactManifest): string {
-  if (manifest.agent.navigationWorkflow === "context-first") {
-    return `CodeMap ${manifest.codemapProfile.expectedVersion} is available. Start repository navigation with codemap context \"<task terms>\" before ordinary fallback tools; it returns a fused search-and-neighbor read plan.`;
-  }
-  return `CodeMap ${manifest.codemapProfile.expectedVersion} is available. Start repository navigation with codemap search, then use codemap context on a trusted hit before ordinary fallback tools.`;
 }
 
 function prepareWorkspace(task: AgentImpactTask, repoCache: string, parent: string, name: string, commit: string): PreparedWorkspace {

@@ -9,8 +9,9 @@ ist lokal korrigiert: vollständiger Fastify-Funktionskörper statt umschließen
 Ein Vorteil im Agentenlauf ist noch ungemessen. Der verworfene kompakte Renderer bleibt verworfen;
 die globale CodeMap-Nutzung bleibt optional.
 
-- [ ] Vor weiterer bezahlter Evaluation eine neue, unabhängige Vergleichsserie mit festem
-  Erfolgskriterium und Budget zur Freigabe vorlegen. Keine Wiederholung alter Fälle als Nutzenbeleg.
+- [ ] Budgetfreigabe für den [vorbereiteten Vergleich](docs/developer/agent-impact-optional.md):
+  acht frische Aufgaben, 16 Läufe, maximal 32 USD. Alle acht Oracles validiert.
+  Erst nach Freigabe starten; primär mindestens 15 % weniger Modellkosten ohne Aufgabenverlust.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

@@ -259,3 +259,5 @@ never overwritten. A write failure is reported on stderr without making paid wor
 Raw traces can contain source and tool output: keep them local and delete them after diagnosis.
 Directories/files use private permissions where supported. No per-tool wall-clock timestamps are
 added, and a runner crash before the provider returns can still lose its buffered output.
+
+The next frozen development comparison is [optional CodeMap on eight fresh tasks](agent-impact-optional.md). It adds an optional workflow and a separate efficiency gate; historical manifest behavior remains unchanged.
