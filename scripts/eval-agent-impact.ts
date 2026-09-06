@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
 import { createAgentImpactTraceDir, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 
 import {
@@ -101,6 +102,8 @@ if (!args.validateOnly && (args.approveBudgetUsd === undefined || args.approveBu
   throw new Error(`Refusing ${plannedRuns} paid runs with worst-case $${worstCaseBudgetUsd.toFixed(2)}; pass --approve-budget-usd ${worstCaseBudgetUsd.toFixed(2)} or more`);
 }
 
+const automationToken = args.validateOnly ? undefined : agentImpactToken(process.env);
+
 mkdirSync(args.cacheDir, { recursive: true });
 const traceDir = args.traceDir && !args.validateOnly ? createAgentImpactTraceDir(args.traceDir, manifestSha256) : undefined;
 if (traceDir) console.error(`[agent-impact] raw traces: ${traceDir}`);
@@ -132,7 +135,7 @@ try {
       const item = schedule[index]!;
       if (completed.has(runKey(item.task.id, item.mode))) continue;
       console.error(`[agent-impact] ${index + 1}/${schedule.length} ${item.task.id}/${item.mode}`);
-      results.push(runAgentAttempt({
+      results.push({ ...runAgentAttempt({
         task: item.task,
         mode: item.mode,
         runOrder: index + 1,
@@ -141,7 +144,7 @@ try {
         profileDir: profile!,
         runRoot,
         keepWorkdir: args.keepWorkdir,
-      }));
+      }), authentication: "setup-token" });
       if (args.evidenceOutput) {
         report = buildReport(manifest, manifestSha256, agentReport, plannedRuns, worstCaseBudgetUsd, oracles, results, args.keepWorkdir ? runRoot : undefined);
         writeEvidence(args.evidenceOutput, report);
@@ -389,8 +392,8 @@ function runClaude(task: AgentImpactTask, mode: AgentImpactMode, manifest: Agent
   });
   return {
     status: child.status,
-    stdout: child.stdout ?? "",
-    stderr: child.stderr ?? "",
+    stdout: redactAgentImpactToken(child.stdout ?? "", automationToken!),
+    stderr: redactAgentImpactToken(child.stderr ?? "", automationToken!),
     timedOut: child.status === 124 || child.signal === "SIGTERM" || child.signal === "SIGKILL",
     ...(child.error ? { error: child.error.message } : {}),
   };
@@ -411,9 +414,9 @@ function prepareWorkspace(task: AgentImpactTask, repoCache: string, parent: stri
   mkdirSync(repo, { recursive: true });
   materializeSnapshot(repoCache, commit, repo);
   applySetupFiles(task, repo);
-  execFileSync("git", ["init", "--quiet"], { cwd: repo });
-  execFileSync("git", ["add", "."], { cwd: repo });
-  execFileSync("git", ["-c", "user.name=CodeMap Eval", "-c", "user.email=codemap@example.invalid", "commit", "--quiet", "-m", "base snapshot"], { cwd: repo });
+  execFileSync("git", ["init", "--quiet"], { cwd: repo, env: baseEnv() });
+  execFileSync("git", ["add", "."], { cwd: repo, env: baseEnv() });
+  execFileSync("git", ["-c", "user.name=CodeMap Eval", "-c", "user.email=codemap@example.invalid", "commit", "--quiet", "-m", "base snapshot"], { cwd: repo, env: baseEnv() });
   const setup = runSpec(task.setup, repo, baseEnv());
   if (setup.status !== 0) throw new Error(`${task.id} setup failed: ${tail(setup.stderr || setup.stdout)}`);
   const dirty = git(repo, ["status", "--porcelain"]);
@@ -435,15 +438,15 @@ function applySetupFiles(task: AgentImpactTask, workspace: string): void {
 }
 
 function materializeSnapshot(repoCache: string, commit: string, target: string): void {
-  execFileSync("git", ["cat-file", "-e", `${commit}^{commit}`], { cwd: repoCache, stdio: "ignore" });
-  const archive = execFileSync("git", ["archive", "--format=tar", commit], { cwd: repoCache, maxBuffer: 128 * 1024 * 1024 });
-  const extracted = spawnSync("tar", ["-x", "-C", target], { input: archive, maxBuffer: 4 * 1024 * 1024 });
+  execFileSync("git", ["cat-file", "-e", `${commit}^{commit}`], { cwd: repoCache, env: baseEnv(), stdio: "ignore" });
+  const archive = execFileSync("git", ["archive", "--format=tar", commit], { cwd: repoCache, env: baseEnv(), maxBuffer: 128 * 1024 * 1024 });
+  const extracted = spawnSync("tar", ["-x", "-C", target], { input: archive, env: baseEnv(), maxBuffer: 4 * 1024 * 1024 });
   if (extracted.status !== 0) throw new Error(`tar extraction failed for ${commit}`);
 }
 
 function applyHiddenTests(task: AgentImpactTask, repoCache: string, workspace: string): void {
   for (const path of task.hiddenTestPaths) {
-    const bytes = execFileSync("git", ["show", `${task.fixCommit}:${path}`], { cwd: repoCache, maxBuffer: 32 * 1024 * 1024 });
+    const bytes = execFileSync("git", ["show", `${task.fixCommit}:${path}`], { cwd: repoCache, env: baseEnv(), maxBuffer: 32 * 1024 * 1024 });
     const target = join(workspace, path);
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, bytes);
@@ -455,10 +458,10 @@ function ensureRepositoryCache(id: string, remote: string, options: ParsedArgs):
   if (!existsSync(target)) {
     if (options.offline) throw new Error(`Missing offline repository cache: ${target}`);
     mkdirSync(dirname(target), { recursive: true });
-    const clone = spawnSync("git", ["clone", "--mirror", remote, target], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    const clone = spawnSync("git", ["clone", "--mirror", remote, target], { env: baseEnv(), encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
     if (clone.status !== 0) throw new Error(`Failed to clone ${remote}: ${tail(clone.stderr)}`);
   } else if (!options.offline) {
-    const fetch = spawnSync("git", ["fetch", "--prune", "origin"], { cwd: target, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    const fetch = spawnSync("git", ["fetch", "--prune", "origin"], { cwd: target, env: baseEnv(), encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
     if (fetch.status !== 0) throw new Error(`Failed to refresh ${id}: ${tail(fetch.stderr)}`);
   }
   return target;
@@ -473,13 +476,14 @@ function ensureCodeMapProfile(manifest: AgentImpactManifest, options: ParsedArgs
     materializeSnapshot(repoRoot, profile.gitCommit, target);
     const install = spawnSync("npm", ["ci", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"], {
       cwd: target,
+      env: baseEnv(),
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,
       timeout: 300_000,
     });
     if (install.status !== 0) throw new Error(`CodeMap profile install failed: ${tail(install.stderr)}`);
   }
-  const version = execFileSync(process.execPath, [binary, "--version"], { encoding: "utf8" }).trim();
+  const version = execFileSync(process.execPath, [binary, "--version"], { env: baseEnv(), encoding: "utf8" }).trim();
   if (version !== profile.expectedVersion) throw new Error(`CodeMap profile version ${version} != ${profile.expectedVersion}`);
   return target;
 }
@@ -494,18 +498,15 @@ function prepareCodeMap(workspace: PreparedWorkspace, profileDir: string, env: N
   chmodSync(wrapper, 0o700);
   env.PATH = `${binDir}:${env.PATH}`;
   const startedAt = performance.now();
-  const indexed = spawnSync(wrapper, ["index", "--approve"], { cwd: workspace.repo, env, encoding: "utf8", maxBuffer: 16 * 1024 * 1024, timeout: 120_000 });
+  const indexed = spawnSync(wrapper, ["index", "--approve"], { cwd: workspace.repo, env: withoutClaudeAuth(env), encoding: "utf8", maxBuffer: 16 * 1024 * 1024, timeout: 120_000 });
   if (indexed.status !== 0) throw new Error(`CodeMap index failed: ${tail(indexed.stderr || indexed.stdout)}`);
   return Math.round(performance.now() - startedAt);
 }
 
 function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDir: string): NodeJS.ProcessEnv {
-  const isolated = prepareClaudeIsolation(workspace);
   const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    HOME: isolated.home,
-    USERPROFILE: isolated.home,
-    CLAUDE_CONFIG_DIR: isolated.configDir,
+    ...withoutClaudeAuth(process.env),
+    ...isolatedAgentImpactClaude(workspace.root, claudeSettings(), automationToken!),
     PATH: sanitizedPath(),
     CODEMAP_HOME: workspace.stateDir,
     CODEMAP_TELEMETRY: "0",
@@ -514,7 +515,6 @@ function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDi
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
     DISABLE_AUTOUPDATER: "1",
     CODEMAP_EVAL_WORKSPACE: workspace.repo,
-    CODEMAP_EVAL_CLAUDE_SETTINGS: isolated.settingsPath,
   };
   if (mode === "baseline" && commandOnPath("codemap", env.PATH!)) throw new Error("baseline PATH still resolves codemap");
   if (mode === "codemap" && !existsSync(join(profileDir, "dist", "cli", "bin.js"))) throw new Error("treatment profile binary missing");
@@ -522,7 +522,7 @@ function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDi
 }
 
 function baseEnv(): NodeJS.ProcessEnv {
-  return { ...process.env, CI: "1", NO_COLOR: "1" };
+  return { ...withoutClaudeAuth(process.env), CI: "1", NO_COLOR: "1" };
 }
 
 function runSpec(spec: AgentImpactCommand, cwd: string, env: NodeJS.ProcessEnv): CommandResult {
@@ -655,20 +655,7 @@ function resolveClaudeBin(): string {
 }
 
 function commandVersion(command: string): string {
-  return execFileSync(command, ["--version"], { encoding: "utf8" }).trim();
-}
-
-function prepareClaudeIsolation(workspace: PreparedWorkspace): { home: string; configDir: string; settingsPath: string } {
-  const home = join(workspace.root, "home");
-  const configDir = join(workspace.root, "claude-config");
-  const settingsPath = join(configDir, "settings.json");
-  mkdirSync(home, { recursive: true });
-  mkdirSync(configDir, { recursive: true });
-  const credentials = join(realHome, ".claude", ".credentials.json");
-  if (!existsSync(credentials)) throw new Error(`Claude credentials missing: ${credentials}`);
-  symlinkSync(credentials, join(configDir, ".credentials.json"));
-  writeFileSync(settingsPath, `${JSON.stringify(claudeSettings(), null, 2)}\n`, { mode: 0o600 });
-  return { home, configDir, settingsPath };
+  return execFileSync(command, ["--version"], { env: baseEnv(), encoding: "utf8" }).trim();
 }
 
 function claudeSettings(): Record<string, unknown> {
@@ -682,7 +669,7 @@ function claudeSettings(): Record<string, unknown> {
 }
 
 function git(cwd: string, values: string[]): string {
-  return execFileSync("git", values, { cwd, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
+  return execFileSync("git", values, { cwd, env: baseEnv(), encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
 }
 
 function claimBoundary(purpose: AgentImpactManifest["corpus"]["purpose"]): string {

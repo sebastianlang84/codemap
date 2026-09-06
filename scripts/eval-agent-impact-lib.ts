@@ -81,6 +81,7 @@ export interface AgentUsage {
 }
 
 export interface AgentImpactRunResult {
+  authentication?: "setup-token";
   taskId: string;
   repo: string;
   mode: AgentImpactMode;

@@ -15,7 +15,8 @@ non-deterministic.
 - Source snapshots come from `git archive` and receive a new one-commit repository with no remote or
   upstream history. The hidden tests are added only after the agent patch is captured.
 - Agent workspaces, home, Claude configuration, CodeMap state, and call logs live under a temporary
-  directory outside the operator home. Only Claude credentials are linked into the isolated config.
+  directory outside the operator home. Personal Claude credentials are never linked or copied.
+  A separately supplied setup token authenticates only the isolated Claude process.
 - Claude Code runs at medium effort with no MCP servers, no session persistence, a strict tool
   allowlist, and a `PreToolUse` guard against network commands, dependency installs, publication,
   and paths outside the workspace. This is tool-level isolation, not an OS network namespace.
@@ -24,6 +25,37 @@ non-deterministic.
   are excluded from checked-in evidence.
 - A provider failure, timeout, or exhausted budget invalidates the pair; it is never scored as a
   treatment loss.
+
+## Automation authentication
+
+Generate a separate token with `claude setup-token`, as described in the
+[official authentication guide](https://code.claude.com/docs/en/authentication#generate-a-long-lived-token).
+The browser authorization must be completed by the account owner. Do not paste the token into
+chat, command arguments, repository files or shell history.
+
+Supply it as `CLAUDE_CODE_OAUTH_TOKEN`, or store it outside repositories in a private file and set
+`CODEMAP_EVAL_OAUTH_TOKEN_FILE`. Use only one source. Example in your terminal after setup-token:
+
+```bash
+install -d -m 700 "$HOME/.agents/secrets"
+(
+  umask 077
+  read -rsp 'Automation token: ' CODEMAP_SETUP_TOKEN
+  printf '%s\n' "$CODEMAP_SETUP_TOKEN" > "$HOME/.agents/secrets/codemap-claude-token"
+  printf '\n'
+)
+export CODEMAP_EVAL_OAUTH_TOKEN_FILE="$HOME/.agents/secrets/codemap-claude-token"
+```
+
+The runner rejects a missing token before setup or model calls. It strips inherited Anthropic
+credentials, endpoint overrides and alternate Claude provider selectors, and supplies the token
+only to the Claude child environment. Setup and verification commands receive no Claude auth.
+Exact token occurrences are redacted from provider output before parsing or trace storage.
+This is not OS containment: tool subprocesses can inherit the Claude environment.
+
+Personal credentials are neither read nor rotated. New attempts record `authentication: setup-token`;
+old checkpoint rows remain unchanged. The pending diagnostic pair therefore spans an authentication
+change and remains diagnostic evidence, not a controlled product-effect comparison.
 
 ## Commands
 

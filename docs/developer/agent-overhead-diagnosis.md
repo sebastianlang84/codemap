@@ -94,5 +94,19 @@ Keep the frozen prompt/oracle unchanged; limit this pair to diagnostic observati
 Raw traces remain local under `/tmp/codemap-agent-traces/agent-impact-wFZW2X/`.
 Baseline trace SHA-256:
 `6e162e0b536d9c3e093900b706ac62dc2968c4740964638ccd29653c5c11bff6`.
-After `claude auth login`, resume the same evidence with `--resume` and `--trace-dir`;
+After providing a separate setup token, resume the same evidence with `--resume` and `--trace-dir`;
 only the zero-cost treatment failure is retryable. Preserve the completed paid control.
+
+### Authentication correction
+
+The old runner symlinked personal credentials into each temporary config directory. A
+[matching upstream report](https://github.com/anthropics/claude-code/issues/76561) describes atomic
+credential replacement detaching that link and leaving stale refresh credentials in the original
+location. Dummy-file reproduction confirms the filesystem mechanism; the deleted run directories
+prevent proving that it caused this specific outage.
+
+The runner now requires a separate setup token and creates no credential links or copies.
+[Setup instructions](agent-impact-eval.md#automation-authentication). Dummy tests cover atomic
+replacement/cleanup without touching personal state, conflicting auth sources, private token files,
+output redaction and refusal before model setup when the token is absent. A real authenticated
+run remains pending owner authorization through `claude setup-token`.
