@@ -81,7 +81,7 @@ trees were injected from checked-in SHA-256-pinned locks; both Flask tasks used 
 | Provider cost | $6.6323 | $7.4065 |
 | Total tokens | 4,540,405 | 5,285,056 |
 | Agent time | 1,974,352 ms | 2,223,698 ms |
-| Mean expected-path recall | 0.8972 | 0.8556 |
+| Mean changed-path coverage | 0.8972 | 0.8556 |
 
 Paired outcome: **0 wins, 1 loss, 11 ties** (`p=1.0`). Treatment adoption was 12/12, baseline
 contamination 0, budget exhaustion 0, and the harness gate passed. CodeMap used 1.164× the tokens,
@@ -131,6 +131,10 @@ not justify removing the deterministic, regression-tested retrieval fix: the bou
 is inconclusive about causal effect, while the retrieval behavior remains directly verified.
 
 ## Interpretation and next gate
+
+[Overhead diagnosis](agent-overhead-diagnosis.md): existing reports lack tool traces;
+`expectedPathRecall` measures changed paths, not read coverage. No causal overhead diagnosis is
+possible from aggregate counts alone.
 
 The [agent benefit recovery plan](../product/roadmap.md#agent-benefit-recovery-plan) governs the
 next work: diagnose retained traces, test one local change, then decide whether a fresh paid
@@ -210,3 +214,16 @@ verified excerpt correction; this small, single-repository workflow comparison n
 its causal effect nor establishes universal equivalence. Before another paid pilot, identify a
 reproducible source of extra navigation work and freeze a distinct development experiment. Do not
 repeat these tasks merely to seek a favorable result.
+
+## Optional diagnostic traces
+
+For an already budget-approved run, add `--trace-dir /tmp/codemap-agent-traces`. The runner creates
+an isolated directory outside Git worktrees and prints its location. Each run stores raw provider
+stdout/stderr, exit status and aggregate durations before parsing, including malformed/timeout
+output. Capture is off by default, does not alter prompts or stable evidence, and is ignored by
+`--dry-run` and `--validate-oracles`. Resumed attempts get a new directory; existing traces are
+never overwritten. A write failure is reported on stderr without making paid work retryable.
+
+Raw traces can contain source and tool output: keep them local and delete them after diagnosis.
+Directories/files use private permissions where supported. No per-tool wall-clock timestamps are
+added, and a runner crash before the provider returns can still lose its buffered output.

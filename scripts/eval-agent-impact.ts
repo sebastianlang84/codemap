@@ -5,6 +5,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createAgentImpactTraceDir, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 
 import {
   evaluateAgentImpactPilotGate,
@@ -36,6 +37,7 @@ interface ParsedArgs {
   keepWorkdir: boolean;
   offline: boolean;
   evidenceOutput?: string;
+  traceDir?: string;
   resume: boolean;
   help: boolean;
 }
@@ -100,6 +102,8 @@ if (!args.validateOnly && (args.approveBudgetUsd === undefined || args.approveBu
 }
 
 mkdirSync(args.cacheDir, { recursive: true });
+const traceDir = args.traceDir && !args.validateOnly ? createAgentImpactTraceDir(args.traceDir, manifestSha256) : undefined;
+if (traceDir) console.error(`[agent-impact] raw traces: ${traceDir}`);
 const runRoot = mkdtempSync(join(tmpdir(), "codemap-agent-impact-"));
 if (resolve(runRoot).startsWith(`${resolve(homedir())}/`)) {
   throw new Error(`Agent workspaces must stay outside HOME to avoid ancestor instruction leakage: ${runRoot}`);
@@ -276,6 +280,14 @@ function runAgentAttempt(options: {
     const agentStartedAt = performance.now();
     const child = runClaude(task, mode, manifest, workspace, env);
     const agentDurationMs = Math.round(performance.now() - agentStartedAt);
+    if (traceDir) {
+      try {
+        writeAgentImpactTrace(traceDir, { taskId: task.id, mode, runOrder, agentDurationMs, indexDurationMs, ...child });
+      } catch (error) {
+        // A diagnostic write failure must not turn a paid attempt into a zero-cost retry.
+        console.error(`[agent-impact] TRACE NOT SAVED for run ${runOrder}: ${message(error)}`);
+      }
+    }
     try {
       usage = parseClaudeJson(child.stdout);
     } catch (error) {
@@ -710,6 +722,7 @@ function parseArgs(raw: string[]): ParsedArgs {
       parsed.mode = mode;
     } else if (name === "--approve-budget-usd") parsed.approveBudgetUsd = parsePositive(value(), name);
     else if (name === "--evidence-output") parsed.evidenceOutput = resolve(value());
+    else if (name === "--trace-dir") parsed.traceDir = resolve(value());
     else if (arg === "--validate-oracles") parsed.validateOnly = true;
     else if (arg === "--dry-run") parsed.dryRun = true;
     else if (arg === "--quality-gate") parsed.qualityGate = true;
@@ -729,7 +742,7 @@ function parsePositive(value: string, label: string): number {
 }
 
 function printHelp(): void {
-  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and worst-case paid budget\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Required cap approval; must cover worst case\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
+  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and worst-case paid budget\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Required cap approval; must cover worst case\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
 }
 
 function tail(value: string, length = 1200): string {

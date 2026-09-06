@@ -7,12 +7,14 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 Die [Roadmap](docs/product/roadmap.md#agent-benefit-recovery-plan) legt Reihenfolge und Stop-Regeln
 fest. Zuerst vorhandene Läufe untersuchen; noch kein weiterer bezahlter Pilot.
 
-- [ ] Verfügbare Tool-Traces des 12- und Vier-Fälle-Piloten inventarisieren; Messlücken benennen.
-- [ ] Gepaarte Abläufe nach Indexierung, Suche, Lesen, Änderungen und Tests aufschlüsseln.
-  Zusätzliche und eingesparte Arbeit anhand konkreter Aufrufe belegen; Cache-Tokens separat zeigen.
-- [ ] Einen Diagnosebericht unter `docs/developer/` ablegen und im Eval-Leitfaden verlinken:
-  Reproduktion, ein möglicher Hebel, lokales Erfolgskriterium oder begründeter Stopp.
-- [ ] Bei fehlenden Traces zuerst minimale lokale Eval-Aufzeichnung mit Fixtures prüfen.
+[Diagnosebericht](docs/developer/agent-overhead-diagnosis.md): Die bisherigen Piloten enthalten
+keine Tool-Traces. Kostenunterschiede sind ausgewertet; ihre Ursache bleibt offen.
+Optionale lokale Ablaufaufzeichnung ist implementiert und mit Fixtures geprüft.
+
+- [ ] Einen frischen diagnostischen Paarlauf mit Trace-Aufzeichnung, Manifest und Kostenobergrenze
+  vorbereiten; Budget vor Ausführung freigeben lassen. Keine Wiederholung der alten Fälle.
+- [ ] Daraus zusätzliche/eingesparte Arbeit belegen und genau einen lokalen Verbesserungsversuch
+  ableiten. Ohne Reproduktion nicht zum achtteiligen Produktvergleich wechseln.
 
 Globale Pflichtnutzung auszusetzen ist eine Empfehlung, noch keine umgesetzte Host-Änderung.
 Neue Ranking-/Struktur-/Skill-Arbeit wartet auf die Diagnose.
