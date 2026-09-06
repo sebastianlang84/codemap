@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
 
 import { useIsolatedHome } from "./helpers/repo-fixture.ts";
 
@@ -59,6 +61,33 @@ test("cli --json emits a parseable search package", (t) => {
   const pkg = JSON.parse(result.out) as { query: string; results: Array<{ path: string }> };
   assert.equal(pkg.query, "renderWidget");
   assert.equal(pkg.results[0]?.path, "src/widget.ts");
+});
+
+test("cli executable drains large JSON to a slow pipe before exiting", async (t) => {
+  const { root, stateDir } = cliRepo(t);
+  writeFileSync(join(root, "guide.md"), `# Guide\n${`${"A documented behavior. ".repeat(50)}\n`.repeat(350)}`);
+  runCli(["index", "--approve", "--state-dir", stateDir], { cwd: root });
+  const args = ["context", "guide.md", "--json", "--state-dir", stateDir];
+  const expected = runCli(args, { cwd: root });
+  assert.equal(expected.code, 0);
+  assert.ok(Buffer.byteLength(expected.out) > 256 * 1024);
+
+  const child = spawn(process.execPath, ["--experimental-strip-types",
+    fileURLToPath(new URL("../src/cli/bin.ts", import.meta.url)), ...args],
+  { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
+  t.after(() => { if (child.exitCode === null) child.kill(); });
+  const closed = new Promise<number | null>((resolve, reject) => {
+    child.once("error", reject);
+    child.once("close", resolve);
+  });
+  child.stderr.resume();
+  // Delay consumption after the first bytes arrive to exercise pipe backpressure.
+  await new Promise<void>((resolve) => child.stdout.once("readable", resolve));
+  await delay(100);
+  const chunks: Buffer[] = [];
+  for await (const chunk of child.stdout) chunks.push(chunk);
+  assert.equal(await closed, 0);
+  assert.deepEqual(JSON.parse(Buffer.concat(chunks).toString()), JSON.parse(expected.out));
 });
 
 test("cli context text preserves ambiguous-target warnings", (t) => {

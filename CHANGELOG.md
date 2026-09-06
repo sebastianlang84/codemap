@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Let CLI output drain before exit so large JSON responses remain complete when piped.
+
 - Review the bundled CLI navigation skill: keep search-tool triggers in frontmatter, clarify refresh and query/path context behavior, and scope text-search fallbacks. Update README skill deployment, link canonical version requirements, and replace general token-saving claims with measured navigation and agent-task results.
 
 - Preserve matched code chunks in query-form context, including function bodies and relationship reasons, instead of replacing search hits with file headers. Context quality gates now check required lines and code for JavaScript and Python symbol queries.

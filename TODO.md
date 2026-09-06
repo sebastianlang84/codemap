@@ -2,26 +2,20 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Nächster Slice: Agenten-Mehraufwand erklären
+## Agenten-Nutzen: Diagnose abgeschlossen, kein weiterer Pilot
 
-Die [Roadmap](docs/product/roadmap.md#agent-benefit-recovery-plan) legt Reihenfolge und Stop-Regeln
-fest. Zuerst vorhandene Läufe untersuchen; noch kein weiterer bezahlter Pilot.
+Der [Diagnosebericht](docs/developer/agent-overhead-diagnosis.md#completed-fresh-trace-pair)
+enthält den vollständigen Paarlauf und den lokalen Ausgabe-Vergleich. Der Agent las nach dem
+CodeMap-Leseplan weiter mit normalen Werkzeugen; ein pauschales `--json` vergrößert die Ausgabe
+stark. Noch kein Workflow-Kandidat besteht das lokale Gate der
+[Roadmap](docs/product/roadmap.md#agent-benefit-recovery-plan).
 
-[Diagnosebericht](docs/developer/agent-overhead-diagnosis.md): Die bisherigen Piloten enthalten
-keine Tool-Traces. Kostenunterschiede sind ausgewertet; ihre Ursache bleibt offen.
-Optionale lokale Ablaufaufzeichnung ist implementiert und mit Fixtures geprüft.
+- [ ] Nur bei einem neuen reproduzierbaren Bedarf einen kompakten Quelltext-Kandidaten lokal
+  prüfen: erforderlicher Code erhalten, irrelevante Ausgabe begrenzt, ersetzte Leseoperation
+  nachgewiesen. Keine weitere bezahlte Messung ohne bestandenes lokales Gate und Budgetfreigabe.
 
-- [ ] Automatisierungstoken prüfen/ersetzen: der Setup-Token-Versuch erhielt HTTP 401
-  ohne Modellkosten. Vollständiges Token aus `claude setup-token` bereitstellen;
-  [sichere Einrichtung](docs/developer/agent-impact-eval.md#automation-authentication).
-  Danach den eingefrorenen Diagnose-Paarlauf mit `--resume` fortsetzen.
-  Kontrolllauf und Trace sind erhalten ($0,516341); CodeMap scheiterte an Authentifizierung ohne
-  Kosten. [Teilbefund und Grenzen](docs/developer/agent-overhead-diagnosis.md#fresh-trace-pair-blocked-after-control).
-- [ ] Danach zusätzliche/eingesparte Arbeit vergleichen; wegen unvollständiger Aufgabenbeschreibung
-  den versteckten Testerfolg nicht als isolierten Navigationsbeleg behandeln.
-
-Globale Pflichtnutzung auszusetzen ist eine Empfehlung, noch keine umgesetzte Host-Änderung.
-Neue Ranking-/Struktur-/Skill-Arbeit wartet auf die Diagnose.
+Globale Pflichtnutzung auszusetzen bleibt eine Empfehlung; die Host-Regeln sind unverändert.
+Ranking-/Struktur-/Skill-Ausbau bleibt zurückgestellt.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

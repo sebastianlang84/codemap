@@ -66,61 +66,107 @@ The runner now accepts `--trace-dir` for local raw output capture before provide
 cover partial provider output, private file modes, overwrite refusal, worktree/symlink rejection
 and a dry-run without writes or agent calls. This is instrumentation evidence, not new agent data.
 
-At the next separately budgeted diagnostic run, compare ordered tool inputs/results for a fresh
-paired task and identify work replaced or added. Raw output can reveal repeated reads, unrelated
-context and test retries, but the synchronous runner does not provide per-event timestamps or
-survive a runner crash with a partial stream. Exact time-to-first-read remains unmeasured.
-A diagnostic run is not the eight-task product comparison; step 2 still needs a reproducible cause.
+The fresh pair below supplies ordered tool inputs/results. The synchronous runner provides no
+per-event timestamps and cannot retain a partial stream after a runner crash. Exact time to the
+first source read remains unmeasured. This is not the eight-task product comparison.
 
-## Fresh trace pair: blocked after control
+## Completed fresh trace pair
 
-The [frozen diagnostic manifest](../../scripts/eval-agent-impact-diagnostic.manifest.json) selects
-Fastify PR 6879, absent from previous corpora. Both oracle repetitions failed on base and passed
-on the reference fix. Freeze commit: `ea5048d`; manifest SHA-256:
+The [frozen manifest](../../scripts/eval-agent-impact-diagnostic.manifest.json) selects Fastify
+PR 6879, absent from previous corpora. Base failed and reference passed twice. Freeze commit:
+`ea5048d`; manifest SHA-256:
 `f6acb032959afcf08bd49a48b0437be03af7b91c085693b792dc138cb370fe82`.
-The authorized pair cap is $4; the CodeMap profile remains the excerpt pilot's pinned profile.
+The CodeMap profile remains pinned to the excerpt pilot. No further paid run was needed after
+completing the previously authorized pair.
 
-[Partial evidence](agent-impact-diagnostic-v1-result.json): the baseline completed in 122,233 ms,
-with 23 provider turns, 22 tool calls and $0.516341 cost. Its hidden test failed. The CodeMap
-attempt failed authentication before any paid usage; there is no valid pair or cost comparison.
+[Completed evidence](agent-impact-diagnostic-v1-result.json), one valid pair:
 
-The baseline trace locates the runtime implementation in its fifth tool invocation, before the
-first edit. It adds a warning and tests, then runs several test commands. The prompt only asks
-for an HTTP-method override warning, while the hidden oracle requires `FastifyDeprecation`,
-`FSTDEP025` and `overrideExisting`. The agent instead implements `FastifyWarning`/`FSTWRN005`.
-This is an under-specified acceptance contract, not evidence that navigation caused the failure.
-Keep the frozen prompt/oracle unchanged; limit this pair to diagnostic observations.
+Stable SHA-256: `6808383df15543a90358735f597b74d61d7aea19b76005cbd796cc8f7792c90a`.
 
-Raw traces remain local under `/tmp/codemap-agent-traces/agent-impact-wFZW2X/`.
-Baseline trace SHA-256:
-`6e162e0b536d9c3e093900b706ac62dc2968c4740964638ccd29653c5c11bff6`.
-After providing a separate setup token, resume the same evidence with `--resume` and `--trace-dir`;
-only the zero-cost treatment failure is retryable. Preserve the completed paid control.
+| Metric | Baseline | CodeMap | Change |
+|---|---:|---:|---:|
+| Hidden-test success | fail | fail | tie |
+| Total tokens including caches | 291,141 | 427,601 | +46.9% |
+| Provider cost | $0.516341 | $0.612544 | +18.6% |
+| Agent duration | 122,233 ms | 105,472 ms | −13.7% |
+| Provider turns / tool calls | 23 / 22 | 28 / 27 | +5 / +5 |
 
-### Authentication correction
+Total cost: $1.128885 against the authorized $4 cap. Preparatory CodeMap indexing took 489 ms,
+outside agent duration. Of 136,460 additional tokens, 133,936 were cache reads, 2,239 cache
+creation, 271 output and 14 uncached input. Token totals alone do not identify their cause.
 
-The old runner symlinked personal credentials into each temporary config directory. A
+### Ordered trace observations
+
+Tool positions below are one-based. Calls containing reads and tests are classified as tests;
+these counts describe commands, not exclusive time or token attribution.
+
+| Primary purpose | Baseline calls | CodeMap calls |
+|---|---|---|
+| Environment/tool discovery | 1 | 1–2 |
+| Navigation/source reads | 2–7, 11, 17 | 3–10, 25 |
+| Edits, including scripted writes | 8–10, 12–16, 18 | 11–19, 26 |
+| Tests/lint, including retries | 19–22 | 20–24, 27 |
+
+- CodeMap call 3 runs `codemap context "http method override warning"`. Its entire output is
+  eight path/range entries and a related-document hint, with **no source text**. `head -60`
+  did not truncate that nine-line result. Call 4 separately reads `lib/warnings.js`.
+- The same two lexical discovery patterns occur in both arms: method-override terminology,
+  then `addHttpMethod`. CodeMap therefore did not replace those searches in this observed run.
+  Baseline reads the runtime implementation in call 5; treatment does so in call 7. Their first
+  edits are calls 8 and 11. Exact elapsed time to those reads is unavailable.
+- Both arms use an unsupported test-directory argument, repeat it to inspect failure output,
+  then switch to a working glob. Both retry documentation writes with Edit after scripted
+  replacements. These retries are not specific to CodeMap.
+- Treatment performs more test/lint calls but omits baseline's broad `test/*.test.js` run.
+  Verification scope differs, so lower aggregate duration cannot establish faster navigation.
+
+Both implementations choose `FastifyWarning`/`FSTWRN005`; the hidden oracle requires
+`FastifyDeprecation`/`FSTDEP025` and `overrideExisting`, absent from the terse prompt. Treatment
+also limits warnings to body-support changes. Keep the frozen oracle unchanged: this is an
+under-specified acceptance contract and a diagnostic pair, not a clean task-success comparison.
+Authentication changed between arms (personal credentials versus setup token), another limitation.
+
+Raw traces remain local:
+
+- Baseline: `/tmp/codemap-agent-traces/agent-impact-wFZW2X/run-1.json`, SHA-256
+  `6e162e0b536d9c3e093900b706ac62dc2968c4740964638ccd29653c5c11bff6`.
+- Treatment: `/tmp/codemap-agent-traces/agent-impact-NHMfTY/run-2.json`, SHA-256
+  `7622ee69a2ad2cc0805346250ab79d8f73fbeae35692ff8dc067cb843a362aff`.
+
+### Local delivery experiment
+
+Hypothesis: requesting existing JSON context could supply the warning source and remove the next
+file read. Fixed input: the same Fastify base, pinned CodeMap profile and exact call-3 query.
+Only output format changes; no model calls. Acceptance: replace that read with complete source
+while retaining the navigation evidence and without adding unrelated source output.
+
+The text result is 491 bytes and contains no code. JSON is 82,960 bytes in this local reproduction;
+55 KB of source text comes from two large documentation chunks. It contains the warning source,
+but `fastify.js` still points to lines 1–80 instead of the `addHttpMethod` implementation. The
+blanket JSON candidate fails the output guardrail. Discard it as a workflow change; this local
+check cannot establish whether an agent would actually omit a read.
+
+A separate CLI correctness defect appeared: the pinned binary repeatedly returned only 65,536
+bytes through a pipe, invalid JSON, while file redirection retained the complete JSON. The CLI
+called `process.exit` immediately after writing. Setting `process.exitCode` lets pending output
+drain. A slow-consumer executable regression fails before and passes after this one-line fix;
+the original Fastify reproduction then parses successfully. This was not the cause of the
+observed agent overhead: that run used text output.
+
+Decision: keep the independently verified pipe fix; do not expand the paid pilot. No workflow
+candidate has passed the local gate. Any future compact-source experiment must first retain
+required code, bound unrelated output and demonstrate removed reads locally. The historical
+pilots still cannot be causally explained without their missing traces.
+
+### Authentication resolution
+
+Earlier personal-auth and setup-token attempts failed before paid usage. The OpenBao retry
+confirmed delivery of the supplied value but also received HTTP 401. The local token was later
+found to contain three identical concatenated copies. After authorized deduplication, the pending
+treatment authenticated and completed. No secret values are retained here. This run used the local
+file directly; it does not verify that the separately stored OpenBao value has been corrected.
+
+The runner no longer symlinks personal credentials into disposable configs. A
 [matching upstream report](https://github.com/anthropics/claude-code/issues/76561) describes atomic
-credential replacement detaching that link and leaving stale refresh credentials in the original
-location. Dummy-file reproduction confirms the filesystem mechanism; the deleted run directories
-prevent proving that it caused this specific outage.
-
-The runner now requires a separate setup token and creates no credential links or copies.
-[Setup instructions](agent-impact-eval.md#automation-authentication). Dummy tests cover atomic
-replacement/cleanup without touching personal state, conflicting auth sources, private token files,
-output redaction and refusal before model setup when the token is absent. A real authenticated
-run remains pending owner authorization through `claude setup-token`.
-
-### Setup-token attempt
-
-The supplied private token file passed local format/permission checks. The resumed treatment
-used `authentication: setup-token` but returned `401 OAuth access token is invalid` before any
-tool calls or paid usage. Total cost remains $0.516341; there is still no valid comparison pair.
-The token has a recognizable OAuth prefix, but completeness and server validity are unverified.
-No personal credential file was read or linked by the runner. This confirms early failure handling,
-not successful live authentication. Replace the supplied token with the complete setup-token
-output before retrying. The completed control remains unchanged.
-
-The OpenBao-backed retry also returned HTTP 401 before paid usage. The supplied value matched
-the local token file; secret delivery succeeded, provider authentication did not. Total cost
-remains $0.516341. Replace the invalid token before another retry.
+replacement detaching such links; dummy-file reproduction confirms the mechanism, not the cause
+of the earlier personal-login outage. [Automation setup](agent-impact-eval.md#automation-authentication).

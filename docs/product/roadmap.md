@@ -47,7 +47,11 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Agent benefit recovery plan
 
-Status: planned, 2026-09-06. This sequence takes priority over the capability ideas below.
+Status: diagnosis completed, 2026-09-06; no workflow candidate passed the local gate.
+The [trace and output comparison](../developer/agent-overhead-diagnosis.md#completed-fresh-trace-pair)
+rejects blanket JSON delivery and records a separate verified CLI pipe fix. No paid expansion;
+maintenance only unless a new reproducible need justifies reopening the workflow experiment.
+This sequence takes priority over the capability ideas below.
 Goal: reduce the work needed to produce correct patches, with a measured advantage over an agent
 using its normal search/read tools. More CodeMap use is not a success metric.
 

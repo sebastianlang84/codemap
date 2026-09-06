@@ -9,4 +9,5 @@ if (result.out)
     process.stdout.write(result.out.endsWith("\n") ? result.out : `${result.out}\n`);
 if (result.err)
     process.stderr.write(result.err.endsWith("\n") ? result.err : `${result.err}\n`);
-process.exit(result.code);
+// Let pending pipe writes drain before terminating.
+process.exitCode = result.code;
