@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 1,
+  "id": "context-program-local-v1",
+  "frozenAt": "2026-09-07",
+  "purpose": "Historical local development corpus; not unseen agent evidence.",
+  "maxExcerpts": 8,
+  "baselineBehaviorCommit": "11b7f1e",
+  "cases": [
+    {
+      "id": "express-pr-6285",
+      "repo": "express",
+      "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+      "fixCommit": "55869f49a65f1e279d92488fa6319c9fd4d8eac2",
+      "sourceUrl": "https://github.com/expressjs/express/pull/6285",
+      "query": "res.send Uint8Array text/plain UTF-8 charset response",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 112,
+          "endLine": 212,
+          "sha256": "053a37db47f86bd21f209db3c1524191d0760e0cc2e9ef0e2970d5a69db82806",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/res.send.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "Allow res.send to send a Uint8Array as its bytes rather than JSON. A UTF-8 encoded text payload sent with an explicit text/plain content type must arrive unchanged with UTF-8 charset. Preserve existing Buffer, string and object response behavior.",
+      "evidence": {
+        "manifest": "eval-agent-impact-location.manifest.json",
+        "referenceDiffSha256": "9c14c4df46816d7d6f7500c4b0d324189fe620715931e3cfea680b36b5698564",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "fastify-pr-6774",
+      "repo": "fastify",
+      "baseCommit": "27f4d6222dd945238e96c1fdaa632d5dc3c37b2c",
+      "fixCommit": "c647de44cceaf8ec6ce81796374ff6ffd944d873",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6774",
+      "query": "plugin dependency unregistered error catalog error codes",
+      "group": "multifile",
+      "requiredTargets": [
+        {
+          "path": "lib/plugin-utils.js",
+          "startLine": 64,
+          "endLine": 78,
+          "sha256": "728d0239d2ad030728034acc42da6e6f558fb4a74ee6b135122015fe892af835",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/internals/errors.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        },
+        {
+          "path": "lib/errors.js",
+          "reason": "Defines and exports matching Fastify error constructors."
+        },
+        {
+          "path": "types/errors.d.ts",
+          "reason": "Public error-code union must match the new constructor."
+        },
+        {
+          "path": "docs/Reference/Errors.md",
+          "reason": "Requested public error catalog must list the new code."
+        },
+        {
+          "path": "fastify.js",
+          "reason": "Public errorCodes export must remain consistent."
+        }
+      ],
+      "scope": "When a plugin declares an unregistered dependency, throw an Error named FastifyError with code FST_ERR_PLUGIN_DEPENDENCY_NOT_REGISTERED, statusCode 500, and message \"The dependency '<dependency>' of plugin '<plugin>' is not registered\" using the actual names. Expose the corresponding error constructor consistently with other Fastify errors, and keep the documented error catalog and public error-code types in sync. Registered dependencies must continue to work.",
+      "evidence": {
+        "manifest": "eval-agent-impact-location.manifest.json",
+        "referenceDiffSha256": "5f6df02a015c0bef88323bea1378f92df106e71f4d8e1853595c9697654269db",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "fastify-pr-6746",
+      "repo": "fastify",
+      "baseCommit": "fc9eafddae37dea167d2affc26a29a04f9412047",
+      "fixCommit": "2bf4265b991aa4c9a2d3886882be6f062338c7bc",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6746",
+      "query": "HTTP/2 large Buffer string Content-Length cancellation trailers response",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/reply.js",
+          "startLine": 575,
+          "endLine": 683,
+          "sha256": "0f5bb1532c92da47a38b487f907300011c8748216f771fa949641534ad217bff",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        },
+        {
+          "path": "lib/reply.js",
+          "startLine": 823,
+          "endLine": 878,
+          "sha256": "dfa60426563e6edee98ef43510a3532c7f63b6f3ae92ddb3e6ee4b16f32f3d8b",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/http2/plain.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "HTTP/2 responses with large non-stream Buffer or string bodies must arrive completely, including bodies larger than 64 KiB with an explicit Content-Length. Cancelling a large response must not prevent a subsequent small response on the same HTTP/2 connection. Preserve HTTP/1 response behavior and send trailers only after the payload is written.",
+      "evidence": {
+        "manifest": "eval-agent-impact-location.manifest.json",
+        "referenceDiffSha256": "6d070d92ab134016b90870bc6a9d4a77a15c531b8b743fd5d08f8ead88a41729",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "fastify-pr-6714",
+      "repo": "fastify",
+      "baseCommit": "6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "fixCommit": "9026164f5a2e78db59ff8f98933279161a85a6e3",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6714",
+      "query": "reply trailer handler callback promise first completion chunked framing Content-Length",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/reply.js",
+          "startLine": 823,
+          "endLine": 877,
+          "sha256": "6a460897849ca332b04b50a87a6a95296ef222a4420b1117b021ffbf88fd0916",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/reply-trailers.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "When a reply trailer handler completes more than once, accept only its first completion. In particular, a handler that calls its callback and also resolves a promise must retain the callback value, while other asynchronous trailers still complete normally. Preserve successful payload delivery, declared trailer names and chunked framing without Content-Length.",
+      "evidence": {
+        "manifest": "eval-agent-impact-location.manifest.json",
+        "referenceDiffSha256": "1e1f2572b91ecbc818808096568e89bc0cb3da23029cc4f5c916ee256c51a38f",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "express-pr-6903",
+      "repo": "express",
+      "baseCommit": "a479419b16f5b97eb20f5dbae5848708ff30ce2d",
+      "fixCommit": "c9ecf7b658388ccaa2b8470aabad92aabde458a2",
+      "sourceUrl": "https://github.com/expressjs/express/pull/6903",
+      "query": "app.render null undefined options callback application locals",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/application.js",
+          "startLine": 522,
+          "endLine": 575,
+          "sha256": "3d998ea00bd85e61dea111d6c6686282b037c6bd220e522c08dcbcd202225671",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/app.render.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "Calling app.render with an explicit null or undefined options argument and a callback must render successfully, using application locals as usual. Preserve the existing callback-only and options-object calling forms.",
+      "evidence": {
+        "manifest": "eval-agent-impact-optional.manifest.json",
+        "referenceDiffSha256": "8b33bfd1a2d3bde92c5feec7117b00aec45060c9a6bdbb0fb8b244ac4554d8db",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "express-pr-4885",
+      "repo": "express",
+      "baseCommit": "6ed3439584b6bc77b0f1156f8797700df063fa63",
+      "fixCommit": "caa4f68ee8d32474676fa29cc2086dcc1d62208b",
+      "sourceUrl": "https://github.com/expressjs/express/pull/4885",
+      "query": "res.links array URLs relation Link header",
+      "group": "simple-control",
+      "requiredTargets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 91,
+          "endLine": 97,
+          "sha256": "db60a7b181d276d07a3fb88dd1caa12bf7b67d50f2e315951c1b82b2723fa7c8",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/res.links.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "Allow res.links to accept an array of URLs as a relation's value, alongside existing single-URL values. Emit a separate Link entry for each URL with the same relation, retaining input order and comma-space separation. Existing Link header values and single-URL behavior must continue to work.",
+      "evidence": {
+        "manifest": "eval-agent-impact-optional.manifest.json",
+        "referenceDiffSha256": "5b8f22e6662f35df4ac7fe1eafd934accea56d30fece3101329a38576d294794",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "express-pr-6073",
+      "repo": "express",
+      "baseCommit": "d2de128a32f1ce3d360bbe3fad56afa026fc8832",
+      "fixCommit": "327af123a1833239adf7eb47fee94542b692d451",
+      "sourceUrl": "https://github.com/expressjs/express/pull/6073",
+      "query": "res.sendFile respect application etag setting",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 365,
+          "endLine": 404,
+          "sha256": "6f3c8e8545cf2db6f2f6737071bd1f1b078d535bf420fe98c6e0083104050c4b",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/res.sendFile.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "File responses sent through res.sendFile must respect the application's etag setting. With app.disable('etag'), a successful file response must omit ETag. Preserve ordinary file delivery and the existing default behavior when etag remains enabled.",
+      "evidence": {
+        "manifest": "eval-agent-impact-optional.manifest.json",
+        "referenceDiffSha256": "8cd5b3ad5b1dda0e5a4f722407065cbe4f139cbbe0c5b0a573fc9b76d47b849f",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "fastify-pr-6483",
+      "repo": "fastify",
+      "baseCommit": "ff7eff5eec8a820b2c6f79b477e1a784bbf42341",
+      "fixCommit": "325682c9e5abb4dce494770c7cdf27139934347d",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6483",
+      "query": "custom validator returned falsy value replace request parameter",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/validation.js",
+          "startLine": 118,
+          "endLine": 144,
+          "sha256": "045ba2d63dbdcd9e556a49428c3fdc6746accc2c0ece36232988cd3716424149",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [],
+      "scope": "Custom validators returning a value must replace the corresponding request value even when it is 0, an empty string, false or null. Preserve validation error handling and behavior for validators that return no replacement value.",
+      "evidence": {
+        "manifest": "eval-agent-impact-optional.manifest.json",
+        "referenceDiffSha256": "46afef2d8bad4af664e955689a0f54efde98f03a44e95510d32c67d37755ed6d",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle.",
+        "absentBaseTest": "Reference adds test/fix-6411.test.js; an absent future file is not a retrieval target."
+      }
+    },
+    {
+      "id": "fastify-pr-6838",
+      "repo": "fastify",
+      "baseCommit": "ab9b96eb2f93373949c253933eddb46f6772bbf4",
+      "fixCommit": "6682c4f9a76cbb60c372ba5cad9dd2fc6e2fdb51",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6838",
+      "query": "findRoute lowercase mixed case HTTP method",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/route.js",
+          "startLine": 180,
+          "endLine": 198,
+          "sha256": "4faedea53c1ead9a314cd482564ad5aaba6a0f51dbb7f9246652680f3857d310",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/find-route.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "findRoute must find registered routes when the supplied HTTP method is lowercase or mixed case. Omitting the method must return null. Preserve URL parameters, constraints and existing uppercase behavior.",
+      "evidence": {
+        "manifest": "eval-agent-impact-optional.manifest.json",
+        "referenceDiffSha256": "b908d86466ec7bb62d041bfa1d22ab07e8bb07b7aa0e728181de0201df651084",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "flask-pr-6096",
+      "repo": "flask",
+      "baseCommit": "514fc6b3e8402e4c646d5284e97a4f0ab50a7c4b",
+      "fixCommit": "05e9c6bd630ecf4ec0ec884b1fc7901663737bc7",
+      "sourceUrl": "https://github.com/pallets/flask/pull/6096",
+      "query": "IPv6 SERVER_NAME development server and session_transaction cookies",
+      "group": "multifile",
+      "requiredTargets": [
+        {
+          "path": "src/flask/app.py",
+          "startLine": 632,
+          "endLine": 753,
+          "sha256": "48ee166a14b450e3690674124bfc86c601c2b8abd8e8bdc8d56266eb61368ab1",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        },
+        {
+          "path": "src/flask/testing.py",
+          "startLine": 136,
+          "endLine": 183,
+          "sha256": "e9daa9b37cf8cf45ccc0d7435ad2a89ca8c0470eda764dee2ada857400ad7b93",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "tests/test_basic.py",
+          "reason": "Existing behavioral test surface for the requested change."
+        },
+        {
+          "path": "tests/test_testing.py",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "Fix .partition(':') usage on potential IPv6 addresses",
+      "evidence": {
+        "manifest": "eval-agent-impact-pilot.manifest.json",
+        "referenceDiffSha256": "42597386fcd5477a8a87092416e5b0efb5d02a92eb5f3def6b29e65d121c42f1",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "fastify-pr-6942",
+      "repo": "fastify",
+      "baseCommit": "eaff726a68c629c1aedc99f96b3c4b95dfdb38d1",
+      "fixCommit": "15c2fb1933461f846a6160923a2bc4e091039826",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6942",
+      "query": "mediaType",
+      "group": "simple-control",
+      "requiredTargets": [
+        {
+          "path": "lib/content-type.js",
+          "startLine": 186,
+          "endLine": 186,
+          "sha256": "f351e47775b5b9ce45bdcb6b8ecefefee3ab22a60a742f6d8516d7ec3a2148b7",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/content-type.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "fix(content-type): return undefined for invalid media types",
+      "evidence": {
+        "manifest": "eval-agent-impact-pilot.manifest.json",
+        "referenceDiffSha256": "c73afcd218d3cc9ebe61a5454f4976dcc692796e60481f19e5d9cc37eafb4049",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    },
+    {
+      "id": "fastify-pr-6846",
+      "repo": "fastify",
+      "baseCommit": "27938ac777c15482a81881b29f86c82b025f7fae",
+      "fixCommit": "16a74e7cb2d1abdc2feca9097f2936fe8b851a5c",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6846",
+      "query": "getParser",
+      "group": "simple-control",
+      "requiredTargets": [
+        {
+          "path": "lib/content-type-parser.js",
+          "startLine": 119,
+          "endLine": 156,
+          "sha256": "cfcc884e63b738b240ffa18f3a4b9cb736ab4440a53a3a6cacd99eebb258535e",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/content-parser.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ],
+      "scope": "fix: reset lastIndex before testing global/sticky content-type RegExp parsers",
+      "evidence": {
+        "manifest": "eval-agent-impact-pilot.manifest.json",
+        "referenceDiffSha256": "319567b020e00591ad3079be39f522da31d18c9959dff10802e620b1d566c6f2",
+        "oracle": "Static source/diff retrieval ground truth; no execution or agent-correctness oracle."
+      }
+    }
+  ]
+}
