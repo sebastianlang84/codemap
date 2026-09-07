@@ -10,6 +10,10 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 - [ ] Aufgabenabhängige Fehlerkatalog-/Typ-/Exportbeziehungen erst bei einem belegten,
   allgemein anwendbaren Verfahren ergänzen; direkte Testimporte lösen nur die Testsuche.
 
+- [ ] Vor weiterer Agenten-Nutzenmessung beiden Varianten denselben geprüften,
+  gezielten Testbefehl geben. Die [frische Vier-Fall-Prüfung](docs/developer/agent-impact-fresh-result.md)
+  wird stark durch Testumwege geprägt; keine automatische weitere Modellserie.
+
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) erklärt

@@ -1,0 +1,318 @@
+{
+  "privateArchive": "/tmp/codemap-fresh-traces/agent-impact-HqhT1T",
+  "manifestSha256": "7f7fe756421029ad147bc7b0d18cfa3fd90e47cdbb94bcc13e0781ab78f52736",
+  "resultSha256": "7e00731613f788856eaa64cce37942643b37a329d70e8e9eb679d8790f636f00",
+  "traceUsageMatches": true,
+  "fasterTasks": 2,
+  "directionalChecks": {
+    "allPairsValid": true,
+    "noPairedSuccessLosses": true,
+    "agentTimeRatioAtMost085": false,
+    "tokenRatioAtMost110": true,
+    "atLeastThreeFasterTasks": false
+  },
+  "directionalPassed": false,
+  "runs": [
+    {
+      "runOrder": 1,
+      "taskId": "express-fresh-5167",
+      "mode": "baseline",
+      "traceFile": "run-1.json",
+      "traceSha256": "0a271c982e1dc2081328789691ff09b8e1a75c65011d94a07a03df76c54143fc",
+      "nonOraclePatchFile": "run-1-non-oracle.patch",
+      "nonOraclePatchSha256": "88aa3a63f08ff7252ef9b7cf9fe0ead1628fa0e7b998ee8af77b38115631b23a",
+      "nonOraclePaths": [
+        "lib/response.js"
+      ],
+      "commands": 5,
+      "outputCharacters": 96786,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 3,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npx mocha --require test/support/env --reporter spec --check-leaks test/res.redirect.js'"
+        },
+        {
+          "ordinal": 4,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm test'"
+        }
+      ]
+    },
+    {
+      "runOrder": 2,
+      "taskId": "express-fresh-5167",
+      "mode": "codemap",
+      "traceFile": "run-2.json",
+      "traceSha256": "39d58e719c4871aec07c7e3d4a0203f98fe260142ac7fe945ed7f58245ab4eb3",
+      "nonOraclePatchFile": "run-2-non-oracle.patch",
+      "nonOraclePatchSha256": "88aa3a63f08ff7252ef9b7cf9fe0ead1628fa0e7b998ee8af77b38115631b23a",
+      "nonOraclePaths": [
+        "lib/response.js"
+      ],
+      "commands": 9,
+      "outputCharacters": 91208,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 7,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc \"npm test -- --grep 'res.*redirect|redirect'\""
+        },
+        {
+          "ordinal": 8,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm test'"
+        }
+      ]
+    },
+    {
+      "runOrder": 3,
+      "taskId": "fastify-fresh-6888",
+      "mode": "codemap",
+      "traceFile": "run-3.json",
+      "traceSha256": "e039db72e36dd733827aed3384dce66ad328e04f6190f94d1bcf8aab30995fcd",
+      "nonOraclePatchFile": "run-3-non-oracle.patch",
+      "nonOraclePatchSha256": "0e2f812d75fb7e49488cf7a2477a4b3a6797b9bca9239e81b118ee3e50500236",
+      "nonOraclePaths": [
+        "fastify.d.ts"
+      ],
+      "commands": 7,
+      "outputCharacters": 36644,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 5,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm run test:types -- --tsconfig ./test/types/tsconfig.json'"
+        },
+        {
+          "ordinal": 7,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm run lint:eslint -- fastify.d.ts test/types/fastify.tst.ts'"
+        }
+      ]
+    },
+    {
+      "runOrder": 4,
+      "taskId": "fastify-fresh-6888",
+      "mode": "baseline",
+      "traceFile": "run-4.json",
+      "traceSha256": "1bab6cd1eeb83fd7bd8ae5af96ad84448eaf35fde9b86ebc2c2282b069516945",
+      "nonOraclePatchFile": "run-4-non-oracle.patch",
+      "nonOraclePatchSha256": "0e2f812d75fb7e49488cf7a2477a4b3a6797b9bca9239e81b118ee3e50500236",
+      "nonOraclePaths": [
+        "fastify.d.ts"
+      ],
+      "commands": 6,
+      "outputCharacters": 63460,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 4,
+          "exitCode": 1,
+          "commandPreview": "/bin/bash -lc 'npm run test:types -- --test-name-pattern fastify'"
+        },
+        {
+          "ordinal": 5,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm run test:types'"
+        },
+        {
+          "ordinal": 6,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npx eslint fastify.d.ts test/types/fastify.tst.ts && git diff -- fastify.d.ts test/types/fastify.tst.ts'"
+        }
+      ]
+    },
+    {
+      "runOrder": 5,
+      "taskId": "fastify-fresh-6830",
+      "mode": "baseline",
+      "traceFile": "run-5.json",
+      "traceSha256": "b3b50eee5ad0052904ebf1b95bebb040bf60fe6d27be4a1d1bd3898443ef081d",
+      "nonOraclePatchFile": "run-5-non-oracle.patch",
+      "nonOraclePatchSha256": "a1f47fb31a319fa17abb6f0493e779cfee40a3ac7e6f1bbcb51ddd48a54a2f7c",
+      "nonOraclePaths": [
+        "lib/reply.js"
+      ],
+      "commands": 15,
+      "outputCharacters": 726040,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 4,
+          "exitCode": 1,
+          "commandPreview": "/bin/bash -lc \"sed -n '202,235p' lib/reply.js; npm test -- --help\""
+        },
+        {
+          "ordinal": 5,
+          "exitCode": 1,
+          "commandPreview": "/bin/bash -lc 'npx borp test/internals/reply.test.js'"
+        },
+        {
+          "ordinal": 7,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc \"node <<'NODE'\n'use strict'\nconst Fastify = require('./')\n;(async () => {\n  const fastify = Fastify()\n  fastify.get('/upper', (_, reply) => reply.type('APPLICATION/JSON').send({ ok: true }))\n  fastify.get('/charset', (_, reply) => reply.type('APPLICATION/JSON; CHARSET=UTF-16').send({ o"
+        },
+        {
+          "ordinal": 9,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npx borp --help | head -80'"
+        },
+        {
+          "ordinal": 10,
+          "exitCode": 1,
+          "commandPreview": "/bin/bash -lc \"npx borp --pattern 'test/internals/reply.test.js' --reporter terse\""
+        },
+        {
+          "ordinal": 11,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc \"npx borp --pattern 'test/internals/reply.test.js'\""
+        },
+        {
+          "ordinal": 12,
+          "exitCode": 130,
+          "commandPreview": "/bin/bash -lc \"npx eslint lib/reply.js test/internals/reply.test.js && npx borp -p 'test/internals/reply.test.js'\""
+        },
+        {
+          "ordinal": 13,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'node --test test/internals/reply.test.js'"
+        },
+        {
+          "ordinal": 14,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npx eslint lib/reply.js test/internals/reply.test.js && node --test test/internals/reply.test.js >/tmp/reply-test-output.txt && tail -8 /tmp/reply-test-output.txt'"
+        }
+      ]
+    },
+    {
+      "runOrder": 6,
+      "taskId": "fastify-fresh-6830",
+      "mode": "codemap",
+      "traceFile": "run-6.json",
+      "traceSha256": "16c3da2d91f21be41c22631ed5850f2ffac54135058569b9eb100b6218dfae9b",
+      "nonOraclePatchFile": "run-6-non-oracle.patch",
+      "nonOraclePatchSha256": "686bfeb32400ac616a49428a35cf30eaf9c387183224dcc254014b12cbbc2486",
+      "nonOraclePaths": [
+        "lib/reply.js",
+        "test/content-type.test.js"
+      ],
+      "commands": 20,
+      "outputCharacters": 347161,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 10,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'node --test test/content-type.test.js'"
+        },
+        {
+          "ordinal": 11,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'node --test test/schema-serialization.test.js'"
+        },
+        {
+          "ordinal": 12,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npx eslint lib/reply.js test/content-type.test.js'"
+        },
+        {
+          "ordinal": 14,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'node --test test/route.5.test.js test/route.6.test.js test/hooks.test.js test/reply-error.test.js'"
+        },
+        {
+          "ordinal": 15,
+          "exitCode": 1,
+          "commandPreview": "/bin/bash -lc 'npm run unit'"
+        },
+        {
+          "ordinal": 17,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'node --test test/internals/reply.test.js test/content-type.test.js'"
+        },
+        {
+          "ordinal": 18,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npx eslint lib/reply.js test/content-type.test.js test/internals/reply.test.js && git diff --check'"
+        },
+        {
+          "ordinal": 19,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm run unit > /tmp/fastify-unit-output.txt 2>&1; unit_status=$?; tail -35 /tmp/fastify-unit-output.txt; exit $unit_status'"
+        }
+      ]
+    },
+    {
+      "runOrder": 7,
+      "taskId": "express-fresh-5785",
+      "mode": "codemap",
+      "traceFile": "run-7.json",
+      "traceSha256": "07709c7b7e3079e48f37fe65ec52b7de78c3d8f30c42eaa09e6a36f3b25b13d0",
+      "nonOraclePatchFile": "run-7-non-oracle.patch",
+      "nonOraclePatchSha256": "4a2eb3ac8662b2e7b4c0f69fbb2ea5fd68dc084af1c327693bca5b5da8defbbf",
+      "nonOraclePaths": [
+        "lib/response.js"
+      ],
+      "commands": 11,
+      "outputCharacters": 108622,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 9,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm run lint'"
+        },
+        {
+          "ordinal": 10,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm test'"
+        }
+      ]
+    },
+    {
+      "runOrder": 8,
+      "taskId": "express-fresh-5785",
+      "mode": "baseline",
+      "traceFile": "run-8.json",
+      "traceSha256": "4df7b7d4721bfb021ca1e0cf1a95b152206c04336d8e968dc8f7d7b096f696b4",
+      "nonOraclePatchFile": "run-8-non-oracle.patch",
+      "nonOraclePatchSha256": "4a2eb3ac8662b2e7b4c0f69fbb2ea5fd68dc084af1c327693bca5b5da8defbbf",
+      "nonOraclePaths": [
+        "lib/response.js"
+      ],
+      "commands": 6,
+      "outputCharacters": 96371,
+      "missingRgEvents": 0,
+      "suspiciousCommandCandidates": [],
+      "testCommands": [
+        {
+          "ordinal": 3,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc \"npm test -- --grep 'res.redirect'\""
+        },
+        {
+          "ordinal": 5,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'npm test'"
+        },
+        {
+          "ordinal": 6,
+          "exitCode": 0,
+          "commandPreview": "/bin/bash -lc 'git diff -- lib/response.js test/res.redirect.js && git status --short && npm run lint -- --no-fix'"
+        }
+      ]
+    }
+  ],
+  "limits": "Command screening, not network observation. Command output characters are not tokens or elapsed time. Non-oracle patches exclude files replaced by hidden tests."
+}

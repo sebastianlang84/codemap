@@ -111,6 +111,11 @@ test strategies. The reproduced JavaScript definition miss is
 [corrected and regression-tested](../developer/javascript-definitions.md).
 No further model series is authorized.
 
+The owner-authorized [fresh four-task comparison](../developer/agent-impact-fresh-result.md)
+then completed with 4/4 solved in both arms, 39.4% fewer tokens and 10.0% less agent
+time with CodeMap. Only 2/4 tasks were faster, so the frozen efficiency gate failed.
+Test-command detours dominate the savings; maintenance-only status remains.
+
 The original proposal below remains historical, not authorization for another run.
 
 Only after step 2 passes, freeze one development experiment: eight new tasks from at least two

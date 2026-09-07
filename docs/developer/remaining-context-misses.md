@@ -90,3 +90,7 @@ used in production and no ranking weights change. Reproduce with
 `python3 scripts/eval-context-alternatives.py --cli /path/to/dist/cli/bin.js --output /tmp/alternatives.json`.
 
 Release impact: patch, next version 0.10.2; retain Unreleased, no release/tag here.
+
+The offline selector used the plugin-corrected context builder, now pinned at
+`11b7f1e`. The subsequent [fresh agent comparison](agent-impact-fresh-result.md)
+completed all eight attempts; its directional efficiency gate failed.
