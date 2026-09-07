@@ -1,6 +1,6 @@
 # Fresh agent-impact directional check
 
-Selection frozen before inspecting candidate patches or oracle outcomes on 2026-09-07:
+Selection protocol fixed before solver runs on 2026-09-07:
 scan commits reachable from each cached Express and Fastify HEAD, ordered by
 committer timestamp descending, then full SHA ascending. Take the first two
 eligible fixes per repository, excluding every fix commit/task in any existing
@@ -33,8 +33,8 @@ incomplete pairs or infrastructure failures cannot pass the gate.
 
 Fastify 6888 uses TSTyche with `--target '*'`, which selects its locally installed
 TypeScript (verified in the installed runner), not a remotely fetched compiler.
-Pinned setup resolved TSTyche 7.2.4 and TypeScript 6.0.3. Fastify 6830 runs only the
-upstream JSON charset response regression; cache-internals assertions from the
+Pinned setup resolved TSTyche 7.2.4 and TypeScript 6.0.3. Fastify 6830 runs the entire upstream reply-internals test file, including the
+JSON charset regression and existing reply controls; cache-internals assertions from the
 same patch are outside this behavioral task. Its score does not establish that
 every refactoring change in the upstream patch was reproduced.
 
@@ -104,5 +104,11 @@ npm run eval:agent-impact -- --manifest scripts/eval-agent-impact-fresh.manifest
 Oracle validation on Node 22.23.2: all four valid; each base failed twice by
 assertion, each reference passed twice. Express 5785 base exits were [4,4];
 other bases [1,1]; all references [0,0]. No solver runs were made during selection.
+Before solver calls, broadened Fastify 6830 from its named charset test to the
+whole reply-internals file. The prompt now specifies the other changed public
+assertion: quoting a version parameter when adding the default charset. No internal
+cache API requirement was added.
+The broadened Fastify 6830 oracle again returned base [1,1] assertions and reference
+[0,0]. Final dry-run plans eight runs and no inferred dollar budget.
 Frozen manifest hash (canonical harness JSON):
-`fd339ac4d603dca4cbb3c4ff8cea3e42dc57c67cbc4029cf206e9ed3e000423d`.
+`7f7fe756421029ad147bc7b0d18cfa3fd90e47cdbb94bcc13e0781ab78f52736`.

@@ -130,7 +130,7 @@
       "id": "fastify-fresh-6830",
       "repo": "fastify",
       "sourceUrl": "https://github.com/fastify/fastify/pull/6830",
-      "prompt": "JSON responses with case variations in the Content-Type media type or charset parameter must still serialize successfully. Preserve an explicitly supplied charset and its header spelling rather than adding a duplicate charset. Keep ordinary JSON and non-JSON responses working.",
+      "prompt": "JSON responses with case variations in the Content-Type media type or charset parameter must still serialize successfully. Preserve an explicitly supplied charset and its header spelling rather than adding a duplicate charset. Keep ordinary JSON and non-JSON responses working. When adding the default charset to application/json; version=2, format the result as application/json; version=\"2\"; charset=utf-8.",
       "baseCommit": "75d74e1af74598deb18f2c052d64f815a5eec8f8",
       "fixCommit": "6f63ce9324b7368ac8beff1f385b31addce35c2d",
       "expectedPaths": [
@@ -169,7 +169,6 @@
         "file": "node",
         "args": [
           "--test",
-          "--test-name-pattern=Reply should handle JSON content type with a charset",
           "test/internals/reply.test.js"
         ],
         "timeoutMs": 60000
