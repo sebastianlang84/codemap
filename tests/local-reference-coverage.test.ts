@@ -30,3 +30,20 @@ test("declaration fallback resolves extensionless and JS imports without guessin
   assert.deepEqual(targets(root, "src/consumer.ts"), ["src/decl.d.ts", "src/runtime.ts", "src/types.d.ts"]);
 });
 
+test("absolute Python imports resolve unique root and src modules, skipping external and ambiguous targets", t => {
+  const root = fixtureRepo(t);
+  write(root, "scripts/main.py", "import root_module as local, external_lib\nfrom mypackage.worker import run\nimport ambiguous\nimport conflict\n");
+  for (const path of ["root_module.py", "src/mypackage/worker.py", "ambiguous.py", "src/ambiguous.py", "conflict.py", "conflict/__init__.py"]) write(root, path, "value = 1\n");
+  indexRepo({ cwd: root });
+  assert.deepEqual(targets(root, "scripts/main.py"), ["root_module.py", "src/mypackage/worker.py"]);
+});
+
+test("Python imports exclude documentation and retain exact source lines", () => {
+  const text = '# import fake\n"""\nimport documentation\n"""\nfrom package.worker import run\nimport first as alias, second.submodule\n';
+  assert.deepEqual(extractLocalReferences(text, "python", "main.py"), [
+    { kind: "import", specifier: "package/worker", lineStart: 5, lineEnd: 5 },
+    { kind: "import", specifier: "first", lineStart: 6, lineEnd: 6 },
+    { kind: "import", specifier: "second/submodule", lineStart: 6, lineEnd: 6 },
+  ]);
+});
+
