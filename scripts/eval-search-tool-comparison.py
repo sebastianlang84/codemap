@@ -17,6 +17,14 @@ def sha(value):
     return hashlib.sha256(value).hexdigest()
 
 
+def replay_env(state):
+    # Public source replay needs no provider credentials or user Git configuration.
+    env = {key: os.environ[key] for key in ('PATH', 'LANG', 'LC_ALL', 'TMPDIR') if key in os.environ}
+    env.update(CODEMAP_HOME=str(state), CODEMAP_TELEMETRY='0', PGR_OUTPUT_PROFILE='full_v4',
+               RIPGREP_CONFIG_PATH='', GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL='/dev/null')
+    return env
+
+
 def command(argv, root=None, env=None, data=None, allowed=(0,)):
     started = time.perf_counter()
     result = subprocess.run([str(a) for a in argv], cwd=root, env=env, input=data,
@@ -226,6 +234,14 @@ def main():
         raise ValueError('PGR binary differs from frozen manifest')
     # Hash only named development sources; never inspect reference patches or confirmation files.
     repo_root = args.manifest.parent.parent
+    if args.helper != repo_root / 'scripts/eval-search-tool-comparison.ts' or args.cli != repo_root / 'dist/cli/bin.js':
+        raise ValueError('Helper and built CLI must belong to the frozen source checkout')
+    source_paths = ['src', 'migrations', 'package.json', 'package-lock.json']
+    command(['git', '-C', repo_root, 'diff', '--exit-code', '--quiet', manifest['codeMapCommit'], '--', *source_paths])
+    dirty, _ = command(['git', '-C', repo_root, 'status', '--porcelain', '--untracked-files=all', '--', *source_paths])
+    if dirty:
+        raise ValueError('Uncommitted product source changes')
+    product_tree, _ = command(['git', '-C', repo_root, 'rev-parse', manifest['codeMapCommit'] + ':src'])
     for path, expected in manifest['sourceManifests'].items():
         if sha((repo_root / path).read_bytes()) != expected:
             raise ValueError(f'Source manifest drift: {path}')
@@ -247,7 +263,7 @@ def main():
                     lines = source_path(root, target['path']).read_text().splitlines()
                     if sha('\n'.join(lines[target['startLine'] - 1:target['endLine']]).encode()) != target['sha256']:
                         raise ValueError(f'Target source drift: {case["id"]}')
-                env = dict(os.environ, CODEMAP_HOME=str(state), CODEMAP_TELEMETRY='0', PGR_OUTPUT_PROFILE='full_v4', RIPGREP_CONFIG_PATH='')
+                env = replay_env(state)
                 command(['git', 'init', '--quiet'], root, env)
                 command(['git', 'add', '.'], root, env)
                 command(['git', '-c', 'user.name=CodeMap Eval', '-c', 'user.email=codemap@example.invalid', 'commit', '--quiet', '-m', 'snapshot'], root, env)
@@ -300,11 +316,13 @@ def main():
     result = {'schemaVersion': 1, 'manifestSha256': sha(manifest_bytes), 'runnerSha256': sha(Path(__file__).read_bytes()),
               'helperSha256': sha(args.helper.read_bytes()), 'pgrSha256': sha(args.pgr.read_bytes()),
               'cliSha256': sha(args.cli.read_bytes()), 'rgSha256': sha(Path(shutil.which('rg')).read_bytes()),
+              'codeMapSourceTree': product_tree.decode().strip(),
               'codeMapCommit': manifest['codeMapCommit'], 'pgrCommit': manifest['pgrCommit'],
               'versions': versions, 'settings': settings, 'indexing': indexes, 'cases': rows,
               'summary': summarize(rows), 'claimBoundary': 'Frozen historical retrieval replay only; static rg is not adaptive agent navigation. No fix-correctness or agent-benefit claim.'}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + '\n')
+    args.output.chmod(0o600)
     print(json.dumps(result['summary'], indent=2))
 
 
