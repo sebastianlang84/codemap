@@ -5,7 +5,8 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 ## Aktives Arbeitsprogramm
 
 [Roadmap mit Reihenfolge, Messregeln und Versuchslimits](docs/product/roadmap.md#arbeitsprogramm-verlässlicher-nutzen-bei-code-aufgaben).
-Stand: geplant; Umsetzung und neue Modellserie noch nicht gestartet.
+Stand: Ausführung freigegeben; Messharness ergänzt, zwölf lokale Fälle eingefroren.
+Die neuen Agentenfälle werden unabhängig vorbereitet; noch keine Modellserie gestartet.
 
 - [ ] 1. Messgrundlage: Runner vervollständigen, geprüfte Testbefehle, getrennte Fallgruppen einfrieren.
 - [ ] 2. Funktionsauswahl: höchstens zwei allgemeine Kandidaten, feste Kontrollfälle und Budgets.

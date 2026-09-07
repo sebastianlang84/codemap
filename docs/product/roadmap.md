@@ -47,9 +47,9 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Arbeitsprogramm: verlässlicher Nutzen bei Code-Aufgaben
 
-Stand: 2026-09-07. Geplant auf Wunsch des Eigentümers als zusammenhängendes Programm.
+Stand: 2026-09-07. Das zusammenhängende Programm ist mit „GO!“ zur Ausführung freigegeben.
 Die Pakete werden in Reihenfolge abgeschlossen; einzelne fehlgeschlagene Versuche lösen
-keine neue Planungsrunde aus. Diese Planung startet noch keine Modellläufe.
+keine neue Planungsrunde aus. Modellläufe starten erst nach den unten festgelegten Gates.
 
 **Ziel:** korrekte Änderungen mit weniger Agentenzeit bei begrenztem Kontext liefern.
 CodeMap bleibt lokal, deterministisch und ohne zusätzliche Repo-Pflege nutzbar.
