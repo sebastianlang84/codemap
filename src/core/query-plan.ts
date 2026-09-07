@@ -27,7 +27,7 @@ export function planQuery(query: string): QueryPlan {
   const raw = query.trim();
   const phrases = [...raw.matchAll(/"([^"]+)"/g)].map((match) => match[1].trim()).filter(Boolean);
   const rawTerms = raw.match(/[\p{L}\p{N}_.$/-]+/gu) ?? [];
-  const terms = rawTerms.slice(0, 12);
+  const terms = selectTerms(rawTerms);
   if (terms.length === 0 && phrases.length === 0) throw new Error("Search query has no searchable terms.");
 
   const normalized = raw.replace(/^"|"$/g, "").toLowerCase();
@@ -61,6 +61,19 @@ export function planQuery(query: string): QueryPlan {
 const stopWords = new Set([
   "a", "an", "and", "api", "by", "for", "from", "get", "in", "into", "of", "on", "or", "post", "put", "the", "to", "with",
 ]);
+
+function selectTerms(terms: string[]): string[] {
+  if (terms.length <= 12) return terms;
+  // Preserve explicit code names before prose consumes the bounded query budget.
+  const priority = (term: string): number => {
+    if (/[a-z0-9][A-Z]|[A-Z]{2}[a-z]|[\p{L}\p{N}][_.\/$-][\p{L}\p{N}]|^[/$][\p{L}\p{N}]/u.test(term)) return 0;
+    return stopWords.has(term.toLowerCase()) ? 2 : 1;
+  };
+  return terms.map((term, index) => ({ term, index, priority: priority(term) }))
+    .sort((left, right) => left.priority - right.priority || left.index - right.index)
+    .slice(0, 12)
+    .map(({ term }) => term);
+}
 
 const codeIntentTerms = new Set([
   "aggregator", "class", "delivery", "endpoint", "function", "handler", "implemented", "lock", "macro", "method", "orchestrator", "pipeline", "service",
