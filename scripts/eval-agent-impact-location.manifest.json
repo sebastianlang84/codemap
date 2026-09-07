@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-location-v1",
+    "version": 1,
+    "frozenAt": "2026-09-07",
+    "purpose": "development-pilot",
+    "selectionProtocol": "Four unused behavioral runtime changes from cached first-parent main history, descending per repository after excluding all prior agent-impact and external-navigation cases, local probes, dependency-only/refactor-only/deletion-only changes and changes without separate regression tests. Express yields one eligible case; use three Fastify cases. Exact package locks frozen before models; all oracles must show base-fail/reference-pass twice. CodeMap profile and location-first instruction frozen before models. Eight Luna-high attempts, no outcome-based retries/replacements. All assigned pairs count, including non-use. See docs/developer/agent-impact-location.md. Development result, not untouched holdout or isolated fix attribution.",
+    "orderSeed": 7092026
+  },
+  "agent": {
+    "provider": "codex-cli",
+    "model": "gpt-5.6-luna",
+    "effort": "high",
+    "navigationWorkflow": "location-first",
+    "maxBudgetUsdPerRun": null,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "22c9fe0e21782c5ed0bee0e607a7e95a5f24d11b",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "express",
+      "remote": "https://github.com/expressjs/express.git"
+    },
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "express-pr-6285",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/6285",
+      "prompt": "Allow res.send to send a Uint8Array as its bytes rather than JSON. A UTF-8 encoded text payload sent with an explicit text/plain content type must arrive unchanged with UTF-8 charset. Preserve existing Buffer, string and object response behavior.",
+      "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+      "fixCommit": "55869f49a65f1e279d92488fa6319c9fd4d8eac2",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "hiddenTestPaths": [
+        "test/res.send.js"
+      ],
+      "expectedBaseFailure": "should accept Uint8Array",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/express-location-6285.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "8affdaededb4e1ca6d4878ece89a2203c7d3b0df892b365acc998401c2abad73"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "dot",
+          "--bail",
+          "--check-leaks",
+          "test/res.send.js"
+        ],
+        "timeoutMs": 60000
+      }
+    },
+    {
+      "id": "fastify-pr-6774",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6774",
+      "prompt": "When a plugin declares an unregistered dependency, throw an Error named FastifyError with code FST_ERR_PLUGIN_DEPENDENCY_NOT_REGISTERED, statusCode 500, and message \"The dependency '<dependency>' of plugin '<plugin>' is not registered\" using the actual names. Expose the corresponding error constructor consistently with other Fastify errors, and keep the documented error catalog and public error-code types in sync. Registered dependencies must continue to work.",
+      "baseCommit": "27f4d6222dd945238e96c1fdaa632d5dc3c37b2c",
+      "fixCommit": "c647de44cceaf8ec6ce81796374ff6ffd944d873",
+      "expectedPaths": [
+        "lib/errors.js",
+        "lib/plugin-utils.js",
+        "docs/Reference/Errors.md",
+        "types/errors.d.ts"
+      ],
+      "hiddenTestPaths": [
+        "test/internals/errors.test.js",
+        "test/internals/plugin.test.js"
+      ],
+      "expectedBaseFailure": "checkDependencies should check if the given dependency is present in the instance (errored)",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-6803.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "e0c6dba7d49ce7fa3c7ac5c28e5b18185da80229c79c9128bb51d3eaf9ca13fe"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/internals/errors.test.js",
+          "test/internals/plugin.test.js"
+        ],
+        "timeoutMs": 60000
+      }
+    },
+    {
+      "id": "fastify-pr-6746",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6746",
+      "prompt": "HTTP/2 responses with large non-stream Buffer or string bodies must arrive completely, including bodies larger than 64 KiB with an explicit Content-Length. Cancelling a large response must not prevent a subsequent small response on the same HTTP/2 connection. Preserve HTTP/1 response behavior and send trailers only after the payload is written.",
+      "baseCommit": "fc9eafddae37dea167d2affc26a29a04f9412047",
+      "fixCommit": "2bf4265b991aa4c9a2d3886882be6f062338c7bc",
+      "expectedPaths": [
+        "lib/reply.js"
+      ],
+      "hiddenTestPaths": [
+        "test/http2/plain.test.js"
+      ],
+      "expectedBaseFailure": "http2 large non-stream replies are sent completely",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-location-6746.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "42ff50a3c6f16a6df428cf2eec410283caaef0f0a5fe771e80817c2c1f0fface"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/http2/plain.test.js"
+        ],
+        "timeoutMs": 60000
+      }
+    },
+    {
+      "id": "fastify-pr-6714",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6714",
+      "prompt": "When a reply trailer handler completes more than once, accept only its first completion. In particular, a handler that calls its callback and also resolves a promise must retain the callback value, while other asynchronous trailers still complete normally. Preserve successful payload delivery, declared trailer names and chunked framing without Content-Length.",
+      "baseCommit": "6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "fixCommit": "9026164f5a2e78db59ff8f98933279161a85a6e3",
+      "expectedPaths": [
+        "lib/reply.js"
+      ],
+      "hiddenTestPaths": [
+        "test/reply-trailers.test.js"
+      ],
+      "expectedBaseFailure": "mixed callback and promise trailers only use the first completion",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-location-6714.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "66dacf3e32c254f952f0e9402581c671e11d53a55431fc3d05aa86bdd07c68e8"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/reply-trailers.test.js"
+        ],
+        "timeoutMs": 60000
+      }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 4,
+    "minTreatmentAdoptionRate": 0.75,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  },
+  "efficiencyGate": {
+    "maxCostRatio": null,
+    "maxTokenRatio": 0.85,
+    "maxAgentDurationRatio": 1.1,
+    "maxPairedLosses": 0
+  }
+}
