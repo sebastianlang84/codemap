@@ -1,0 +1,42 @@
+{
+  "taskId": "program-development-09",
+  "baseCommit": "85c5d93cbd049c4bd0679c36fd1ddcae8c37b642",
+  "postHoc": true,
+  "reason": "Winning treatment patch omits overloads and did not run mypy; baseline did.",
+  "command": [
+    ".venv/bin/mypy",
+    "src/flask/sansio/app.py",
+    "src/flask/sansio/blueprints.py"
+  ],
+  "arms": {
+    "base": {
+      "setupExit": 0,
+      "exitCode": 0,
+      "logSha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8",
+      "output": "Success: no issues found in 2 source files\n"
+    },
+    "baseline": {
+      "originalPatchSha256": "2418811bb3933779bc895414245ffb7b846284dfedce421554bdc46ebda42d0b",
+      "setupExit": 0,
+      "exitCode": 0,
+      "logSha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8",
+      "output": "Success: no issues found in 2 source files\n"
+    },
+    "codemap": {
+      "originalPatchSha256": "4c8d95ffbf7970c1b69dc6b55782de298d830e4901d4f8710411de78166bc1d1",
+      "setupExit": 0,
+      "exitCode": 1,
+      "logSha256": "dfe880ce10639002a0ad0efb14d9a71b3fe67c043e3f6ebf2c615bc434b19902",
+      "output": "src/flask/sansio/blueprints.py:496: error: Incompatible return value type (got\n\"Callable[..., bool]\", expected\n\"Callable[[T_template_test], T_template_test] | T_template_test\") \n[return-value]\n                return name\n                       ^~~~\nsrc/flask/sansio/app.py:726: error: Incompatible return value type (got\n\"Callable[..., bool]\", expected\n\"Callable[[T_template_test], T_template_test] | T_template_test\") \n[return-value]\n                return name\n                       ^~~~\nFound 2 errors in 2 files (checked 2 source files)\n"
+    }
+  },
+  "setupCommand": [
+    "uv",
+    "sync",
+    "--frozen",
+    "--offline",
+    "--python",
+    "3.14.2"
+  ],
+  "privateReproducer": "/home/wasti/.cache/codemap/agent-impact-current-20260907/typecheck.py"
+}

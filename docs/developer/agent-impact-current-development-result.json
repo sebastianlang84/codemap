@@ -1,0 +1,1450 @@
+{
+  "agent": {
+    "codexVersion": "codex-cli 0.153.4",
+    "effort": "medium",
+    "isolationConfigSha256": "74af79b093554077bc957d58a6fc66eed118b0ce89368a252c589fa25d1c5d90",
+    "maxBudgetUsdPerRun": null,
+    "modelEvidence": "requested-only; CLI does not report response model",
+    "navigationWorkflow": "location-first",
+    "provider": "codex-cli",
+    "requestedModel": "gpt-5.6-luna"
+  },
+  "claimBoundary": "Directional development evidence only; it cannot support a generalization claim.",
+  "codemapProfile": {
+    "expectedVersion": "0.10.1",
+    "gitCommit": "1f348c456f7efc13007a8372376e766d9d13272b"
+  },
+  "corpus": {
+    "frozenAt": "2026-09-07",
+    "id": "agent-impact-program-development-v1",
+    "orderSeed": 0,
+    "purpose": "development-pilot",
+    "selectionProtocol": "Feasibility-screened new upstream changes; eight per repository, SHA-sorted alternating allocation with deterministic API-family cap repair, then repository-interleaved order. Corpus frozen before CodeMap or solver observations. See docs/developer/agent-impact-program-protocol.md. Confirmation stays sealed until candidate freeze and a passing development gate.",
+    "version": 1
+  },
+  "efficiencyGate": {
+    "issues": [
+      {
+        "actual": 0.9497878067347003,
+        "expected": "<= 0.85",
+        "metric": "agentDurationRatio"
+      },
+      {
+        "actual": 4,
+        "expected": ">= 8",
+        "metric": "fasterPairs"
+      }
+    ],
+    "passed": false
+  },
+  "gate": {
+    "issues": [],
+    "passed": true
+  },
+  "manifestSha256": "b288f18f795d9a47ca3d4270ef8beecffcd84d4b9cf433961c48f240d9308a4f",
+  "oracles": [
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-01",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-02",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-03",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-04",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-05",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-06",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-07",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-08",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-09",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-10",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-11",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "taskId": "program-development-12",
+      "valid": true
+    }
+  ],
+  "plannedRuns": 24,
+  "results": [
+    {
+      "addedLines": 43,
+      "agentDurationMs": 68155,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.download.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "68cbb3569ead95525c2bdbd2d5878f92133b5d3d17e9bf1469c6ccc75b6ac6ff",
+      "preflightDurationMs": 594,
+      "repo": "express",
+      "runOrder": 1,
+      "setupDurationMs": 1895,
+      "success": true,
+      "taskId": "program-development-01",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 141824,
+        "costUsd": null,
+        "inputTokens": 24311,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2960,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 7
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 351,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 45,
+      "agentDurationMs": 81765,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.download.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 268,
+      "mode": "codemap",
+      "originalPatchSha256": "e54b0a9923cf8bbb856513399e368d7e0cfa410b9382b7763d7a68e11a69816a",
+      "preflightDurationMs": 642,
+      "repo": "express",
+      "runOrder": 2,
+      "setupDurationMs": 1845,
+      "success": true,
+      "taskId": "program-development-01",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 131584,
+        "costUsd": null,
+        "inputTokens": 19035,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 3799,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 13
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 378,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 30,
+      "agentDurationMs": 68915,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/request.js",
+        "test/internals/request.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 6,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 562,
+      "mode": "codemap",
+      "originalPatchSha256": "a9d1b1c29945779f44c248842a08ea94277d0a51b409d85d17b91653d02d484a",
+      "preflightDurationMs": 665,
+      "repo": "fastify",
+      "runOrder": 3,
+      "setupDurationMs": 4644,
+      "success": true,
+      "taskId": "program-development-02",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 146944,
+        "costUsd": null,
+        "inputTokens": 24466,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2974,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 9
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 349,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 30,
+      "agentDurationMs": 79415,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/request.js",
+        "test/internals/request.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 6,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "f76bb914c8e1bf7abc6110f10e344a0f38f616ad69bb1f3946cd0c4c9cc9f5e3",
+      "preflightDurationMs": 785,
+      "repo": "fastify",
+      "runOrder": 4,
+      "setupDurationMs": 4592,
+      "success": true,
+      "taskId": "program-development-02",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 254464,
+        "costUsd": null,
+        "inputTokens": 27910,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 3025,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 8
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 367,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 4,
+      "agentDurationMs": 47439,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "src/flask/app.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 4,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "5284570ce2adb078d6e1122f7b7e3f0d1abbb643f657016072af70d4bb89e9fe",
+      "preflightDurationMs": 1151,
+      "repo": "flask",
+      "runOrder": 5,
+      "setupDurationMs": 234,
+      "success": true,
+      "taskId": "program-development-03",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 110848,
+        "costUsd": null,
+        "inputTokens": 26418,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1951,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 381,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 12,
+      "agentDurationMs": 56622,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "src/flask/app.py",
+        "tests/test_helpers.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 4,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 196,
+      "mode": "codemap",
+      "originalPatchSha256": "1aa197bea8990ad7d70e28eb3b9f2b214bc7055e8ea3210512b172f40aae2ad8",
+      "preflightDurationMs": 1222,
+      "repo": "flask",
+      "runOrder": 6,
+      "setupDurationMs": 205,
+      "success": true,
+      "taskId": "program-development-03",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 111360,
+        "costUsd": null,
+        "inputTokens": 19472,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2391,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 10
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 384,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 44,
+      "agentDurationMs": 71468,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.cookie.js"
+      ],
+      "codemapCommands": {
+        "context": 2,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 259,
+      "mode": "codemap",
+      "originalPatchSha256": "e63e975ac45763e619bc23b1800e394b74d85a34a2bd66940ce491a3eaa1c91d",
+      "preflightDurationMs": 643,
+      "repo": "express",
+      "runOrder": 7,
+      "setupDurationMs": 1799,
+      "success": true,
+      "taskId": "program-development-04",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 135424,
+        "costUsd": null,
+        "inputTokens": 25076,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 3056,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 12
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 322,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 9,
+      "agentDurationMs": 45525,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "b2fc82ebfaba078f8a063bc18e5b43bcf6e5ba4937ed80cf4890cd213d74fc79",
+      "preflightDurationMs": 545,
+      "repo": "express",
+      "runOrder": 8,
+      "setupDurationMs": 1775,
+      "success": true,
+      "taskId": "program-development-04",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 65024,
+        "costUsd": null,
+        "inputTokens": 19773,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1880,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 306,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 26,
+      "agentDurationMs": 126042,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "docs/Reference/Errors.md",
+        "lib/errors.js",
+        "lib/route.js",
+        "test/internals/errors.test.js",
+        "types/errors.d.ts"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "e46f40254e757f1283ad7b6667c987311875ed7b9a2a386cbc022de9e53d3c7b",
+      "preflightDurationMs": 564,
+      "repo": "fastify",
+      "runOrder": 9,
+      "setupDurationMs": 4517,
+      "success": true,
+      "taskId": "program-development-05",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 516096,
+        "costUsd": null,
+        "inputTokens": 54847,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 5047,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 12
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 522,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 20,
+      "agentDurationMs": 192073,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "docs/Reference/Errors.md",
+        "lib/errors.js",
+        "lib/route.js",
+        "test/internals/errors.test.js",
+        "test/types/errors.test-d.ts",
+        "types/errors.d.ts"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 556,
+      "mode": "codemap",
+      "originalPatchSha256": "0e3230d3fc2b34b0a2507b3e58b7ec84416a1aae42227f2e8fff48cd725357a0",
+      "preflightDurationMs": 652,
+      "repo": "fastify",
+      "runOrder": 10,
+      "setupDurationMs": 4531,
+      "success": true,
+      "taskId": "program-development-05",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 836096,
+        "costUsd": null,
+        "inputTokens": 82986,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 8853,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 20
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 349,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 16,
+      "agentDurationMs": 138800,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "docs/config.rst",
+        "src/flask/app.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 189,
+      "mode": "codemap",
+      "originalPatchSha256": "b9ee8f241aaa8bdb5fb0c52d7ba933da483fee4c2430d7ab0e4b36ac0732039a",
+      "preflightDurationMs": 1120,
+      "repo": "flask",
+      "runOrder": 11,
+      "setupDurationMs": 306,
+      "success": true,
+      "taskId": "program-development-06",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 601088,
+        "costUsd": null,
+        "inputTokens": 51876,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 5603,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 21
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 310,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 16,
+      "agentDurationMs": 128093,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "docs/config.rst",
+        "src/flask/app.py",
+        "src/flask/ctx.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "41d306696018f1c38a59699345a15fe07f35485a79d69a96547fec9ae45ac1b4",
+      "preflightDurationMs": 1011,
+      "repo": "flask",
+      "runOrder": 12,
+      "setupDurationMs": 205,
+      "success": true,
+      "taskId": "program-development-06",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 445952,
+        "costUsd": null,
+        "inputTokens": 41954,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 5149,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 15
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 313,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 30,
+      "agentDurationMs": 47021,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.clearCookie.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "a5617cd8870318ec1220199abb6d06242d91dea5c009ebdae7fab080a3957f14",
+      "preflightDurationMs": 495,
+      "repo": "express",
+      "runOrder": 13,
+      "setupDurationMs": 1704,
+      "success": true,
+      "taskId": "program-development-07",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 70912,
+        "costUsd": null,
+        "inputTokens": 11855,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1786,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 266,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 35,
+      "agentDurationMs": 56502,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.clearCookie.js"
+      ],
+      "codemapCommands": {
+        "context": 2,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 244,
+      "mode": "codemap",
+      "originalPatchSha256": "a762943f2941709eb12cccff3e0611932b9f2476b22a478a07d08afca332882a",
+      "preflightDurationMs": 560,
+      "repo": "express",
+      "runOrder": 14,
+      "setupDurationMs": 1689,
+      "success": true,
+      "taskId": "program-development-07",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 86784,
+        "costUsd": null,
+        "inputTokens": 14092,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2476,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 7
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 264,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 3,
+      "agentDurationMs": 61450,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/request.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 10,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 548,
+      "mode": "codemap",
+      "originalPatchSha256": "582a4d21a7202ef72fbc9953acce39fe27daff4424e1f22f1060b3a24bf38cb2",
+      "preflightDurationMs": 406,
+      "repo": "fastify",
+      "runOrder": 15,
+      "setupDurationMs": 4445,
+      "success": true,
+      "taskId": "program-development-08",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 75008,
+        "costUsd": null,
+        "inputTokens": 23822,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2748,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 100,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 20,
+      "agentDurationMs": 58557,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/request.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 13,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "423322f1ebe397b8a5b917ae2da9ed5afa73cdf9848bd871bce626075aa6706c",
+      "preflightDurationMs": 341,
+      "repo": "fastify",
+      "runOrder": 16,
+      "setupDurationMs": 4517,
+      "success": true,
+      "taskId": "program-development-08",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 100608,
+        "costUsd": null,
+        "inputTokens": 20339,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2583,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 4
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 98,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 116,
+      "agentDurationMs": 147693,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "src/flask/sansio/app.py",
+        "src/flask/sansio/blueprints.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 12,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "2418811bb3933779bc895414245ffb7b846284dfedce421554bdc46ebda42d0b",
+      "preflightDurationMs": 1529,
+      "repo": "flask",
+      "runOrder": 17,
+      "setupDurationMs": 605,
+      "success": true,
+      "taskId": "program-development-09",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 427264,
+        "costUsd": null,
+        "inputTokens": 40640,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 5792,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 11
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 772,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 36,
+      "agentDurationMs": 76230,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "src/flask/sansio/app.py",
+        "src/flask/sansio/blueprints.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 12,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 179,
+      "mode": "codemap",
+      "originalPatchSha256": "4c8d95ffbf7970c1b69dc6b55782de298d830e4901d4f8710411de78166bc1d1",
+      "preflightDurationMs": 1619,
+      "repo": "flask",
+      "runOrder": 18,
+      "setupDurationMs": 536,
+      "success": true,
+      "taskId": "program-development-09",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 170496,
+        "costUsd": null,
+        "inputTokens": 28073,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 3478,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 10
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 766,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 24,
+      "agentDurationMs": 40085,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.format.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 253,
+      "mode": "codemap",
+      "originalPatchSha256": "fe2a55534dd098b90ead6d2da04eb855d2289300b253787806a85eaac7527734",
+      "preflightDurationMs": 650,
+      "repo": "express",
+      "runOrder": 19,
+      "setupDurationMs": 1762,
+      "success": true,
+      "taskId": "program-development-10",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 60928,
+        "costUsd": null,
+        "inputTokens": 22906,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1505,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 367,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 25,
+      "agentDurationMs": 46984,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/response.js",
+        "test/res.format.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "da1801c294dff441c35855be2aebbd9da144796d0f48bca807a2e1787b20d138",
+      "preflightDurationMs": 585,
+      "repo": "express",
+      "runOrder": 20,
+      "setupDurationMs": 1793,
+      "success": true,
+      "taskId": "program-development-10",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 81152,
+        "costUsd": null,
+        "inputTokens": 13472,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1887,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 355,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 44,
+      "agentDurationMs": 200835,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/validation.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 6,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "a1e5909940744f8347ad793badbf99cc6ab3ab4497c2035b875ad9dd65842652",
+      "preflightDurationMs": 1009,
+      "repo": "fastify",
+      "runOrder": 21,
+      "setupDurationMs": 4185,
+      "success": true,
+      "taskId": "program-development-11",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 857088,
+        "costUsd": null,
+        "inputTokens": 104148,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 8865,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 15
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 249,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 28,
+      "agentDurationMs": 90015,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/validation.js",
+        "test/schema-validation.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 558,
+      "mode": "codemap",
+      "originalPatchSha256": "0ea0f820b0f52b50baac1674618a18cf7fa79cb1433b6ce256676ecad713be99",
+      "preflightDurationMs": 1072,
+      "repo": "fastify",
+      "runOrder": 22,
+      "setupDurationMs": 4256,
+      "success": true,
+      "taskId": "program-development-11",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 337664,
+        "costUsd": null,
+        "inputTokens": 68462,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 3647,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 12
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 246,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 5,
+      "agentDurationMs": 55506,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "src/flask/sessions.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 182,
+      "mode": "codemap",
+      "originalPatchSha256": "23404a826d49a487de9f9e642e48346623b529b69a170192fbcb10ff53ec5195",
+      "preflightDurationMs": 1549,
+      "repo": "flask",
+      "runOrder": 23,
+      "setupDurationMs": 614,
+      "success": true,
+      "taskId": "program-development-12",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 89088,
+        "costUsd": null,
+        "inputTokens": 20905,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2364,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 10
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 744,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 4,
+      "agentDurationMs": 45980,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "src/flask/sessions.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "312c355e911ae66e3f641062a1c9a4795421c4f7c7c3b144291667c453671e94",
+      "preflightDurationMs": 1456,
+      "repo": "flask",
+      "runOrder": 24,
+      "setupDurationMs": 503,
+      "success": true,
+      "taskId": "program-development-12",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 86272,
+        "costUsd": null,
+        "inputTokens": 19914,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1725,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 752,
+      "verifierExitCode": 0
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "agentDurationRatio": 0.9498,
+    "baselineSuccessRate": 1,
+    "budgetExhaustedRuns": 0,
+    "crossArmContamination": 0,
+    "exactTwoSidedP": 1,
+    "losingTasks": [],
+    "losses": 0,
+    "tasks": 12,
+    "ties": 12,
+    "tokenRatio": 0.8948,
+    "totalCostUsd": null,
+    "treatmentAdoptionRate": 1,
+    "treatmentSuccessRate": 1,
+    "validPairs": 12,
+    "wins": 0
+  },
+  "worstCaseBudgetUsd": null
+}

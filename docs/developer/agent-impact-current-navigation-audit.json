@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 1,
+  "evidenceSha256": "1e664b273ff1975aea3fd019b9043f210507b6b893dc29f8f53f5b6543464640",
+  "rawUsageAndDurationMatches": 24,
+  "originalPatchHashMatches": 24,
+  "canonicalManifestHashVerified": true,
+  "commandEvents": 234,
+  "totals": {
+    "baseline_commands": 98,
+    "baseline_beforeFirstFileChange": 48,
+    "baseline_failedCommands": 10,
+    "baseline_searchCalls": 0,
+    "baseline_contextCalls": 0,
+    "baseline_failedContextCalls": 0,
+    "codemap_commands": 136,
+    "codemap_beforeFirstFileChange": 90,
+    "codemap_failedCommands": 8,
+    "codemap_searchCalls": 12,
+    "codemap_contextCalls": 14,
+    "codemap_failedContextCalls": 2
+  },
+  "screenFlags": [],
+  "manualReview": "All completed command traces reviewed; no observed foreign profile, benchmark manifest, git history, remote source retrieval, or baseline CodeMap use. Long inline probes also screened. Not filesystem or network monitoring.",
+  "countBoundary": "beforeFirstFileChange counts command events before first reported file_change; it is not elapsed navigation time.",
+  "runs": [
+    {
+      "runOrder": 1,
+      "taskId": "program-development-01",
+      "mode": "baseline",
+      "commands": 7,
+      "beforeFirstFileChange": 3,
+      "failedCommands": 0,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 2,
+      "taskId": "program-development-01",
+      "mode": "codemap",
+      "commands": 13,
+      "beforeFirstFileChange": 8,
+      "failedCommands": 0,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 549,
+              "endLine": 591,
+              "sourceBytes": 1042
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 3,
+      "taskId": "program-development-02",
+      "mode": "codemap",
+      "commands": 9,
+      "beforeFirstFileChange": 7,
+      "failedCommands": 0,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "lib/request.js",
+              "startLine": 101,
+              "endLine": 149,
+              "sourceBytes": 1512
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 4,
+      "taskId": "program-development-02",
+      "mode": "baseline",
+      "commands": 8,
+      "beforeFirstFileChange": 2,
+      "failedCommands": 1,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 5,
+      "taskId": "program-development-03",
+      "mode": "baseline",
+      "commands": 5,
+      "beforeFirstFileChange": 2,
+      "failedCommands": 1,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 6,
+      "taskId": "program-development-03",
+      "mode": "codemap",
+      "commands": 10,
+      "beforeFirstFileChange": 7,
+      "failedCommands": 0,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "noCoveringChunk": false
+        }
+      ]
+    },
+    {
+      "runOrder": 7,
+      "taskId": "program-development-04",
+      "mode": "codemap",
+      "commands": 12,
+      "beforeFirstFileChange": 9,
+      "failedCommands": 1,
+      "searchCalls": 1,
+      "contextCalls": 2,
+      "failedContextCalls": 1,
+      "contexts": [
+        {
+          "exitCode": 1,
+          "noCoveringChunk": true
+        },
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 854,
+              "endLine": 883,
+              "sourceBytes": 654
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 8,
+      "taskId": "program-development-04",
+      "mode": "baseline",
+      "commands": 5,
+      "beforeFirstFileChange": 3,
+      "failedCommands": 0,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 9,
+      "taskId": "program-development-05",
+      "mode": "baseline",
+      "commands": 12,
+      "beforeFirstFileChange": 7,
+      "failedCommands": 2,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 10,
+      "taskId": "program-development-05",
+      "mode": "codemap",
+      "commands": 20,
+      "beforeFirstFileChange": 12,
+      "failedCommands": 1,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "lib/route.js",
+              "startLine": 75,
+              "endLine": 588,
+              "sourceBytes": 18271
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 11,
+      "taskId": "program-development-06",
+      "mode": "codemap",
+      "commands": 21,
+      "beforeFirstFileChange": 11,
+      "failedCommands": 3,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "src/flask/wrappers.py",
+              "startLine": 18,
+              "endLine": 219,
+              "sourceBytes": 7677
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 12,
+      "taskId": "program-development-06",
+      "mode": "baseline",
+      "commands": 15,
+      "beforeFirstFileChange": 9,
+      "failedCommands": 5,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 13,
+      "taskId": "program-development-07",
+      "mode": "baseline",
+      "commands": 5,
+      "beforeFirstFileChange": 3,
+      "failedCommands": 0,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 14,
+      "taskId": "program-development-07",
+      "mode": "codemap",
+      "commands": 7,
+      "beforeFirstFileChange": 5,
+      "failedCommands": 1,
+      "searchCalls": 1,
+      "contextCalls": 2,
+      "failedContextCalls": 1,
+      "contexts": [
+        {
+          "exitCode": 1,
+          "noCoveringChunk": true
+        },
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 709,
+              "endLine": 713,
+              "sourceBytes": 163
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 15,
+      "taskId": "program-development-08",
+      "mode": "codemap",
+      "commands": 6,
+      "beforeFirstFileChange": 4,
+      "failedCommands": 0,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "lib/request.js",
+              "startLine": 223,
+              "endLine": 302,
+              "sourceBytes": 2127
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 16,
+      "taskId": "program-development-08",
+      "mode": "baseline",
+      "commands": 4,
+      "beforeFirstFileChange": 2,
+      "failedCommands": 0,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 17,
+      "taskId": "program-development-09",
+      "mode": "baseline",
+      "commands": 11,
+      "beforeFirstFileChange": 3,
+      "failedCommands": 1,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 18,
+      "taskId": "program-development-09",
+      "mode": "codemap",
+      "commands": 10,
+      "beforeFirstFileChange": 8,
+      "failedCommands": 0,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "src/flask/sansio/blueprints.py",
+              "startLine": 119,
+              "endLine": 632,
+              "sourceBytes": 20239
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 19,
+      "taskId": "program-development-10",
+      "mode": "codemap",
+      "commands": 6,
+      "beforeFirstFileChange": 4,
+      "failedCommands": 0,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 683,
+              "endLine": 710,
+              "sourceBytes": 582
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 20,
+      "taskId": "program-development-10",
+      "mode": "baseline",
+      "commands": 5,
+      "beforeFirstFileChange": 3,
+      "failedCommands": 0,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 21,
+      "taskId": "program-development-11",
+      "mode": "baseline",
+      "commands": 15,
+      "beforeFirstFileChange": 7,
+      "failedCommands": 0,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    },
+    {
+      "runOrder": 22,
+      "taskId": "program-development-11",
+      "mode": "codemap",
+      "commands": 12,
+      "beforeFirstFileChange": 9,
+      "failedCommands": 0,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "test/schema-validation.test.js",
+              "startLine": 318,
+              "endLine": 336,
+              "sourceBytes": 552
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 23,
+      "taskId": "program-development-12",
+      "mode": "codemap",
+      "commands": 10,
+      "beforeFirstFileChange": 6,
+      "failedCommands": 2,
+      "searchCalls": 1,
+      "contextCalls": 1,
+      "failedContextCalls": 0,
+      "contexts": [
+        {
+          "exitCode": 0,
+          "excerpts": [
+            {
+              "path": "src/flask/sessions.py",
+              "startLine": 298,
+              "endLine": 398,
+              "sourceBytes": 3657
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 24,
+      "taskId": "program-development-12",
+      "mode": "baseline",
+      "commands": 6,
+      "beforeFirstFileChange": 4,
+      "failedCommands": 0,
+      "searchCalls": 0,
+      "contextCalls": 0,
+      "failedContextCalls": 0,
+      "contexts": []
+    }
+  ],
+  "privateTraceArchive": "/home/wasti/.cache/codemap/agent-impact-current-20260907/traces"
+}

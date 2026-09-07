@@ -96,3 +96,6 @@ Infrastruktur-Ersatzbudget aktualisiert. Während der Serie keine Produktänderu
 Ergebnisse: `agent-impact-current-development-result.json` und kurzer Ergebnisbericht
 im selben Verzeichnis. Modellzeit, Testzeit und Suchverläufe werden gemeinsam beurteilt;
 eine nachträgliche Auswahl günstiger Aufgaben ersetzt das Gate nicht.
+
+[Vergleich abgeschlossen](agent-impact-current-development-result.md): 24 reguläre Aufrufe,
+keine Ersatzversuche; Entwicklungs-Gate verfehlt, Bestätigung nicht gestartet.
