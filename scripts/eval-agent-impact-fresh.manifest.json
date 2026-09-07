@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-fresh-v1",
+    "version": 1,
+    "frozenAt": "2026-09-07",
+    "purpose": "development-pilot",
+    "selectionProtocol": "Newest eligible HEAD-reachable cached fixes ordered by committer date descending, then SHA ascending, excluding all previous manifest tasks; two per repository. Selection and exclusions frozen before solver runs in docs/developer/agent-impact-fresh.md. Eight Luna medium attempts, rotated order, no outcome retries; stop on infrastructure failure.",
+    "orderSeed": 0
+  },
+  "agent": {
+    "provider": "codex-cli",
+    "model": "gpt-5.6-luna",
+    "effort": "medium",
+    "navigationWorkflow": "location-first",
+    "maxBudgetUsdPerRun": null,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "11b7f1e8c30c6a53fe5db88f5d49a59e0fa9a078",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "express",
+      "remote": "https://github.com/expressjs/express.git"
+    },
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "express-fresh-5167",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/5167",
+      "prompt": "HTML redirect responses need a document structure. For a 302 redirect to /next, return exactly <!DOCTYPE html><head><title>Found</title></head><body><p>Found. Redirecting to /next</p></body>. Use the same compact structure with the appropriate status text and escaped destination for other HTML redirects. Preserve status and Location, URL encoding, plain-text negotiation and HEAD behavior.",
+      "baseCommit": "2cd372e34cd6613f4d00836c2ee122f28bddfcb3",
+      "fixCommit": "9a3f7ff4120d7920a2d13809ff5ae78648c8a3d6",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "hiddenTestPaths": [
+        "test/res.redirect.js"
+      ],
+      "expectedBaseFailure": "should respond with html",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fresh-express-5167.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "3382416fbc6258356e02db8f955679a8934eb3f3d01eef216018e46f8e94604a"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "dot",
+          "--bail",
+          "--check-leaks",
+          "test/res.redirect.js"
+        ],
+        "timeoutMs": 60000
+      }
+    },
+    {
+      "id": "fastify-fresh-6888",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6888",
+      "prompt": "Explicitly setting http2: false in server options should type-check as an HTTP/1 server. This must work both for plain HTTP and with HTTPS options, with the correct corresponding instance type inferred. Preserve inference for HTTP/2 configurations.",
+      "baseCommit": "0e9a3b35d8b13c9f261bf29bef46168a5d43c28f",
+      "fixCommit": "0f54a40f63b399bfe06a3deeab832f8b5feb6345",
+      "expectedPaths": [
+        "fastify.d.ts"
+      ],
+      "hiddenTestPaths": [
+        "test/types/fastify.tst.ts"
+      ],
+      "expectedBaseFailure": "No overload matches this call",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fresh-fastify-6888.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "5695515fd163b42baa838261efa02b1aafe10fbcfadd0de0d33975ab66636df7"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/tstyche",
+        "args": [
+          "--target",
+          "*",
+          "test/types/fastify.tst.ts"
+        ],
+        "timeoutMs": 60000
+      }
+    },
+    {
+      "id": "fastify-fresh-6830",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6830",
+      "prompt": "JSON responses with case variations in the Content-Type media type or charset parameter must still serialize successfully. Preserve an explicitly supplied charset and its header spelling rather than adding a duplicate charset. Keep ordinary JSON and non-JSON responses working.",
+      "baseCommit": "75d74e1af74598deb18f2c052d64f815a5eec8f8",
+      "fixCommit": "6f63ce9324b7368ac8beff1f385b31addce35c2d",
+      "expectedPaths": [
+        "lib/reply.js",
+        "lib/content-type.js",
+        "lib/content-type-parser.js",
+        "lib/request.js",
+        "lib/handle-request.js"
+      ],
+      "hiddenTestPaths": [
+        "test/internals/reply.test.js"
+      ],
+      "expectedBaseFailure": "Reply should handle JSON content type with a charset",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fresh-fastify-6830.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "6f78aeecc6a292b6b75b2a69676f1f16a7d119eeefe89b1467af1d22445c3717"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "--test-name-pattern=Reply should handle JSON content type with a charset",
+          "test/internals/reply.test.js"
+        ],
+        "timeoutMs": 60000
+      }
+    },
+    {
+      "id": "express-fresh-5785",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/5785",
+      "prompt": "For an HTML redirect response, display the escaped redirect destination as plain text rather than a clickable link, including destinations using a javascript scheme. Preserve the status message, Location header, URL encoding, HTML escaping, plain-text responses and HEAD behavior.",
+      "baseCommit": "125bb742a38cd97938a3932b47cc301e41c31f5d",
+      "fixCommit": "54271f69b511fea198471e6ff3400ab805d6b553",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "hiddenTestPaths": [
+        "test/res.redirect.js"
+      ],
+      "expectedBaseFailure": "should not render evil javascript links in anchor href",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fresh-express-5785.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "72b7dc1337347610095bc48bfc903081a176db9e18fd384748dd607a0e6052dc"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "spec",
+          "--check-leaks",
+          "test/res.redirect.js"
+        ],
+        "timeoutMs": 60000
+      }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 4,
+    "minTreatmentAdoptionRate": 0.75,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  },
+  "efficiencyGate": {
+    "maxCostRatio": null,
+    "maxTokenRatio": 1.1,
+    "maxAgentDurationRatio": 0.85,
+    "maxPairedLosses": 0
+  }
+}
