@@ -2,15 +2,14 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Agenten-Nutzen: Vergleich abgeschlossen
+## Agenten-Nutzen: Fehlerpflege
 
-[Luna-high v2](docs/developer/agent-impact-luna-result.md): beide Varianten 8/8 Aufgaben gelöst,
-mit optionalem CodeMap +21,9 % Tokens und +12,3 % Agentenzeit. CodeMap-Nutzung: 0/8.
-Kein Nutzenbeleg; die Suchqualität selbst wurde mangels Nutzung nicht bewertet.
-Das Fortsetzungskriterium ist verfehlt: Fehlerpflege, kein automatischer weiterer Pilot oder Ausbau.
-Die lokal geprüfte Korrektur verschachtelter Funktionsausschnitte bleibt bestehen.
-Trace-Audit: `rg` fehlte in allen 16 Läufen; der Vergleich belegt keinen Effekt gegenüber
-einem Agenten mit funktionierendem ripgrep. Details und lokale Ansatzpunkte im Ergebnisbericht.
+[Location-first-Vergleich](docs/developer/agent-impact-location-result.md) abgeschlossen:
+CodeMap 4/4 gelöst, Baseline 3/4; Agentenzeit −17,0 %, Gesamttokens +4,7 %.
+Nutzung 4/4; das vorher festgelegte Token-Sparziel wurde verfehlt. Ein positiver
+Einzelfall rechtfertigt keinen verpflichtenden Standard oder automatischen weiteren Ausbau.
+Verifizierte Korrekturen bleiben bestehen. Neue Arbeit braucht einen konkreten Fehler
+oder eine neue ausdrückliche Entscheidung. [Vorheriger optionaler Vergleich](docs/developer/agent-impact-luna-result.md).
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

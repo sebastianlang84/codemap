@@ -25,17 +25,7 @@
   "efficiencyGate": {
     "issues": [
       {
-        "actual": "fastify-pr-6746",
-        "expected": "one valid run per arm",
-        "metric": "completePairs"
-      },
-      {
-        "actual": "fastify-pr-6714",
-        "expected": "one valid run per arm",
-        "metric": "completePairs"
-      },
-      {
-        "actual": 1.5266900996365633,
+        "actual": 1.046919497860056,
         "expected": "<= 0.85",
         "metric": "tokenRatio"
       }
@@ -43,14 +33,8 @@
     "passed": false
   },
   "gate": {
-    "issues": [
-      {
-        "actual": 2,
-        "expected": ">= 4",
-        "metric": "validPairs"
-      }
-    ],
-    "passed": false
+    "issues": [],
+    "passed": true
   },
   "manifestSha256": "0197d8d4660112eab82b9708c6530ade7360bc51d1e61994b493b83fc690a84d",
   "oracles": [
@@ -287,25 +271,185 @@
         "turns": 1
       },
       "verifierExitCode": 0
+    },
+    {
+      "addedLines": 14,
+      "agentDurationMs": 805568,
+      "agentExitCode": 0,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/reply.js",
+        "test/http2/reply.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 5,
+      "success": false,
+      "taskId": "fastify-pr-6746",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 3175680,
+        "costUsd": null,
+        "inputTokens": 142326,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 21221,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 31
+        },
+        "turns": 1
+      },
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 92,
+      "agentDurationMs": 553787,
+      "agentExitCode": 0,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/reply.js",
+        "test/http2/plain.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 4,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 486,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 6,
+      "success": true,
+      "taskId": "fastify-pr-6746",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 2859264,
+        "costUsd": null,
+        "inputTokens": 176312,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 22072,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 49
+        },
+        "turns": 1
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 38,
+      "agentDurationMs": 127998,
+      "agentExitCode": 0,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/reply.js",
+        "test/reply-trailers.test.js"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 473,
+      "mode": "codemap",
+      "repo": "fastify",
+      "runOrder": 7,
+      "success": true,
+      "taskId": "fastify-pr-6714",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 211456,
+        "costUsd": null,
+        "inputTokens": 47413,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 4754,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 13
+        },
+        "turns": 1
+      },
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 36,
+      "agentDurationMs": 111170,
+      "agentExitCode": 0,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "lib/reply.js",
+        "test/reply-trailers.test.js"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "repo": "fastify",
+      "runOrder": 8,
+      "success": true,
+      "taskId": "fastify-pr-6714",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 326656,
+        "costUsd": null,
+        "inputTokens": 78343,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 3812,
+        "requestedModel": "gpt-5.6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 9
+        },
+        "turns": 1
+      },
+      "verifierExitCode": 0
     }
   ],
   "schemaVersion": 1,
   "summary": {
-    "agentDurationRatio": 1.0638,
-    "baselineSuccessRate": 1,
+    "agentDurationRatio": 0.83,
+    "baselineSuccessRate": 0.75,
     "budgetExhaustedRuns": 0,
     "crossArmContamination": 0,
     "exactTwoSidedP": 1,
     "losingTasks": [],
     "losses": 0,
-    "tasks": 2,
-    "ties": 2,
-    "tokenRatio": 1.5267,
+    "tasks": 4,
+    "ties": 3,
+    "tokenRatio": 1.0469,
     "totalCostUsd": null,
     "treatmentAdoptionRate": 1,
     "treatmentSuccessRate": 1,
-    "validPairs": 2,
-    "wins": 0
+    "validPairs": 4,
+    "wins": 1
   },
   "worstCaseBudgetUsd": null
 }

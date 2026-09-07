@@ -1,0 +1,105 @@
+{
+  "manifestSha256": "0197d8d4660112eab82b9708c6530ade7360bc51d1e61994b493b83fc690a84d",
+  "privateArchive": "/home/wasti/.agents/state/codemap/evals/location-v1-final-0197d8d46601",
+  "traceCount": 8,
+  "commandEventsReviewed": 180,
+  "missingRipgrepMatches": [],
+  "sandboxDenialMatches": [],
+  "externalRetrievalPatternMatches": [],
+  "explicitLocationCommandMatches": [
+    {
+      "runOrder": 2,
+      "commandOrdinal": 2
+    },
+    {
+      "runOrder": 3,
+      "commandOrdinal": 2
+    },
+    {
+      "runOrder": 6,
+      "commandOrdinal": 2
+    },
+    {
+      "runOrder": 7,
+      "commandOrdinal": 2
+    }
+  ],
+  "tokenTotalsMatchRawCliUsage": true,
+  "traces": [
+    {
+      "runOrder": 1,
+      "taskId": "express-pr-6285",
+      "mode": "baseline",
+      "file": "run-1.json",
+      "sha256": "dd7f97f61b32685b5e4dfa2d376fd0f2da638bf39e86e8554a5aa0b002ce3ce0"
+    },
+    {
+      "runOrder": 2,
+      "taskId": "express-pr-6285",
+      "mode": "codemap",
+      "file": "run-2.json",
+      "sha256": "e9dfe869be425ebcebb55d6464a1171e106505a6960fba0868c09679b1dcd5a8"
+    },
+    {
+      "runOrder": 3,
+      "taskId": "fastify-pr-6774",
+      "mode": "codemap",
+      "file": "run-3.json",
+      "sha256": "3ca369bcd14aa7075fbaa5e72e56f5449159ee5fb9b58f5c18175d18dffcfe01"
+    },
+    {
+      "runOrder": 4,
+      "taskId": "fastify-pr-6774",
+      "mode": "baseline",
+      "file": "run-4.json",
+      "sha256": "7b7e7e1f44b911eb032f5011314869a2d3e1c4c030e14795e51db7602ac6b2e3"
+    },
+    {
+      "runOrder": 5,
+      "taskId": "fastify-pr-6746",
+      "mode": "baseline",
+      "file": "run-5.json",
+      "sha256": "0a87dd489166698bc96a45fcd673d4458bccde746fe2dad76ef5f86d739abcac"
+    },
+    {
+      "runOrder": 6,
+      "taskId": "fastify-pr-6746",
+      "mode": "codemap",
+      "file": "run-6.json",
+      "sha256": "0f2db2fd8b23b3f3f24110c92c53e094d5306d03179f5d5c35b162e5f647c91d"
+    },
+    {
+      "runOrder": 7,
+      "taskId": "fastify-pr-6714",
+      "mode": "codemap",
+      "file": "run-7.json",
+      "sha256": "df6e914eee107828444410e43fac9d4d12c4ff5a0035662daf2c5e14ce5b43dd"
+    },
+    {
+      "runOrder": 8,
+      "taskId": "fastify-pr-6714",
+      "mode": "baseline",
+      "file": "run-8.json",
+      "sha256": "e202f78f0b7a08af18c46998cafd74a99e27e056ee2ebec5e1e53156d736b49f"
+    }
+  ],
+  "diagnosticReplays": {
+    "taskId": "fastify-pr-6746",
+    "sourceRunOrder": 5,
+    "method": "Reapply the captured agent runtime diff to the frozen base; run frozen hidden HTTP/2 tests twice without any model call.",
+    "failedTest": "http2 large buffer replies can be cancelled without rejecting the next stream",
+    "error": "ERR_HTTP2_STREAM_ERROR: Stream closed with error code NGHTTP2_ENHANCE_YOUR_CALM",
+    "replays": [
+      {
+        "file": "http2-baseline-diagnosis-1.log",
+        "sha256": "a406970929d2ceeffc5cfa3a67b5980f47aed526c5b938113ad22eafdbfb16b1",
+        "exitCode": 1
+      },
+      {
+        "file": "http2-baseline-diagnosis-2.log",
+        "sha256": "edc225d0d69743e44a2fb53f16fe9da437c5950ef1b69953c450ab36237ce581",
+        "exitCode": 1
+      }
+    ]
+  }
+}

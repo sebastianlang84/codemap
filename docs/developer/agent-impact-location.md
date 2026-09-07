@@ -75,3 +75,6 @@ each attempt. Do not use `--resume` to repeat completed model attempts.
 Launch correction before any model call: the trace guard rejected `~/.agents/state`
 because its parent is a Git worktree. Raw capture uses `/tmp`; verified private copies
 are archived under the ignored agent state directory after completion.
+
+Completed: [results and decision](agent-impact-location-result.md). All eight attempts
+finished; no model retry. The efficiency gate failed on total tokens.

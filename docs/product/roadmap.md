@@ -96,6 +96,15 @@ both arms 8/8 solved, optional treatment +21.9% tokens and +12.3% agent time, ze
 use. The efficiency gate failed. This recovery cycle is closed under step 4; no retrieval-quality
 conclusion follows from non-use.
 
+Owner-authorized follow-up completed on 2026-09-07: the
+[location-first comparison](../developer/agent-impact-location-result.md) used four fresh tasks,
+working ripgrep and explicit location retrieval. CodeMap solved 4/4 versus baseline 3/4,
+with 17.0% less agent time and 4.7% more total tokens. Adoption was 4/4; the frozen token
+reduction gate failed. Preserve the positive single-case evidence and verified fixes;
+maintenance-only status remains, with no automatic further model series or default rollout.
+
+The original proposal below remains historical, not authorization for another run.
+
 Only after step 2 passes, freeze one development experiment: eight new tasks from at least two
 repositories, selected without candidate-output inspection; include straightforward lookups and
 harder discovery. Pin model, effort, prompts, commits, dependency locks, order and hidden tests.
