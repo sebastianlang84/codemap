@@ -45,113 +45,119 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ## Future work
 
-### Agent benefit recovery plan
+### Arbeitsprogramm: verlässlicher Nutzen bei Code-Aufgaben
 
-Status: a separately authorized nested-function correction passed local checks on 2026-09-06;
-[scope and evidence](../developer/agent-overhead-diagnosis.md#nested-function-selection-follow-up).
-The previous compact renderer remains discarded. No new paid comparison is authorized and no
-end-to-end benefit is established. The sequence below remains the evaluation policy.
-Goal: reduce the work needed to produce correct patches, with a measured advantage over an agent
-using its normal search/read tools. More CodeMap use is not a success metric.
+Stand: 2026-09-07. Geplant auf Wunsch des Eigentümers als zusammenhängendes Programm.
+Die Pakete werden in Reihenfolge abgeschlossen; einzelne fehlgeschlagene Versuche lösen
+keine neue Planungsrunde aus. Diese Planung startet noch keine Modellläufe.
 
-Baseline: the 12-task pilot had 0 wins and 1 loss with 16.4% more tokens; the fresh four-task
-pilot tied all outcomes with 39.7% more tokens. The module-name confirmation was inconclusive.
-[Agent evidence](../developer/agent-impact-eval.md) and
-[positive scripted navigation evidence](../developer/external-holdout.md) measure different things.
-No single cause of the agent overhead has been established.
+**Ziel:** korrekte Änderungen mit weniger Agentenzeit bei begrenztem Kontext liefern.
+CodeMap bleibt lokal, deterministisch und ohne zusätzliche Repo-Pflege nutzbar.
 
-#### 1. Diagnose existing runs before spending again
+**Ausgangslage:** [aktueller Vergleich](../developer/agent-impact-fresh-result.md):
+beide Varianten 4/4 korrekt, CodeMap −39,4 % Tokens und −10,0 % Zeit, aber nur 2/4 schneller.
+Das Effizienz-Gate ist verfehlt; Testumwege verzerren den Vergleich.
+[JavaScript-Definitionen](../developer/javascript-definitions.md) und
+[direkte Testimporte](../developer/remaining-context-misses.md) sind korrigiert.
+Offen sind die passende Funktion innerhalb einer Trefferdatei und aufgabenabhängige
+Fehlerkatalog-/Typ-/Exportstellen. Der bisherige alternative Funktionsselektor ist verworfen.
+[Frühere Vergleiche](../developer/agent-impact-eval.md) bleiben Evidenz, kein Trainings-Holdout.
 
-- Inventory retained tool traces for the 12-task and four-task pilots. Record unavailable data;
-  aggregate Bash counts and total tokens cannot establish repeated reads or their cause.
-- Compare paired timelines: setup/indexing, discovery, source reads, edits, tests and retries.
-  Record time to the first relevant source read, repeated file/line reads, irrelevant output,
-  and operations that CodeMap actually replaces. Separate cached tokens, uncached tokens,
-  output tokens, provider cost, agent time and index/setup time; avoid double-counting indexing.
-- Classify misses as retrieval, insufficient excerpts, unnecessary expansion, redundant workflow,
-  or implementation/test reasoning. Trace evidence supports a hypothesis, not causal attribution.
-- Deliver one short diagnostic report under `docs/developer/`, linked from the evaluation guide:
-  paired evidence, missing observations, one reproducible source of avoidable work, and a candidate
-  change. Inspect all available pairs, including wins and cheaper treatment runs.
+| Paket | Ergebnis | Abschlusskriterium | Aufwandsschätzung |
+| --- | --- | --- | --- |
+| 1. Messgrundlage | Wiederverwendbarer Runner und getrennte Entwicklungs-/Bestätigungsfälle | Reproduzierbare Oracles, geprüfte Testbefehle, vollständige Messdaten | 1–2 Arbeitstage |
+| 2. Funktionsauswahl | Allgemeine Auswahl relevanter Bereiche derselben Datei | Mehr vollständige Ziele bei gleichem Quelltextbudget, keine verlorenen Kontrollziele | 1–2 Arbeitstage |
+| 3. Aufgabenkontext | Belegte Verbindungen zu benötigten Tests, Typen, Exporten und Fehlerdefinitionen | Mehr vollständige Aufgabenpakete bei gleichem Budget, keine falschen Beziehungsbehauptungen | 2–3 Arbeitstage |
+| 4. Nutzenprüfung | Eingefrorener Kandidat gegen normale Agentennavigation | Entwicklungs-Gate und unabhängige Bestätigung bestehen | 1–2 Arbeitstage plus Modelllaufzeit |
+| 5. Abschluss | Dokumentierter Einsatzbereich oder begründeter Entwicklungsstopp | Gates, Dokumentation und Git sauber; klare Entscheidung | ½ Arbeitstag |
 
-Exit: one trace-backed hypothesis and a local reproduction. If traces are missing, add minimal
-opt-in trace capture to the isolated eval runner and verify it with fixtures. Keep raw content
-local and out of commits; do not manufacture a diagnosis or silently buy replacement runs.
+Schätzung: etwa 6–10 Arbeitstage, keine Laufzeitgarantie. Abhängigkeiten: 1 → 2 → 3 → 4 → 5.
+Fallaufbereitung und unabhängige Analyse dürfen in getrennten Worktrees parallel laufen;
+Produktänderungen werden einzeln integriert und gemessen. Während Zeitmessungen keine
+zusätzlichen schweren Jobs aus diesem Programm starten; fremde Hostlast protokollieren.
 
-#### 2. Test one change locally
+#### 1. Messgrundlage einmal richtig aufbauen
 
-Choose the smallest change that addresses the diagnosis. Candidates, not commitments:
-smaller context expansion, a complete relevant excerpt, or selective use after ordinary discovery
-fails. A workflow change and a ranking change are separate experiments.
+Den vorhandenen Runner erweitern, keinen zweiten bauen. Beiden Varianten denselben
+auf Basis und Referenz geprüften, gezielten Testbefehl geben, ohne versteckte Assertions
+oder Lösungshinweise zu zeigen. Originalpatches vor dem Aufspielen versteckter Tests sichern.
+Zeit je Werkzeugaufruf erfassen; Setup, Indexierung, Navigation und Tests getrennt berichten.
+Gesamte Agentenzeit bleibt Hauptmetrik, Testzeit wird nicht nachträglich herausgerechnet.
 
-Freeze the reproduction and expected removed work before editing. Keep the change only if it
-removes that work while retaining required code evidence and passing existing retrieval,
-context, token-injection and relevant runtime checks. Local correctness alone does not authorize
-wider adoption. Record the baseline, diff, regressions and keep/discard decision with the diagnosis.
+Für lokale Entwicklung mindestens zwölf belegte Fälle aus mindestens drei Repos einfrieren:
+Funktionsauswahl, mehrere benötigte Dateien und einfache Kontrollaufgaben. Bekannte Fälle
+wie Trailers sind Regressionen. Zusätzlich zwei getrennte Gruppen mit je zwölf neuen
+Agentenaufgaben aus mindestens drei Repos reservieren; höchstens zwei je API/Fehlerfamilie.
+Auswahlregel, Ausschlüsse, Basis-/Fix-Commits und Lockfiles vor Kandidatenmessungen festhalten.
+Die Bestätigungsgruppe bleibt bis Paket 4 versiegelt; der Implementierer sieht keine Lösungen.
 
-#### 3. Measure a fresh agent comparison
+Exit: alle Oracles scheitern zweimal auf der Basis und bestehen zweimal mit Referenzfix;
+Runner-Tests belegen Zeit-/Patch-Erfassung, Isolation und Fortsetzung nach Infrastrukturfehlern.
+Fehlen geeignete Fälle oder reproduzierbare Tests, Paket 4 auslassen und die Grenze berichten.
 
-Completed: [Luna-high v2](../developer/agent-impact-luna-result.md), eight valid pairs,
-both arms 8/8 solved, optional treatment +21.9% tokens and +12.3% agent time, zero CodeMap
-use. The efficiency gate failed. This recovery cycle is closed under step 4; no retrieval-quality
-conclusion follows from non-use.
+#### 2. Relevante Funktionen innerhalb einer Datei
 
-Owner-authorized follow-up completed on 2026-09-07: the
-[location-first comparison](../developer/agent-impact-location-result.md) used four fresh tasks,
-working ripgrep and explicit location retrieval. CodeMap solved 4/4 versus baseline 3/4,
-with 17.0% less agent time and 4.7% more total tokens. Adoption was 4/4; the frozen token
-reduction gate failed. Preserve the positive single-case evidence and verified fixes;
-maintenance-only status remains, with no automatic further model series or default rollout.
+Hypothese: die Beschränkung auf einen Bereich je Datei verwirft benötigte Funktionen.
+Zuerst einen durch lokale Aufrufbelege gestützten Selektor prüfen; nur falls erforderlich
+als zweiten Ansatz eine begrenzte Auswahl mehrerer Suchtreffer derselben Datei.
+Keine weitere Abstimmung der bereits gescheiterten Begriffsabdeckung auf Trailers.
 
-Owner-authorized [selected-context diagnosis](../developer/agent-impact-context-result.md)
-completed on 2026-09-07: all three arms solved 3/4 tasks. Selected source used 40.9% less
-agent time and 46.8% fewer tokens than normal navigation; current CodeMap used more.
-The directional diagnostic signal passed, with privileged manual selection and different
-test strategies. The reproduced JavaScript definition miss is
-[corrected and regression-tested](../developer/javascript-definitions.md).
-No further model series is authorized.
+Je Ansatz Hypothese, unveränderte Fälle und Messregel vor Implementierung festschreiben.
+Höchstens zwei Kandidaten; jeder gegen denselben Ausgangsstand. Behalten nur bei mindestens
+zwei zusätzlich vollständig abgedeckten Fällen, keinem Verlust vollständiger Kontrollziele,
+unverändertem Quelltextbudget je Fall und bestandenem `npm run verify:local`.
+Kein Gewinner: Befund abschließen und Paket 3 fortsetzen.
 
-The owner-authorized [fresh four-task comparison](../developer/agent-impact-fresh-result.md)
-then completed with 4/4 solved in both arms, 39.4% fewer tokens and 10.0% less agent
-time with CodeMap. Only 2/4 tasks were faster, so the frozen efficiency gate failed.
-Test-command detours dominate the savings; maintenance-only status remains.
+#### 3. Aufgabenabhängige Dateien verbinden
 
-The original proposal below remains historical, not authorization for another run.
+Hypothese: vorhandene Import-, Symbol- und Exportbelege reichen für fehlende Begleitstellen.
+Zuerst vorhandene Beziehungen nutzen; höchstens eine weitere begrenzte Beziehungsklasse
+prüfen, wenn ein reproduzierbarer Miss sie verlangt. Kandidaten getrennt messen, maximal zwei.
+Benötigt die Auswahl Aufgabenabsicht, den vorhandenen Query-Pfad prüfen; eine reine
+Funktionsposition enthält diese Information nicht. Kein verstecktes Wissen aus Eval-Zielpfaden.
 
-Only after step 2 passes, freeze one development experiment: eight new tasks from at least two
-repositories, selected without candidate-output inspection; include straightforward lookups and
-harder discovery. Pin model, effort, prompts, commits, dependency locks, order and hidden tests.
-Compare normal agent tools against the current optional CodeMap workflow. This does not isolate
-the nested-function fix from the navigation-policy change. Keep the
-untouched holdout unused. Record index readiness and report cold setup separately from warm use.
+Behalten nur bei mindestens zwei zusätzlich vollständigen Aufgabenpaketen, keinem Verlust
+bestehender vollständiger Kontrollfälle, keinen unbelegten Beziehungen und unverändertem
+Quelltextbudget je Fall. Scope-, Geheimnis-, Laufzeit- und Token-Gates müssen bestehen.
+Danach den kombinierten Stand mit `npm run verify:local` prüfen. Schema-/API-Erweiterungen
+nur, wenn der gemessene Gewinn ohne sie nicht erreichbar ist; sonst den Ansatz verwerfen.
 
-Before execution, declare one primary target: task success or efficiency. Proposed continuation
-criteria, to freeze in the manifest before any run:
+#### 4. Eine Entwicklungsmessung, eine unabhängige Bestätigung
 
-- Success target: more paired wins than losses; token, provider-cost and time ratios each <= 1.10.
-- Efficiency target: no paired success losses; provider cost or agent time (choose one upfront)
-  improves by at least 15%; the other resource and total tokens each have ratios <= 1.10.
-- All eight pairs must be valid. Report every pair and per-repository results; provider failures
-  remain invalid, and existing paid-failure retry restrictions apply. Optional use is evaluated
-  as assigned, including non-use, rather than filtering to successful CodeMap invocations.
+Nur starten, wenn Paket 2 oder 3 einen Gewinner liefert. Aktuellen Produktstand und
+Navigationsanweisung einfrieren; innerhalb der Agentenserie nichts mehr verändern.
+Vergleich: normale Werkzeuge gegen CodeMap mit explizitem Suchtreffer und dessen Kontext.
+Beide Varianten erhalten gleiche Testhilfe und Aufgabeninformationen.
 
-The [Codex Luna comparison](../developer/agent-impact-luna.md) selects total tokens
-as its primary efficiency target (>=15% reduction, no paired losses, time ratio <=1.10).
-It replaces the unrun Claude cost-target proposal at user request; Codex reports no USD cost. These are engineering thresholds, not evidence of statistical significance. For metered API experiments, freeze a spend cap before launch. The completed Codex
-subscription run used attempt/time limits; its USD cost is unreported. A passing development result only permits planning independent confirmation.
+Geplant: Luna medium über das vorhandene Codex-Abonnement, zwölf Paare je Gruppe,
+rotierende Reihenfolge, höchstens 15 Minuten pro Versuch. Erst Entwicklung, dann bei
+bestandenem Gate derselbe Kandidat auf der Bestätigungsgruppe. Maximal 48 reguläre
+Modellaufrufe und zwei Infrastruktur-Ersatzversuche im gesamten Programm. Keine Wiederholung
+schlechter Ergebnisse, kein Providerwechsel innerhalb einer Serie, keine neue API-Ausgabe.
+Das Maximum entspricht 12,5 Stunden Modellzeit ohne Setup; Tokens sind keine Quotaschätzung.
 
-#### 4. Continue, narrow, or stop
+Vor Ausführung im Manifest einfrieren: keine gepaarten Korrektheitsverluste, mindestens
+15 % weniger gesamte Agentenzeit, Tokenverhältnis höchstens 1,10 und mindestens 8/12
+schnellere Aufgaben. Alle zwölf Paare müssen gültig sein; Ergebnisse je Repo, alle Versuche,
+Indexkosten und Unsicherheit berichten. Diese Schwellen sind eine technische Entscheidung,
+kein Signifikanznachweis. Das gleiche Gate gilt unabhängig für die Bestätigung.
 
-- Pass: confirm the unchanged candidate on an untouched corpus. Freeze sample size, uncertainty
-  analysis and acceptance criteria before spending; only confirmed benefit supports default use,
-  and only for the tested task scope. Test skill routing separately if that becomes the lever.
-- Fail or inconclusive: stop this recovery cycle and enter maintenance-only mode. No repeated
-  tuning on these tasks, larger feature programme or automatic second paid pilot.
-- No actionable diagnosis: stop before step 3. Reopen only for a new reproducible user need.
+Entwicklung scheitert: Bestätigung entfällt. Bestätigung scheitert: keine Nachoptimierung
+auf ihren Fällen. Fehlende Nutzung oder Infrastruktur als solche ausweisen. Bei erschöpftem
+Versuchslimit beenden, ohne die Stichprobe passend zu verkleinern.
 
-Owner-approved host-policy change completed on 2026-09-06: CodeMap-first is no longer mandatory;
-the CLI remains available on demand. Preserve verified fixes and evidence. Embeddings, graph expansion, parser rewrites and
-stronger skill activation remain deferred until a diagnosis specifically justifies them.
+#### 5. Ergebnis und Fortsetzung
+
+Bei bestätigtem Nutzen den belegten Einsatzbereich dokumentieren und eine gebündelte
+Release-Empfehlung vorbereiten. Sonst verifizierte lokale Korrekturen behalten und
+Nutzenbehauptung verwerfen; weitere Entwicklung nur für neue reproduzierbare Nutzerprobleme.
+Embeddings, Graphserver, breiter Parserumbau und globale CodeMap-Pflicht gehören nicht zu
+diesem Programm. Release, Installation und globale Richtlinien bleiben eigene Entscheidungen.
+
+Pro Paket ein kurzer Ergebnisbericht mit Basis, Kandidaten, Gewinnen, Verlusten und
+Keep/Discard-Entscheidung; Rohtraces bleiben privat. Verifizierte Änderungen regulär committen
+und pushen. Status nach abgeschlossenen Paketen oder echten Blockern, keine erneute
+Freigabefrage nach jeder Korrektur. `TODO.md` führt nur Paketstatus und nächsten Einstieg.
 
 ### Product direction for arbitrary repos
 
