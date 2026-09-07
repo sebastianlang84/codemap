@@ -18,7 +18,7 @@
     "maxInfrastructureRetries": 2
   },
   "codemapProfile": {
-    "gitCommit": "298e25d8e1e561383301b8db939d2fa968248a5a",
+    "gitCommit": "1f348c456f7efc13007a8372376e766d9d13272b",
     "expectedVersion": "0.10.1"
   },
   "repositories": [
@@ -988,7 +988,7 @@
     "minFasterPairs": 8
   },
   "preparation": {
-    "productProfileStatus": "placeholder; replace only at candidate freeze before any model attempts",
+    "productProfileStatus": "frozen current product; user authorized existing-product comparison on 2026-09-07; no local winner prerequisite",
     "environment": {
       "node": "v22.23.2",
       "npm": "10.9.8",

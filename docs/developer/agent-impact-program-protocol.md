@@ -1,7 +1,8 @@
 # Agentenvergleich: eingefrorene Fallgruppen
 
 Stand: 2026-09-07. Vorbereitung für Paket 1 der [Roadmap](../product/roadmap.md).
-Noch keine Modellläufe oder CodeMap-Ausgaben für diese Aufgaben beobachtet.
+Neuer Auftrag vom 2026-09-07: aktuellen Produktstand mit den vorbereiteten Fällen prüfen.
+Zum Einfrieren weiterhin keine Modellläufe oder CodeMap-Ausgaben für diese Aufgaben beobachtet.
 
 ## Auswahl und Trennung
 
@@ -80,3 +81,18 @@ aller Repos; sie ändern die eingefrorenen Entscheidungsschwellen nicht.
 Programmabschluss: [Ergebnis und Grenzen](agent-impact-program-result.md).
 Die beiden Produktkandidaten wurden verworfen. Die Fallgruppen bleiben vorbereitet;
 Entwicklungs- und Bestätigungs-Modellläufe wurden nicht gestartet.
+
+## Neuer Auftrag: bestehenden Produktnutzen prüfen
+
+Der Nutzer hat nach Programmabschluss den Vergleich ausdrücklich gestartet.
+Die Voraussetzung eines neuen lokalen Produktgewinners entfällt für diesen Auftrag;
+Aufgaben, Testhilfe, Navigationsanweisung und sämtliche Schwellen bleiben unverändert.
+Produkt und Runner sind `1f348c456f7efc13007a8372376e766d9d13272b`; Produktquellen und
+Build stimmen mit dem vorbereiteten Ausgangsstand `298e25d` überein.
+Gemessen wird der angeleitete location-first-Ablauf, keine freiwillige Werkzeugadoption.
+Erst zwölf Entwicklungspaare, bei bestandenem Gate zwölf unabhängige Bestätigungspaare.
+Bestätigung bleibt bis dahin versiegelt; dort werden nur Profil und verbleibendes
+Infrastruktur-Ersatzbudget aktualisiert. Während der Serie keine Produktänderung.
+Ergebnisse: `agent-impact-current-development-result.json` und kurzer Ergebnisbericht
+im selben Verzeichnis. Modellzeit, Testzeit und Suchverläufe werden gemeinsam beurteilt;
+eine nachträgliche Auswahl günstiger Aufgaben ersetzt das Gate nicht.

@@ -47,6 +47,9 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Arbeitsprogramm: verlässlicher Nutzen bei Code-Aufgaben
 
+Neuer Auftrag: [bestehenden Produktnutzen mit den vorbereiteten Aufgaben messen](../developer/agent-impact-program-protocol.md#neuer-auftrag-bestehenden-produktnutzen-prüfen).
+Das abgeschlossene Verbesserungsprogramm bleibt unten als Verlauf dokumentiert.
+
 Stand: 2026-09-07. Programm abgeschlossen: Messgrundlage geprüft, beide Produktkandidaten verworfen;
 Paket 3 anhand der Machbarkeit beendet, Modellvergleich nach Gate ausgelassen.
 [Ergebnis und Prüfstand](../developer/agent-impact-program-result.md). Die folgende

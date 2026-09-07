@@ -2,7 +2,13 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Abschluss des Arbeitsprogramms
+## Aktuellen Produktnutzen messen
+
+- [ ] Zwölf vorbereitete Entwicklungspaare auf eingefrorenem aktuellem Stand ausführen;
+  bei bestandenem Gate unabhängige Bestätigung, sonst Ablaufdiagnose und Ergebnis.
+  [Protokoll](docs/developer/agent-impact-program-protocol.md#neuer-auftrag-bestehenden-produktnutzen-prüfen).
+
+### Vorheriger Programmabschluss
 
 [Ergebnis](docs/developer/agent-impact-program-result.md): beide Produktkandidaten
 verworfen; keine neue Modellserie. Messharness und getrennte Fallgruppen bleiben
