@@ -31,3 +31,26 @@ byte/excerpt cap respected. Then pass the existing full local gates before produ
 integration. Companion-path presence remains the corpus's limited package measure.
 At most one second package-2 candidate may follow a failed result; do not tune this
 candidate against its observed losses.
+
+Result: **discard**. [Candidate output](context-program-function-calls-result.json):
+targets 7→10 (plugin, HTTP/2, validator), packages 7→8 (validator), no prior losses;
+all local budgets and source checks pass. Full verification stops at 314/316 tests:
+one retained span loses its inherited relationship reason; query context also
+reorders an already-present provider contrary to its existing read-plan test.
+No tests or corpus expectations changed. Later gates did not run.
+[Exact rejected patch](../../scripts/fixtures/context-program/function-calls-candidate.patch)
+applies to `82f079d`; no candidate code is active on main.
+
+## Package 2, candidate 2: restore missing function hits
+
+Frozen before implementation/output. The diagnosis identifies discarded search
+hits across files, so this last candidate narrows to that loss and omits local-call
+inference. Keep the original baseline items and their reasons in relative order.
+From the first five unchanged search hits, consider at most two complete production
+function excerpts not already covered by a baseline span. Insert those after the
+first baseline item, then fill from the remaining baseline in its original order,
+skipping anything exceeding the original source-byte or excerpt cap. Exact duplicate
+or contained excerpts are not additions. No new relation type, lexer or ranking weight.
+
+Use the same original 7/12 baseline and unchanged package-2 acceptance criteria.
+All existing tests remain unchanged. If this candidate fails, package 2 ends.

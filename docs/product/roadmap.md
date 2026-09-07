@@ -99,7 +99,9 @@ Fehlen geeignete Fälle oder reproduzierbare Tests, Paket 4 auslassen und die Gr
 
 Hypothese: die Beschränkung auf einen Bereich je Datei verwirft benötigte Funktionen.
 Zuerst einen durch lokale Aufrufbelege gestützten Selektor prüfen; nur falls erforderlich
-als zweiten Ansatz eine begrenzte Auswahl mehrerer Suchtreffer derselben Datei.
+als zweiten Ansatz bisher verdrängte Funktionstreffer begrenzt aufnehmen.
+Die Diagnose zeigt auch Verluste zwischen Suchergebnis und Dateileseplan; deshalb
+berücksichtigt der zweite Ansatz bereits gefundene Dateien statt nur Bereiche derselben Datei.
 Keine weitere Abstimmung der bereits gescheiterten Begriffsabdeckung auf Trailers.
 
 Je Ansatz Hypothese, unveränderte Fälle und Messregel vor Implementierung festschreiben.

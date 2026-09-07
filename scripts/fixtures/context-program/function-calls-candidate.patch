@@ -1,0 +1,473 @@
+diff --git a/dist/core/context-builder.js b/dist/core/context-builder.js
+index bd00f02..2bd0d3b 100644
+--- a/dist/core/context-builder.js
++++ b/dist/core/context-builder.js
+@@ -1,3 +1,5 @@
++import { localCallCandidates, prioritizeFunctionContext } from "./context-function-calls.js";
++import { readIndexedSourceText } from "./indexed-source.js";
+ import { functionChunkAtLine, snippet } from "./chunker.js";
+ import { openRepoDb } from "./db.js";
+ import { fullIndexHealth, readIndexStatusCounts } from "./index-health.js";
+@@ -55,6 +57,23 @@ function buildCodeMapContextInternal(options, inheritedDiagnostics, depth = 0) {
+                     reasons: [...(related?.reasons ?? []), ...(item.reasons ?? [])],
+                 });
+             }
++            const baseline = readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []);
++            const seeds = readFirst.items.slice(0, 5)
++                .filter(item => item.kind === "function" && !isTestReadFirstPath(item.path) && !isNoisyIndexedPath(db, item.path))
++                .map(item => matchedChunkForItem(db, item))
++                .filter(item => item.kind === "function" && "text" in item && !!item.text)
++                .slice(0, 2);
++            const callees = [...new Set(seeds.map(seed => seed.path))].flatMap(path => {
++                const seed = seeds.find(item => item.path === path);
++                const source = readIndexedSourceText(db, seed.path);
++                if (!source || !["javascript", "js"].includes(source.language))
++                    return [];
++                const functions = db.prepare("select start_line as startLine, end_line as endLine, kind, text from chunks where file_id=? and kind='function' order by ordinal")
++                    .all(source.id);
++                return localCallCandidates(source.text, seeds.filter(item => item.path === seed.path), functions.map(item => ({ ...item, path: seed.path, language: source.language, snippet: snippet(item.text) })), request.target);
++            }).sort((a, b) => b.count - a.count || b.coverage - a.coverage || a.item.startLine - b.item.startLine).map(candidate => candidate.item);
++            const selected = prioritizeFunctionContext(baseline, seeds, callees, request.limit);
++            const selectedPaths = selected.map(item => item.path);
+             return {
+                 target: request.target,
+                 targetForm: "query",
+@@ -66,11 +85,17 @@ function buildCodeMapContextInternal(options, inheritedDiagnostics, depth = 0) {
+                 changed: anchored.changed,
+                 missing: anchored.missing,
+                 deleted: anchored.deleted,
+-                readFirst: readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []),
++                readFirst: selected,
+                 relatedTests: anchored.relatedTests,
+                 relatedDocs: anchored.relatedDocs,
+                 warnings: uniqueStrings([...warnings, ...anchored.warnings]),
+-                readPlan,
++                readPlan: {
++                    ...readPlan,
++                    selected: selectedPaths,
++                    budget: { ...readPlan.budget, selected: selected.length, dropped: Math.max(0, readPlan.budget.available - selected.length) },
++                    decisions: readPlan.decisions.map(decision => ({ ...decision, selected: selectedPaths.includes(decision.path),
++                        rank: selectedPaths.includes(decision.path) ? selectedPaths.indexOf(decision.path) + 1 : undefined })),
++                },
+             };
+         }
+         const related = relatedPaths(db, readFirst.base, request.pathFilter);
+diff --git a/src/core/context-builder.ts b/src/core/context-builder.ts
+index c3abc0b..eab11a7 100644
+--- a/src/core/context-builder.ts
++++ b/src/core/context-builder.ts
+@@ -1,3 +1,5 @@
++import { localCallCandidates, prioritizeFunctionContext } from "./context-function-calls.ts";
++import { readIndexedSourceText } from "./indexed-source.ts";
+ import { functionChunkAtLine, snippet } from "./chunker.ts";
+ import { openRepoDb } from "./db.ts";
+ import { fullIndexHealth, readIndexStatusCounts } from "./index-health.ts";
+@@ -117,6 +119,23 @@ function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDi
+           reasons: [...(related?.reasons ?? []), ...(item.reasons ?? [])],
+         });
+       }
++      const baseline = readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []);
++      const seeds = readFirst.items.slice(0, 5)
++        .filter(item => item.kind === "function" && !isTestReadFirstPath(item.path) && !isNoisyIndexedPath(db, item.path))
++        .map(item => matchedChunkForItem(db, item))
++        .filter(item => item.kind === "function" && "text" in item && !!item.text)
++        .slice(0, 2);
++      const callees = [...new Set(seeds.map(seed => seed.path))].flatMap(path => {
++        const seed = seeds.find(item => item.path === path)!;
++        const source = readIndexedSourceText(db, seed.path);
++        if (!source || !["javascript", "js"].includes(source.language)) return [];
++        const functions = db.prepare("select start_line as startLine, end_line as endLine, kind, text from chunks where file_id=? and kind='function' order by ordinal")
++          .all(source.id) as Array<{ startLine: number; endLine: number; kind: string; text: string }>;
++        return localCallCandidates(source.text, seeds.filter(item => item.path === seed.path),
++          functions.map(item => ({ ...item, path: seed.path, language: source.language, snippet: snippet(item.text) })), request.target);
++      }).sort((a, b) => b.count - a.count || b.coverage - a.coverage || a.item.startLine - b.item.startLine).map(candidate => candidate.item);
++      const selected = prioritizeFunctionContext(baseline, seeds, callees, request.limit);
++      const selectedPaths = selected.map(item => item.path);
+       return {
+         target: request.target,
+         targetForm: "query",
+@@ -128,11 +147,17 @@ function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDi
+         changed: anchored.changed,
+         missing: anchored.missing,
+         deleted: anchored.deleted,
+-        readFirst: readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []),
++        readFirst: selected,
+         relatedTests: anchored.relatedTests,
+         relatedDocs: anchored.relatedDocs,
+         warnings: uniqueStrings([...warnings, ...anchored.warnings]),
+-        readPlan,
++        readPlan: {
++          ...readPlan,
++          selected: selectedPaths,
++          budget: { ...readPlan.budget, selected: selected.length, dropped: Math.max(0, readPlan.budget.available - selected.length) },
++          decisions: readPlan.decisions.map(decision => ({ ...decision, selected: selectedPaths.includes(decision.path),
++            rank: selectedPaths.includes(decision.path) ? selectedPaths.indexOf(decision.path) + 1 : undefined })),
++        },
+       };
+     }
+     const related = relatedPaths(db, readFirst.base, request.pathFilter);
+diff --git a/src/core/relationships.ts b/src/core/relationships.ts
+index d53d154..6dada56 100644
+--- a/src/core/relationships.ts
++++ b/src/core/relationships.ts
+@@ -8,6 +8,7 @@ import { localityScore, uniqueStrings } from "./text-util.ts";
+ export type CodeMapContextReasonKind =
+   | "target"
+   | "search_result"
++  | "local_call"
+   | "import"
+   | "reverse_import"
+   | "include"
+diff --git a/src/core/context-function-calls.ts b/src/core/context-function-calls.ts
+new file mode 100644
+index 0000000..b6d027d
+--- /dev/null
++++ b/src/core/context-function-calls.ts
+@@ -0,0 +1,119 @@
++import type { CodeMapReadFirstItem } from "./context-builder.ts";
++import { isRegexStart, regexEnd } from "./javascript-syntax.ts";
++
++interface Token { value: string; line: number }
++
++// Reject ambiguous slash syntax rather than infer a call from an unparsed literal.
++function tokens(source: string): Token[] | undefined {
++  const result: Token[] = [];
++  let line = 1;
++  for (let i = 0; i < source.length;) {
++    const char = source[i];
++    if (/\s/.test(char)) { if (char === "\n") line++; i++; continue; }
++    if (source.startsWith("//", i)) { while (i < source.length && source[i] !== "\n") i++; continue; }
++    if (source.startsWith("/*", i)) {
++      const end = source.indexOf("*/", i + 2);
++      if (end < 0) return undefined;
++      line += source.slice(i, end + 2).split("\n").length - 1;
++      i = end + 2; continue;
++    }
++    if (char === "'" || char === '"' || char === "`") {
++      const quote = char;
++      let closed = false;
++      const begin = i;
++      for (i++; i < source.length; i++) {
++        if (source[i] === "\n") line++;
++        if (source[i] === "\\") { if (source[i + 1] === "\n") line++; i++; continue; }
++        if (source[i] === quote) { i++; closed = true; break; }
++      }
++      if (!closed) return undefined;
++      // Only simple references inside templates are masked safely here. Complex
++      // interpolation (including nested templates) disables call inference.
++      if (quote === "`" && source.slice(begin + 1, i - 1).replace(/\$\{[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\}/g, "").includes("${")) return undefined;
++      continue;
++    }
++    if (char === "/") {
++      const lineStart = source.lastIndexOf("\n", i - 1) + 1;
++      const lineText = source.slice(lineStart).split("\n")[0];
++      const offset = i - lineStart;
++      if (!isRegexStart(lineText, offset)) return undefined;
++      const end = regexEnd(lineText, offset);
++      if (end === offset) return undefined;
++      i = lineStart + end + 1;
++      while (/[a-z]/i.test(source[i] ?? "") && i < source.length) i++;
++      continue;
++    }
++    const identifier = /^[A-Za-z_$][\w$]*/.exec(source.slice(i));
++    if (identifier) { result.push({ value: identifier[0], line }); i += identifier[0].length; }
++    else { result.push({ value: char, line }); i++; }
++  }
++  return result;
++}
++
++function closing(ts: Token[], start: number, open: string, close: string): number {
++  let depth = 0;
++  for (let i = start; i < ts.length; i++) {
++    if (ts[i].value === open) depth++;
++    if (ts[i].value === close && --depth === 0) return i;
++  }
++  return -1;
++}
++
++export interface LocalCallCandidate { item: CodeMapReadFirstItem; count: number; coverage: number }
++
++export function localCallCandidates(source: string, seeds: CodeMapReadFirstItem[], functions: CodeMapReadFirstItem[], query: string): LocalCallCandidate[] {
++  const ts = tokens(source);
++  if (!ts || ts.some((t, i) => ["with", "eval"].includes(t.value) && ts[i + 1]?.value === "(")) return [];
++  const terms = [...new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? [])];
++  const ranked: Array<{ item: CodeMapReadFirstItem; count: number; coverage: number }> = [];
++  let depth = 0;
++  for (let i = 0; i < ts.length; i++) {
++    const token = ts[i];
++    if (token.value === "{") depth++;
++    if (token.value === "}") depth--;
++    if (depth !== 0 || token.value !== "function" || !/^[A-Za-z_$][\w$]*$/.test(ts[i + 1]?.value ?? "") || ts[i + 2]?.value !== "(") continue;
++    const previous = ts[i - 1];
++    if (previous && previous.line === token.line && ![";", "}", "export", "default", "async"].includes(previous.value)) continue;
++    if (["=", "(", ":", ","].includes(previous?.value ?? "") || (previous?.value === "async" && ["=", "(", ":", ","].includes(ts[i - 2]?.value ?? ""))) continue;
++    const name = ts[i + 1].value;
++    const paramsEnd = closing(ts, i + 2, "(", ")");
++    if (paramsEnd < 0 || ts[paramsEnd + 1]?.value !== "{") continue;
++    const bodyEnd = closing(ts, paramsEnd + 1, "{", "}");
++    if (bodyEnd < 0) continue;
++    const item = functions.find(f => f.startLine === token.line && f.endLine === ts[bodyEnd].line && f.kind === "function");
++    if (!item || seeds.some(s => s.path === item.path && s.startLine <= item.startLine && s.endLine >= item.endLine)) continue;
++    let count = 0;
++    let unsafe = false;
++    for (let j = 0; j < ts.length; j++) {
++      if (ts[j].value !== name || j === i + 1) continue;
++      if (ts[j - 1]?.value === ".") continue;
++      // Every other bare use must be a call. This rejects rebinding, parameters,
++      // destructuring, nested declarations and callbacks passed by reference.
++      if (ts[j + 1]?.value !== "(" || ["function", "new"].includes(ts[j - 1]?.value ?? "")) { unsafe = true; break; }
++      const end = closing(ts, j + 1, "(", ")");
++      if (end < 0 || ts[end + 1]?.value === "{") { unsafe = true; break; }
++      if (seeds.some(s => ts[j].line >= s.startLine && ts[j].line <= s.endLine)) count++;
++    }
++    const body = ts.slice(paramsEnd + 2, bodyEnd).map(t => t.value.toLowerCase()).join(" ");
++    const coverage = terms.filter(term => body.includes(term)).length;
++    if (!unsafe && count > 0 && coverage > 0) ranked.push({ item, count, coverage });
++  }
++  return ranked.map(row => ({ ...row, item: {
++    ...row.item,
++    reasons: [{ kind: "local_call", label: "Direct same-file function call", sourcePath: row.item.path, targetPath: row.item.path }],
++  } }));
++}
++
++export function prioritizeFunctionContext(baseline: CodeMapReadFirstItem[], seeds: CodeMapReadFirstItem[], callees: CodeMapReadFirstItem[], limit: number): CodeMapReadFirstItem[] {
++  if (!baseline.length) return baseline;
++  const bytes = (item: CodeMapReadFirstItem) => Buffer.byteLength("text" in item ? item.text : "");
++  const budget = baseline.reduce((sum, item) => sum + bytes(item), 0);
++  const selected = [baseline[0]];
++  let used = bytes(baseline[0]);
++  for (const item of [...seeds.slice(0, 2), ...callees.slice(0, 1), ...baseline.slice(1)]) {
++    if (selected.some(existing => existing.path === item.path && existing.startLine <= item.startLine && existing.endLine >= item.endLine)) continue;
++    if (selected.length >= limit || used + bytes(item) > budget) continue;
++    selected.push(item); used += bytes(item);
++  }
++  return selected;
++}
+diff --git a/dist/core/context-function-calls.js b/dist/core/context-function-calls.js
+new file mode 100644
+index 0000000..9fd807f
+--- /dev/null
++++ b/dist/core/context-function-calls.js
+@@ -0,0 +1,167 @@
++import { isRegexStart, regexEnd } from "./javascript-syntax.js";
++// Reject ambiguous slash syntax rather than infer a call from an unparsed literal.
++function tokens(source) {
++    const result = [];
++    let line = 1;
++    for (let i = 0; i < source.length;) {
++        const char = source[i];
++        if (/\s/.test(char)) {
++            if (char === "\n")
++                line++;
++            i++;
++            continue;
++        }
++        if (source.startsWith("//", i)) {
++            while (i < source.length && source[i] !== "\n")
++                i++;
++            continue;
++        }
++        if (source.startsWith("/*", i)) {
++            const end = source.indexOf("*/", i + 2);
++            if (end < 0)
++                return undefined;
++            line += source.slice(i, end + 2).split("\n").length - 1;
++            i = end + 2;
++            continue;
++        }
++        if (char === "'" || char === '"' || char === "`") {
++            const quote = char;
++            let closed = false;
++            const begin = i;
++            for (i++; i < source.length; i++) {
++                if (source[i] === "\n")
++                    line++;
++                if (source[i] === "\\") {
++                    if (source[i + 1] === "\n")
++                        line++;
++                    i++;
++                    continue;
++                }
++                if (source[i] === quote) {
++                    i++;
++                    closed = true;
++                    break;
++                }
++            }
++            if (!closed)
++                return undefined;
++            // Only simple references inside templates are masked safely here. Complex
++            // interpolation (including nested templates) disables call inference.
++            if (quote === "`" && source.slice(begin + 1, i - 1).replace(/\$\{[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\}/g, "").includes("${"))
++                return undefined;
++            continue;
++        }
++        if (char === "/") {
++            const lineStart = source.lastIndexOf("\n", i - 1) + 1;
++            const lineText = source.slice(lineStart).split("\n")[0];
++            const offset = i - lineStart;
++            if (!isRegexStart(lineText, offset))
++                return undefined;
++            const end = regexEnd(lineText, offset);
++            if (end === offset)
++                return undefined;
++            i = lineStart + end + 1;
++            while (/[a-z]/i.test(source[i] ?? "") && i < source.length)
++                i++;
++            continue;
++        }
++        const identifier = /^[A-Za-z_$][\w$]*/.exec(source.slice(i));
++        if (identifier) {
++            result.push({ value: identifier[0], line });
++            i += identifier[0].length;
++        }
++        else {
++            result.push({ value: char, line });
++            i++;
++        }
++    }
++    return result;
++}
++function closing(ts, start, open, close) {
++    let depth = 0;
++    for (let i = start; i < ts.length; i++) {
++        if (ts[i].value === open)
++            depth++;
++        if (ts[i].value === close && --depth === 0)
++            return i;
++    }
++    return -1;
++}
++export function localCallCandidates(source, seeds, functions, query) {
++    const ts = tokens(source);
++    if (!ts || ts.some((t, i) => ["with", "eval"].includes(t.value) && ts[i + 1]?.value === "("))
++        return [];
++    const terms = [...new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? [])];
++    const ranked = [];
++    let depth = 0;
++    for (let i = 0; i < ts.length; i++) {
++        const token = ts[i];
++        if (token.value === "{")
++            depth++;
++        if (token.value === "}")
++            depth--;
++        if (depth !== 0 || token.value !== "function" || !/^[A-Za-z_$][\w$]*$/.test(ts[i + 1]?.value ?? "") || ts[i + 2]?.value !== "(")
++            continue;
++        const previous = ts[i - 1];
++        if (previous && previous.line === token.line && ![";", "}", "export", "default", "async"].includes(previous.value))
++            continue;
++        if (["=", "(", ":", ","].includes(previous?.value ?? "") || (previous?.value === "async" && ["=", "(", ":", ","].includes(ts[i - 2]?.value ?? "")))
++            continue;
++        const name = ts[i + 1].value;
++        const paramsEnd = closing(ts, i + 2, "(", ")");
++        if (paramsEnd < 0 || ts[paramsEnd + 1]?.value !== "{")
++            continue;
++        const bodyEnd = closing(ts, paramsEnd + 1, "{", "}");
++        if (bodyEnd < 0)
++            continue;
++        const item = functions.find(f => f.startLine === token.line && f.endLine === ts[bodyEnd].line && f.kind === "function");
++        if (!item || seeds.some(s => s.path === item.path && s.startLine <= item.startLine && s.endLine >= item.endLine))
++            continue;
++        let count = 0;
++        let unsafe = false;
++        for (let j = 0; j < ts.length; j++) {
++            if (ts[j].value !== name || j === i + 1)
++                continue;
++            if (ts[j - 1]?.value === ".")
++                continue;
++            // Every other bare use must be a call. This rejects rebinding, parameters,
++            // destructuring, nested declarations and callbacks passed by reference.
++            if (ts[j + 1]?.value !== "(" || ["function", "new"].includes(ts[j - 1]?.value ?? "")) {
++                unsafe = true;
++                break;
++            }
++            const end = closing(ts, j + 1, "(", ")");
++            if (end < 0 || ts[end + 1]?.value === "{") {
++                unsafe = true;
++                break;
++            }
++            if (seeds.some(s => ts[j].line >= s.startLine && ts[j].line <= s.endLine))
++                count++;
++        }
++        const body = ts.slice(paramsEnd + 2, bodyEnd).map(t => t.value.toLowerCase()).join(" ");
++        const coverage = terms.filter(term => body.includes(term)).length;
++        if (!unsafe && count > 0 && coverage > 0)
++            ranked.push({ item, count, coverage });
++    }
++    return ranked.map(row => ({ ...row, item: {
++            ...row.item,
++            reasons: [{ kind: "local_call", label: "Direct same-file function call", sourcePath: row.item.path, targetPath: row.item.path }],
++        } }));
++}
++export function prioritizeFunctionContext(baseline, seeds, callees, limit) {
++    if (!baseline.length)
++        return baseline;
++    const bytes = (item) => Buffer.byteLength("text" in item ? item.text : "");
++    const budget = baseline.reduce((sum, item) => sum + bytes(item), 0);
++    const selected = [baseline[0]];
++    let used = bytes(baseline[0]);
++    for (const item of [...seeds.slice(0, 2), ...callees.slice(0, 1), ...baseline.slice(1)]) {
++        if (selected.some(existing => existing.path === item.path && existing.startLine <= item.startLine && existing.endLine >= item.endLine))
++            continue;
++        if (selected.length >= limit || used + bytes(item) > budget)
++            continue;
++        selected.push(item);
++        used += bytes(item);
++    }
++    return selected;
++}
+diff --git a/tests/context-function-calls.test.ts b/tests/context-function-calls.test.ts
+new file mode 100644
+index 0000000..0114cce
+--- /dev/null
++++ b/tests/context-function-calls.test.ts
+@@ -0,0 +1,49 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { localCallCandidates, prioritizeFunctionContext } from "../src/core/context-function-calls.ts";
++import type { CodeMapReadFirstItem } from "../src/core/context-builder.ts";
++
++function item(text: string, startLine: number, path = "lib/runtime.js"): CodeMapReadFirstItem {
++  return { path, language: "javascript", kind: "function", startLine, endLine: startLine + text.split("\n").length - 1, text, snippet: text };
++}
++function calls(body: string, prefix = "", declaration = "function deliver () { return payload }") {
++  const seed = item(`function entry () { ${body} }`, prefix ? 2 : 1);
++  const callee = item(declaration, prefix ? 3 : 2);
++  return localCallCandidates([prefix, "text" in seed ? seed.text : "", declaration].filter(Boolean).join("\n"), [seed], [callee], "payload");
++}
++
++test("direct calls carry local evidence and count actual invocations", () => {
++  const result = calls("deliver(); deliver()");
++  assert.equal(result.length, 1);
++  assert.equal(result[0].count, 2);
++  assert.equal(result[0].item.reasons?.[0].kind, "local_call");
++});
++
++test("literal and property references never become direct calls", () => {
++  for (const body of ["'deliver()'", '"deliver()"', "`deliver()`", "/* deliver() */", "// deliver()\n", "const re = /deliver\\(\\)/", "object.deliver()", "object?.deliver()", "new deliver()"])
++    assert.equal(calls(body).length, 0, body);
++  assert.equal(calls("deliver()", "const note = `${name} deliver()`").length, 1);
++  assert.equal(calls("deliver()", "const note = `${unknown()}`").length, 0);
++});
++
++test("shadowing, declarations, rebinding and dynamic scope disable evidence", () => {
++  for (const body of ["const deliver = other; deliver()", "function nested(deliver) { deliver() }", "function deliver() {} ; deliver()", "const { deliver } = other; deliver()", "try {} catch(deliver) { deliver() }", "const nested = deliver => deliver()", "deliver = other; deliver()", "with (object) { deliver() }", "eval(code); deliver()", "const obj = { deliver() {} }; deliver()"])
++    assert.equal(calls(body).length, 0, body);
++  assert.equal(calls("deliver()", "", "const value = function deliver () { return payload }").length, 0);
++  assert.equal(calls("deliver()", "", "const value = async function deliver () { return payload }").length, 0);
++});
++
++test("only query-supported same-file indexed declarations are eligible", () => {
++  assert.equal(calls("deliver()", "", "function deliver () { return unrelated }").length, 0);
++  assert.equal(calls("deliver()", "", "if (ready) { function deliver () { return payload } }").length, 0);
++});
++
++test("selection preserves first excerpt, count and actual bytes", () => {
++  const first = item("function a() {}", 1);
++  const second = item("function longer() { return 123456789 }", 2, "b.js");
++  const seed = item("function seed() {}", 4);
++  const selected = prioritizeFunctionContext([first, second], [seed], [], 2);
++  assert.deepEqual(selected, [first, seed]);
++  assert.deepEqual(prioritizeFunctionContext([first], [second], [], 8), [first]);
++  assert.deepEqual(prioritizeFunctionContext([first, second], [first], [], 2), [first, second]);
++});
