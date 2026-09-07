@@ -45,6 +45,55 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ## Future work
 
+### Grundsatzbewertung 2026-09-08
+
+**Bewertung: Der lokale Index ist ein plausibler Ansatz; ein verlässlicher Vorteil der
+heutigen automatischen Kontextauswahl ist nicht belegt.** SQLite, lexikalische Suche
+und deterministische Extraktion verhindern nützliche Navigation nicht. Das vollständige
+Produkt findet im [statischen Begriffstest](../developer/search-tool-comparison-result.md)
+mehr vollständige Ziele als BM25 allein. Daraus folgt kein Vorteil gegenüber einem
+Agenten, der seine Suche anpasst. [Zwölf Agentenpaare](../developer/agent-impact-current-development-result.md)
+und zwei verworfene Kontextänderungen rechtfertigen weder einen Standardablauf noch
+weitere ungezielte Erweiterungen.
+
+Der grundsätzliche Engpass liegt zwischen **Aufgabenrelevanz, Fundstelle und Ausgabe**:
+
+| Beobachtung im Code | Konsequenz und Grenze |
+| --- | --- |
+| [Query-Plan](../../src/core/query-plan.ts) begrenzt reguläre Eingabewörter vor Filterung/Expansion. | Ein später genanntes Symbol kann fehlen. Kein semantisches Aufgabenverständnis; fehlende Embeddings allein sind noch kein Defekt. |
+| [Ranking](../../src/core/ranking.ts) behält pro Datei einen Treffer; [Kontextbau](../../src/core/context-builder.ts) ordnet Query-Kontext nach Dateipfaden. | Mehrere benötigte Funktionen derselben Datei lassen sich so nicht zuverlässig vertreten. |
+| Pfadziele/Nachbarn beginnen mit frühen Chunks; eine Anfrage enthält entweder Ziel oder Query. | Eine relevante Datei garantiert keinen relevanten Bereich; Aufgabenfrage und Fundstelle werden nicht gemeinsam zur Auswahl genutzt. |
+| [Leseplan](../../src/core/navigation-read-plan.ts) mischt Treffer und Nachbarn nach festen Rollen; Query-Kontext expandiert den ersten Treffer. | Dateinähe und Rolle ersetzen eine Prüfung der Aufgabenrelevanz. Der Scoreabstand aus der Suche verhindert einen unsicheren Anker hier nicht. |
+| [Chunker](../../src/core/chunker.ts) lässt große Markdown-Abschnitte zusammen; Kontext zählt Einträge. | Kein Gesamtbudget für Quelltext. Die Bytegrenzen früherer Experimente waren keine Produkteigenschaft. |
+| [Referenzextraktion](../../src/core/local-references.ts) nutzt begrenzte Sprachregeln. | Kommentare können Scheinimporte erzeugen; manche echte Verweise fehlen. Mehr Kanten können auch mehr falschen Kontext liefern. |
+| [CLI](../../src/cli/main.ts) und [MCP](../../src/mcp/server.ts) haben unterschiedliche Text-/Strukturausgaben. | Kontextdaten im Produkt sind nicht automatisch Quelltext im Modellkontext; die tatsächlich sichtbare Ausgabe muss gemessen werden. |
+
+Am genannten Stand mit reinen Funktionsaufrufen reproduziert: zwei Funktionskandidaten
+in derselben Datei ergeben einen Suchtreffer; eine Überschrift mit 600 Textzeilen und
+abschließendem Zeilenumbruch ergibt einen 602-Zeilen-Chunk; ein auskommentierter JS-Import
+wird extrahiert. In `please find the code that handles the response when a client cancels
+sendTrailers` fehlt das letzte Symbol im regulären FTS-Plan. Das sind Mechanikproben,
+keine neuen Nutzenevaluationen. Basis: `04ed1c4`.
+
+**Folgerung:** zunächst den Ausgabevertrag und die Messintegrität klären; den Nutzen
+von gerankter Suche allein als eigenen Prüfauftrag vom bisherigen Kontextablauf trennen.
+Informationsverluste bleiben konkrete Reparaturkandidaten. Für einen späteren kompakten
+Aufruf ist zu prüfen, ob er wirklich Folgelesen ersetzt; heutige Auswahl bleibt Kontrolle.
+Gleiche vollständige Qualitätsprüfungen und abgeschirmte Eval-Dateien sind Voraussetzung
+weiterer Agentenvergleiche.
+Kein Beleg rechtfertigt jetzt einen größeren Graphen, einen Parserwechsel, Embeddings
+oder das bloße Verstellen von Punktwerten. Die [gesammelten TODOs](../../TODO.md#belegte-schwächen-und-offene-prüfaufträge)
+sind Prüfaufträge, keine beschlossene Neuentwicklung.
+
+Peer-Debate: zwei unabhängige `gemini-3.8-flash-medium`-Instanzen, beide medium;
+blinde Eröffnung, je eine Faktenkorrektur, ein Austausch, beide zuletzt `converged`.
+**Nur teilweise übernommen:** reine Suche separat prüfen und Messintegrität zuerst
+herstellen. Nicht übernommen: vermeintlich bewiesene Untauglichkeit automatischen
+Kontexts, kausale Erklärung des Flask-Zeitabstands oder automatischer Entwicklungsstopp
+nach einem negativen Test reiner Suche. Die Einigung liefert keine neue Nutzenevidenz.
+Lokales Protokoll: `2026-09-08-codemap-foundation-medium`, SHA-256
+`699bc71d4e097bfac6988a4f69672782583d3c868efa1906cd66542639ab04a3`.
+
 ### Arbeitsprogramm: verlässlicher Nutzen bei Code-Aufgaben
 
 Der anschließende [Vergleich des bestehenden Produkts](../developer/agent-impact-current-development-result.md)
