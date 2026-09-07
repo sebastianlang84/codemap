@@ -65,9 +65,13 @@ node --experimental-strip-types scripts/eval-agent-impact.ts \
   --manifest scripts/eval-agent-impact-location.manifest.json \
   --offline --cache-dir ~/.cache/codemap/external-holdout-v1 \
   --run-codex --quality-gate \
-  --trace-dir ~/.agents/state/codemap/evals/location-v1 \
+  --trace-dir /tmp/codemap-agent-traces/location-v1 \
   --evidence-output docs/developer/agent-impact-location-result.json
 ```
 
 The runner validates all four oracles twice before the first model call and checkpoints
 each attempt. Do not use `--resume` to repeat completed model attempts.
+
+Launch correction before any model call: the trace guard rejected `~/.agents/state`
+because its parent is a Git worktree. Raw capture uses `/tmp`; verified private copies
+are archived under the ignored agent state directory after completion.
