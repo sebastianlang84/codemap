@@ -115,19 +115,35 @@ function referenceRegexStart(code: string[], index: number): boolean {
 
 function extractPythonReferences(text: string): LocalReference[] {
   const references: LocalReference[] = [];
-  for (const match of text.matchAll(/(?:^|\n)\s*from\s+(\.+)([A-Za-z_][\w.]*)?\s+import\s+([^\n#]+)/g)) {
+  const code = pythonReferenceCode(text);
+  for (const match of code.matchAll(/^[ \t]*from[ \t]+(\.*)([A-Za-z_][\w.]*)?[ \t]+import[ \t]+([^\n#]+)/gm)) {
     const dots = match[1] ?? "";
     const moduleName = (match[2] ?? "").replace(/\./g, "/");
     if (moduleName) {
-      references.push(withLines({ kind: "import", specifier: pythonRelativeSpecifier(dots, moduleName) }, text, match));
+      references.push(withLines({ kind: "import", specifier: dots ? pythonRelativeSpecifier(dots, moduleName) : moduleName }, text, match));
       continue;
     }
+    if (!dots) continue;
     for (const imported of (match[3] ?? "").split(",")) {
       const name = imported.trim().split(/\s+as\s+/, 1)[0];
       if (/^[A-Za-z_]\w*$/.test(name)) references.push(withLines({ kind: "import", specifier: pythonRelativeSpecifier(dots, name) }, text, match));
     }
   }
+  for (const match of code.matchAll(/^[ \t]*import[ \t]+([^\n;]+)/gm)) {
+    for (const imported of match[1].split(",")) {
+      const name = imported.trim().split(/\s+as\s+/, 1)[0];
+      if (/^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$/.test(name)) {
+        references.push(withLines({ kind: "import", specifier: name.replace(/\./g, "/") }, text, match));
+      }
+    }
+  }
   return references;
+}
+
+// Strings and comments cannot introduce import statements; retain their source offsets.
+function pythonReferenceCode(text: string): string {
+  return text.replace(/#[^\n]*|("""|''')(?:\\[\s\S]|(?!\1)[\s\S])*(?:\1|$)|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/g,
+    value => value.replace(/[^\r\n]/g, " "));
 }
 
 function extractCppReferences(text: string): LocalReference[] {
@@ -157,6 +173,10 @@ function isPotentialLocalTsJsSpecifier(specifier: string): boolean {
 }
 
 function resolveIndexedImport(db: ReturnType<typeof openRepoDb>, fromPath: string, language: string, specifier: string, pathFilter: string): string | undefined {
+  if (isPythonPath(language, fromPath) && !specifier.startsWith(".")) {
+    if (!/^[A-Za-z_]\w*(?:\/[A-Za-z_]\w*)*$/.test(specifier)) return undefined;
+    return uniqueIndexedCandidate(db, [specifier, `src/${specifier}`].flatMap(pythonImportCandidates), pathFilter);
+  }
   const normalized = normalizeLocalSpecifier(fromPath, specifier);
   const candidateBases = normalized ? [normalized] : isTsJsPath(language, fromPath) ? tsJsPathAliasCandidates(db, fromPath, specifier) : [];
   if (candidateBases.length === 0) return undefined;
@@ -166,7 +186,21 @@ function resolveIndexedImport(db: ReturnType<typeof openRepoDb>, fromPath: strin
       .get(candidate, pathFilter) as { path: string } | undefined;
     if (row) return row.path;
   }
+  if (isTsJsPath(language, fromPath)) {
+    if (candidates.some(candidate => db.prepare("select path from files where path = ?").get(candidate))) return undefined;
+    const declarations = candidateBases.flatMap(candidate => candidate.endsWith(".js")
+      ? [`${candidate.slice(0, -3)}.d.ts`]
+      : /\.[^/.]+$/.test(candidate) ? [] : [`${candidate}.d.ts`, `${candidate}/index.d.ts`]);
+    return uniqueIndexedCandidate(db, declarations, pathFilter);
+  }
   return undefined;
+}
+
+function uniqueIndexedCandidate(db: ReturnType<typeof openRepoDb>, candidates: string[], pathFilter: string): string | undefined {
+  const matches = uniqueStrings(candidates).filter(candidate => db.prepare("select path from files where path = ?").get(candidate));
+  if (matches.length !== 1) return undefined;
+  // Determine ambiguity before filtering so a narrow view cannot create false certainty.
+  return db.prepare("select path from files where path = ? and path like ? escape '\\'").get(matches[0], pathFilter) ? matches[0] : undefined;
 }
 
 function resolveIndexedInclude(db: ReturnType<typeof openRepoDb>, fromPath: string, specifier: string, pathFilter: string): string | undefined {
