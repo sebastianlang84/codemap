@@ -2,7 +2,7 @@ import { openRepoDb } from "./db.ts";
 import { readAllIndexedSourceTexts } from "./indexed-source.ts";
 import { extractLocalReferences, resolveIndexedReference } from "./local-references.ts";
 
-export const GRAPH_VERSION = "2";
+export const GRAPH_VERSION = "3";
 const GRAPH_VERSION_KEY = "graph_version";
 
 export interface GraphDependency {

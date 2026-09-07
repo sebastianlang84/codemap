@@ -47,3 +47,20 @@ test("Python imports exclude documentation and retain exact source lines", () =>
   ]);
 });
 
+test("unchanged indexing refresh removes a false edge cached under graph version 2", t => {
+  const root = fixtureRepo(t);
+  write(root, "src/fake.ts");
+  write(root, "src/consumer.ts", "// import { Value } from './fake';\nexport const value = 1;\n");
+  indexRepo({ cwd: root });
+  const db = new DatabaseSync(getRepoInfo(root).dbPath);
+  try {
+    db.prepare("update meta set value='2' where key='graph_version'").run();
+    db.exec(`insert into graph_edges(from_node_id,to_node_id,kind,source_file_id,extractor,specifier,evidence_key,created_at,updated_at)
+      select source.id,target.id,'imports',source.file_id,'ts-js-local-import-regex','./fake','old-false-edge','old','old'
+      from graph_nodes source,graph_nodes target where source.path='src/consumer.ts' and target.path='src/fake.ts'`);
+  } finally { db.close(); }
+  assert.deepEqual(targets(root, "src/consumer.ts"), ["src/fake.ts"]);
+  const refreshed = indexRepo({ cwd: root });
+  assert.equal(refreshed.indexed, 0);
+  assert.deepEqual(targets(root, "src/consumer.ts"), []);
+});
