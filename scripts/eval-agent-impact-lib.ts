@@ -208,9 +208,11 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   unique(tasks.map((item) => item.id), "task id");
   const remoteByRepo = new Map(repositories.map((item) => [item.id, item.remote.replace(/\.git$/, "")]));
   for (const task of tasks) {
-    const prefix = `${remoteByRepo.get(task.repo)}/pull/`;
-    if (!task.sourceUrl.startsWith(prefix) || !/^\d+$/.test(task.sourceUrl.slice(prefix.length))) {
-      throw new Error(`${task.id}.sourceUrl must reference a pull request in ${task.repo}`);
+    const remote = remoteByRepo.get(task.repo)!;
+    const prefix = `${remote}/pull/`;
+    const pullRequest = task.sourceUrl.startsWith(prefix) && /^\d+$/.test(task.sourceUrl.slice(prefix.length));
+    if (!pullRequest && task.sourceUrl !== `${remote}/commit/${task.fixCommit}`) {
+      throw new Error(`${task.id}.sourceUrl must reference a pull request or the exact fix commit in ${task.repo}`);
     }
   }
 

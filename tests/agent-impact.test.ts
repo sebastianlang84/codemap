@@ -28,6 +28,18 @@ import {
 const manifestRaw = readFileSync(new URL("../scripts/eval-agent-impact.manifest.json", import.meta.url), "utf8");
 const manifest = parseAgentImpactManifest(manifestRaw);
 
+test("commit provenance requires the exact reference fix and repository", () => {
+  const raw = JSON.parse(manifestRaw);
+  const task = raw.tasks[0];
+  const remote = raw.repositories.find((repo: { id: string }) => repo.id === task.repo).remote.replace(/\.git$/, "");
+  task.sourceUrl = `${remote}/commit/${task.fixCommit}`;
+  assert.equal(parseAgentImpactManifest(JSON.stringify(raw)).tasks[0]!.sourceUrl, task.sourceUrl);
+  for (const wrong of [`${remote}/commit/${task.baseCommit}`, `${remote}/commit/${task.fixCommit.slice(0, 7)}`, `https://github.com/other/project/commit/${task.fixCommit}`]) {
+    task.sourceUrl = wrong;
+    assert.throws(() => parseAgentImpactManifest(JSON.stringify(raw)), /sourceUrl/);
+  }
+});
+
 test("resume keeps failed outcomes and archives infrastructure replacements within their frozen cap", () => {
   const failed = run("one", "baseline", false, {}, 100);
   const infrastructure = { ...run("two", "codemap", false, {}, 0), infrastructureError: "preflight failed" };
