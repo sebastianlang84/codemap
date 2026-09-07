@@ -2,6 +2,14 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
+## Kontextlücken
+
+- [ ] Trailers: passende Funktion innerhalb der bereits gefundenen Datei auswählen.
+  - Extraktion korrekt; der begrenzte Versuch mit zusätzlicher Begriffsabdeckung scheitert.
+  - [Befund und verworfener Versuch](docs/developer/remaining-context-misses.md).
+- [ ] Aufgabenabhängige Fehlerkatalog-/Typ-/Exportbeziehungen erst bei einem belegten,
+  allgemein anwendbaren Verfahren ergänzen; direkte Testimporte lösen nur die Testsuche.
+
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) erklärt

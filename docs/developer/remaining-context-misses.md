@@ -21,7 +21,7 @@ within four excerpts, retains the complete target, and passes `verify:local`.
 The isolated regression also checks mismatched filenames, the filename fallback,
 exclusion of unrelated tests, import evidence and subtree boundaries.
 
-Frozen SHA-256:
+Initial frozen SHA-256:
 - `tests/context-importing-tests.test.ts`: `8ce2197ec545092c14df8f466b3d0a276d443bdeefa6b56ab138ff4c1b6e455f`
 - `scripts/eval-plugin-context.py`: `cbbe6b4ea99dc31f1ee230cbe82dbe7cbbfb7f347029a194b8ef0203b6ff00fc`
 
@@ -47,3 +47,46 @@ Per-file deduplication removes the lower-scoring function. Removing the partial
 symbol bonus alone would select the caller again, not the target. Changing global
 weights for this inspected case is unsupported. A separate bounded experiment
 would need query-dependent alternatives within one file and a fixed token budget.
+
+Fixture correction: the synthetic imports `a.js` and `b.js` accidentally matched
+unrelated test paths through the existing substring fallback. Renamed those two
+imports to `prerequisite.js` and `condition.js`; assertions and the real-repo
+evaluation are unchanged. The corrected fixture still fails on `49ca2ed`.
+Final test SHA-256: `25624c412f6d0ee1f9275c8507191456be17f77d7c1be14e4292d11786aec867`.
+
+
+## Bounded alternative-chunk experiment
+
+Protocol frozen before running the candidate: replay the four original natural
+queries with current code, limit eight. Retain the first excerpt. From that file's
+structured function chunks, greedily add at most two non-overlapping alternatives
+with the most newly covered query terms; tie-break by fewer UTF-8 bytes, then line.
+Terms are lowercase alphanumeric words with internal hyphens; matching is substring
+coverage. Fill remaining positions from the unchanged baseline order. Skip anything
+that exceeds the baseline source-byte budget. No task-specific selection rules.
+
+Keep only if Trailers gains its complete target, every baseline excerpt from an
+expected source/test path survives, all budgets hold, and other cases retain their
+baseline target coverage. Expected paths and target lines are evaluation-only.
+This is an offline selector experiment; do not change product behavior unless it
+passes and then also passes the existing corpus. One candidate, no tuning on losses.
+
+
+## Results
+
+Plugin candidate kept. The direct test moves from absent to the fourth excerpt;
+all four frozen checks pass ([result](plugin-context-result.json)). At limit one,
+source stays at 442 bytes. At limit four, source grows from 4,695 to 4,799 bytes;
+at limit eight it falls from 12,139 to 10,003 bytes. The full local gate passes:
+298 tests and all retrieval/context/navigation/token gates; local navigation stays
+at 7 wins, 0 losses, 17 ties. Existing importer caps remain; this is not exhaustive
+reverse-reference discovery. Error catalog/types/exports are not newly resolved.
+
+The alternative-chunk candidate is discarded ([result](context-alternatives-result.json)).
+Trailers stays uncovered: after the caller, the selector chooses a shorter function
+covering `callback` and `handler`, not `sendTrailer`. All budgets and already-visible
+expected excerpts survive, but the primary target gate fails. No selector code is
+used in production and no ranking weights change. Reproduce with
+`python3 scripts/eval-context-alternatives.py --cli /path/to/dist/cli/bin.js --output /tmp/alternatives.json`.
+
+Release impact: patch, next version 0.10.2; retain Unreleased, no release/tag here.

@@ -338,3 +338,7 @@ For name targets, exact non-heading symbols take precedence over partial filenam
 exact indexed paths still win. JavaScript function assignments such as
 `res.send = function(body) { ... }` are searchable by `res.send` and `send`.
 Run `codemap index` after upgrading to refresh existing symbols and chunks.
+
+Related-test suggestions include direct test importers from the indexed relationship
+graph, followed by filename matches. These suggestions remain available with
+`--limit 1`; a larger limit can include their source excerpts.

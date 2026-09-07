@@ -1,0 +1,433 @@
+{
+  "experimentSha256": "a44d08de2a72359e8e5f2ba8e234a476473828dea2c4d95d7f1d58d16b811afe",
+  "cases": [
+    {
+      "taskId": "express-pr-6285",
+      "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+      "query": "res.send Uint8Array text/plain UTF-8 charset response",
+      "baseline": {
+        "spans": [
+          {
+            "path": "lib/response.js",
+            "startLine": 112,
+            "endLine": 212
+          },
+          {
+            "path": "test/res.send.js",
+            "startLine": 71,
+            "endLine": 150
+          },
+          {
+            "path": "test/res.set.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/res.format.js",
+            "startLine": 182,
+            "endLine": 248
+          },
+          {
+            "path": "test/res.jsonp.js",
+            "startLine": 211,
+            "endLine": 290
+          },
+          {
+            "path": "test/res.sendFile.js",
+            "startLine": 891,
+            "endLine": 899
+          },
+          {
+            "path": "test/res.attachment.js",
+            "startLine": 1,
+            "endLine": 78
+          },
+          {
+            "path": "test/res.download.js",
+            "startLine": 71,
+            "endLine": 150
+          }
+        ],
+        "sourceBytes": 14710,
+        "targetCovered": true
+      },
+      "candidate": {
+        "spans": [
+          {
+            "path": "lib/response.js",
+            "startLine": 112,
+            "endLine": 212
+          },
+          {
+            "path": "lib/response.js",
+            "startLine": 803,
+            "endLine": 842
+          },
+          {
+            "path": "test/res.send.js",
+            "startLine": 71,
+            "endLine": 150
+          },
+          {
+            "path": "test/res.set.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/res.format.js",
+            "startLine": 182,
+            "endLine": 248
+          },
+          {
+            "path": "test/res.jsonp.js",
+            "startLine": 211,
+            "endLine": 290
+          },
+          {
+            "path": "test/res.sendFile.js",
+            "startLine": 891,
+            "endLine": 899
+          },
+          {
+            "path": "test/res.attachment.js",
+            "startLine": 1,
+            "endLine": 78
+          }
+        ],
+        "sourceBytes": 13306,
+        "targetCovered": true
+      },
+      "alternatives": [
+        {
+          "startLine": 803,
+          "endLine": 842,
+          "newTerms": [
+            "plain",
+            "text"
+          ]
+        }
+      ],
+      "lostExpectedSpans": [],
+      "budgetPreserved": true
+    },
+    {
+      "taskId": "fastify-pr-6774",
+      "baseCommit": "27f4d6222dd945238e96c1fdaa632d5dc3c37b2c",
+      "query": "plugin dependency unregistered error catalog error codes",
+      "baseline": {
+        "spans": [
+          {
+            "path": "test/plugin.3.test.js",
+            "startLine": 244,
+            "endLine": 246
+          },
+          {
+            "path": "test/internals/plugin.test.js",
+            "startLine": 149,
+            "endLine": 158
+          },
+          {
+            "path": "test/esm/plugin.mjs",
+            "startLine": 2,
+            "endLine": 4
+          },
+          {
+            "path": "test/plugin.1.test.js",
+            "startLine": 34,
+            "endLine": 39
+          },
+          {
+            "path": "test/plugin.4.test.js",
+            "startLine": 87,
+            "endLine": 89
+          },
+          {
+            "path": "fastify.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "lib/errors.js",
+            "startLine": 518,
+            "endLine": 529
+          },
+          {
+            "path": "package.json",
+            "startLine": 1,
+            "endLine": 80
+          }
+        ],
+        "sourceBytes": 6765,
+        "targetCovered": false
+      },
+      "candidate": {
+        "spans": [
+          {
+            "path": "test/plugin.3.test.js",
+            "startLine": 244,
+            "endLine": 246
+          },
+          {
+            "path": "test/plugin.3.test.js",
+            "startLine": 248,
+            "endLine": 250
+          },
+          {
+            "path": "test/internals/plugin.test.js",
+            "startLine": 149,
+            "endLine": 158
+          },
+          {
+            "path": "test/esm/plugin.mjs",
+            "startLine": 2,
+            "endLine": 4
+          },
+          {
+            "path": "test/plugin.1.test.js",
+            "startLine": 34,
+            "endLine": 39
+          },
+          {
+            "path": "test/plugin.4.test.js",
+            "startLine": 87,
+            "endLine": 89
+          },
+          {
+            "path": "fastify.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "lib/errors.js",
+            "startLine": 518,
+            "endLine": 529
+          }
+        ],
+        "sourceBytes": 3414,
+        "targetCovered": false
+      },
+      "alternatives": [
+        {
+          "startLine": 248,
+          "endLine": 250,
+          "newTerms": [
+            "plugin"
+          ]
+        }
+      ],
+      "lostExpectedSpans": [],
+      "budgetPreserved": true
+    },
+    {
+      "taskId": "fastify-pr-6746",
+      "baseCommit": "fc9eafddae37dea167d2affc26a29a04f9412047",
+      "query": "HTTP/2 large Buffer string Content-Length cancellation trailers response",
+      "baseline": {
+        "spans": [
+          {
+            "path": "docs/Reference/HTTP2.md",
+            "startLine": 1,
+            "endLine": 10
+          },
+          {
+            "path": "test/content-length.test.js",
+            "startLine": 71,
+            "endLine": 150
+          },
+          {
+            "path": "test/reply-trailers.test.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/http2/closing.test.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/http2/constraint.test.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/http2/head.test.js",
+            "startLine": 1,
+            "endLine": 35
+          },
+          {
+            "path": "test/http2/plain.test.js",
+            "startLine": 1,
+            "endLine": 69
+          },
+          {
+            "path": "test/http2/secure-with-fallback.test.js",
+            "startLine": 1,
+            "endLine": 80
+          }
+        ],
+        "sourceBytes": 13072,
+        "targetCovered": false
+      },
+      "candidate": {
+        "spans": [
+          {
+            "path": "docs/Reference/HTTP2.md",
+            "startLine": 1,
+            "endLine": 10
+          },
+          {
+            "path": "test/content-length.test.js",
+            "startLine": 71,
+            "endLine": 150
+          },
+          {
+            "path": "test/reply-trailers.test.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/http2/closing.test.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/http2/constraint.test.js",
+            "startLine": 1,
+            "endLine": 80
+          },
+          {
+            "path": "test/http2/head.test.js",
+            "startLine": 1,
+            "endLine": 35
+          },
+          {
+            "path": "test/http2/plain.test.js",
+            "startLine": 1,
+            "endLine": 69
+          },
+          {
+            "path": "test/http2/secure-with-fallback.test.js",
+            "startLine": 1,
+            "endLine": 80
+          }
+        ],
+        "sourceBytes": 13072,
+        "targetCovered": false
+      },
+      "alternatives": [],
+      "lostExpectedSpans": [],
+      "budgetPreserved": true
+    },
+    {
+      "taskId": "fastify-pr-6714",
+      "baseCommit": "6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "query": "reply trailer handler callback promise first completion chunked framing Content-Length",
+      "baseline": {
+        "spans": [
+          {
+            "path": "lib/reply.js",
+            "startLine": 301,
+            "endLine": 312
+          },
+          {
+            "path": "test/content-parser.test.js",
+            "startLine": 8,
+            "endLine": 8
+          },
+          {
+            "path": "test/reply-trailers.test.js",
+            "startLine": 212,
+            "endLine": 291
+          },
+          {
+            "path": "test/promises.test.js",
+            "startLine": 71,
+            "endLine": 126
+          },
+          {
+            "path": "test/stream-serializers.test.js",
+            "startLine": 1,
+            "endLine": 41
+          },
+          {
+            "path": "docs/Reference/Reply.md",
+            "startLine": 360,
+            "endLine": 372
+          },
+          {
+            "path": "lib/content-type-parser.js",
+            "startLine": 197,
+            "endLine": 243
+          },
+          {
+            "path": "test/internals/reply.test.js",
+            "startLine": 907,
+            "endLine": 913
+          }
+        ],
+        "sourceBytes": 7324,
+        "targetCovered": false
+      },
+      "candidate": {
+        "spans": [
+          {
+            "path": "lib/reply.js",
+            "startLine": 301,
+            "endLine": 312
+          },
+          {
+            "path": "lib/reply.js",
+            "startLine": 575,
+            "endLine": 683
+          },
+          {
+            "path": "lib/reply.js",
+            "startLine": 987,
+            "endLine": 1007
+          },
+          {
+            "path": "test/content-parser.test.js",
+            "startLine": 8,
+            "endLine": 8
+          },
+          {
+            "path": "test/reply-trailers.test.js",
+            "startLine": 212,
+            "endLine": 291
+          }
+        ],
+        "sourceBytes": 7149,
+        "targetCovered": false
+      },
+      "alternatives": [
+        {
+          "startLine": 575,
+          "endLine": 683,
+          "newTerms": [
+            "chunked",
+            "content-length",
+            "first"
+          ]
+        },
+        {
+          "startLine": 987,
+          "endLine": 1007,
+          "newTerms": [
+            "callback",
+            "handler"
+          ]
+        }
+      ],
+      "lostExpectedSpans": [],
+      "budgetPreserved": true
+    }
+  ],
+  "checks": {
+    "trailersTargetComplete": false,
+    "expectedExcerptsPreserved": true,
+    "targetCoveragePreserved": true,
+    "budgetsPreserved": true
+  },
+  "decision": "discard",
+  "claimBoundary": "Retrospective offline selector experiment, not production behavior or agent benefit."
+}

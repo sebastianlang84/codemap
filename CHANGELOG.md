@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Include directly importing tests in related-test suggestions even when filenames differ, and prioritize their import evidence in expanded context.
+
 - Recognize JavaScript function assignments under their target and short property names, return complete function context, and stop treating callback calls as methods. Exact symbol context now precedes partial filename matches. Run `codemap index` to rebuild existing indexes.
 
 - Align the bundled skill and tool hints with location-preserving context and a one-excerpt initial limit.

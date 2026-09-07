@@ -1,0 +1,256 @@
+{
+  "baseCommit": "27f4d6222dd945238e96c1fdaa632d5dc3c37b2c",
+  "target": "lib/plugin-utils.js:64-78",
+  "implementationSha256": "9c69b1113ef5abe4de12fb7d4a415ea005d13cdd2b70e831426a62c566082e51",
+  "contexts": [
+    {
+      "limit": 1,
+      "relatedTests": [
+        "test/internals/plugin.test.js"
+      ],
+      "relatedDocs": [
+        "README.md",
+        "test/bundler/README.md"
+      ],
+      "readFirst": [
+        {
+          "path": "lib/plugin-utils.js",
+          "startLine": 64,
+          "endLine": 78,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/plugin-utils.js"
+            }
+          ]
+        }
+      ],
+      "sourceBytes": 442,
+      "completeTarget": true
+    },
+    {
+      "limit": 4,
+      "relatedTests": [
+        "test/internals/plugin.test.js"
+      ],
+      "relatedDocs": [
+        "README.md",
+        "test/bundler/README.md"
+      ],
+      "readFirst": [
+        {
+          "path": "lib/plugin-utils.js",
+          "startLine": 64,
+          "endLine": 78,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/plugin-utils.js"
+            }
+          ]
+        },
+        {
+          "path": "lib/symbols.js",
+          "startLine": 1,
+          "endLine": 74,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "lib/plugin-utils.js",
+              "targetPath": "lib/symbols.js",
+              "specifier": "./symbols.js"
+            }
+          ]
+        },
+        {
+          "path": "lib/decorate.js",
+          "startLine": 1,
+          "endLine": 18,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "lib/plugin-utils.js",
+              "targetPath": "lib/decorate.js",
+              "specifier": "./decorate.js"
+            }
+          ]
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "startLine": 1,
+          "endLine": 16,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/internals/plugin.test.js",
+              "targetPath": "lib/plugin-utils.js",
+              "specifier": "../../lib/plugin-utils.js"
+            },
+            {
+              "kind": "reverse_test",
+              "label": "test file imports target",
+              "sourcePath": "test/internals/plugin.test.js",
+              "targetPath": "lib/plugin-utils.js"
+            },
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/internals/plugin.test.js",
+              "targetPath": "lib/plugin-utils.js",
+              "specifier": "../../lib/plugin-utils"
+            }
+          ]
+        }
+      ],
+      "sourceBytes": 4799,
+      "completeTarget": true
+    },
+    {
+      "limit": 8,
+      "relatedTests": [
+        "test/internals/plugin.test.js"
+      ],
+      "relatedDocs": [
+        "README.md",
+        "test/bundler/README.md"
+      ],
+      "readFirst": [
+        {
+          "path": "lib/plugin-utils.js",
+          "startLine": 64,
+          "endLine": 78,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/plugin-utils.js"
+            }
+          ]
+        },
+        {
+          "path": "lib/symbols.js",
+          "startLine": 1,
+          "endLine": 74,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "lib/plugin-utils.js",
+              "targetPath": "lib/symbols.js",
+              "specifier": "./symbols.js"
+            }
+          ]
+        },
+        {
+          "path": "lib/decorate.js",
+          "startLine": 1,
+          "endLine": 18,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "lib/plugin-utils.js",
+              "targetPath": "lib/decorate.js",
+              "specifier": "./decorate.js"
+            }
+          ]
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "startLine": 1,
+          "endLine": 16,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/internals/plugin.test.js",
+              "targetPath": "lib/plugin-utils.js",
+              "specifier": "../../lib/plugin-utils.js"
+            },
+            {
+              "kind": "reverse_test",
+              "label": "test file imports target",
+              "sourcePath": "test/internals/plugin.test.js",
+              "targetPath": "lib/plugin-utils.js"
+            },
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/internals/plugin.test.js",
+              "targetPath": "lib/plugin-utils.js",
+              "specifier": "../../lib/plugin-utils"
+            }
+          ]
+        },
+        {
+          "path": "test/types/decorate-request-reply.test-d.ts",
+          "startLine": 1,
+          "endLine": 19,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/types/decorate-request-reply.test-d.ts",
+              "targetPath": "lib/decorate.js"
+            }
+          ]
+        },
+        {
+          "path": "test/fastify-instance.test.js",
+          "startLine": 1,
+          "endLine": 80,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/fastify-instance.test.js",
+              "targetPath": "fastify.js"
+            }
+          ]
+        },
+        {
+          "path": "lib/plugin-override.js",
+          "startLine": 1,
+          "endLine": 27,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "lib/plugin-override.js",
+              "targetPath": "lib/plugin-utils.js",
+              "specifier": "./plugin-utils.js"
+            }
+          ]
+        },
+        {
+          "path": "lib/config-validator.js",
+          "startLine": 1,
+          "endLine": 9,
+          "reasons": [
+            {
+              "kind": "near_config",
+              "label": "nearby configuration file",
+              "sourcePath": "lib/config-validator.js",
+              "targetPath": "lib/plugin-utils.js"
+            }
+          ]
+        }
+      ],
+      "sourceBytes": 10003,
+      "completeTarget": true
+    }
+  ],
+  "checks": {
+    "directTestListed": true,
+    "directTestWithinFour": true,
+    "targetUnchanged": true,
+    "limitsPreserved": true
+  },
+  "passed": true,
+  "claimBoundary": "Direct importing test discovery only; no complete task-context or agent-benefit claim."
+}

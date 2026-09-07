@@ -137,6 +137,11 @@ function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDi
     }
     const related = relatedPaths(db, readFirst.base, request.pathFilter);
     const relationships = readFirst.direct ? findIndexedRelationships(db, readFirst.base, request.pathFilter) : { imports: [], importers: [], implementationPairs: [] };
+    // A test's import is stronger evidence than a matching filename.
+    related.tests = uniqueStrings([
+      ...relationships.importers.filter(item => isTestReadFirstPath(item.path)).map(item => item.path),
+      ...related.tests,
+    ]).slice(0, 8);
     const importedNeighborTests = readFirst.direct ? importedNeighborTestPaths(db, relationships.imports, request.pathFilter) : [];
     const importerNeighborTests = readFirst.direct ? importerNeighborTestPaths(db, relationships.importers, request.pathFilter) : [];
     const implementationPairNeighborTests = readFirst.direct ? implementationPairNeighborTestPaths(db, relationships.implementationPairs, request.pathFilter) : [];
@@ -283,7 +288,8 @@ function localReadFirstItems(db: ReturnType<typeof openRepoDb>, input: LocalRead
     implementationPairs, importers, configs, tests, docs, sameDir, testOf, limit,
   } = input;
   const targetPath = targetItems[0]?.path ?? "";
-  const testItems = tests.map((path) => ({ path, reasons: [relatedTestReason(targetPath, path)] }));
+  const testItems = tests.map((path) => importers.find(item => item.path === path)
+    ?? { path, reasons: [relatedTestReason(targetPath, path)] });
   const docItems = docs.map((path) => ({ path, reasons: [relatedDocReason(targetPath, path)] }));
   const primaryImports = imports.slice(0, 2);
   const laterImports = imports.slice(2);
