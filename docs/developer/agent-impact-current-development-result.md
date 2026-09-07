@@ -33,13 +33,40 @@ Flask −11,4 % / −8,9 %. Vier Fälle pro Repo erlauben keine belastbare Einsa
 - Zwei Kontextantworten enthalten je 514 Zeilen. Kleinere, aufgabenbezogene Bereiche
   sind eine plausible Entwicklungshypothese, noch kein gemessener Produktgewinn.
 - Die zwei größten Zeitgewinne stammen aus Dekoratoren und Schema-Coercion. Beim
-  Dekorator-Patch fehlen jedoch Typüberladungen. Eine nachgelagerte identische
+  Dekorator-Patch bleiben jedoch Typfehler. Eine nachgelagerte identische
   [Typprüfung](agent-impact-current-typecheck.json) besteht auf Basis und normalem
   Agentenpatch; der CodeMap-Patch führt zwei Rückgabetypfehler ein. Der Agent hat dort
   keine Typprüfung ausgeführt. Das ursprüngliche Gate wurde nicht nachträglich geändert.
 - 24/24 Rohverbrauchswerte, Laufzeiten und Originalpatch-Hashes stimmen mit den
   Messdaten überein. 234 Befehlsereignisse sind geprüft; keine fremden Lösungsquellen
   oder CodeMap-Nutzung im Kontrollarm beobachtet. Null Infrastruktur-Ersatzversuche.
+
+## Nachprüfung des Flask-Dekoratorfalls
+
+**Der erste normale Patch ist exakt gleich dem fertigen CodeMap-Patch.**
+Der normale Agent findet danach mit mypy zwei Rückgabetypfehler, ergänzt Casts
+und später Typüberladungen. Seine abschließenden Tests, mypy und Ruff bestehen.
+Der CodeMap-Agent liest ebenfalls die nötigen Typdefinitionen, führt aber keine
+Typprüfung aus. Beide bestehen die Verhaltenstests. Die Zeiten von 147,7 gegenüber
+76,2 Sekunden vergleichen deshalb unterschiedliche fertiggestellte Qualität;
+der Zeitabstand lässt sich nicht vollständig auf die Prüfdauer zurückführen.
+
+Zusätzliche isolierte Typprüfungen unterscheiden Bibliothekscode und Aufrufer:
+
+| Patch | Bibliothekscode | Bestehende Aufrufe | Neue Aufrufe ohne Klammern |
+| --- | --- | --- | --- |
+| Unveränderte Basis | besteht | besteht | Feature fehlt |
+| CodeMap | 2 Fehler | 36 Diagnosen | 12 Diagnosen |
+| CodeMap plus zwei Casts | besteht | 36 Diagnosen | 12 Diagnosen |
+| Normaler Patch ohne Casts | 2 Fehler | besteht | besteht |
+| Fertiger normaler Patch | besteht | besteht | besteht |
+
+Die Aufruferproben decken alle sechs Dekoratoren ab; mehrere Diagnosen können
+vom selben Aufruf stammen. Casts beheben die internen Rückgabetypfehler,
+Überladungen erhalten die aufrufabhängigen Signaturen. Das sind getrennte Probleme.
+[Prüfdaten](agent-impact-current-typecheck.json) ergänzen den ursprünglichen Vergleich,
+ändern dessen Gate aber nicht. Dieser einzelne Fall belegt eine Prüfungslücke,
+keine Fehlerverursachung durch CodeMap und keinen fehlenden Typkontext.
 
 ## Konsequenz und Grenzen
 

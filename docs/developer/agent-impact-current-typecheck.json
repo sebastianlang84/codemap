@@ -2,7 +2,7 @@
   "taskId": "program-development-09",
   "baseCommit": "85c5d93cbd049c4bd0679c36fd1ddcae8c37b642",
   "postHoc": true,
-  "reason": "Winning treatment patch omits overloads and did not run mypy; baseline did.",
+  "reason": "Winning treatment patch did not run mypy; baseline found the same initial errors and repaired them.",
   "command": [
     ".venv/bin/mypy",
     "src/flask/sansio/app.py",
@@ -38,5 +38,199 @@
     "--python",
     "3.14.2"
   ],
-  "privateReproducer": "/home/wasti/.cache/codemap/agent-impact-current-20260907/typecheck.py"
+  "privateReproducer": "/home/wasti/.cache/codemap/agent-impact-current-20260907/typecheck.py",
+  "caseDiagnosis": {
+    "date": "2026-09-08",
+    "postHoc": true,
+    "baselineInitialDiffEvent": "run-17 item_8",
+    "baselineInitialPatchEqualsFinalTreatmentPatch": true,
+    "baselineTypecheckEvents": {
+      "item_9": 1,
+      "item_12": 0,
+      "item_17": 0
+    },
+    "treatmentTypeContextEvent": "run-18 item_5",
+    "probeScriptSha256": "58793ea34f0713f68f39b73c5c0b606a7a728fe0e5517fed10097de2e1f1e98f",
+    "method": "Pinned Flask base and archived original patches; uv sync --frozen --offline --python 3.14.2. Caller fixtures cover six decorators with (), explicit name, and bare syntax; assert_type checks str or bool return. typing_extensions import matches configured Python 3.10 target. Caller checks use --follow-imports=silent to isolate caller diagnostics.",
+    "variants": {
+      "base": {
+        "source": {
+          "command": [
+            ".venv/bin/mypy",
+            "src/flask/sansio/app.py",
+            "src/flask/sansio/blueprints.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8"
+        },
+        "existing": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e"
+        },
+        "bare": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 1,
+          "diagnosticCount": 14,
+          "outputSha256": "d648f7b82e5c337832c28acfbed8077443ff3f86a8005bee9b7ef92964e9be79"
+        }
+      },
+      "baseline": {
+        "source": {
+          "command": [
+            ".venv/bin/mypy",
+            "src/flask/sansio/app.py",
+            "src/flask/sansio/blueprints.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8"
+        },
+        "existing": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e"
+        },
+        "bare": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e"
+        }
+      },
+      "codemap": {
+        "source": {
+          "command": [
+            ".venv/bin/mypy",
+            "src/flask/sansio/app.py",
+            "src/flask/sansio/blueprints.py"
+          ],
+          "exitCode": 1,
+          "diagnosticCount": 2,
+          "outputSha256": "dfe880ce10639002a0ad0efb14d9a71b3fe67c043e3f6ebf2c615bc434b19902"
+        },
+        "existing": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 1,
+          "diagnosticCount": 36,
+          "outputSha256": "a3e98b0f2ba70f292831c639fe5c2db628b3a5ca1844072450613a86c3537047"
+        },
+        "bare": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 1,
+          "diagnosticCount": 12,
+          "outputSha256": "cd90b0b4cc3eb4a7254ddd400119d7ea6866d17a952c8ba74a372a361ca05914"
+        }
+      },
+      "casts_only": {
+        "source": {
+          "command": [
+            ".venv/bin/mypy",
+            "src/flask/sansio/app.py",
+            "src/flask/sansio/blueprints.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8"
+        },
+        "existing": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 1,
+          "diagnosticCount": 36,
+          "outputSha256": "a3e98b0f2ba70f292831c639fe5c2db628b3a5ca1844072450613a86c3537047"
+        },
+        "bare": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 1,
+          "diagnosticCount": 12,
+          "outputSha256": "cd90b0b4cc3eb4a7254ddd400119d7ea6866d17a952c8ba74a372a361ca05914"
+        }
+      },
+      "overloads_only": {
+        "source": {
+          "command": [
+            ".venv/bin/mypy",
+            "src/flask/sansio/app.py",
+            "src/flask/sansio/blueprints.py"
+          ],
+          "exitCode": 1,
+          "diagnosticCount": 2,
+          "outputSha256": "74345caa8420b74040c0aafff7d462726f5ab4a6b9dd25a332a5b0ea539869d8"
+        },
+        "existing": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e"
+        },
+        "bare": {
+          "command": [
+            ".venv/bin/mypy",
+            "--cache-dir=.mypy_probe_cache",
+            "--follow-imports=silent",
+            "typing_probe.py"
+          ],
+          "exitCode": 0,
+          "diagnosticCount": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e"
+        }
+      }
+    },
+    "interpretation": "Source return-value errors and caller signature regressions are separate. Casts fix only source errors; overloads fix caller signatures. No causal CodeMap attribution from this single pair.",
+    "variantDefinitions": {
+      "base": "Unmodified pinned base. Bare decorator feature absent.",
+      "baseline": "Original run-17 final patch: overloads and two casts.",
+      "codemap": "Original run-18 final patch: neither overloads nor casts.",
+      "casts_only": "Treatment patch; only the two template-test callable-branch returns become t.cast(T_template_test, name).",
+      "overloads_only": "Baseline patch; only the two cast-and-register branches return/register name directly."
+    }
+  }
 }
