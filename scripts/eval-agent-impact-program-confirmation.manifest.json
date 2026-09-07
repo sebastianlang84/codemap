@@ -1,0 +1,1015 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-program-confirmation-v1",
+    "version": 1,
+    "frozenAt": "2026-09-07",
+    "purpose": "untouched-holdout",
+    "selectionProtocol": "Feasibility-screened new upstream changes; eight per repository, SHA-sorted alternating allocation with deterministic API-family cap repair, then repository-interleaved order. Corpus frozen before CodeMap or solver observations. See docs/developer/agent-impact-program-protocol.md. Confirmation stays sealed until candidate freeze and a passing development gate.",
+    "orderSeed": 0
+  },
+  "agent": {
+    "provider": "codex-cli",
+    "model": "gpt-5.6-luna",
+    "effort": "medium",
+    "navigationWorkflow": "location-first",
+    "maxBudgetUsdPerRun": null,
+    "timeoutMs": 900000,
+    "maxInfrastructureRetries": 2
+  },
+  "codemapProfile": {
+    "gitCommit": "298e25d8e1e561383301b8db939d2fa968248a5a",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "express",
+      "remote": "https://github.com/expressjs/express.git"
+    },
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    },
+    {
+      "id": "flask",
+      "remote": "https://github.com/pallets/flask.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "program-confirmation-01",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/commit/0def9bb659557df1bd659411a1a6f2c5b8b9d893",
+      "prompt": "Support a root directory option for response downloads. Resolve relative paths against that root, allow parent traversal that remains within it, and reject requests that escape it. Preserve custom filenames, headers, and callbacks.",
+      "baseCommit": "4847d0efa123fae8f12a2c1b88f7e1a87a5f145a",
+      "fixCommit": "0def9bb659557df1bd659411a1a6f2c5b8b9d893",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "hiddenTestPaths": [
+        "test/res.download.js"
+      ],
+      "expectedBaseFailure": "should allow relative path",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "./node_modules/.bin/mocha",
+        "--require",
+        "test/support/env",
+        "--reporter",
+        "spec",
+        "--bail",
+        "--check-leaks",
+        "test/res.download.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-01.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "cef860780a0d691d426e550a7668caa3bf17c389c34d223fc58259c8b69c0866"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "spec",
+          "--bail",
+          "--check-leaks",
+          "test/res.download.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "res.download",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "dac0651db2e6eaf31fb60577fbb5c37012228ce5270de7d0dad676bcc0ddc086",
+          "base-0.log": "040db46a7392b7eddf5836522906da8741b6f62158943702e9bdd1a1917f153e",
+          "base-1.log": "f8f7820fe31b9656975cdd34042a396187f4a1fa1626b1c167ff5ad841d639fc",
+          "ref-0.log": "f7ff43997803d2a281a0efe2383a41ee68cac7ecccae289bf205addd345fdaa4",
+          "ref-1.log": "570ae388f5eda61a85aa27387726168800ff990b324ac4e995e0be336d9f1587",
+          "public-ref.log": "0325f8a40db987415f8b3c48872f738a0162ee88022aa4762e0b7e489e555ed3",
+          "frozen-setup.log": "c770715f69cde1afab83c6ca1cadf48635795e0c7a4acec8f523f9c2a6947387"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-02",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/commit/6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "prompt": "Request-handler diagnostics must track asynchronous custom error handlers. After a synchronous route throws and an async error handler handles it, emit the asyncStart and asyncEnd lifecycle events with the original request/reply tracing context, in the existing handler event order. Preserve normal error responses.",
+      "baseCommit": "10c69d153c6ee4a61878eabfb2a8f3ec34ab9c8c",
+      "fixCommit": "6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "expectedPaths": [
+        "lib/error-handler.js",
+        "lib/handle-request.js",
+        "lib/symbols.js"
+      ],
+      "hiddenTestPaths": [
+        "test/diagnostics-channel/async-error-handler.test.js"
+      ],
+      "expectedBaseFailure": "diagnostics channel tracks async operations in async error handlers",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "node",
+        "--test",
+        "test/set-error-handler.test.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-02.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "7cc0eba6ba5b9c72bf7026ba65d346c5d06e87f7acb4a9cb20831493cf992ddd"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/diagnostics-channel/async-error-handler.test.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "request-diagnostics",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "5b3b38f43d851967dbb38680e0f0cc230ac55a2e4051a3b51d9c05e7913c9692",
+          "base-0.log": "96be3061e9f1ea75e3f88f3f85233793abd0e9123e4426c71d4c644ce7e6de54",
+          "base-1.log": "8032541de3a0bad0e09f14711c4aa2c0fcaa1d910358e6de03bcce4707fdad79",
+          "ref-0.log": "5318b6d881610a29f0368f76e7bb6f03de7e42a712630d85ca60ec8a0d863b4c",
+          "ref-1.log": "006308aa03f85a3989d0dffa6f44e04b747f8645b4736a53412a49b58ee1afd2",
+          "public-ref.log": "89bf3e28e1fa9454f79a581603bc88518bd38409b5e9ff6f8b24261a1c85d7c7",
+          "frozen-setup.log": "35fc8d0bf17ce5a298b922379cdb95228b4e7176b9514803ef01b2b1b09c9b8e"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-03",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/commit/4995a775df21a206b529403bc30d71795a994fd4",
+      "prompt": "Setting SERVER_NAME must not restrict incoming requests to that host when subdomain matching is disabled. In host-matching mode, match the actual request host even when SERVER_NAME is configured. Preserve explicitly enabled subdomain matching and URL building outside a request.",
+      "baseCommit": "07c7d5730a2685ef2281cc635e289685e5c3d478",
+      "fixCommit": "4995a775df21a206b529403bc30d71795a994fd4",
+      "expectedPaths": [
+        "src/flask/app.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/test_basic.py",
+        "tests/test_blueprints.py"
+      ],
+      "expectedBaseFailure": "test_server_name_matching",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "uv.lock",
+        "requirements"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "-c",
+        "import sys; sys.path.insert(0,'src'); import pytest; raise SystemExit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_basic.py",
+        "tests/test_blueprints.py"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import subprocess; subprocess.run(['uv','venv','--python','3.14.2','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','--no-deps','-r','requirements/tests.txt','-r','requirements/tests-min.txt'],check=True)"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "-c",
+          "import sys; sys.path.insert(0,'src'); import pytest; raise SystemExit(pytest.main(sys.argv[1:]))",
+          "-q",
+          "tests/test_basic.py",
+          "tests/test_blueprints.py"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "flask-routing",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "8f1957781583a019f9398ab6b1db8dc8c5ec34737998f1fa892ab23f817e1ba5",
+          "base-0.log": "3eb00dc43658a0c86abee8820617a603cc08b59c51be8f9f315fda29f6cf0657",
+          "base-1.log": "66c3191fbb1474b3aef0ee2d4c87ebbc7903734ed0a1395d5542d7c4fdfe6a00",
+          "ref-0.log": "ca68c57fb3395c4945c751c7c0d401e7916f41f70218e523015bb42c1ff3aede",
+          "ref-1.log": "92985a960b0c35f4e675ae23a3c0d355de7b5e4f6446a528429630f09ffdf6e8",
+          "public-ref.log": "b53aa845fd387c855e7e646664a2f0ea1e23f1ee950f3de1d7cee50df6a7a730",
+          "frozen-setup.log": "e83f08edaa801bc6f5d363ddee2ddd9b4fe876feebd9884bf80237bdc7dc2dac"
+        },
+        "upstreamDependencyPins": [
+          {
+            "path": "requirements/tests.txt",
+            "sha256": "0e9c77a693172a03e80ed0d87c117eb6de0fe6feddcbce774c4103fa26487bd3"
+          },
+          {
+            "path": "requirements/tests-min.txt",
+            "sha256": "9fbf9f0aef84deb42623fe0f228d959fd6025dec691fc65e6e6d271b087bd1da"
+          }
+        ]
+      }
+    },
+    {
+      "id": "program-confirmation-04",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/commit/74beeac0718c928b4ba249aba3652c52fbe32ca8",
+      "prompt": "Routing a request with a missing method must not throw. Method-specific routes should be skipped and all-method handlers should still run. Preserve ordinary method matching and the existing HEAD fallback.",
+      "baseCommit": "9bc1742937253825d2dc1e9a48c8e8424f0a315b",
+      "fixCommit": "74beeac0718c928b4ba249aba3652c52fbe32ca8",
+      "expectedPaths": [
+        "lib/router/route.js"
+      ],
+      "hiddenTestPaths": [
+        "test/Router.js"
+      ],
+      "expectedBaseFailure": "handle missing method",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "./node_modules/.bin/mocha",
+        "--require",
+        "test/support/env",
+        "--reporter",
+        "spec",
+        "--bail",
+        "--check-leaks",
+        "test/Router.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-04.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "feac2afdd87707fb11d4ff3b9f790c993184335f1f3289eba1e8a37e2ea992ff"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "spec",
+          "--bail",
+          "--check-leaks",
+          "test/Router.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "express-router",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "64f4b84523468c5b284e0428d6e683f6d6c413252e3b3cb84b2a067b0be613b0",
+          "base-0.log": "90b48d13bf40f27a784d51fef7756d2cfd42ee170572c30431aeb4d5ae567509",
+          "base-1.log": "c5dd12027b8817d72e848efb2ca9eb54945aeb495db2db277a0f931e4007a8f5",
+          "ref-0.log": "a3a78c80acbfbcc3bcf28e152d6a13d3f4be9ff7f32a3dbc4a5b1a5d41238648",
+          "ref-1.log": "28d90fed3fb6903ab7a5f6035c506e845fd8e3a75188793bee910ce89e1f78d2",
+          "public-ref.log": "185d9716d86a176e6bebd24b1e3452861205f9d0720da24383c97f67e9319896",
+          "frozen-setup.log": "d4802cc73104329d823be2cdada61fa80113b4f2408801b578d5002596773fff"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-05",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/commit/b4db85b665ac99a809c633b7564d49c8a4c2c5c9",
+      "prompt": "Creating or readying a server must not mutate the caller-provided routerOptions object. Reusing the same options for two instances must work without leaking instance-specific routing callbacks; unknown URLs should still produce each instance's normal 404 response.",
+      "baseCommit": "3653e7b92719061c6c2dfb4497d2d5b936509309",
+      "fixCommit": "b4db85b665ac99a809c633b7564d49c8a4c2c5c9",
+      "expectedPaths": [
+        "lib/route.js"
+      ],
+      "hiddenTestPaths": [
+        "test/router-options.test.js"
+      ],
+      "expectedBaseFailure": "Should allow reusing a routerOptions object across instances",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "node",
+        "--test",
+        "test/router-options.test.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-05.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "fb6b0004dbb6aef9731503ba0b81bfc1544cbadb9412b133d4c3b3c64b0cecb8"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/router-options.test.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "route-registration",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "dbafb5c3a06d811f7893d183b616332c4685b5ad991e0a2ea3881fc8b9cedd99",
+          "base-0.log": "d74ba1d0c964c254771bcad2e8f2c5ee39489bec34d11da7f922f889b921dccc",
+          "base-1.log": "e34e7ac028522dc815273af35dafb48e5d9d562f819694737f9b1d6812782cdc",
+          "ref-0.log": "5c29fafb865d78ccec4cdf4c8db13a7b933230619bf5ef3d28b63dbe5af8da46",
+          "ref-1.log": "497ffce74c453df49538920eac48f83642ab398bc4dafb2deb6104863604abbc",
+          "public-ref.log": "25a39e1a3b7ba3513524ee082f6180a853954ed7451d3324d3a1b804f0c0f54d",
+          "frozen-setup.log": "62bb7247ab98b076a1cc1c9c989f0423868b6f49b5391511bb403c5e7dc88b9a"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-06",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/commit/53b8f08218796d95764c5252bccd8a50a173a6fb",
+      "prompt": "With a preserved test-client context and follow_redirects enabled, the session visible after the request must reflect the final redirect target, including updates made by both the redirecting view and the target view. Preserve ordinary session transactions and context cleanup.",
+      "baseCommit": "5addaf833b2e8c7a616f89dd8ad5a44b07d7c000",
+      "fixCommit": "53b8f08218796d95764c5252bccd8a50a173a6fb",
+      "expectedPaths": [
+        "src/flask/testing.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/test_testing.py"
+      ],
+      "expectedBaseFailure": "test_redirect_session",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "uv.lock",
+        "requirements"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/pytest",
+        "-q",
+        "tests/test_testing.py"
+      ],
+      "setup": {
+        "file": "uv",
+        "args": [
+          "sync",
+          "--frozen",
+          "--python",
+          "3.14.2"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/pytest",
+        "args": [
+          "-q",
+          "tests/test_testing.py"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "context-lifecycle",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "bc4375117ef9b33bb819c21d4dcc9c6fa72474712ace3da1564eaf5ba5bde34d",
+          "base-0.log": "b2c942324143827e15a81f966183d76b51bf55b9918bad736b3628d8001b8a05",
+          "base-1.log": "0916a9e554f4c19857eac6aa3fc8debaf17ccff708ff1c5664d84f919769b97f",
+          "ref-0.log": "bb7218d73e8a9e248a1199901a8bd688c2fb20db60a2d0cb8fb2e4e28fbce34b",
+          "ref-1.log": "3396a2c6730401f4973a645f2325f31a1972f89a9577f3551367a78ca543f8f8",
+          "public-ref.log": "3396a2c6730401f4973a645f2325f31a1972f89a9577f3551367a78ca543f8f8",
+          "frozen-setup.log": "997e5a3510dcdec042cd3f0cb3c00272c15fca65f641026eae580407d9fe0e79"
+        },
+        "upstreamDependencyPins": [
+          {
+            "path": "uv.lock",
+            "sha256": "c2a18575d95f15aa2ab86524921b6c7ba116a5964f95db75d42b3d0db2ad52af"
+          }
+        ]
+      }
+    },
+    {
+      "id": "program-confirmation-07",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/commit/87279c08aa46d178fe6f2e235d2345f17d6b5a37",
+      "prompt": "A 205 Reset Content response must have no response body or Transfer-Encoding header and must set Content-Length to zero. Preserve existing behavior for other status codes.",
+      "baseCommit": "8bf072039100cd264be920f06635fe77f083c751",
+      "fixCommit": "87279c08aa46d178fe6f2e235d2345f17d6b5a37",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "hiddenTestPaths": [
+        "test/res.send.js"
+      ],
+      "expectedBaseFailure": "should strip Transfer-Encoding field and body, set Content-Length",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "./node_modules/.bin/mocha",
+        "--require",
+        "test/support/env",
+        "--reporter",
+        "spec",
+        "--bail",
+        "--check-leaks",
+        "test/res.send.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-07.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "cef860780a0d691d426e550a7668caa3bf17c389c34d223fc58259c8b69c0866"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "spec",
+          "--bail",
+          "--check-leaks",
+          "test/res.send.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "res.send",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "87309b68eccce7a80e3ce8a7137bffed6d60972dd99732c6d2ec98838b7d4128",
+          "base-0.log": "24eec3fbae196792ddb48406a159cf3605db0bcba22076e500f85ea3351c9e09",
+          "base-1.log": "a84726a73bf94b4673b75897feac0e9c21382380afa52d7ed62de21def6dd1e4",
+          "ref-0.log": "6af84c988ac10e8164f171fef46896fa61318f3c7aa311c23ff87bce92402721",
+          "ref-1.log": "7875add3ce1e932e8c5e60a35fca12b2fb651a4b0fe3ebae5cf71ba9e1de7c46",
+          "public-ref.log": "81b92e3802dc0882df1b4b4149b7071f7660c9c47573491bf4b04ae8129330bf",
+          "frozen-setup.log": "c770715f69cde1afab83c6ca1cadf48635795e0c7a4acec8f523f9c2a6947387"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-08",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/commit/d76dbcd58bf6d82bba167cdc74a79d2f74dbcb97",
+      "prompt": "A custom serializer compiler and a custom validator compiler must be recognized independently. Providing only one factory must enable only its corresponding custom-compiler flag and preserve default handling for the other compiler.",
+      "baseCommit": "d9659819fbbc391d054f1aa4b49ce969a13610dd",
+      "fixCommit": "d76dbcd58bf6d82bba167cdc74a79d2f74dbcb97",
+      "expectedPaths": [
+        "lib/schema-controller.js"
+      ],
+      "hiddenTestPaths": [
+        "test/internals/schema-controller-perf.test.js"
+      ],
+      "expectedBaseFailure": "isCustomSerializerCompiler flag is set correctly when only buildSerializer is provided",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "node",
+        "--test",
+        "test/internals/schema-controller-perf.test.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-08.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "7cc0eba6ba5b9c72bf7026ba65d346c5d06e87f7acb4a9cb20831493cf992ddd"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/internals/schema-controller-perf.test.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "schema-compilers",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "043d903e1fde614fe67d00baa4cba479b83e2a2b6c153b36683044e744e30a4b",
+          "base-0.log": "37311663ec17cff04dc4696b869977e270515d8c6d95d7a10cd1e05184b8fffe",
+          "base-1.log": "c7f94e2c9bc8513b139673f3d51013218bd098594df3d826f5757ed3c3e85927",
+          "ref-0.log": "61fee43665efec30377a846a5c6d33d9a7f7b0087b1df88b1af7ca5d00865429",
+          "ref-1.log": "de9d2e0105278589326ff6ce2d7128974cbc26d765291f0093d61195ce850ccd",
+          "public-ref.log": "f4a678273d7cfa182f0b134d6e563730e1d6b4a1cbd637c09c3d244924490906",
+          "frozen-setup.log": "35fc8d0bf17ce5a298b922379cdb95228b4e7176b9514803ef01b2b1b09c9b8e"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-09",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/commit/e82db2ca3a22c9614c1987392c9cfaa8c6ce99ad",
+      "prompt": "Explicitly enabling automatic OPTIONS on a view or route must add OPTIONS even when automatic handling is globally disabled. Preserve explicit disabling, explicitly implemented OPTIONS methods, blueprint routes, and class-based views.",
+      "baseCommit": "d3b78fd18a8d9e224cb9ef58a23cec9b1ffc9ce9",
+      "fixCommit": "e82db2ca3a22c9614c1987392c9cfaa8c6ce99ad",
+      "expectedPaths": [
+        "src/flask/sansio/app.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/test_basic.py",
+        "tests/test_blueprints.py",
+        "tests/test_cli.py",
+        "tests/test_views.py"
+      ],
+      "expectedBaseFailure": "test_provide_automatic_options_attr_enable",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "uv.lock",
+        "requirements"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/pytest",
+        "-q",
+        "tests/test_basic.py",
+        "tests/test_blueprints.py",
+        "tests/test_cli.py",
+        "tests/test_views.py"
+      ],
+      "setup": {
+        "file": "uv",
+        "args": [
+          "sync",
+          "--frozen",
+          "--python",
+          "3.14.2"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/pytest",
+        "args": [
+          "-q",
+          "tests/test_basic.py",
+          "tests/test_blueprints.py",
+          "tests/test_cli.py",
+          "tests/test_views.py"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "flask-routing",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "597838b77752a5942d9ca82a87a285b8ff2323e6b9afae8bd6cbeaca84041d2b",
+          "base-0.log": "642fbd9eb94ebd5bf99020fd05f0f4e2897c763b5e947a4223e7e66df6e2d1ca",
+          "base-1.log": "bfb6b0609dbcf391066f3403e2778aac1663fcee4ee260010256953cf0685f16",
+          "ref-0.log": "98d2c6bb7609f5c18dd0cea6cb1c2c1e389cee297222738d8225469de85d8548",
+          "ref-1.log": "84592f68c12bdceedd7475187177f7136d0baef370528e119916d25ccbaf6780",
+          "public-ref.log": "87e95cb7b548bbc38cd5453166316afb9bba6a396feb1b7deff6b329d608e73f",
+          "frozen-setup.log": "16c2daf8f0a086743856ac8c6529a7bdad5b9beb23ceaee6c42ad5559d04c662"
+        },
+        "upstreamDependencyPins": [
+          {
+            "path": "uv.lock",
+            "sha256": "c97c294ceb55a8ffae08ed94fb75b9bd8f535f98a35d8bc77025faf88dc88101"
+          }
+        ]
+      }
+    },
+    {
+      "id": "program-confirmation-10",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/commit/c17fe058613dc7dfb7779fbe68a9738a108fe408",
+      "prompt": "Application settings must ignore inherited Object.prototype properties unless explicitly configured. Retrieving an unset prototype-named setting should return undefined, enabled should return false, and disabled should return true. Explicitly assigned values and parent-application settings must still work.",
+      "baseCommit": "87279c08aa46d178fe6f2e235d2345f17d6b5a37",
+      "fixCommit": "c17fe058613dc7dfb7779fbe68a9738a108fe408",
+      "expectedPaths": [
+        "lib/application.js"
+      ],
+      "hiddenTestPaths": [
+        "test/config.js"
+      ],
+      "expectedBaseFailure": "should return undefined for prototype values",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "./node_modules/.bin/mocha",
+        "--require",
+        "test/support/env",
+        "--reporter",
+        "spec",
+        "--bail",
+        "--check-leaks",
+        "test/config.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-10.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "cef860780a0d691d426e550a7668caa3bf17c389c34d223fc58259c8b69c0866"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "spec",
+          "--bail",
+          "--check-leaks",
+          "test/config.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "app-settings",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "bdf3b0b08519c5bbb89470a970f839a2b8cd7e345566194d4aba39db1d1fa5a5",
+          "base-0.log": "195e004c315954ccc111b195945d2b37cc44c75c02f6a171e9c4e64e7b53f5cb",
+          "base-1.log": "70bd7bd378f986bce3155ebe5d3468a70e852cbdb899d4af1e78ea1d7a3bb446",
+          "ref-0.log": "072addb5b9cff8a9665e4660b4aab153993409907b8a04d255a9efdcf11c8d69",
+          "ref-1.log": "c21f3c7832161b34956bc592dbe528ad3951f0ee2d01495aadad895f25fba1b3",
+          "public-ref.log": "072addb5b9cff8a9665e4660b4aab153993409907b8a04d255a9efdcf11c8d69",
+          "frozen-setup.log": "c770715f69cde1afab83c6ca1cadf48635795e0c7a4acec8f523f9c2a6947387"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-11",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/commit/d9659819fbbc391d054f1aa4b49ce969a13610dd",
+      "prompt": "Registering an overlapping route with an array of HTTP methods must produce the framework's FST_ERR_DUPLICATED_ROUTE error code, just as a single-method duplicate does. Preserve existing duplicate detection and automatic HEAD behavior.",
+      "baseCommit": "c2ba18c17769dacce61472ec0397560b3b4eebde",
+      "fixCommit": "d9659819fbbc391d054f1aa4b49ce969a13610dd",
+      "expectedPaths": [
+        "lib/route.js"
+      ],
+      "hiddenTestPaths": [
+        "test/throw.test.js"
+      ],
+      "expectedBaseFailure": "Fastify should throw on multiple assignment to the same route with array method",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "publicTestCommand": [
+        "node",
+        "--test",
+        "test/throw.test.js"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-confirmation-11.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "7cc0eba6ba5b9c72bf7026ba65d346c5d06e87f7acb4a9cb20831493cf992ddd"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/throw.test.js"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "route-registration",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "5d7d7f7abb0f70174e65daa20773b5a6ed8b79aad939295fece66fb65ef9997f",
+          "base-0.log": "5ec89263bea14c2f182ae87b72c7fcca7ef19a769230ff3e3bfa26b02ea90952",
+          "base-1.log": "ab56e9b69f5dcacee3b2cdcc9e5776e95f91fe623f5f6d5300783e42e87b20e4",
+          "ref-0.log": "2ccb1753a3e5e9eb29dc0152a4c820cde345a5f575ada1e3a5649d7db734d39d",
+          "ref-1.log": "9f968d871e98922254d96bbff9106e695cb9898ce13526c22931b665d0eb8f94",
+          "public-ref.log": "69e66e329a28eeb2064cecd07b9cc760b4ec44c42cd89df24569bd00451cc796",
+          "frozen-setup.log": "35fc8d0bf17ce5a298b922379cdb95228b4e7176b9514803ef01b2b1b09c9b8e"
+        }
+      }
+    },
+    {
+      "id": "program-confirmation-12",
+      "repo": "flask",
+      "sourceUrl": "https://github.com/pallets/flask/commit/fbb6f0bc4c60a0bada0e03c3480d0ccf30a3c1df",
+      "prompt": "Run all request and application teardown callbacks, context cleanup, and teardown signals even if a callback or signal receiver raises. Report the collected errors after cleanup, using an exception group on supported Python versions and the first collected error otherwise. Preserve teardown order and the original request error passed to callbacks.",
+      "baseCommit": "7b0088693ece1bd3a9238a6fdf56ed8df7a4d43b",
+      "fixCommit": "fbb6f0bc4c60a0bada0e03c3480d0ccf30a3c1df",
+      "expectedPaths": [
+        "src/flask/app.py",
+        "src/flask/ctx.py",
+        "src/flask/helpers.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/test_appctx.py",
+        "tests/test_basic.py",
+        "tests/test_blueprints.py",
+        "tests/test_helpers.py",
+        "tests/test_testing.py"
+      ],
+      "expectedBaseFailure": "test_robust_teardown",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "uv.lock",
+        "requirements"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/pytest",
+        "-q",
+        "tests/test_appctx.py",
+        "tests/test_basic.py",
+        "tests/test_blueprints.py",
+        "tests/test_helpers.py",
+        "tests/test_testing.py"
+      ],
+      "setup": {
+        "file": "uv",
+        "args": [
+          "sync",
+          "--frozen",
+          "--python",
+          "3.14.2"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/pytest",
+        "args": [
+          "-q",
+          "tests/test_appctx.py",
+          "tests/test_basic.py",
+          "tests/test_blueprints.py",
+          "tests/test_helpers.py",
+          "tests/test_testing.py"
+        ],
+        "timeoutMs": 120000
+      },
+      "preparationEvidence": {
+        "apiFamily": "context-lifecycle",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "publicBaseExitCode": 0,
+        "publicReferenceExitCode": 0,
+        "frozenSetupExitCode": 0,
+        "logSha256": {
+          "public-base.log": "a11a632002f9090d552a3d9e9063e453228f0ee89d1ca85f5da18ddbc3310437",
+          "base-0.log": "8ca46dba09886606aac6db41199603d4cb31b6143025aca4a6757cfedad82714",
+          "base-1.log": "71caafad9a34352d6db059ed1c673f336955df1efc11de862382fac0279047c8",
+          "ref-0.log": "b588db7ca3ad6a7868119f0b313a8e4ba6a7857dafeebaf0eed28907d99963f8",
+          "ref-1.log": "664babf292dfc9998ebc5e84499f3940ec32dd0aadae7fe5651a698774073ed4",
+          "public-ref.log": "7e5814c3a990e008cd195ace31cb809a524fb8494dc10f98ce46078d35ced1ba",
+          "frozen-setup.log": "22d3c25612323b3061aa1f5c288fdb54671f24503ac1e62156028506f600d7c9"
+        },
+        "upstreamDependencyPins": [
+          {
+            "path": "uv.lock",
+            "sha256": "c97c294ceb55a8ffae08ed94fb75b9bd8f535f98a35d8bc77025faf88dc88101"
+          }
+        ]
+      }
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 12,
+    "minTreatmentAdoptionRate": 1,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  },
+  "efficiencyGate": {
+    "maxCostRatio": null,
+    "maxTokenRatio": 1.1,
+    "maxAgentDurationRatio": 0.85,
+    "maxPairedLosses": 0,
+    "minFasterPairs": 8
+  },
+  "preparation": {
+    "productProfileStatus": "placeholder; replace only at candidate freeze before any model attempts",
+    "environment": {
+      "node": "v22.23.2",
+      "npm": "10.9.8",
+      "pythonLauncher": "3.13.5",
+      "pythonRuntime": "3.14.2",
+      "uv": "0.12.10"
+    },
+    "priorManifestTaskSetSha256": "6beb07c64768edeb97d4de114ade82ebb46d81fa9f92ef6238baa93171f91dad",
+    "priorManifestUniqueFixCount": 61,
+    "logRoot": "/home/wasti/.cache/codemap/agent-impact-program-preparation-v1/confirmation",
+    "modelsCalled": 0,
+    "codemapOutputsObserved": 0,
+    "attemptPolicy": "48 regular model calls and at most two infrastructure replacements across BOTH groups. Reduce confirmation maxInfrastructureRetries by replacements already used in development; include superseded attempts in reporting."
+  }
+}
