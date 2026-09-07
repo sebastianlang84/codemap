@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "runnerCommit": "98e4e225432a530d2d413e9e9c4fc6d3fefdb149",
+  "runnerSha256": "681a1515fa7c9bcde70917cf7fbbc34e4491a1c9a14eaad2014c29af08188d02",
+  "groups": [
+    {
+      "group": "development",
+      "manifestSha256": "029832d7071997bcd779bd59d52668f570dd2d982ea27b36d2eb19efaba9ff04",
+      "privateReportSha256": "0ca2d56d19ce8f912cc30dd324aea5c071389301f4b5e9e8a86addc41d3464aa",
+      "validOracles": 12,
+      "publicSandboxChecksPassed": 48,
+      "publicSandboxChecks": 48
+    },
+    {
+      "group": "confirmation",
+      "manifestSha256": "daa3ae7302e4341b6b27d55862f78fa0b72f84d8235e8f8f58666956d75780a8",
+      "privateReportSha256": "e67378abd84dd42529098b44cf9bc6bcd61e472b258f25407031dad1962a9c95",
+      "validOracles": 12,
+      "publicSandboxChecksPassed": 48,
+      "publicSandboxChecks": 48
+    }
+  ],
+  "oracleRule": "Each base fails hidden tests twice; each reference and public base/reference test passes twice.",
+  "sandboxRule": "Each public command passes on base and reference in baseline and CodeMap containers, without login or model invocation.",
+  "confirmationSealedFromImplementers": true,
+  "modelCalls": 0,
+  "infrastructureReplacements": 0,
+  "localVerification": {
+    "unitTestsPassed": 313,
+    "unitTestsFailed": 0,
+    "verifyLocalPassed": true
+  },
+  "claimBoundary": "Runner and public-test executability only; no agent benefit measurement."
+}

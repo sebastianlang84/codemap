@@ -61,6 +61,9 @@ preserved. All 316 tests and the search, semantic, context, agent-navigation and
 token gates pass. The [live-repository gate](context-program-missing-hits-gate.json)
 fails: two context losses against search, maximum 0.5; allowed one loss and 0.25.
 Affected tasks concern MacroLens session restoration and Memory handoff precedence.
+Against main directly, three tasks lose context recall, also including ambiguous
+`sg` discovery; that third task falls back to search's existing recall and therefore
+does not count as an additional loss in the context-versus-search gate.
 Unchanged main rerun passes with seven wins and zero losses; lexical/search control
 results are identical across both runs. No expectations were relaxed or candidate
 retuned. [Rejected patch](../../scripts/fixtures/context-program/missing-hits-candidate.patch)

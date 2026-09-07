@@ -47,9 +47,10 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Arbeitsprogramm: verlässlicher Nutzen bei Code-Aufgaben
 
-Stand: 2026-09-07. Das zusammenhängende Programm ist mit „GO!“ zur Ausführung freigegeben.
-Die Pakete werden in Reihenfolge abgeschlossen; einzelne fehlgeschlagene Versuche lösen
-keine neue Planungsrunde aus. Modellläufe starten erst nach den unten festgelegten Gates.
+Stand: 2026-09-07. Programm abgeschlossen: Messgrundlage geprüft, beide Produktkandidaten verworfen;
+Paket 3 anhand der Machbarkeit beendet, Modellvergleich nach Gate ausgelassen.
+[Ergebnis und Prüfstand](../developer/agent-impact-program-result.md). Die folgende
+Reihenfolge dokumentiert das freigegebene Programm, keine automatische neue Serie.
 
 **Ziel:** korrekte Änderungen mit weniger Agentenzeit bei begrenztem Kontext liefern.
 CodeMap bleibt lokal, deterministisch und ohne zusätzliche Repo-Pflege nutzbar.

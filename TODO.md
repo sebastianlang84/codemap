@@ -2,21 +2,15 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Aktives Arbeitsprogramm
+## Abschluss des Arbeitsprogramms
 
-[Roadmap mit Reihenfolge, Messregeln und Versuchslimits](docs/product/roadmap.md#arbeitsprogramm-verlässlicher-nutzen-bei-code-aufgaben).
-Stand: Ausführung freigegeben; Messharness ergänzt, zwölf lokale Fälle eingefroren.
-Die neuen Agentenfälle werden unabhängig vorbereitet; noch keine Modellserie gestartet.
+[Ergebnis](docs/developer/agent-impact-program-result.md): beide Produktkandidaten
+verworfen; keine neue Modellserie. Messharness und getrennte Fallgruppen bleiben
+für spätere ausdrücklich beauftragte Arbeit verfügbar.
 
-- [ ] 1. Messgrundlage: Runner vervollständigen, geprüfte Testbefehle, getrennte Fallgruppen einfrieren.
-- [ ] 2. Funktionsauswahl: höchstens zwei allgemeine Kandidaten, feste Kontrollfälle und Budgets.
-- [ ] 3. Aufgabenkontext: benötigte Begleitstellen über belegte Beziehungen finden und messen.
-- [ ] 4. Nutzenprüfung: zwölf Entwicklungspaare; nur bei Erfolg zwölf unabhängige Bestätigungspaare.
-- [ ] 5. Abschluss: belegten Einsatzbereich oder Entwicklungsstopp dokumentieren, Git bereinigen.
-
-Nächster Einstieg: Messlücken im bestehenden Agenten-Runner anhand des
-[letzten Trace-Audits](docs/developer/agent-impact-fresh-result.md) schließen.
-[Offene Kontextbefunde](docs/developer/remaining-context-misses.md) dienen als Entwicklungsfälle.
+Offene Produktgrenzen stehen im [Versuchsbericht](docs/developer/context-program-experiments.md).
+Neue Bereichsauswahl erst mit eigenständiger Hypothese und eingefrorenem Budget;
+keine weitere Abstimmung auf die verworfenen Fälle als Fortsetzung dieses Programms.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

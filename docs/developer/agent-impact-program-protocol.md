@@ -69,3 +69,14 @@ Korrektheitsverluste, mindestens 15 % weniger gesamte Agentenzeit, Tokenverhält
 höchstens 1,10 und mindestens acht schnellere Aufgaben. Setup, Indexierung, Navigation
 und Tests werden zusätzlich getrennt berichtet; Testzeit bleibt in der Agentenzeit.
 Die Schwellen sind technische Entscheidungskriterien, kein Signifikanznachweis.
+
+Für eine spätere Ausführung vorab festgelegt: je Gruppe 10.000 gepaarte
+Bootstrap-Ziehungen innerhalb jedes Repos, Seed 20260907, 95%-Perzentilintervalle
+für das Verhältnis der summierten Agentenzeit und Tokens. Zusätzlich alle
+Paarverhältnisse und Repo-Aggregate berichten. Die Intervalle beschreiben nur die
+Streuung dieser ausgewählten Aufgaben, nicht wiederholter Modellantworten oder
+aller Repos; sie ändern die eingefrorenen Entscheidungsschwellen nicht.
+
+Programmabschluss: [Ergebnis und Grenzen](agent-impact-program-result.md).
+Die beiden Produktkandidaten wurden verworfen. Die Fallgruppen bleiben vorbereitet;
+Entwicklungs- und Bestätigungs-Modellläufe wurden nicht gestartet.
