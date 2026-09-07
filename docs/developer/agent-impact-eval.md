@@ -264,8 +264,11 @@ output. Capture is off by default, does not alter prompts or stable evidence, an
 never overwritten. A write failure is reported on stderr without making paid work retryable.
 
 Raw traces can contain source and tool output: keep them local and delete them after diagnosis.
-Directories/files use private permissions where supported. No per-tool wall-clock timestamps are
-added, and a runner crash before the provider returns can still lose its buffered output.
+Directories/files use private permissions where supported. Codex traces now include monotonic
+reception times for command start/completion events and host load before/after the attempt.
+Missing events remain unknown; buffering can compress observed durations. These are diagnostic
+timings, not exact subprocess measurements or causal attribution. Claude traces retain their
+previous format. A runner crash before the provider returns can still lose buffered output.
 
 The next frozen development comparison is [optional CodeMap on eight fresh tasks](agent-impact-optional.md). It adds an optional workflow and a separate efficiency gate; historical manifest behavior remains unchanged.
 

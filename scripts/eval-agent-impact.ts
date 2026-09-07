@@ -9,6 +9,7 @@ import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, 
 import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
 import { renderCuratedContext, summarizeContextDiagnostic } from "./eval-agent-impact-context.ts";
 import { captureAgentImpactPatch, createAgentImpactTraceDir, writeAgentImpactPatch, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
+import { runObservedCodexProcess, type ObservedToolTiming } from "./eval-agent-impact-process.ts";
 
 import {
   evaluateAgentImpactPilotGate,
@@ -55,6 +56,7 @@ interface CommandResult {
   stderr: string;
   timedOut: boolean;
   error?: string;
+  toolTimings?: ObservedToolTiming[];
 }
 
 interface PreparedWorkspace {
@@ -156,7 +158,7 @@ try {
       const item = schedule[index]!;
       if (completed.has(runKey(item.task.id, item.mode))) continue;
       console.error(`[agent-impact] ${index + 1}/${schedule.length} ${item.task.id}/${item.mode}`);
-      results.push({ ...runAgentAttempt({
+      results.push({ ...await runAgentAttempt({
         task: item.task,
         mode: item.mode,
         runOrder: index + 1,
@@ -297,7 +299,7 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
   }
 }
 
-function runAgentAttempt(options: {
+async function runAgentAttempt(options: {
   task: AgentImpactTask;
   mode: AgentImpactMode;
   runOrder: number;
@@ -306,7 +308,7 @@ function runAgentAttempt(options: {
   profileDir: string;
   runRoot: string;
   keepWorkdir: boolean;
-}): AgentImpactRunResult {
+}): Promise<AgentImpactRunResult> {
   const { task, mode, runOrder, manifest, repoCache, profileDir, runRoot, keepWorkdir } = options;
   let workspace: PreparedWorkspace | undefined;
   let usage = emptyUsage();
@@ -324,7 +326,7 @@ function runAgentAttempt(options: {
     }
     const agentStartedAt = performance.now();
     const hostLoadBefore = loadavg();
-    const child = isCodex ? runCodex(task, mode, manifest, workspace, env, profileDir) : runClaude(task, mode, manifest, workspace, env);
+    const child = isCodex ? await runCodex(task, mode, manifest, workspace, env, profileDir) : runClaude(task, mode, manifest, workspace, env);
     const agentDurationMs = Math.round(performance.now() - agentStartedAt);
     let traceError: string | undefined;
     let originalPatchSha256: string | undefined;
@@ -807,13 +809,14 @@ function agentPrompt(task: AgentImpactTask, mode: AgentImpactMode, manifest: Age
   ].join("\n\n");
 }
 
-function runCodex(task: AgentImpactTask, mode: AgentImpactMode, manifest: AgentImpactManifest, workspace: PreparedWorkspace, env: NodeJS.ProcessEnv, profile: string): CommandResult {
-  const child = spawnSync("timeout", ["--signal=TERM", "--kill-after=10s", `${Math.ceil(manifest.agent.timeoutMs / 1000)}s`,
+async function runCodex(task: AgentImpactTask, mode: AgentImpactMode, manifest: AgentImpactManifest, workspace: PreparedWorkspace, env: NodeJS.ProcessEnv, profile: string): Promise<CommandResult> {
+  const child = await runObservedCodexProcess("timeout", ["--signal=TERM", "--kill-after=10s", `${Math.ceil(manifest.agent.timeoutMs / 1000)}s`,
     "bwrap", ...codexContainerArgs(resolveCodexBin(), workspace.root, profile), ...codexArguments(manifest.agent.model, workspace.repo, manifest.agent.effort)], {
-    cwd: workspace.repo, env: codexContainerEnv(env), input: agentPrompt(task, mode, manifest), encoding: "utf8",
-    maxBuffer: 64 * 1024 * 1024, timeout: manifest.agent.timeoutMs + 20_000,
+    cwd: workspace.repo, env: codexContainerEnv(env), input: agentPrompt(task, mode, manifest),
+    maxBuffer: 64 * 1024 * 1024, timeoutMs: manifest.agent.timeoutMs + 20_000,
   });
   return { status: child.status, stdout: redactCodexAuth(child.stdout ?? "", env.CODEX_HOME!), stderr: redactCodexAuth(child.stderr ?? "", env.CODEX_HOME!),
-    timedOut: child.status === 124 || child.signal === "SIGTERM" || child.signal === "SIGKILL",
-    ...(child.error ? { error: child.error.message } : {}) };
+    toolTimings: child.toolTimings.map(item => ({ ...item, command: redactCodexAuth(item.command, env.CODEX_HOME!) })),
+    timedOut: child.status === 124 || child.timedOut,
+    ...(child.error ? { error: child.error } : {}) };
 }
