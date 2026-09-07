@@ -261,6 +261,14 @@ Unknown-cost completed/partial attempts and task failures are retained, not reru
 multi-manifest programme, subtract development replacements from the confirmation allowance
 before freezing its execution profile so the programme-wide cap cannot reset.
 
+`--validate-sandboxes` adds public-test execution on both base/reference snapshots
+in both Codex sandbox arms, without copying a login or invoking a model. It includes
+the host oracle checks. Every actual attempt also checks its public command before
+launch; `preflightDurationMs` is reported separately and excluded from agent time.
+The isolated container mounts a venv's dedicated uv CPython installation read-only
+when its interpreter lives outside `/usr`; it does not expose the surrounding host
+home or cache. Node-only and system-Python environments retain their existing mounts.
+
 For an already budget-approved run, add `--trace-dir /tmp/codemap-agent-traces`. The runner creates
 an isolated directory outside Git worktrees and prints its location. Each run stores raw provider
 stdout/stderr, exit status and aggregate durations before parsing, including malformed/timeout

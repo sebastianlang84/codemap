@@ -75,6 +75,7 @@ export interface OracleValidationResult {
   baseFails: boolean;
   referencePasses: boolean;
   publicTestExitCodes?: { base: Array<number | null>; reference: Array<number | null> };
+  publicSandboxPassed?: boolean;
   valid: boolean;
   error?: string;
 }
@@ -106,6 +107,7 @@ export interface AgentImpactRunResult {
   agentDurationMs: number;
   indexDurationMs: number;
   setupDurationMs?: number;
+  preflightDurationMs?: number;
   verifierDurationMs?: number;
   originalPatchSha256?: string;
   verifierExitCode: number | null;

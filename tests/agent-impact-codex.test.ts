@@ -1,14 +1,37 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "../scripts/eval-agent-impact-codex.ts";
+import { codexArguments, codexContainerArgs, codexContainerEnv, codexPythonRuntimeBindings, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "../scripts/eval-agent-impact-codex.ts";
 import { parseAgentImpactManifest, summarizeAgentImpact, retryableAgentImpactInfrastructure, agentImpactTreatmentInstruction } from "../scripts/eval-agent-impact-lib.ts";
 
 const manifest = parseAgentImpactManifest(readFileSync("scripts/eval-agent-impact-luna.manifest.json", "utf8"));
 const previous = parseAgentImpactManifest(readFileSync("scripts/eval-agent-impact-optional.manifest.json", "utf8"));
+
+test("venv exposes only its dedicated external CPython runtime read-only", () => {
+  const parent = mkdtempSync(join(tmpdir(), "codemap-python-mount-test-"));
+  const root = join(parent, "attempt");
+  const runtime = join(parent, "cpython-3.14.2-linux-x86_64-gnu");
+  const venv = join(root, "repo", ".venv");
+  mkdirSync(join(venv, "bin"), { recursive: true });
+  mkdirSync(join(runtime, "bin"), { recursive: true });
+  mkdirSync(join(runtime, "lib", "python3.14"), { recursive: true });
+  try {
+    assert.deepEqual(codexPythonRuntimeBindings(root), []);
+    writeFileSync(join(runtime, "bin", "python3.14"), "fixture");
+    writeFileSync(join(runtime, "lib", "python3.14", "os.py"), "fixture");
+    writeFileSync(join(venv, "pyvenv.cfg"), `home = ${runtime}/bin\n`);
+    symlinkSync(join(runtime, "bin", "python3.14"), join(venv, "bin", "python"));
+    assert.deepEqual(codexPythonRuntimeBindings(root), ["--ro-bind", runtime, runtime]);
+    writeFileSync(join(venv, "pyvenv.cfg"), "home = /etc\n");
+    assert.throws(() => codexPythonRuntimeBindings(root), /Unsupported external Python/);
+    rmSync(join(venv, "bin", "python"));
+    symlinkSync("/etc/passwd", join(venv, "bin", "python"));
+    assert.throws(() => codexPythonRuntimeBindings(root), /Unsupported external Python/);
+  } finally { rmSync(parent, { recursive: true, force: true }); }
+});
 
 test("Luna preserves tasks and candidate; costs remain unavailable", () => {
   assert.deepEqual(manifest.tasks, previous.tasks);
@@ -117,7 +140,11 @@ test("navigation preflight checks both arms without counting harness calls as ad
     mkdirSync(join(root, "bin"));
     writeFileSync(join(root, "example.js"), "const present = true;\n");
     const env = { PATH: "/usr/local/bin:/usr/bin:/bin", CODEMAP_CALL_LOG: join(root, "agent-calls.log") };
-    verifyCodexSandbox(binary, root, root, profile, env, false);
+    verifyCodexSandbox(binary, root, root, profile, env, false,
+      { argv: [process.execPath, "-e", "require('node:fs').writeFileSync('public-test-ran', 'yes')"], timeoutMs: 5000 });
+    assert.equal(readFileSync(join(root, "public-test-ran"), "utf8"), "yes");
+    assert.throws(() => verifyCodexSandbox(binary, root, root, profile, env, false,
+      { argv: [process.execPath, "-e", "process.exit(7)"], timeoutMs: 5000 }), /preflight failed/);
     writeFileSync(join(root, "bin", "codemap"), '#!/bin/sh\necho status >> "$CODEMAP_CALL_LOG"\necho {}\n', { mode: 0o700 });
     verifyCodexSandbox(binary, root, root, profile, env, true);
     assert.equal(existsSync(env.CODEMAP_CALL_LOG), false);

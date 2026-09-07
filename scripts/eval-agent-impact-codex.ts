@@ -1,6 +1,6 @@
 import { copyFileSync, chmodSync, existsSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { dirname, join } from "node:path";
+import { basename, dirname, join, sep } from "node:path";
 import type { AgentUsage } from "./eval-agent-impact-lib.ts";
 
 export function prepareCodexHome(root: string, sourceHome: string): NodeJS.ProcessEnv {
@@ -49,10 +49,29 @@ export function codexContainerArgs(binary: string, root: string, profile: string
     "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
     "--ro-bind", "/etc", "/etc", "--tmpfs", "/tmp",
     "--bind", root, root, "--ro-bind", profile, profile,
+    ...codexPythonRuntimeBindings(root),
     "--bind", join(root, "home"), "/home/codemap",
     "--bind", join(root, "codex-home"), "/home/codemap/.codex",
     "--ro-bind", join(root, "bin"), "/usr/local/bin",
     "--ro-bind", dirname(executable), dirname(executable), "--", executable];
+}
+
+export function codexPythonRuntimeBindings(root: string): string[] {
+  const venv = join(root, "repo", ".venv");
+  const interpreter = join(venv, "bin", "python");
+  if (!existsSync(interpreter)) return [];
+  const executable = realpathSync(interpreter);
+  if (executable.startsWith(`${realpathSync(root)}${sep}`) || executable.startsWith("/usr/")) return [];
+  const prefix = dirname(dirname(executable));
+  const version = /^cpython-(\d+\.\d+)\.\d+-[A-Za-z0-9_.-]+$/.exec(basename(prefix));
+  const home = /^home\s*=\s*(.+)$/m.exec(readFileSync(join(venv, "pyvenv.cfg"), "utf8"))?.[1].trim();
+  if (!version || !/^python\d+(?:\.\d+)?$/.test(basename(executable)) || !home
+    || realpathSync(home) !== dirname(executable) || basename(dirname(executable)) !== "bin"
+    || !existsSync(join(prefix, "lib", `python${version[1]}`, "os.py"))) {
+    throw new Error("Unsupported external Python runtime; expected a dedicated uv CPython installation");
+  }
+  // Expose only the pinned interpreter and its standard library, never the host home/cache.
+  return ["--ro-bind", prefix, prefix];
 }
 
 export function parseCodexJson(raw: string, requestedModel: string): AgentUsage {
@@ -104,10 +123,13 @@ export function codexContainerEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 
-export function verifyCodexSandbox(binary: string, root: string, workspace: string, profile: string, env: NodeJS.ProcessEnv, treatment: boolean): void {
+export function verifyCodexSandbox(binary: string, root: string, workspace: string, profile: string, env: NodeJS.ProcessEnv, treatment: boolean,
+  publicTest?: { argv: string[]; timeoutMs: number }): void {
   const probe = `const cp=require('node:child_process');
     cp.execFileSync('/bin/bash',['-lc','rg --version && rg --files | head -1 && node --version && npm --version']);
     if (${treatment}) cp.execFileSync('/bin/bash',['-lc','codemap status --json']);
+    const test=${JSON.stringify(publicTest ?? null)};
+    if(test) cp.execFileSync(test.argv[0],test.argv.slice(1),{timeout:test.timeoutMs,maxBuffer:32*1024*1024});
     const s=require('node:http').createServer((q,r)=>r.end('ok'));
     s.on('error',()=>process.exit(1));
     s.listen(0,'127.0.0.1',async()=>{try{const r=await fetch('http://127.0.0.1:'+s.address().port);if(await r.text()!=='ok')process.exitCode=1;}finally{s.close()}});`;
@@ -116,6 +138,6 @@ export function verifyCodexSandbox(binary: string, root: string, workspace: stri
     "-c", 'permissions.fixture.extends=":workspace"',
     "-c", 'permissions.fixture.network.enabled=true',
     "--", process.execPath, "-e", probe,
-  ], { cwd: workspace, env: codexContainerEnv({ ...env, CODEMAP_CALL_LOG: join(root, "preflight-calls.log") }), encoding: "utf8", timeout: 20000 });
+  ], { cwd: workspace, env: codexContainerEnv({ ...env, CODEMAP_CALL_LOG: join(root, "preflight-calls.log") }), encoding: "utf8", timeout: (publicTest?.timeoutMs ?? 0) + 20000 });
   if (result.status !== 0) throw new Error("Codex sandbox preflight failed: " + (result.stderr ?? "").slice(-2000));
 }

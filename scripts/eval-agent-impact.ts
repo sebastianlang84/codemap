@@ -39,6 +39,7 @@ interface ParsedArgs {
   mode: AgentImpactMode | "all";
   approveBudgetUsd?: number;
   validateOnly: boolean;
+  validateSandboxes: boolean;
   dryRun: boolean;
   qualityGate: boolean;
   keepWorkdir: boolean;
@@ -87,6 +88,7 @@ if (modes.some(mode => !allModes.includes(mode))) throw new Error("Mode is not e
 const curatedContexts = new Map<string, string>();
 const plannedRuns = selectedTasks.length * modes.length;
 const isCodex = manifest.agent.provider === "codex-cli";
+if (args.validateSandboxes && !isCodex) throw new Error("Sandbox validation requires a Codex manifest");
 const worstCaseBudgetUsd = manifest.agent.maxBudgetUsdPerRun === null ? null : round(plannedRuns * manifest.agent.maxBudgetUsdPerRun, 2);
 
 if (args.resume && !args.evidenceOutput) throw new Error("--resume requires --evidence-output");
@@ -136,8 +138,8 @@ try {
   for (const task of selectedTasks) {
     if (manifest.diagnostic) curatedContexts.set(task.id, renderCuratedContext(task, path => git(repositoryCaches.get(task.repo)!, ["show", `${task.baseCommit}:${path}`])));
   }
-  const profile = args.validateOnly ? undefined : ensureCodeMapProfile(manifest, args);
-  const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir));
+  const profile = args.validateOnly && !args.validateSandboxes ? undefined : ensureCodeMapProfile(manifest, args);
+  const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir, args.validateSandboxes ? profile : undefined));
   const results = !args.validateOnly && args.resume ? loadCheckpoint(args.evidenceOutput!, manifestSha256, manifest) : [];
   const agentReport = {
     provider: manifest.agent.provider,
@@ -254,7 +256,7 @@ function runKey(taskId: string, mode: AgentImpactMode): string {
   return `${taskId}\0${mode}`;
 }
 
-function validateOracle(task: AgentImpactTask, repoCache: string, parent: string, keepWorkdir: boolean): OracleValidationResult {
+function validateOracle(task: AgentImpactTask, repoCache: string, parent: string, keepWorkdir: boolean, sandboxProfile?: string): OracleValidationResult {
   let base: PreparedWorkspace | undefined;
   let fixed: PreparedWorkspace | undefined;
   try {
@@ -266,6 +268,15 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
       reference: [runSpec(publicSpec, fixed.repo, baseEnv()), runSpec(publicSpec, fixed.repo, baseEnv())],
     } : undefined;
     const publicPasses = !publicResults || [...publicResults.base, ...publicResults.reference].every(item => item.status === 0 && !item.timedOut && !item.error);
+    if (sandboxProfile) {
+      if (!task.publicTestCommand) throw new Error("Sandbox validation requires a public test command");
+      for (const workspace of [base, fixed]) for (const mode of ["baseline", "codemap"] as const) {
+        const env = agentEnv(workspace, mode, sandboxProfile, false);
+        if (mode === "codemap") prepareCodeMap(workspace, sandboxProfile, env);
+        verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, sandboxProfile, env, mode === "codemap",
+          { argv: task.publicTestCommand, timeoutMs: task.verify.timeoutMs });
+      }
+    }
     applyHiddenTests(task, repoCache, base.repo);
     const baseResults = [runSpec(task.verify, base.repo, baseEnv()), runSpec(task.verify, base.repo, baseEnv())];
     const fixResults = [runSpec(task.verify, fixed.repo, baseEnv()), runSpec(task.verify, fixed.repo, baseEnv())];
@@ -283,6 +294,7 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
       referencePasses,
       valid: baseFails && referencePasses && baseFailureKind === "assertion" && publicPasses,
       ...(publicResults ? { publicTestExitCodes: { base: publicResults.base.map(item => item.status), reference: publicResults.reference.map(item => item.status) } } : {}),
+      ...(sandboxProfile ? { publicSandboxPassed: true } : {}),
       ...((baseResults.some((item) => item.error) || fixResults.some((item) => item.error))
         ? { error: [...baseResults, ...fixResults].map((item) => item.error).filter(Boolean).join("; ") }
         : {}),
@@ -321,6 +333,7 @@ async function runAgentAttempt(options: {
   let usage = emptyUsage();
   let indexDurationMs = 0;
   let setupDurationMs = 0;
+  let preflightDurationMs = 0;
   let agentStarted = false;
   try {
     const setupStartedAt = performance.now();
@@ -329,7 +342,10 @@ async function runAgentAttempt(options: {
     setupDurationMs = Math.round(performance.now() - setupStartedAt);
     if (mode === "codemap") indexDurationMs = prepareCodeMap(workspace, profileDir, env);
     if (isCodex) {
-      verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, profileDir, env, mode === "codemap");
+      const preflightStartedAt = performance.now();
+      verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, profileDir, env, mode === "codemap",
+        task.publicTestCommand ? { argv: task.publicTestCommand, timeoutMs: task.verify.timeoutMs } : undefined);
+      preflightDurationMs = Math.round(performance.now() - preflightStartedAt);
       console.error(`[agent-impact] sandbox preflight passed: ${task.id} ${mode}`);
     }
     const agentStartedAt = performance.now();
@@ -382,6 +398,7 @@ async function runAgentAttempt(options: {
       agentDurationMs,
       indexDurationMs,
       setupDurationMs,
+      preflightDurationMs,
       verifierDurationMs,
       ...(originalPatchSha256 ? { originalPatchSha256 } : {}),
       verifierExitCode: verifier.status,
@@ -559,10 +576,12 @@ function prepareCodeMap(workspace: PreparedWorkspace, profileDir: string, env: N
   return Math.round(performance.now() - startedAt);
 }
 
-function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDir: string): NodeJS.ProcessEnv {
+function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDir: string, credentials = true): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
     ...(isCodex ? { LANG: "C.UTF-8", TERM: "dumb" } : withoutClaudeAuth(process.env)),
-    ...(isCodex ? prepareCodexHome(workspace.root, process.env.CODEX_HOME ?? join(realHome, ".codex")) : isolatedAgentImpactClaude(workspace.root, claudeSettings(), automationToken!)),
+    ...(isCodex ? credentials ? prepareCodexHome(workspace.root, process.env.CODEX_HOME ?? join(realHome, ".codex"))
+      : { HOME: join(workspace.root, "home"), USERPROFILE: join(workspace.root, "home"), CODEX_HOME: join(workspace.root, "codex-home") }
+      : isolatedAgentImpactClaude(workspace.root, claudeSettings(), automationToken!)),
     PATH: sanitizedPath(),
     CODEMAP_HOME: workspace.stateDir,
     CODEMAP_TELEMETRY: "0",
@@ -742,6 +761,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     taskIds: [],
     mode: "all",
     validateOnly: false,
+    validateSandboxes: false,
     dryRun: false,
     qualityGate: false,
     keepWorkdir: false,
@@ -769,6 +789,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     else if (name === "--evidence-output") parsed.evidenceOutput = resolve(value());
     else if (name === "--trace-dir") parsed.traceDir = resolve(value());
     else if (arg === "--validate-oracles") parsed.validateOnly = true;
+    else if (arg === "--validate-sandboxes") { parsed.validateOnly = true; parsed.validateSandboxes = true; }
     else if (arg === "--dry-run") parsed.dryRun = true;
     else if (arg === "--quality-gate") parsed.qualityGate = true;
     else if (arg === "--keep-workdir") parsed.keepWorkdir = true;
@@ -788,7 +809,7 @@ function parsePositive(value: string, label: string): number {
 }
 
 function printHelp(): void {
-  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and provider limits\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Claude USD-equivalent limiter\n  --run-codex                   Start fixed Codex runs using existing login\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|curated|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
+  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and provider limits\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --validate-sandboxes          Also run public tests inside both Codex sandbox arms; no login/model\n  --approve-budget-usd <n>      Claude USD-equivalent limiter\n  --run-codex                   Start fixed Codex runs using existing login\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|curated|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
 }
 
 function tail(value: string, length = 1200): string {
