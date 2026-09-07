@@ -1,6 +1,7 @@
 import { copyFileSync, chmodSync, existsSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { basename, dirname, join, sep } from "node:path";
+import { validateRuntimeProfile } from "./eval-agent-impact-runtime-profile.ts";
 import type { AgentUsage } from "./eval-agent-impact-lib.ts";
 
 export function prepareCodexHome(root: string, sourceHome: string): NodeJS.ProcessEnv {
@@ -36,6 +37,7 @@ export function codexArguments(model: string, workspace: string, effort: "medium
 // Local HTTP regression tests need socket access in both arms.
 // Only this attempt, the pinned CodeMap profile, system runtime and Codex executable are visible.
 export function codexContainerArgs(binary: string, root: string, profile: string): string[] {
+  validateRuntimeProfile(profile);
   const executable = realpathSync(binary);
   mkdirSync(join(root, "bin"), { recursive: true });
   const ripgrep = (process.env.PATH ?? "").split(":").map(path => join(path, "rg")).find(existsSync);

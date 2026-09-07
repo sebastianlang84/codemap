@@ -7,6 +7,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "./eval-agent-impact-codex.ts";
 import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
+import { createRuntimeProfile } from "./eval-agent-impact-runtime-profile.ts";
 import { renderCuratedContext, summarizeContextDiagnostic } from "./eval-agent-impact-context.ts";
 import { captureAgentImpactPatch, createAgentImpactTraceDir, writeAgentImpactPatch, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 import { runObservedCodexProcess, type ObservedToolTiming } from "./eval-agent-impact-process.ts";
@@ -131,6 +132,7 @@ if (resolve(runRoot).startsWith(`${resolve(homedir())}/`)) {
   throw new Error(`Agent workspaces must stay outside HOME to avoid ancestor instruction leakage: ${runRoot}`);
 }
 
+let runtimeProfile: string | undefined;
 let report: Record<string, unknown> | undefined;
 let supersededInfrastructure: AgentImpactRunResult[] = [];
 try {
@@ -138,7 +140,7 @@ try {
   for (const task of selectedTasks) {
     if (manifest.diagnostic) curatedContexts.set(task.id, renderCuratedContext(task, path => git(repositoryCaches.get(task.repo)!, ["show", `${task.baseCommit}:${path}`])));
   }
-  const profile = args.validateOnly && !args.validateSandboxes ? undefined : ensureCodeMapProfile(manifest, args);
+  const profile = runtimeProfile = args.validateOnly && !args.validateSandboxes ? undefined : ensureCodeMapProfile(manifest, args);
   const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir, args.validateSandboxes ? profile : undefined));
   const results = !args.validateOnly && args.resume ? loadCheckpoint(args.evidenceOutput!, manifestSha256, manifest) : [];
   const agentReport = {
@@ -192,6 +194,7 @@ try {
   if (args.qualityGate && !args.validateOnly && (!gate.passed || (report.diagnostic && !(report.diagnostic as { complete: boolean }).complete) || (report.efficiencyGate && !(report.efficiencyGate as { passed: boolean }).passed))) process.exitCode = 1;
   if (oracles.some((item) => !item.valid)) process.exitCode = 1;
 } finally {
+  if (runtimeProfile && !args.keepWorkdir) rmSync(runtimeProfile, { recursive: true, force: true });
   if (!args.keepWorkdir) rmSync(runRoot, { recursive: true, force: true });
   else console.error(`[agent-impact] kept ${runRoot}`);
 }
@@ -541,24 +544,14 @@ function ensureRepositoryCache(id: string, remote: string, options: ParsedArgs):
 }
 
 function ensureCodeMapProfile(manifest: AgentImpactManifest, options: ParsedArgs): string {
-  const profile = manifest.codemapProfile;
-  const target = join(options.cacheDir, "profiles", `codemap-${profile.expectedVersion}-${profile.gitCommit.slice(0, 12)}`);
-  const binary = join(target, "dist", "cli", "bin.js");
-  if (!existsSync(binary)) {
-    mkdirSync(target, { recursive: true });
-    materializeSnapshot(repoRoot, profile.gitCommit, target);
-    const install = spawnSync("npm", ["ci", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"], {
-      cwd: target,
-      env: baseEnv(),
-      encoding: "utf8",
-      maxBuffer: 16 * 1024 * 1024,
-      timeout: 300_000,
-    });
-    if (install.status !== 0) throw new Error(`CodeMap profile install failed: ${tail(install.stderr)}`);
-  }
-  const version = execFileSync(process.execPath, [binary, "--version"], { env: baseEnv(), encoding: "utf8" }).trim();
-  if (version !== profile.expectedVersion) throw new Error(`CodeMap profile version ${version} != ${profile.expectedVersion}`);
-  return target;
+  return createRuntimeProfile({
+    repository: repoRoot,
+    commit: manifest.codemapProfile.gitCommit,
+    expectedVersion: manifest.codemapProfile.expectedVersion,
+    cacheDir: options.cacheDir,
+    env: baseEnv(),
+    offline: options.offline,
+  });
 }
 
 function prepareCodeMap(workspace: PreparedWorkspace, profileDir: string, env: NodeJS.ProcessEnv): number {
