@@ -20,7 +20,7 @@ import {
   parseAgentImpactManifest,
   parseAgentImpactCheckpoint,
   parseClaudeJson,
-  retryableAgentImpactInfrastructure,
+  resumeAgentImpactResults,
   stableAgentImpactEvidence,
   summarizeAgentImpact,
   type AgentImpactCommand,
@@ -130,6 +130,7 @@ if (resolve(runRoot).startsWith(`${resolve(homedir())}/`)) {
 }
 
 let report: Record<string, unknown> | undefined;
+let supersededInfrastructure: AgentImpactRunResult[] = [];
 try {
   const repositoryCaches = new Map(manifest.repositories.map((repo) => [repo.id, ensureRepositoryCache(repo.id, repo.remote, args)]));
   for (const task of selectedTasks) {
@@ -216,6 +217,7 @@ function buildReport(
     worstCaseBudgetUsd,
     oracles,
     results,
+    ...(supersededInfrastructure.length ? { supersededInfrastructure } : {}),
     summary,
     ...(manifest.diagnostic ? { diagnostic: summarizeContextDiagnostic(results, manifest.tasks.length) } : {}),
     gate: evaluateAgentImpactPilotGate(manifest, oracles, summary),
@@ -237,10 +239,15 @@ function writeEvidence(path: string, report: Record<string, unknown>): unknown {
 function loadCheckpoint(path: string, expectedManifestSha256: string, manifest: AgentImpactManifest): AgentImpactRunResult[] {
   if (!existsSync(path)) return [];
   const loaded = parseAgentImpactCheckpoint(readFileSync(path, "utf8"), expectedManifestSha256, new Set(manifest.tasks.map((task) => task.id)), new Set(allModes));
-  const retained = loaded.filter((result) => !retryableAgentImpactInfrastructure(result));
-  const retrying = loaded.length - retained.length;
-  if (retrying > 0) console.error(`[agent-impact] retrying ${retrying} zero-cost infrastructure runs`);
-  return retained;
+  const checkpoint = JSON.parse(readFileSync(path, "utf8"));
+  const previous = checkpoint.supersededInfrastructure ?? [];
+  if (!Array.isArray(previous)) throw new Error("Invalid checkpoint retry history");
+  for (const item of previous) parseAgentImpactCheckpoint(JSON.stringify({ manifestSha256: expectedManifestSha256, results: [item] }), expectedManifestSha256, new Set(manifest.tasks.map(task => task.id)), new Set(allModes));
+  const resumed = resumeAgentImpactResults(loaded, previous, manifest.agent.maxInfrastructureRetries ?? Infinity);
+  supersededInfrastructure = resumed.supersededInfrastructure;
+  const retrying = loaded.length - resumed.results.length;
+  if (retrying > 0) console.error(`[agent-impact] retrying ${retrying} pre-launch or zero-cost infrastructure runs`);
+  return resumed.results;
 }
 
 function runKey(taskId: string, mode: AgentImpactMode): string {
@@ -314,6 +321,7 @@ async function runAgentAttempt(options: {
   let usage = emptyUsage();
   let indexDurationMs = 0;
   let setupDurationMs = 0;
+  let agentStarted = false;
   try {
     const setupStartedAt = performance.now();
     workspace = prepareWorkspace(task, repoCache, runRoot, `run-${runOrder}-${task.id}-${mode}`, task.baseCommit);
@@ -326,6 +334,7 @@ async function runAgentAttempt(options: {
     }
     const agentStartedAt = performance.now();
     const hostLoadBefore = loadavg();
+    agentStarted = true;
     const child = isCodex ? await runCodex(task, mode, manifest, workspace, env, profileDir) : runClaude(task, mode, manifest, workspace, env);
     const agentDurationMs = Math.round(performance.now() - agentStartedAt);
     let traceError: string | undefined;
@@ -347,7 +356,8 @@ async function runAgentAttempt(options: {
     try {
       usage = isCodex ? parseCodexJson(child.stdout, manifest.agent.model) : parseClaudeJson(child.stdout);
     } catch (error) {
-      return failedRun(task, mode, runOrder, workspace.repo, usage, child, agentDurationMs, indexDurationMs, `provider parse: ${message(error)}`);
+      return { ...failedRun(task, mode, runOrder, workspace.repo, usage, child, agentDurationMs, indexDurationMs, `provider parse: ${message(error)}`),
+        agentStarted, setupDurationMs, ...(originalPatchSha256 ? { originalPatchSha256 } : {}) };
     }
     const diff = captureDiff(workspace.repo, task);
     applyHiddenTests(task, repoCache, workspace.repo);
@@ -367,6 +377,7 @@ async function runAgentAttempt(options: {
       mode,
       runOrder,
       agentExitCode: child.status,
+      agentStarted,
       timedOut: child.timedOut,
       agentDurationMs,
       indexDurationMs,
@@ -387,6 +398,7 @@ async function runAgentAttempt(options: {
       mode,
       runOrder,
       agentExitCode: null,
+      agentStarted,
       timedOut: false,
       agentDurationMs: 0,
       indexDurationMs,

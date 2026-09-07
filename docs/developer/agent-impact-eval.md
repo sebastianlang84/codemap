@@ -255,6 +255,11 @@ setup time and independent verifier time separately from agent/index time.
 New manifests may supply `publicTestCommand` as argv: it is shown identically to both
 arms and must pass twice on the prepared base and reference before hidden tests are applied.
 `efficiencyGate.minFasterPairs` prevents one expensive task from deciding the time gate alone.
+`agent.maxInfrastructureRetries` caps replacements on resume; superseded attempts remain
+in aggregate evidence. Only pre-launch or reported zero-cost infrastructure failures qualify.
+Unknown-cost completed/partial attempts and task failures are retained, not rerun. For a
+multi-manifest programme, subtract development replacements from the confirmation allowance
+before freezing its execution profile so the programme-wide cap cannot reset.
 
 For an already budget-approved run, add `--trace-dir /tmp/codemap-agent-traces`. The runner creates
 an isolated directory outside Git worktrees and prints its location. Each run stores raw provider

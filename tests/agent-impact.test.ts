@@ -16,6 +16,7 @@ import {
   parseAgentImpactCheckpoint,
   parseClaudeJson,
   retryableAgentImpactInfrastructure,
+  resumeAgentImpactResults,
   stableAgentImpactEvidence,
   summarizeAgentImpact,
   type AgentImpactManifest,
@@ -26,6 +27,24 @@ import {
 
 const manifestRaw = readFileSync(new URL("../scripts/eval-agent-impact.manifest.json", import.meta.url), "utf8");
 const manifest = parseAgentImpactManifest(manifestRaw);
+
+test("resume keeps failed outcomes and archives infrastructure replacements within their frozen cap", () => {
+  const failed = run("one", "baseline", false, {}, 100);
+  const infrastructure = { ...run("two", "codemap", false, {}, 0), infrastructureError: "preflight failed" };
+  infrastructure.usage.costUsd = 0;
+  const resumed = resumeAgentImpactResults([failed, infrastructure], [], 2);
+  assert.deepEqual(resumed.results, [failed]);
+  assert.deepEqual(resumed.supersededInfrastructure, [infrastructure]);
+  const second = resumeAgentImpactResults([infrastructure], resumed.supersededInfrastructure, 2);
+  assert.equal(second.supersededInfrastructure.length, 2);
+  assert.throws(() => resumeAgentImpactResults([infrastructure], second.supersededInfrastructure, 2), /limit exhausted/);
+  assert.throws(() => resumeAgentImpactResults([], [failed], 2), /non-retryable/);
+  const unpriced = structuredClone(infrastructure);
+  unpriced.usage.costUsd = null;
+  assert.deepEqual(resumeAgentImpactResults([unpriced], [], 2).results, [unpriced]);
+  unpriced.agentStarted = false;
+  assert.equal(resumeAgentImpactResults([unpriced], [], 2).supersededInfrastructure.length, 1);
+});
 
 test("public test argv survives parsing and shell rendering without interpolation", () => {
   const raw = JSON.parse(manifestRaw);

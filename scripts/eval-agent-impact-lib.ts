@@ -44,6 +44,7 @@ export interface AgentImpactManifest {
     navigationWorkflow: "search-then-context" | "context-first" | "optional" | "location-first";
     maxBudgetUsdPerRun: number | null;
     timeoutMs: number;
+    maxInfrastructureRetries?: number;
   };
   codemapProfile: {
     gitCommit: string;
@@ -100,6 +101,7 @@ export interface AgentImpactRunResult {
   mode: AgentImpactMode;
   runOrder: number;
   agentExitCode: number | null;
+  agentStarted?: boolean;
   timedOut: boolean;
   agentDurationMs: number;
   indexDurationMs: number;
@@ -164,6 +166,7 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   const agent = record(root.agent, "agent");
   if (agent.provider !== "claude-code" && agent.provider !== "codex-cli") throw new Error("Unsupported agent provider");
   string(agent.model, "agent.model");
+  if (agent.maxInfrastructureRetries !== undefined) nonNegativeInteger(agent.maxInfrastructureRetries, "agent.maxInfrastructureRetries");
   if (agent.effort !== "medium" && !(agent.provider === "codex-cli" && agent.effort === "high")) {
     throw new Error("agent.effort must be medium, or high for Codex CLI");
   }
@@ -291,7 +294,16 @@ export function parseAgentImpactCheckpoint(
 }
 
 export function retryableAgentImpactInfrastructure(result: AgentImpactRunResult): boolean {
-  return Boolean(result.infrastructureError) && result.usage.costUsd === 0;
+  return Boolean(result.infrastructureError) && (result.agentStarted === false || result.usage.costUsd === 0);
+}
+
+export function resumeAgentImpactResults(results: AgentImpactRunResult[], previous: AgentImpactRunResult[], maximum: number): {
+  results: AgentImpactRunResult[]; supersededInfrastructure: AgentImpactRunResult[];
+} {
+  if (previous.some(result => !retryableAgentImpactInfrastructure(result))) throw new Error("Checkpoint retry history contains non-retryable outcomes");
+  const retries = results.filter(retryableAgentImpactInfrastructure);
+  if (previous.length + retries.length > maximum) throw new Error("Infrastructure retry limit exhausted");
+  return { results: results.filter(result => !retryableAgentImpactInfrastructure(result)), supersededInfrastructure: [...previous, ...retries] };
 }
 
 export function summarizeAgentImpact(
