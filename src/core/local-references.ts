@@ -166,7 +166,21 @@ function resolveIndexedImport(db: ReturnType<typeof openRepoDb>, fromPath: strin
       .get(candidate, pathFilter) as { path: string } | undefined;
     if (row) return row.path;
   }
+  if (isTsJsPath(language, fromPath)) {
+    if (candidates.some(candidate => db.prepare("select path from files where path = ?").get(candidate))) return undefined;
+    const declarations = candidateBases.flatMap(candidate => candidate.endsWith(".js")
+      ? [`${candidate.slice(0, -3)}.d.ts`]
+      : /\.[^/.]+$/.test(candidate) ? [] : [`${candidate}.d.ts`, `${candidate}/index.d.ts`]);
+    return uniqueIndexedCandidate(db, declarations, pathFilter);
+  }
   return undefined;
+}
+
+function uniqueIndexedCandidate(db: ReturnType<typeof openRepoDb>, candidates: string[], pathFilter: string): string | undefined {
+  const matches = uniqueStrings(candidates).filter(candidate => db.prepare("select path from files where path = ?").get(candidate));
+  if (matches.length !== 1) return undefined;
+  // Determine ambiguity before filtering so a narrow view cannot create false certainty.
+  return db.prepare("select path from files where path = ? and path like ? escape '\\'").get(matches[0], pathFilter) ? matches[0] : undefined;
 }
 
 function resolveIndexedInclude(db: ReturnType<typeof openRepoDb>, fromPath: string, specifier: string, pathFilter: string): string | undefined {
