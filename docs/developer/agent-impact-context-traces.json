@@ -1,0 +1,151 @@
+{
+  "privateArchive": "/tmp/codemap-context-traces/agent-impact-pw7HhU",
+  "manifestSha256": "3e26ff97ef090cfb603b4aba81bcd834c850da990686022aab491e33baba2c38",
+  "traces": [
+    {
+      "runOrder": 1,
+      "taskId": "express-pr-6285",
+      "mode": "baseline",
+      "file": "run-1.json",
+      "sha256": "874ff9782d31666735f855ba3cb74b75667dc84a795117cdc39b3c0fb5fa97a3",
+      "runtimePatchFile": "run-1-expected-paths.patch",
+      "runtimePatchSha256": "9f6338e5a4c956b1185a09ef1c1743709a4b8a43311e662800acd332d1e90ecc"
+    },
+    {
+      "runOrder": 2,
+      "taskId": "express-pr-6285",
+      "mode": "codemap",
+      "file": "run-2.json",
+      "sha256": "12703f5c211f57f896d3cc677ef8be05719e2ca3acf9ca71d5aa59086a237247",
+      "runtimePatchFile": "run-2-expected-paths.patch",
+      "runtimePatchSha256": "2a24f5ecd41241e5fccf830d2effc8b77258ea3543e2640b85ac856dcea77018"
+    },
+    {
+      "runOrder": 3,
+      "taskId": "express-pr-6285",
+      "mode": "curated",
+      "file": "run-3.json",
+      "sha256": "5cade2dcc5cfc867c766d4f273926c4ab07cf6d519454ee78c27c743f6981985",
+      "runtimePatchFile": "run-3-expected-paths.patch",
+      "runtimePatchSha256": "56729307d9159df3491948667f91ce62a9e05342c9759309e5e5978bf576a7b9"
+    },
+    {
+      "runOrder": 4,
+      "taskId": "fastify-pr-6774",
+      "mode": "codemap",
+      "file": "run-4.json",
+      "sha256": "5581c9febe79ead592ffce95f6f3af91895dae7bfb7804cbc58072dcf1831c05",
+      "runtimePatchFile": "run-4-expected-paths.patch",
+      "runtimePatchSha256": "737b5ab6d074a12918234db031c25c3bb919c7fff9f102b53b74219b2e8e56c6"
+    },
+    {
+      "runOrder": 5,
+      "taskId": "fastify-pr-6774",
+      "mode": "curated",
+      "file": "run-5.json",
+      "sha256": "cee40331a9a06d6dc76263f5639b8fd42d3998d628a7ddd6e0c67344c8af7499",
+      "runtimePatchFile": "run-5-expected-paths.patch",
+      "runtimePatchSha256": "f4e8922b22ffb0efbf1b4cc29d26141d9d0efdbf8a18a0721ca48fcaf613f250"
+    },
+    {
+      "runOrder": 6,
+      "taskId": "fastify-pr-6774",
+      "mode": "baseline",
+      "file": "run-6.json",
+      "sha256": "f89dcd530610aedcdab2f49672a08a283150eca3be831d094719444273cba6d3",
+      "runtimePatchFile": "run-6-expected-paths.patch",
+      "runtimePatchSha256": "b547c9a2968871e7f6009532de2112d4ea9156b2746a83327ff1e8942fbda178"
+    },
+    {
+      "runOrder": 7,
+      "taskId": "fastify-pr-6746",
+      "mode": "curated",
+      "file": "run-7.json",
+      "sha256": "ac7097fe6f9e32d152da89e512ec1c61257242e6a842e37537ea47850f0ebfa6",
+      "runtimePatchFile": "run-7-expected-paths.patch",
+      "runtimePatchSha256": "6b7d48564ee47eeb311cc9f6fec48ee1fa84d91054c061436f1ae42f9446ebe2"
+    },
+    {
+      "runOrder": 8,
+      "taskId": "fastify-pr-6746",
+      "mode": "baseline",
+      "file": "run-8.json",
+      "sha256": "7a9b1f50ab8b405ff81d6dee480931c5b3e2933662265ba76c6aa03b500e524a",
+      "runtimePatchFile": "run-8-expected-paths.patch",
+      "runtimePatchSha256": "0c2165bbe2b69cbe0a98996e2b1f7d659be63f83c615d5739dac1dfb68f3088f"
+    },
+    {
+      "runOrder": 9,
+      "taskId": "fastify-pr-6746",
+      "mode": "codemap",
+      "file": "run-9.json",
+      "sha256": "5949c2c56909911689bdf0754e89793ab26f85ac7ac86603042b17d0ea878645",
+      "runtimePatchFile": "run-9-expected-paths.patch",
+      "runtimePatchSha256": "aac3a962d947be3c5c13e5d41db1187acdc5325556282e15e79476f6f686dc37"
+    },
+    {
+      "runOrder": 10,
+      "taskId": "fastify-pr-6714",
+      "mode": "baseline",
+      "file": "run-10.json",
+      "sha256": "6b8ed542f1558c09a895c34d07c74117c2a874f979df4e95f95a24fe57d1302d",
+      "runtimePatchFile": "run-10-expected-paths.patch",
+      "runtimePatchSha256": "ea924172d0dc53c0366decf012169dafd214b8d9f460a39d174b15347f1c8584"
+    },
+    {
+      "runOrder": 11,
+      "taskId": "fastify-pr-6714",
+      "mode": "codemap",
+      "file": "run-11.json",
+      "sha256": "b873103e8813259df611f64f07ceaefc5b7ea5a0fd67f42e1dcc1acc0f74a6a4",
+      "runtimePatchFile": "run-11-expected-paths.patch",
+      "runtimePatchSha256": "ea924172d0dc53c0366decf012169dafd214b8d9f460a39d174b15347f1c8584"
+    },
+    {
+      "runOrder": 12,
+      "taskId": "fastify-pr-6714",
+      "mode": "curated",
+      "file": "run-12.json",
+      "sha256": "0e6a60042a392d1dbda3172a827aec0bdb3384d70de5455950243e954c1fac7a",
+      "runtimePatchFile": "run-12-expected-paths.patch",
+      "runtimePatchSha256": "56abf95164eceefd8bf30c5066f55b1fbb631527c827b5e8521693e288bd5f0b"
+    }
+  ],
+  "patchScope": "Only frozen expected paths; hidden-test files overwritten by verifier are excluded. Not the full agent diff.",
+  "commandScreen": {
+    "completedCommands": 119,
+    "candidates": [],
+    "claimBoundary": "Command-text screening only, not packet observation."
+  },
+  "verifierReplays": [
+    {
+      "runOrder": 7,
+      "mode": "curated",
+      "exitCode": 1,
+      "file": "run-7-verifier.log",
+      "sha256": "a071fae6d0191a342433e6cd3da3008dbf609c4b5f140da6cae4d815547cded8"
+    },
+    {
+      "runOrder": 8,
+      "mode": "baseline",
+      "exitCode": 1,
+      "file": "run-8-verifier.log",
+      "sha256": "27eff6253d8056e8b5aa8188630df01e4a8dc3840ec2bd3a5fdb92ed81f2ebdf"
+    },
+    {
+      "runOrder": 9,
+      "mode": "codemap",
+      "exitCode": 1,
+      "file": "run-9-verifier.log",
+      "sha256": "fcf7abb701b96ce17253081a90b1df42e0be41501d2d754985a13d39ece89266"
+    }
+  ],
+  "http2RequestProperty": {
+    "file": "http2-request-property.json",
+    "sha256": "aded2f931770fe188874f4a2aa0c8fd28c19052404154c85e7e442b5162a8143",
+    "result": {
+      "requestHttpVersionMajorType": "undefined",
+      "rawHttpVersionMajor": 2
+    }
+  }
+}

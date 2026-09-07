@@ -4,12 +4,17 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 ## Agenten-Nutzen: Fehlerpflege
 
-[Location-first-Vergleich](docs/developer/agent-impact-location-result.md) abgeschlossen:
-CodeMap 4/4 gelöst, Baseline 3/4; Agentenzeit −17,0 %, Gesamttokens +4,7 %.
-Nutzung 4/4; das vorher festgelegte Token-Sparziel wurde verfehlt. Ein positiver
-Einzelfall rechtfertigt keinen verpflichtenden Standard oder automatischen weiteren Ausbau.
-Verifizierte Korrekturen bleiben bestehen. Neue Arbeit braucht einen konkreten Fehler
-oder eine neue ausdrückliche Entscheidung. [Vorheriger optionaler Vergleich](docs/developer/agent-impact-luna-result.md).
+[Kontextdiagnose](docs/developer/agent-impact-context-result.md) abgeschlossen:
+alle Varianten lösen 3/4 Aufgaben. Manuell ausgewählter Quellkontext benötigt gegenüber
+normaler Suche 40,9 % weniger Agentenzeit und 46,8 % weniger Tokens; CodeMap selbst
+31,6 % mehr Zeit und 33,4 % mehr Tokens. Unterschiedliche Teststrategien und ein
+schwieriger Fehlversuch prägen die Summen. Kein allgemeiner Nutzennachweis.
+
+- [ ] JavaScript-Funktionszuweisungen korrekt erkennen; Callback-Aufrufe nicht als Definitionen zählen.
+  - Reproduziert am Express-Stand: `res.send` fehlt als Symbol; ein `sendfile`-Aufruf wird als Methode erkannt.
+  - [Reproduktion](docs/developer/agent-impact-context-symbol-probe.json), `python3 scripts/probe-context-symbols.py`.
+  - Nächster begrenzter Kandidat: Fälle und Kontrollen vor Änderung festlegen; bestehende Messreihen müssen bestehen.
+  - Noch keine Korrektur umgesetzt. Keine automatische weitere Modellserie oder verpflichtende Nutzung.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

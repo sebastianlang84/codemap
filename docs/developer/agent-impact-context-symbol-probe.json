@@ -1,0 +1,316 @@
+{
+  "taskId": "express-pr-6285",
+  "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+  "path": "lib/response.js",
+  "sourceSha256": "39ce89d1b09f15fd44fc3e44787d7ec03aa8bb90750590dd3622c8ce093dc538",
+  "extractorCommit": "54df28cf0d9965d3e8bed831c27013a8a8248685",
+  "checks": [
+    {
+      "line": 112,
+      "source": "res.send = function send(body) {",
+      "symbols": []
+    },
+    {
+      "line": 395,
+      "source": "  sendfile(res, file, opts, function (err) {",
+      "symbols": [
+        {
+          "name": "sendfile",
+          "kind": "method",
+          "startLine": 395,
+          "signature": "sendfile(res, file, opts, function (err) {"
+        }
+      ]
+    }
+  ],
+  "minimal": [
+    {
+      "source": "res.send = function send(body) {",
+      "symbols": []
+    },
+    {
+      "source": "sendfile(res, file, opts, function (err) {",
+      "symbols": [
+        {
+          "name": "sendfile",
+          "kind": "method",
+          "startLine": 1,
+          "signature": "sendfile(res, file, opts, function (err) {"
+        }
+      ]
+    }
+  ],
+  "claimBoundary": "Retrospective extraction reproduction only. Does not isolate ranking causality or measure agent effect.",
+  "queryProbe": [
+    {
+      "query": "res.send Uint8Array text/plain UTF-8 charset response",
+      "stale": false,
+      "confidence": {
+        "level": "low",
+        "margin": 0.037037037037037
+      },
+      "results": [
+        {
+          "path": "test/res.send.js",
+          "startLine": 71,
+          "endLine": 150,
+          "kind": "text",
+          "snippet": "it('should send as html', function(done){\n      var app = express();",
+          "score": 37.8
+        },
+        {
+          "path": "test/res.set.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text",
+          "snippet": "'use strict'\n\nvar express = require('..');\nvar request = require('supertest');",
+          "score": 36.4
+        },
+        {
+          "path": "test/res.format.js",
+          "startLine": 182,
+          "endLine": 248,
+          "kind": "function",
+          "snippet": "request(app)\n    .get('/')\n    .set('Accept', 'text/html; q=.5, application/json, */*; q=.1')\n    .expect({\"message\":\"hey\"}, done);\n  })",
+          "score": 35.800000000000004
+        },
+        {
+          "path": "test/res.jsonp.js",
+          "startLine": 211,
+          "endLine": 290,
+          "kind": "text",
+          "snippet": "request(app)\n          .get('/?callback=cb')\n          .expect('Content-Type', 'text/javascript; charset=utf-8')\n          .expect(200, /cb\\(42\\)/, done)\n      })",
+          "score": 35.800000000000004
+        },
+        {
+          "path": "test/res.json.js",
+          "startLine": 71,
+          "endLine": 150,
+          "kind": "text",
+          "snippet": ".expect('Content-Type', 'application/json; charset=utf-8')\n        .expect(200, '\"str\"', done)\n      })",
+          "score": 35.6
+        },
+        {
+          "path": "lib/response.js",
+          "startLine": 395,
+          "endLine": 395,
+          "kind": "method",
+          "snippet": "sendfile(res, file, opts, function (err) {",
+          "score": 37.800000000000004
+        },
+        {
+          "path": "test/res.redirect.js",
+          "startLine": 148,
+          "endLine": 148,
+          "kind": "method",
+          "snippet": "it('should respond with text', function(done){",
+          "score": 37.800000000000004
+        },
+        {
+          "path": "test/res.sendFile.js",
+          "startLine": 765,
+          "endLine": 765,
+          "kind": "method",
+          "snippet": "it('should accept plain number as milliseconds', function (done) {",
+          "score": 37.800000000000004
+        },
+        {
+          "path": "test/res.attachment.js",
+          "startLine": 1,
+          "endLine": 78,
+          "kind": "text",
+          "snippet": "'use strict'\n\nvar express = require('../')\n  , request = require('supertest');",
+          "score": 36.4
+        },
+        {
+          "path": "test/res.download.js",
+          "startLine": 71,
+          "endLine": 150,
+          "kind": "text",
+          "snippet": "describe('.download(path, fn)', function(){\n    it('should invoke the callback', function(done){\n      var app = express();\n      var cb = after(2, done);",
+          "score": 36.4
+        }
+      ]
+    },
+    {
+      "query": "res.send",
+      "stale": false,
+      "confidence": {
+        "level": "high",
+        "margin": 0.18181818181818182
+      },
+      "results": [
+        {
+          "path": "test/res.send.js",
+          "startLine": 281,
+          "endLine": 360,
+          "kind": "text",
+          "snippet": "res.send('hey');\n    });",
+          "score": 66
+        },
+        {
+          "path": "test/res.format.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text",
+          "snippet": "var after = require('after')\nvar express = require('../')\n  , request = require('supertest')\n  , assert = require('node:assert');",
+          "score": 54
+        },
+        {
+          "path": "test/res.sendFile.js",
+          "startLine": 1,
+          "endLine": 1,
+          "kind": "file",
+          "snippet": "test/res.sendFile.js",
+          "score": 54
+        },
+        {
+          "path": "test/res.sendStatus.js",
+          "startLine": 1,
+          "endLine": 1,
+          "kind": "file",
+          "snippet": "test/res.sendStatus.js",
+          "score": 54
+        },
+        {
+          "path": "test/app.route.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text",
+          "snippet": "'use strict'\n\nvar express = require('../');\nvar request = require('supertest');",
+          "score": 43
+        },
+        {
+          "path": "test/res.attachment.js",
+          "startLine": 1,
+          "endLine": 78,
+          "kind": "text",
+          "snippet": "'use strict'\n\nvar express = require('../')\n  , request = require('supertest');",
+          "score": 54
+        },
+        {
+          "path": "test/res.download.js",
+          "startLine": 421,
+          "endLine": 487,
+          "kind": "text",
+          "snippet": "it('should be ignored case-insensitively', function (done) {\n        var app = express()\n\n        app.use(function (req, res) {",
+          "score": 54
+        },
+        {
+          "path": "test/res.get.js",
+          "startLine": 1,
+          "endLine": 22,
+          "kind": "text",
+          "snippet": "'use strict'\n\nvar express = require('..');\nvar request = require('supertest');",
+          "score": 54
+        },
+        {
+          "path": "examples/error/index.js",
+          "startLine": 20,
+          "endLine": 27,
+          "kind": "function",
+          "snippet": "function error(err, req, res, next) {\n  // log it\n  if (!test) console.error(err.stack);",
+          "score": 46
+        },
+        {
+          "path": "test/app.router.js",
+          "startLine": 21,
+          "endLine": 23,
+          "kind": "function",
+          "snippet": "function handler2(req, res) {\n      res.send(req.params.id);\n    }",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "query": "send",
+      "stale": false,
+      "confidence": {
+        "level": "high",
+        "margin": 0.32608695652173914
+      },
+      "results": [
+        {
+          "path": "test/res.send.js",
+          "startLine": 349,
+          "endLine": 349,
+          "kind": "method",
+          "snippet": "it('should send ETag', function (done) {",
+          "score": 46
+        },
+        {
+          "path": "test/res.sendStatus.js",
+          "startLine": 1,
+          "endLine": 45,
+          "kind": "text",
+          "snippet": "describe('res', function () {\n  describe('.sendStatus(statusCode)', function () {\n    it('should send the status code and message as body', function (done) {\n      var app = express();",
+          "score": 31
+        },
+        {
+          "path": "lib/response.js",
+          "startLine": 395,
+          "endLine": 395,
+          "kind": "method",
+          "snippet": "sendfile(res, file, opts, function (err) {",
+          "score": 28
+        },
+        {
+          "path": "test/app.route.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text",
+          "snippet": "app.route('/foo')\n    .get(function(req, res) {\n      res.send('get');\n    })\n    .post(function(req, res) {",
+          "score": 25
+        },
+        {
+          "path": "test/res.format.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text",
+          "snippet": "res.format({\n    'text/plain': function(){\n      res.send('hey');\n    },",
+          "score": 25
+        },
+        {
+          "path": "test/res.sendFile.js",
+          "startLine": 403,
+          "endLine": 403,
+          "kind": "method",
+          "snippet": "it('should send cache-control header', function (done) {",
+          "score": 37
+        },
+        {
+          "path": "examples/error/index.js",
+          "startLine": 20,
+          "endLine": 27,
+          "kind": "function",
+          "snippet": "// respond with 500 \"Internal Server Error\".\n  res.status(500);\n  res.send('Internal Server Error');\n}",
+          "score": 28
+        },
+        {
+          "path": "test/app.router.js",
+          "startLine": 21,
+          "endLine": 23,
+          "kind": "function",
+          "snippet": "function handler2(req, res) {\n      res.send(req.params.id);\n    }",
+          "score": 28
+        },
+        {
+          "path": "test/app.use.js",
+          "startLine": 483,
+          "endLine": 486,
+          "kind": "function",
+          "snippet": "function fn3(req, res, next) {\n        res.setHeader('x-fn-3', 'hit');\n        res.send('saw ' + req.method + ' ' + req.url + ' through ' + req.originalUrl);\n      }",
+          "score": 28
+        },
+        {
+          "path": "test/express.text.js",
+          "startLine": 549,
+          "endLine": 566,
+          "kind": "function",
+          "snippet": "app.use(function (err, req, res, next) {\n    res.status(err.status || 500)\n    res.send(String(req.headers['x-error-property']\n      ? err[req.headers['x-error-property']]\n      : ('[' + err.type + '] ' + err.message)))",
+          "score": 28
+        }
+      ]
+    }
+  ]
+}

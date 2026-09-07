@@ -1,0 +1,266 @@
+{
+  "sourceInventory": "agent-impact-context-traces.json",
+  "method": "SHA-256 verified traces; completed command events; Unicode character counts of recorded output, not model tokens. Exact repeated commands include tests and are not classified as avoidable reads. Large output threshold: 60000 characters. One-based command ordinals; no per-event timing.",
+  "runs": [
+    {
+      "runOrder": 1,
+      "taskId": "express-pr-6285",
+      "mode": "baseline",
+      "commands": 11,
+      "rgMissingEvents": 0,
+      "outputCharacters": 114968,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 10,
+          "characters": 64651
+        }
+      ],
+      "usage": {
+        "input_tokens": 271793,
+        "cached_input_tokens": 226560,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4644,
+        "reasoning_output_tokens": 2557
+      }
+    },
+    {
+      "runOrder": 2,
+      "taskId": "express-pr-6285",
+      "mode": "codemap",
+      "commands": 11,
+      "rgMissingEvents": 0,
+      "outputCharacters": 98079,
+      "exactRepeatedCommands": 1,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 9,
+          "characters": 64561
+        }
+      ],
+      "usage": {
+        "input_tokens": 370776,
+        "cached_input_tokens": 332288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4925,
+        "reasoning_output_tokens": 2317
+      }
+    },
+    {
+      "runOrder": 3,
+      "taskId": "express-pr-6285",
+      "mode": "curated",
+      "commands": 6,
+      "rgMissingEvents": 0,
+      "outputCharacters": 89158,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 5,
+          "characters": 64633
+        }
+      ],
+      "usage": {
+        "input_tokens": 176818,
+        "cached_input_tokens": 137984,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2953,
+        "reasoning_output_tokens": 1415
+      }
+    },
+    {
+      "runOrder": 4,
+      "taskId": "fastify-pr-6774",
+      "mode": "codemap",
+      "commands": 13,
+      "rgMissingEvents": 0,
+      "outputCharacters": 297299,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 12,
+          "characters": 173389
+        }
+      ],
+      "usage": {
+        "input_tokens": 520374,
+        "cached_input_tokens": 453120,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4187,
+        "reasoning_output_tokens": 1082
+      }
+    },
+    {
+      "runOrder": 5,
+      "taskId": "fastify-pr-6774",
+      "mode": "curated",
+      "commands": 7,
+      "rgMissingEvents": 0,
+      "outputCharacters": 71777,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [],
+      "usage": {
+        "input_tokens": 274004,
+        "cached_input_tokens": 230144,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4558,
+        "reasoning_output_tokens": 964
+      }
+    },
+    {
+      "runOrder": 6,
+      "taskId": "fastify-pr-6774",
+      "mode": "baseline",
+      "commands": 7,
+      "rgMissingEvents": 0,
+      "outputCharacters": 388320,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 1,
+          "characters": 129636
+        },
+        {
+          "commandOrdinal": 5,
+          "characters": 174728
+        }
+      ],
+      "usage": {
+        "input_tokens": 624473,
+        "cached_input_tokens": 552448,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3656,
+        "reasoning_output_tokens": 791
+      }
+    },
+    {
+      "runOrder": 7,
+      "taskId": "fastify-pr-6746",
+      "mode": "curated",
+      "commands": 8,
+      "rgMissingEvents": 0,
+      "outputCharacters": 92150,
+      "exactRepeatedCommands": 1,
+      "largeOutputs": [],
+      "usage": {
+        "input_tokens": 344964,
+        "cached_input_tokens": 295168,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4248,
+        "reasoning_output_tokens": 2018
+      }
+    },
+    {
+      "runOrder": 8,
+      "taskId": "fastify-pr-6746",
+      "mode": "baseline",
+      "commands": 14,
+      "rgMissingEvents": 0,
+      "outputCharacters": 408975,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 6,
+          "characters": 168602
+        },
+        {
+          "commandOrdinal": 8,
+          "characters": 167548
+        }
+      ],
+      "usage": {
+        "input_tokens": 670510,
+        "cached_input_tokens": 611328,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7429,
+        "reasoning_output_tokens": 3323
+      }
+    },
+    {
+      "runOrder": 9,
+      "taskId": "fastify-pr-6746",
+      "mode": "codemap",
+      "commands": 26,
+      "rgMissingEvents": 0,
+      "outputCharacters": 84043,
+      "exactRepeatedCommands": 3,
+      "largeOutputs": [],
+      "usage": {
+        "input_tokens": 1312159,
+        "cached_input_tokens": 1239552,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 12289,
+        "reasoning_output_tokens": 5149
+      }
+    },
+    {
+      "runOrder": 10,
+      "taskId": "fastify-pr-6714",
+      "mode": "baseline",
+      "commands": 4,
+      "rgMissingEvents": 0,
+      "outputCharacters": 196319,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [
+        {
+          "commandOrdinal": 3,
+          "characters": 167139
+        }
+      ],
+      "usage": {
+        "input_tokens": 248528,
+        "cached_input_tokens": 219136,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2032,
+        "reasoning_output_tokens": 516
+      }
+    },
+    {
+      "runOrder": 11,
+      "taskId": "fastify-pr-6714",
+      "mode": "codemap",
+      "commands": 7,
+      "rgMissingEvents": 0,
+      "outputCharacters": 52608,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [],
+      "usage": {
+        "input_tokens": 218236,
+        "cached_input_tokens": 185856,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2204,
+        "reasoning_output_tokens": 566
+      }
+    },
+    {
+      "runOrder": 12,
+      "taskId": "fastify-pr-6714",
+      "mode": "curated",
+      "commands": 5,
+      "rgMissingEvents": 0,
+      "outputCharacters": 23031,
+      "exactRepeatedCommands": 0,
+      "largeOutputs": [],
+      "usage": {
+        "input_tokens": 165010,
+        "cached_input_tokens": 132864,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2152,
+        "reasoning_output_tokens": 690
+      }
+    }
+  ],
+  "frozenDirectionalSignal": {
+    "comparison": "curated versus baseline",
+    "passed": true,
+    "checks": {
+      "allFourTripletsValid": true,
+      "noPairedSuccessLosses": true,
+      "agentTimeRatioAtMost085": true,
+      "totalTokenRatioAtMost110": true,
+      "atLeastThreeFasterTasks": true
+    },
+    "fasterTasks": 4,
+    "claimBoundary": "Diagnostic signal only; faster failed tasks count, and test scope varies."
+  }
+}
