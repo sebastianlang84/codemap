@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "./eval-agent-impact-codex.ts";
 import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
 import { createRuntimeProfile } from "./eval-agent-impact-runtime-profile.ts";
+import { runQualityChecks } from "./eval-agent-impact-quality.ts";
 import { renderCuratedContext, summarizeContextDiagnostic } from "./eval-agent-impact-context.ts";
 import { captureAgentImpactPatch, createAgentImpactTraceDir, writeAgentImpactPatch, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 import { runObservedCodexProcess, type ObservedToolTiming } from "./eval-agent-impact-process.ts";
@@ -283,6 +284,11 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
     applyHiddenTests(task, repoCache, base.repo);
     const baseResults = [runSpec(task.verify, base.repo, baseEnv()), runSpec(task.verify, base.repo, baseEnv())];
     const fixResults = [runSpec(task.verify, fixed.repo, baseEnv()), runSpec(task.verify, fixed.repo, baseEnv())];
+    const quality = {
+      base: [0, 1].map(() => runQualityChecks(task.qualityChecks, "base", command => runSpec(command, base!.repo, baseEnv()))),
+      reference: [0, 1].map(() => runQualityChecks(task.qualityChecks, "reference", command => runSpec(command, fixed!.repo, baseEnv()))),
+    };
+    const qualityPasses = [...quality.base, ...quality.reference].flat().every(item => item.passed);
     const baseFailureKind = baseResults.some((item) => item.timedOut)
       ? "timeout"
       : baseResults.every((item) => `${item.stdout}\n${item.stderr}`.includes(task.expectedBaseFailure)) ? "assertion" : "other";
@@ -295,7 +301,8 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
       baseFailureKind,
       baseFails,
       referencePasses,
-      valid: baseFails && referencePasses && baseFailureKind === "assertion" && publicPasses,
+      valid: baseFails && referencePasses && baseFailureKind === "assertion" && publicPasses && qualityPasses,
+      ...(task.qualityChecks ? { quality } : {}),
       ...(publicResults ? { publicTestExitCodes: { base: publicResults.base.map(item => item.status), reference: publicResults.reference.map(item => item.status) } } : {}),
       ...(sandboxProfile ? { publicSandboxPassed: true } : {}),
       ...((baseResults.some((item) => item.error) || fixResults.some((item) => item.error))
@@ -382,6 +389,7 @@ async function runAgentAttempt(options: {
     applyHiddenTests(task, repoCache, workspace.repo);
     const verifierStartedAt = performance.now();
     const verifier = runSpec(task.verify, workspace.repo, baseEnv());
+    const quality = runQualityChecks(task.qualityChecks, "agent", command => runSpec(command, workspace.repo, baseEnv()));
     const verifierDurationMs = Math.round(performance.now() - verifierStartedAt);
     const codemapCommands = readCallLog(workspace.callLog);
     const budgetExhausted = !isCodex && child.status !== 0 && (/budget/i.test(usage.terminalReason) || (usage.costUsd ?? 0) >= manifest.agent.maxBudgetUsdPerRun! * 0.95);
@@ -405,7 +413,8 @@ async function runAgentAttempt(options: {
       verifierDurationMs,
       ...(originalPatchSha256 ? { originalPatchSha256 } : {}),
       verifierExitCode: verifier.status,
-      success: child.status === 0 && !infrastructureError && verifier.status === 0 && diff.changedPaths.length > 0 && diff.forbiddenChanges.length === 0,
+      success: child.status === 0 && !infrastructureError && verifier.status === 0 && quality.every(item => item.passed) && diff.changedPaths.length > 0 && diff.forbiddenChanges.length === 0,
+      ...(task.qualityChecks ? { quality } : {}),
       ...(infrastructureError ? { infrastructureError } : {}),
       ...diff,
       codemapCommands,

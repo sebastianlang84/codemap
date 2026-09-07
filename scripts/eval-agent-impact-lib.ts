@@ -8,12 +8,28 @@ export interface AgentImpactCommand {
   timeoutMs: number;
 }
 
+export interface AgentImpactQualityCheck {
+  id: string;
+  command: AgentImpactCommand;
+  baseline: "pass" | "feature-failure";
+  expectedBaseFailure?: string;
+}
+
+export interface AgentImpactQualityResult {
+  id: string;
+  exitCode: number | null;
+  timedOut: boolean;
+  passed: boolean;
+  outputSha256: string;
+}
+
 export interface AgentImpactTask {
   id: string;
   repo: string;
   sourceUrl: string;
   prompt: string;
   publicTestCommand?: string[];
+  qualityChecks?: AgentImpactQualityCheck[];
   baseCommit: string;
   fixCommit: string;
   expectedPaths: string[];
@@ -76,6 +92,7 @@ export interface OracleValidationResult {
   referencePasses: boolean;
   publicTestExitCodes?: { base: Array<number | null>; reference: Array<number | null> };
   publicSandboxPassed?: boolean;
+  quality?: { base: AgentImpactQualityResult[][]; reference: AgentImpactQualityResult[][] };
   valid: boolean;
   error?: string;
 }
@@ -111,6 +128,7 @@ export interface AgentImpactRunResult {
   verifierDurationMs?: number;
   originalPatchSha256?: string;
   verifierExitCode: number | null;
+  quality?: AgentImpactQualityResult[];
   success: boolean;
   infrastructureError?: string;
   changedPaths: string[];
@@ -455,12 +473,22 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     return { path, start, end, sha256 };
   });
   unique(setupFiles.map((item) => item.target), `tasks[${index}].setupFiles target`);
+  const qualityChecks: AgentImpactQualityCheck[] | undefined = task.qualityChecks === undefined ? undefined : optionalArray(task.qualityChecks, "qualityChecks").map(item => {
+    const entry = record(item, "quality check");
+    const id = string(entry.id, "quality check id");
+    if (entry.baseline !== "pass" && entry.baseline !== "feature-failure") throw new Error("quality check baseline must be pass or feature-failure");
+    const baseline = entry.baseline;
+    const expectedBaseFailure = baseline === "feature-failure" ? string(entry.expectedBaseFailure, "quality check expectedBaseFailure") : undefined;
+    return { id, command: command(entry.command, "quality check command"), baseline, ...(expectedBaseFailure ? { expectedBaseFailure } : {}) };
+  });
+  if (qualityChecks) unique(qualityChecks.map(item => item.id), "quality check id");
   return {
     id,
     repo,
     sourceUrl,
     prompt,
     ...(publicTestCommand ? { publicTestCommand } : {}),
+    ...(qualityChecks ? { qualityChecks } : {}),
     baseCommit,
     fixCommit,
     expectedPaths,
@@ -662,9 +690,11 @@ export function evaluateAgentImpactEfficiencyGate(
 }
 
 export function agentImpactPublicTestInstruction(task: AgentImpactTask): string[] {
-  if (!task.publicTestCommand) return [];
-  const command = task.publicTestCommand.map(arg => `'${arg.replaceAll("'", "'\\''")}'`).join(" ");
-  return [`Focused test command (verified on the prepared repository): ${command}`];
+  const render = (argv: string[]) => argv.map(arg => `'${arg.replaceAll("'", "'\\''")}'`).join(" ");
+  return [
+    ...(task.publicTestCommand ? [`Focused test command (verified on the prepared repository): ${render(task.publicTestCommand)}`] : []),
+    ...(task.qualityChecks ?? []).map(check => `Required quality check ${check.id}: ${render([check.command.file, ...check.command.args])}`),
+  ];
 }
 
 export function agentImpactTreatmentInstruction(manifest: AgentImpactManifest): string {

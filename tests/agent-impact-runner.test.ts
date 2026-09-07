@@ -49,6 +49,25 @@ test("oracle validation checks public tests before hidden replacements and rejec
     assert.deepEqual(good.oracle.publicTestExitCodes, { base: [0, 0], reference: [0, 0] });
     assert.deepEqual(good.oracle.baseHiddenTestExitCodes, [1, 1]);
     assert.deepEqual(good.oracle.referenceFixExitCodes, [0, 0]);
+    manifest.tasks[0].qualityChecks = [{ id: "source-types", baseline: "pass",
+      command: { file: process.execPath, args: ["-e", "console.error('type error');process.exit(1)"], timeoutMs: 5000 } }];
+    const badTypes = validate();
+    assert.equal(badTypes.status, 1, "behavior-only reference must not pass with failing quality checks");
+    assert.equal(badTypes.oracle.valid, false);
+    assert.equal(badTypes.oracle.quality.reference[0].every((item: { passed: boolean }) => item.passed), false);
+    manifest.tasks[0].qualityChecks[0].command.args = ["-e", ""];
+    const goodTypes = validate();
+    assert.equal(goodTypes.status, 0);
+    assert.equal(goodTypes.oracle.quality.base.length, 2);
+    assert.equal(goodTypes.oracle.quality.reference.length, 2);
+    manifest.tasks[0].qualityChecks = [{ id: "new-call-signature", baseline: "feature-failure", expectedBaseFailure: "missing signature",
+      command: { file: process.execPath, args: ["-e", "if(require('./value.cjs')!==1){console.error('missing signature');process.exit(1)}"], timeoutMs: 5000 } }];
+    const featureTypes = validate();
+    assert.equal(featureTypes.status, 0);
+    assert.equal(featureTypes.oracle.quality.base[0][0].exitCode, 1);
+    assert.equal(featureTypes.oracle.quality.base[0][0].passed, true);
+    assert.equal(featureTypes.oracle.quality.reference[0][0].exitCode, 0);
+    delete manifest.tasks[0].qualityChecks;
     manifest.tasks[0].publicTestCommand = [process.execPath, "does-not-exist.cjs"];
     const bad = validate();
     assert.equal(bad.status, 1);
