@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export type AgentImpactMode = "baseline" | "codemap";
+export type AgentImpactMode = "baseline" | "codemap" | "curated";
 
 export interface AgentImpactCommand {
   file: string;
@@ -20,12 +20,14 @@ export interface AgentImpactTask {
   expectedBaseFailure: string;
   forbiddenChangePaths: string[];
   setupFiles: Array<{ source: string; target: string; sha256: string }>;
+  sourceContext?: Array<{ path: string; start: number; end: number; sha256: string }>;
   setup: AgentImpactCommand;
   verify: AgentImpactCommand;
 }
 
 export interface AgentImpactManifest {
   schemaVersion: 1;
+  diagnostic?: "curated-context";
   corpus: {
     id: string;
     version: number;
@@ -190,6 +192,10 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   if (!Array.isArray(root.tasks) || root.tasks.length === 0) throw new Error("tasks must be non-empty");
   const tasks = root.tasks.map((item, index) => parseTask(item, index, repoIds));
   root.tasks = tasks;
+  if (root.diagnostic !== undefined) {
+    if (root.diagnostic !== "curated-context" || agent.provider !== "codex-cli" || corpus.purpose !== "development-pilot") throw new Error("Unsupported diagnostic configuration");
+    if (tasks.some(task => !task.sourceContext?.length)) throw new Error("Diagnostic requires sourceContext for every task");
+  } else if (tasks.some(task => task.sourceContext?.length)) throw new Error("sourceContext requires a diagnostic manifest");
   unique(tasks.map((item) => item.id), "task id");
   const remoteByRepo = new Map(repositories.map((item) => [item.id, item.remote.replace(/\.git$/, "")]));
   for (const task of tasks) {
@@ -256,6 +262,7 @@ export function parseAgentImpactCheckpoint(
   raw: string,
   expectedManifestSha256: string,
   allowedTaskIds: Set<string>,
+  allowedModes: Set<AgentImpactMode> = new Set(["baseline", "codemap"]),
 ): AgentImpactRunResult[] {
   const value = record(JSON.parse(raw), "checkpoint");
   if (value.manifestSha256 !== expectedManifestSha256) throw new Error("Checkpoint manifest hash mismatch");
@@ -264,7 +271,7 @@ export function parseAgentImpactCheckpoint(
   for (const item of value.results) {
     const result = record(item, "checkpoint result");
     const taskId = string(result.taskId, "checkpoint result.taskId");
-    if (!allowedTaskIds.has(taskId) || (result.mode !== "baseline" && result.mode !== "codemap")) {
+    if (!allowedTaskIds.has(taskId) || !allowedModes.has(result.mode as AgentImpactMode)) {
       throw new Error("Checkpoint contains an unknown run");
     }
     const key = `${taskId}\0${result.mode}`;
@@ -405,6 +412,15 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error(`tasks[${index}].setupFiles[${fileIndex}].sha256 must be SHA-256`);
     return { source, target, sha256 };
   });
+  const sourceContext = task.sourceContext === undefined ? undefined : optionalArray(task.sourceContext, "sourceContext").map(item => {
+    const entry = record(item, "sourceContext entry");
+    const path = repoPath(entry.path, "sourceContext.path");
+    const start = positiveInteger(entry.start, "sourceContext.start");
+    const end = positiveInteger(entry.end, "sourceContext.end");
+    const sha256 = string(entry.sha256, "sourceContext.sha256");
+    if (end < start || !/^[a-f0-9]{64}$/.test(sha256)) throw new Error("Invalid sourceContext range or hash");
+    return { path, start, end, sha256 };
+  });
   unique(setupFiles.map((item) => item.target), `tasks[${index}].setupFiles target`);
   return {
     id,
@@ -418,6 +434,7 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     expectedBaseFailure,
     forbiddenChangePaths,
     setupFiles,
+    ...(sourceContext ? { sourceContext } : {}),
     setup: command(task.setup, `tasks[${index}].setup`),
     verify: command(task.verify, `tasks[${index}].verify`),
   };

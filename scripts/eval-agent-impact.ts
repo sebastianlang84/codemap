@@ -7,6 +7,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "./eval-agent-impact-codex.ts";
 import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
+import { renderCuratedContext, summarizeContextDiagnostic } from "./eval-agent-impact-context.ts";
 import { createAgentImpactTraceDir, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 
 import {
@@ -77,14 +78,17 @@ const manifestRaw = readFileSync(args.manifestPath, "utf8");
 const manifest = parseAgentImpactManifest(manifestRaw);
 const manifestSha256 = hashAgentImpactJson(JSON.parse(manifestRaw));
 const selectedTasks = selectTasks(manifest, args.taskIds);
-const modes: AgentImpactMode[] = args.mode === "all" ? ["baseline", "codemap"] : [args.mode];
+const allModes: AgentImpactMode[] = manifest.diagnostic ? ["baseline", "codemap", "curated"] : ["baseline", "codemap"];
+const modes: AgentImpactMode[] = args.mode === "all" ? allModes : [args.mode];
+if (modes.some(mode => !allModes.includes(mode))) throw new Error("Mode is not enabled by manifest");
+const curatedContexts = new Map<string, string>();
 const plannedRuns = selectedTasks.length * modes.length;
 const isCodex = manifest.agent.provider === "codex-cli";
 const worstCaseBudgetUsd = manifest.agent.maxBudgetUsdPerRun === null ? null : round(plannedRuns * manifest.agent.maxBudgetUsdPerRun, 2);
 
 if (args.resume && !args.evidenceOutput) throw new Error("--resume requires --evidence-output");
-if (args.evidenceOutput && (selectedTasks.length !== manifest.tasks.length || modes.length !== 2 || args.validateOnly)) {
-  throw new Error("Evidence output requires every manifest task in both modes");
+if (args.evidenceOutput && (selectedTasks.length !== manifest.tasks.length || modes.length !== allModes.length || args.validateOnly)) {
+  throw new Error("Evidence output requires every manifest task in all enabled modes");
 }
 if (args.evidenceOutput && existsSync(args.evidenceOutput) && !args.resume) {
   throw new Error(`Evidence output already exists; pass --resume to continue: ${args.evidenceOutput}`);
@@ -108,7 +112,7 @@ if (!args.validateOnly && !isCodex && (args.approveBudgetUsd === undefined || ar
   throw new Error(`Refusing ${plannedRuns} paid runs with worst-case $${worstCaseBudgetUsd!.toFixed(2)}; pass --approve-budget-usd ${worstCaseBudgetUsd!.toFixed(2)} or more`);
 }
 
-if (manifest.efficiencyGate && !args.validateOnly && (!args.traceDir || !args.evidenceOutput)) {
+if ((manifest.efficiencyGate || manifest.diagnostic) && !args.validateOnly && (!args.traceDir || !args.evidenceOutput)) {
   throw new Error("Efficiency evaluation requires --trace-dir and --evidence-output");
 }
 
@@ -125,6 +129,9 @@ if (resolve(runRoot).startsWith(`${resolve(homedir())}/`)) {
 let report: Record<string, unknown> | undefined;
 try {
   const repositoryCaches = new Map(manifest.repositories.map((repo) => [repo.id, ensureRepositoryCache(repo.id, repo.remote, args)]));
+  for (const task of selectedTasks) {
+    if (manifest.diagnostic) curatedContexts.set(task.id, renderCuratedContext(task, path => git(repositoryCaches.get(task.repo)!, ["show", `${task.baseCommit}:${path}`])));
+  }
   const profile = args.validateOnly ? undefined : ensureCodeMapProfile(manifest, args);
   const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir));
   const results = !args.validateOnly && args.resume ? loadCheckpoint(args.evidenceOutput!, manifestSha256, manifest) : [];
@@ -163,7 +170,7 @@ try {
         writeEvidence(args.evidenceOutput, report);
         console.error(`[agent-impact] checkpoint ${results.length}/${schedule.length}`);
       }
-      if (manifest.efficiencyGate && results.at(-1)?.infrastructureError) {
+      if ((manifest.efficiencyGate || manifest.diagnostic) && results.at(-1)?.infrastructureError) {
         console.error("[agent-impact] stopping efficiency evaluation after infrastructure failure");
         break;
       }
@@ -176,7 +183,7 @@ try {
     console.error(`[agent-impact] evidence ${args.evidenceOutput} sha256=${hashAgentImpactJson(stable)}`);
   }
   console.log(JSON.stringify(report, null, 2));
-  if (args.qualityGate && !args.validateOnly && (!gate.passed || (report.efficiencyGate && !(report.efficiencyGate as { passed: boolean }).passed))) process.exitCode = 1;
+  if (args.qualityGate && !args.validateOnly && (!gate.passed || (report.diagnostic && !(report.diagnostic as { complete: boolean }).complete) || (report.efficiencyGate && !(report.efficiencyGate as { passed: boolean }).passed))) process.exitCode = 1;
   if (oracles.some((item) => !item.valid)) process.exitCode = 1;
 } finally {
   if (!args.keepWorkdir) rmSync(runRoot, { recursive: true, force: true });
@@ -193,7 +200,7 @@ function buildReport(
   results: AgentImpactRunResult[],
   workdir?: string,
 ): Record<string, unknown> {
-  const summary = summarizeAgentImpact(results, manifest.agent.navigationWorkflow);
+  const summary = summarizeAgentImpact(results.filter(item => item.mode !== "curated"), manifest.agent.navigationWorkflow);
   if (manifest.agent.provider === "codex-cli") summary.totalCostUsd = null;
   return {
     schemaVersion: 1,
@@ -207,6 +214,7 @@ function buildReport(
     oracles,
     results,
     summary,
+    ...(manifest.diagnostic ? { diagnostic: summarizeContextDiagnostic(results, manifest.tasks.length) } : {}),
     gate: evaluateAgentImpactPilotGate(manifest, oracles, summary),
     ...(manifest.efficiencyGate ? { efficiencyGate: evaluateAgentImpactEfficiencyGate(manifest, results) } : {}),
     claimBoundary: claimBoundary(manifest.corpus.purpose),
@@ -225,7 +233,7 @@ function writeEvidence(path: string, report: Record<string, unknown>): unknown {
 
 function loadCheckpoint(path: string, expectedManifestSha256: string, manifest: AgentImpactManifest): AgentImpactRunResult[] {
   if (!existsSync(path)) return [];
-  const loaded = parseAgentImpactCheckpoint(readFileSync(path, "utf8"), expectedManifestSha256, new Set(manifest.tasks.map((task) => task.id)));
+  const loaded = parseAgentImpactCheckpoint(readFileSync(path, "utf8"), expectedManifestSha256, new Set(manifest.tasks.map((task) => task.id)), new Set(allModes));
   const retained = loaded.filter((result) => !retryableAgentImpactInfrastructure(result));
   const retrying = loaded.length - retained.length;
   if (retrying > 0) console.error(`[agent-impact] retrying ${retrying} zero-cost infrastructure runs`);
@@ -527,7 +535,7 @@ function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDi
     DISABLE_AUTOUPDATER: "1",
     CODEMAP_EVAL_WORKSPACE: workspace.repo,
   };
-  if (mode === "baseline" && commandOnPath("codemap", env.PATH!)) throw new Error("baseline PATH still resolves codemap");
+  if (mode !== "codemap" && commandOnPath("codemap", env.PATH!)) throw new Error("baseline PATH still resolves codemap");
   if (mode === "codemap" && !existsSync(join(profileDir, "dist", "cli", "bin.js"))) throw new Error("treatment profile binary missing");
   return env;
 }
@@ -632,6 +640,7 @@ function emptyUsage(): AgentUsage {
 function scheduleRuns(tasks: AgentImpactTask[], modes: AgentImpactMode[], seed: number): Array<{ task: AgentImpactTask; mode: AgentImpactMode }> {
   return tasks.flatMap((task, index) => {
     const ordered = [...modes];
+    if (ordered.length === 3) ordered.push(...ordered.splice(0, (seed + index) % 3));
     if (ordered.length === 2 && (seed + index) % 2 === 1) ordered.reverse();
     return ordered.map((mode) => ({ task, mode }));
   });
@@ -717,7 +726,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     else if (name === "--task") parsed.taskIds.push(value());
     else if (name === "--mode") {
       const mode = value();
-      if (mode !== "baseline" && mode !== "codemap" && mode !== "all") throw new Error(`Unsupported mode: ${mode}`);
+      if (mode !== "baseline" && mode !== "codemap" && mode !== "curated" && mode !== "all") throw new Error(`Unsupported mode: ${mode}`);
       parsed.mode = mode;
     } else if (name === "--approve-budget-usd") parsed.approveBudgetUsd = parsePositive(value(), name);
     else if (name === "--evidence-output") parsed.evidenceOutput = resolve(value());
@@ -742,7 +751,7 @@ function parsePositive(value: string, label: string): number {
 }
 
 function printHelp(): void {
-  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and provider limits\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Claude USD-equivalent limiter\n  --run-codex                   Start fixed Codex runs using existing login\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
+  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and provider limits\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --approve-budget-usd <n>      Claude USD-equivalent limiter\n  --run-codex                   Start fixed Codex runs using existing login\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|curated|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
 }
 
 function tail(value: string, length = 1200): string {
@@ -770,6 +779,7 @@ function agentPrompt(task: AgentImpactTask, mode: AgentImpactMode, manifest: Age
       ? agentImpactTreatmentInstruction(manifest)
       : "CodeMap is unavailable in this control run. Use the repository's normal local navigation tools and do not invoke codemap.",
     `Task: ${task.prompt}`,
+    ...(mode === "curated" ? [curatedContexts.get(task.id)!] : []),
   ].join("\n\n");
 }
 

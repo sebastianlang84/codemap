@@ -1,0 +1,441 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "id": "agent-impact-context-v1",
+    "version": 1,
+    "frozenAt": "2026-09-07",
+    "purpose": "development-pilot",
+    "selectionProtocol": "Retrospective diagnosis on all four location-v1 tasks; three fresh isolated arms per task. Curator selected base-only source with task prompts and expected paths visible. Exact ranges and base byte hashes frozen before solver calls. Twelve Luna-medium attempts, rotated arm order, no outcome retries. See docs/developer/agent-impact-context.md.",
+    "orderSeed": 0
+  },
+  "agent": {
+    "provider": "codex-cli",
+    "model": "gpt-5.6-luna",
+    "effort": "medium",
+    "navigationWorkflow": "location-first",
+    "maxBudgetUsdPerRun": null,
+    "timeoutMs": 900000
+  },
+  "codemapProfile": {
+    "gitCommit": "54df28cf0d9965d3e8bed831c27013a8a8248685",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "express",
+      "remote": "https://github.com/expressjs/express.git"
+    },
+    {
+      "id": "fastify",
+      "remote": "https://github.com/fastify/fastify.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "express-pr-6285",
+      "repo": "express",
+      "sourceUrl": "https://github.com/expressjs/express/pull/6285",
+      "prompt": "Allow res.send to send a Uint8Array as its bytes rather than JSON. A UTF-8 encoded text payload sent with an explicit text/plain content type must arrive unchanged with UTF-8 charset. Preserve existing Buffer, string and object response behavior.",
+      "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+      "fixCommit": "55869f49a65f1e279d92488fa6319c9fd4d8eac2",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "hiddenTestPaths": [
+        "test/res.send.js"
+      ],
+      "expectedBaseFailure": "should accept Uint8Array",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json",
+        "History.md"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/express-location-6285.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "8affdaededb4e1ca6d4878ece89a2203c7d3b0df892b365acc998401c2abad73"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "./node_modules/.bin/mocha",
+        "args": [
+          "--require",
+          "test/support/env",
+          "--reporter",
+          "dot",
+          "--bail",
+          "--check-leaks",
+          "test/res.send.js"
+        ],
+        "timeoutMs": 60000
+      },
+      "sourceContext": [
+        {
+          "path": "lib/response.js",
+          "start": 15,
+          "end": 47,
+          "sha256": "d2b688343efb3f6b9933c729b4401ca096df2ff03b8fbaa46d7db367f7f5a95c"
+        },
+        {
+          "path": "lib/response.js",
+          "start": 99,
+          "end": 240,
+          "sha256": "0a7174aedff930a141f1af53962894f25086c5dae20049f424d2270adf5925bd"
+        },
+        {
+          "path": "lib/response.js",
+          "start": 655,
+          "end": 677,
+          "sha256": "5db2955299eb38a09bce9830b20e6820f5a1c45fd9f0db0ed284b5d717d2377e"
+        },
+        {
+          "path": "test/res.send.js",
+          "start": 1,
+          "end": 9,
+          "sha256": "6ff1fa26d66f4e18dbceda35a44e0ac42fb42badc60f2d9d74cc858eece8bbe6"
+        },
+        {
+          "path": "test/res.send.js",
+          "start": 70,
+          "end": 207,
+          "sha256": "cfd3d310205ac5bb0761db88deae9262cbff9c02eeea31264004e329c13537fc"
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6774",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6774",
+      "prompt": "When a plugin declares an unregistered dependency, throw an Error named FastifyError with code FST_ERR_PLUGIN_DEPENDENCY_NOT_REGISTERED, statusCode 500, and message \"The dependency '<dependency>' of plugin '<plugin>' is not registered\" using the actual names. Expose the corresponding error constructor consistently with other Fastify errors, and keep the documented error catalog and public error-code types in sync. Registered dependencies must continue to work.",
+      "baseCommit": "27f4d6222dd945238e96c1fdaa632d5dc3c37b2c",
+      "fixCommit": "c647de44cceaf8ec6ce81796374ff6ffd944d873",
+      "expectedPaths": [
+        "lib/errors.js",
+        "lib/plugin-utils.js",
+        "docs/Reference/Errors.md",
+        "types/errors.d.ts"
+      ],
+      "hiddenTestPaths": [
+        "test/internals/errors.test.js",
+        "test/internals/plugin.test.js"
+      ],
+      "expectedBaseFailure": "checkDependencies should check if the given dependency is present in the instance (errored)",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-6803.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "e0c6dba7d49ce7fa3c7ac5c28e5b18185da80229c79c9128bb51d3eaf9ca13fe"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/internals/errors.test.js",
+          "test/internals/plugin.test.js"
+        ],
+        "timeoutMs": 60000
+      },
+      "sourceContext": [
+        {
+          "path": "lib/plugin-utils.js",
+          "start": 1,
+          "end": 20,
+          "sha256": "ab3f3c32bc393439eb4c80c31d7b3e2ba6af6d8abb07460110f8e587539bd326"
+        },
+        {
+          "path": "lib/plugin-utils.js",
+          "start": 64,
+          "end": 78,
+          "sha256": "9fb47def150e020d484e66b373bda5cb78f4418f201eba12af8408a42bc08942"
+        },
+        {
+          "path": "lib/plugin-utils.js",
+          "start": 98,
+          "end": 107,
+          "sha256": "5762777ea0cbda7ba214f9e0aa62c9518bfbd3b20d4d96f4aed23c051ec70cec"
+        },
+        {
+          "path": "lib/plugin-utils.js",
+          "start": 131,
+          "end": 169,
+          "sha256": "da70284d0bd01c34465b18c4915a80961a5c89dbae3ccd051c4ef5511ba066ea"
+        },
+        {
+          "path": "lib/errors.js",
+          "start": 1,
+          "end": 5,
+          "sha256": "b97d6c80262ca280bca671a84fa71edb80706cd64e7a75722f981294723391b5"
+        },
+        {
+          "path": "lib/errors.js",
+          "start": 468,
+          "end": 484,
+          "sha256": "647e3dc9d74ab5203e56f8f7578169a00d8b5e1b678bdb599cfc80924538b080"
+        },
+        {
+          "path": "lib/errors.js",
+          "start": 513,
+          "end": 520,
+          "sha256": "ac876ac64d83838bd6f818ee2bc824519e0a5b7b546998f2781833b0a820e435"
+        },
+        {
+          "path": "fastify.js",
+          "start": 54,
+          "end": 58,
+          "sha256": "cbf1fdb98efcb55fd530f5d98c60741ee79f6386bc7c019f04dbc8da21edbfcb"
+        },
+        {
+          "path": "fastify.js",
+          "start": 1011,
+          "end": 1014,
+          "sha256": "38dfec1b3a4a9a1f114b84b55120a7297883f40faf888cd6e57c4cf1f643a55b"
+        },
+        {
+          "path": "types/errors.d.ts",
+          "start": 1,
+          "end": 94,
+          "sha256": "d1e07c58dde1051ad28deffd41e21baa4447e8d98d944808fb9e13693e54f9b0"
+        },
+        {
+          "path": "docs/Reference/Errors.md",
+          "start": 95,
+          "end": 102,
+          "sha256": "d5815cef3ba56c416d08bdc9250bdd16ac7e6505c7bc7a9d14d78b201cc8846f"
+        },
+        {
+          "path": "docs/Reference/Errors.md",
+          "start": 371,
+          "end": 378,
+          "sha256": "bbfd76258efe583da59b3a66faf8da78ebd808788808e5c6ded9f2457f83d7e6"
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "start": 1,
+          "end": 7,
+          "sha256": "1151bc306b80fbb6640161e69867d6a2d14c2757a3aeb1d02ec9eb59e595db61"
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "start": 131,
+          "end": 170,
+          "sha256": "05e9069f3d593611722f2189a12b36c360f3866877cff1ead5857071ab0b336d"
+        },
+        {
+          "path": "test/internals/errors.test.js",
+          "start": 1,
+          "end": 31,
+          "sha256": "13f87ba5d6dd4f927cbb87fa9875f282b5dca6f4db1627e03a8f3ed4f9ae0254"
+        },
+        {
+          "path": "test/internals/errors.test.js",
+          "start": 803,
+          "end": 831,
+          "sha256": "953a043d5ea019b6b0c7a671b730223387d7b2b6ca931a2582963fc20e18e01d"
+        },
+        {
+          "path": "test/internals/errors.test.js",
+          "start": 913,
+          "end": 1002,
+          "sha256": "acaec5f8dafbbe0caa38f9a734ae16ae83f43b14ab5cd404af3ed69819a33e8f"
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6746",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6746",
+      "prompt": "HTTP/2 responses with large non-stream Buffer or string bodies must arrive completely, including bodies larger than 64 KiB with an explicit Content-Length. Cancelling a large response must not prevent a subsequent small response on the same HTTP/2 connection. Preserve HTTP/1 response behavior and send trailers only after the payload is written.",
+      "baseCommit": "fc9eafddae37dea167d2affc26a29a04f9412047",
+      "fixCommit": "2bf4265b991aa4c9a2d3886882be6f062338c7bc",
+      "expectedPaths": [
+        "lib/reply.js"
+      ],
+      "hiddenTestPaths": [
+        "test/http2/plain.test.js"
+      ],
+      "expectedBaseFailure": "http2 large non-stream replies are sent completely",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-location-6746.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "42ff50a3c6f16a6df428cf2eec410283caaef0f0a5fe771e80817c2c1f0fface"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/http2/plain.test.js"
+        ],
+        "timeoutMs": 60000
+      },
+      "sourceContext": [
+        {
+          "path": "lib/reply.js",
+          "start": 1,
+          "end": 76,
+          "sha256": "b3fb1ab91eaed434713b937645836414ad568c37e6484e6e72ad3eacad06c285"
+        },
+        {
+          "path": "lib/reply.js",
+          "start": 139,
+          "end": 225,
+          "sha256": "121d75621a8b3f8466d6291717e2fcfdeb4bcc23d17059e5551fdbbe1fa2391e"
+        },
+        {
+          "path": "lib/reply.js",
+          "start": 541,
+          "end": 683,
+          "sha256": "3d58458b13c8eb73bc0ce20440eda1e812f39194eb91c2e229ed1abdf05341c3"
+        },
+        {
+          "path": "lib/reply.js",
+          "start": 823,
+          "end": 883,
+          "sha256": "1d159f870ee8c3f7da87b0d5c6a4849b1cf2b2efb5e1d01ca9f2264873dc7c08"
+        },
+        {
+          "path": "test/http2/plain.test.js",
+          "start": 1,
+          "end": 68,
+          "sha256": "f45e2d86539cf03e4c9e9c41c9a1e1deeeda478570f0baa57079cb57aa485b75"
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6714",
+      "repo": "fastify",
+      "sourceUrl": "https://github.com/fastify/fastify/pull/6714",
+      "prompt": "When a reply trailer handler completes more than once, accept only its first completion. In particular, a handler that calls its callback and also resolves a promise must retain the callback value, while other asynchronous trailers still complete normally. Preserve successful payload delivery, declared trailer names and chunked framing without Content-Length.",
+      "baseCommit": "6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "fixCommit": "9026164f5a2e78db59ff8f98933279161a85a6e3",
+      "expectedPaths": [
+        "lib/reply.js"
+      ],
+      "hiddenTestPaths": [
+        "test/reply-trailers.test.js"
+      ],
+      "expectedBaseFailure": "mixed callback and promise trailers only use the first completion",
+      "forbiddenChangePaths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "setupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/fastify-location-6714.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "66dacf3e32c254f952f0e9402581c671e11d53a55431fc3d05aa86bdd07c68e8"
+        }
+      ],
+      "setup": {
+        "file": "npm",
+        "args": [
+          "ci",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": "node",
+        "args": [
+          "--test",
+          "test/reply-trailers.test.js"
+        ],
+        "timeoutMs": 60000
+      },
+      "sourceContext": [
+        {
+          "path": "lib/reply.js",
+          "start": 1,
+          "end": 76,
+          "sha256": "b3fb1ab91eaed434713b937645836414ad568c37e6484e6e72ad3eacad06c285"
+        },
+        {
+          "path": "lib/reply.js",
+          "start": 301,
+          "end": 322,
+          "sha256": "83a036e820cac39013242973f00350ebf3811f41ee37435681dad15eda48436a"
+        },
+        {
+          "path": "lib/reply.js",
+          "start": 563,
+          "end": 683,
+          "sha256": "1ace8d67b8ad49effac1f7d08b4cf82013b9d5028425f21d3ab72701670c9a45"
+        },
+        {
+          "path": "lib/reply.js",
+          "start": 823,
+          "end": 882,
+          "sha256": "12d2b29b3c026087c3e2a9b275cebdab12ff09e96d5735d28e7941dd72779aa9"
+        },
+        {
+          "path": "test/reply-trailers.test.js",
+          "start": 1,
+          "end": 7,
+          "sha256": "e917ad448e8ad0cfa533543212ccde2f477867a3f0640c0eb17f749debab8daa"
+        },
+        {
+          "path": "test/reply-trailers.test.js",
+          "start": 84,
+          "end": 115,
+          "sha256": "deaa13abbb2925bf57f21848a3936be838c9d846e34ae5044e67a5129b578d37"
+        },
+        {
+          "path": "test/reply-trailers.test.js",
+          "start": 145,
+          "end": 309,
+          "sha256": "66061fdbaa5198645cac28291024adb5851faf06a9aa6f9be6668d4260a0942a"
+        }
+      ]
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 4,
+    "minTreatmentAdoptionRate": 0.75,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  },
+  "diagnostic": "curated-context"
+}
