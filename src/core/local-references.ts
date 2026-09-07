@@ -1,6 +1,7 @@
 import { posix } from "node:path";
 
 import { openRepoDb } from "./db.ts";
+import { isRegexStart, regexEnd } from "./javascript-syntax.ts";
 import { tsJsPathAliasCandidates } from "./tsconfig-paths.ts";
 import { uniqueStrings } from "./text-util.ts";
 
@@ -38,19 +39,78 @@ function isCppPath(language: string, path: string): boolean {
 
 function extractTsJsReferences(text: string): LocalReference[] {
   const references: LocalReference[] = [];
+  const code = tsJsReferenceCode(text);
   const patterns = [
-    /\b(?:import|export)\s+(?:type\s+)?[\s\S]{0,500}?\bfrom\s*["']([^"']+)["']/g,
-    /(?:^|\n)\s*import\s*["']([^"']+)["']/g,
-    /\brequire\(\s*["']([^"']+)["']\s*\)/g,
-    /\bimport\(\s*["']([^"']+)["']\s*\)/g,
+    /\b(?:import|export)\s+(?:type\s+)?[\p{ID_Continue}$*{},\s"']{1,500}?\bfrom\s*["']([^"']+)["']/dgu,
+    /\bimport\s*["']([^"']+)["']/dg,
+    /\brequire\s*\(\s*["']([^"']+)["']\s*\)/dg,
+    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/dg,
   ];
   for (const pattern of patterns) {
-    for (const match of text.matchAll(pattern)) {
-      const specifier = cleanSpecifier(match[1] ?? "");
+    for (const match of code.matchAll(pattern)) {
+      const span = match.indices?.[1];
+      const specifier = cleanSpecifier(span ? text.slice(...span) : "");
       if (isPotentialLocalTsJsSpecifier(specifier)) references.push(withLines({ kind: "import", specifier }, text, match));
     }
   }
   return references;
+}
+
+// Preserve offsets and quote boundaries while hiding non-executable text.
+function tsJsReferenceCode(text: string): string {
+  const code = text.split("");
+  const hide = (start: number, end: number) => {
+    for (let i = start; i < end; i++) if (code[i] !== "\n" && code[i] !== "\r") code[i] = " ";
+  };
+  const modes: Array<{ template: boolean; braces: number }> = [{ template: false, braces: 0 }];
+  for (let i = 0; i < text.length; i++) {
+    const mode = modes[modes.length - 1];
+    const char = text[i];
+    if (mode.template) {
+      if (char === "\\") { hide(i, Math.min(text.length, i + 2)); i++; }
+      else if (char === "`") { modes.pop(); }
+      else if (char === "$" && text[i + 1] === "{") {
+        modes.push({ template: false, braces: 1 });
+        i++;
+      } else hide(i, i + 1);
+      continue;
+    }
+    if (char === "/" && text[i + 1] === "/") {
+      const end = text.indexOf("\n", i + 2);
+      const stop = end < 0 ? text.length : end;
+      hide(i, stop);
+      i = stop - 1;
+    } else if (char === "/" && text[i + 1] === "*") {
+      const end = text.indexOf("*/", i + 2);
+      const stop = end < 0 ? text.length : end + 2;
+      hide(i, stop);
+      i = stop - 1;
+    } else if (char === "'" || char === '"') {
+      let end = i + 1;
+      for (; end < text.length; end++) {
+        if (text[end] === "\\") { end++; continue; }
+        if (text[end] === char) break;
+      }
+      hide(i + 1, Math.min(end, text.length));
+      i = end;
+    } else if (char === "`") {
+      modes.push({ template: true, braces: 0 });
+    } else if (char === "/" && referenceRegexStart(code, i)) {
+      const end = regexEnd(text, i);
+      if (end > i) { hide(i, end + 1); i = end; }
+    } else if (modes.length > 1) {
+      if (char === "{") mode.braces++;
+      else if (char === "}" && --mode.braces === 0) modes.pop();
+    }
+  }
+  return code.join("");
+}
+
+function referenceRegexStart(code: string[], index: number): boolean {
+  let previous = index - 1;
+  while (previous >= 0 && /\s/.test(code[previous])) previous--;
+  const prefix = code.slice(Math.max(0, previous - 20), previous + 1).join("");
+  return isRegexStart(prefix, prefix.length);
 }
 
 function extractPythonReferences(text: string): LocalReference[] {
