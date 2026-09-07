@@ -249,6 +249,13 @@ repeat these tasks merely to seek a favorable result.
 
 ## Optional diagnostic traces
 
+The current runner also saves `run-N-original.patch` privately before hidden tests
+replace files, including agent-created tests. Aggregate evidence records its SHA-256,
+setup time and independent verifier time separately from agent/index time.
+New manifests may supply `publicTestCommand` as argv: it is shown identically to both
+arms and must pass twice on the prepared base and reference before hidden tests are applied.
+`efficiencyGate.minFasterPairs` prevents one expensive task from deciding the time gate alone.
+
 For an already budget-approved run, add `--trace-dir /tmp/codemap-agent-traces`. The runner creates
 an isolated directory outside Git worktrees and prints its location. Each run stores raw provider
 stdout/stderr, exit status and aggregate durations before parsing, including malformed/timeout

@@ -1,10 +1,41 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { createAgentImpactTraceDir, writeAgentImpactTrace } from "../scripts/eval-agent-impact-trace.ts";
+import { captureAgentImpactPatch, createAgentImpactTraceDir, writeAgentImpactPatch, writeAgentImpactTrace } from "../scripts/eval-agent-impact-trace.ts";
+
+test("original patch reconstructs tracked, staged and new agent files before hidden tests replace them", () => {
+  const root = mkdtempSync(join(tmpdir(), "impact-patch-test-"));
+  const git = (...args: string[]) => {
+    const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+  };
+  try {
+    git("init", "--quiet");
+    writeFileSync(join(root, "test.js"), "original\n");
+    git("add", "test.js");
+    git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--quiet", "-m", "base");
+    writeFileSync(join(root, "test.js"), "agent test\n");
+    git("add", "test.js");
+    writeFileSync(join(root, "new file.js"), "agent new test\n");
+    const patch = captureAgentImpactPatch(root);
+    assert.match(patch, /agent test/);
+    assert.match(patch, /agent new test/);
+    writeAgentImpactPatch(root, 1, patch);
+    assert.throws(() => writeAgentImpactPatch(root, 1, "overwrite"), /EEXIST/);
+    assert.equal(statSync(join(root, "run-1-original.patch")).mode & 0o777, 0o600);
+    writeFileSync(join(root, "test.js"), "hidden verifier replacement\n");
+    assert.equal(readFileSync(join(root, "run-1-original.patch"), "utf8"), patch);
+    rmSync(join(root, "new file.js"));
+    git("reset", "--hard", "HEAD");
+    const restored = spawnSync("git", ["apply", "-"], { cwd: root, input: patch, encoding: "utf8" });
+    assert.equal(restored.status, 0, restored.stderr);
+    assert.equal(readFileSync(join(root, "test.js"), "utf8"), "agent test\n");
+    assert.equal(readFileSync(join(root, "new file.js"), "utf8"), "agent new test\n");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
 
 test("traces preserve tool events and partial provider failures without overwriting paid runs", () => {
   const root = mkdtempSync(join(tmpdir(), "impact-trace-test-"));

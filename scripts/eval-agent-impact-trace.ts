@@ -3,6 +3,26 @@ import { existsSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 
 import { dirname, join, resolve } from "node:path";
 import { withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
 
+export function captureAgentImpactPatch(repo: string): string {
+  const options = { cwd: repo, encoding: "utf8" as const, env: withoutClaudeAuth(process.env), maxBuffer: 64 * 1024 * 1024 };
+  const tracked = spawnSync("git", ["diff", "--binary", "HEAD", "--"], options);
+  if (tracked.error || tracked.status !== 0) throw tracked.error ?? new Error("Cannot capture tracked agent patch");
+  const files = spawnSync("git", ["ls-files", "--others", "--exclude-standard", "-z"], options);
+  if (files.error || files.status !== 0) throw files.error ?? new Error("Cannot list agent-created files");
+  const parts = [tracked.stdout];
+  for (const path of files.stdout.split("\0").filter(Boolean)) {
+    const diff = spawnSync("git", ["diff", "--no-index", "--binary", "--", "/dev/null", path], options);
+    if (diff.error || (diff.status !== 0 && diff.status !== 1)) throw diff.error ?? new Error("Cannot capture new agent file");
+    parts.push(diff.stdout);
+  }
+  return parts.join("");
+}
+
+export function writeAgentImpactPatch(directory: string, runOrder: number, patch: string): void {
+  if (!Number.isSafeInteger(runOrder) || runOrder < 1) throw new Error("Invalid patch run order");
+  writeFileSync(join(directory, `run-${runOrder}-original.patch`), patch, { mode: 0o600, flag: "wx" });
+}
+
 // Raw provider output stays outside repositories and outside stable evidence.
 export function createAgentImpactTraceDir(base: string, manifestSha256: string): string {
   let ancestor = resolve(base);
@@ -27,6 +47,9 @@ export function writeAgentImpactTrace(directory: string, trace: {
   stdout: string;
   stderr: string;
   error?: string;
+  setupDurationMs?: number;
+  toolTimings?: unknown[];
+  hostLoad?: { before: number[]; after: number[] };
 }): void {
   if (!Number.isSafeInteger(trace.runOrder) || trace.runOrder < 1) throw new Error("Invalid trace run order");
   writeFileSync(join(directory, `run-${trace.runOrder}.json`), `${JSON.stringify(trace)}\n`, {

@@ -2,18 +2,19 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { homedir, loadavg, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { codexArguments, codexContainerArgs, codexContainerEnv, parseCodexJson, prepareCodexHome, redactCodexAuth, verifyCodexSandbox } from "./eval-agent-impact-codex.ts";
 import { agentImpactToken, isolatedAgentImpactClaude, redactAgentImpactToken, withoutClaudeAuth } from "./eval-agent-impact-auth.ts";
 import { renderCuratedContext, summarizeContextDiagnostic } from "./eval-agent-impact-context.ts";
-import { createAgentImpactTraceDir, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
+import { captureAgentImpactPatch, createAgentImpactTraceDir, writeAgentImpactPatch, writeAgentImpactTrace } from "./eval-agent-impact-trace.ts";
 
 import {
   evaluateAgentImpactPilotGate,
   evaluateAgentImpactEfficiencyGate,
   agentImpactTreatmentInstruction,
+  agentImpactPublicTestInstruction,
   hashAgentImpactJson,
   parseAgentImpactManifest,
   parseAgentImpactCheckpoint,
@@ -250,6 +251,12 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
   try {
     base = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-base`, task.baseCommit);
     fixed = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-fix`, task.fixCommit);
+    const publicSpec = task.publicTestCommand ? { file: task.publicTestCommand[0]!, args: task.publicTestCommand.slice(1), timeoutMs: task.verify.timeoutMs } : undefined;
+    const publicResults = publicSpec ? {
+      base: [runSpec(publicSpec, base.repo, baseEnv()), runSpec(publicSpec, base.repo, baseEnv())],
+      reference: [runSpec(publicSpec, fixed.repo, baseEnv()), runSpec(publicSpec, fixed.repo, baseEnv())],
+    } : undefined;
+    const publicPasses = !publicResults || [...publicResults.base, ...publicResults.reference].every(item => item.status === 0 && !item.timedOut && !item.error);
     applyHiddenTests(task, repoCache, base.repo);
     const baseResults = [runSpec(task.verify, base.repo, baseEnv()), runSpec(task.verify, base.repo, baseEnv())];
     const fixResults = [runSpec(task.verify, fixed.repo, baseEnv()), runSpec(task.verify, fixed.repo, baseEnv())];
@@ -265,7 +272,8 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
       baseFailureKind,
       baseFails,
       referencePasses,
-      valid: baseFails && referencePasses && baseFailureKind === "assertion",
+      valid: baseFails && referencePasses && baseFailureKind === "assertion" && publicPasses,
+      ...(publicResults ? { publicTestExitCodes: { base: publicResults.base.map(item => item.status), reference: publicResults.reference.map(item => item.status) } } : {}),
       ...((baseResults.some((item) => item.error) || fixResults.some((item) => item.error))
         ? { error: [...baseResults, ...fixResults].map((item) => item.error).filter(Boolean).join("; ") }
         : {}),
@@ -303,21 +311,31 @@ function runAgentAttempt(options: {
   let workspace: PreparedWorkspace | undefined;
   let usage = emptyUsage();
   let indexDurationMs = 0;
+  let setupDurationMs = 0;
   try {
+    const setupStartedAt = performance.now();
     workspace = prepareWorkspace(task, repoCache, runRoot, `run-${runOrder}-${task.id}-${mode}`, task.baseCommit);
     const env = agentEnv(workspace, mode, profileDir);
+    setupDurationMs = Math.round(performance.now() - setupStartedAt);
     if (mode === "codemap") indexDurationMs = prepareCodeMap(workspace, profileDir, env);
     if (isCodex) {
       verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, profileDir, env, mode === "codemap");
       console.error(`[agent-impact] sandbox preflight passed: ${task.id} ${mode}`);
     }
     const agentStartedAt = performance.now();
+    const hostLoadBefore = loadavg();
     const child = isCodex ? runCodex(task, mode, manifest, workspace, env, profileDir) : runClaude(task, mode, manifest, workspace, env);
     const agentDurationMs = Math.round(performance.now() - agentStartedAt);
     let traceError: string | undefined;
+    let originalPatchSha256: string | undefined;
     if (traceDir) {
       try {
-        writeAgentImpactTrace(traceDir, { taskId: task.id, mode, runOrder, agentDurationMs, indexDurationMs, ...child });
+        writeAgentImpactTrace(traceDir, { taskId: task.id, mode, runOrder, agentDurationMs, indexDurationMs, setupDurationMs,
+          hostLoad: { before: hostLoadBefore, after: loadavg() }, ...child });
+        // Preserve agent tests and new files before the verifier replaces hidden test paths.
+        const patch = captureAgentImpactPatch(workspace.repo);
+        writeAgentImpactPatch(traceDir, runOrder, patch);
+        originalPatchSha256 = createHash("sha256").update(patch).digest("hex");
       } catch (error) {
         // A diagnostic write failure must not turn a paid attempt into a zero-cost retry.
         traceError = `trace not saved: ${message(error)}`;
@@ -331,7 +349,9 @@ function runAgentAttempt(options: {
     }
     const diff = captureDiff(workspace.repo, task);
     applyHiddenTests(task, repoCache, workspace.repo);
+    const verifierStartedAt = performance.now();
     const verifier = runSpec(task.verify, workspace.repo, baseEnv());
+    const verifierDurationMs = Math.round(performance.now() - verifierStartedAt);
     const codemapCommands = readCallLog(workspace.callLog);
     const budgetExhausted = !isCodex && child.status !== 0 && (/budget/i.test(usage.terminalReason) || (usage.costUsd ?? 0) >= manifest.agent.maxBudgetUsdPerRun! * 0.95);
     const infrastructureError = traceError ?? (isCodex && /model[ _]rerout/i.test(child.stderr + child.stdout) ? "Codex model rerouted" : budgetExhausted
@@ -348,6 +368,9 @@ function runAgentAttempt(options: {
       timedOut: child.timedOut,
       agentDurationMs,
       indexDurationMs,
+      setupDurationMs,
+      verifierDurationMs,
+      ...(originalPatchSha256 ? { originalPatchSha256 } : {}),
       verifierExitCode: verifier.status,
       success: child.status === 0 && !infrastructureError && verifier.status === 0 && diff.changedPaths.length > 0 && diff.forbiddenChanges.length === 0,
       ...(infrastructureError ? { infrastructureError } : {}),
@@ -779,6 +802,7 @@ function agentPrompt(task: AgentImpactTask, mode: AgentImpactMode, manifest: Age
       ? agentImpactTreatmentInstruction(manifest)
       : "CodeMap is unavailable in this control run. Use the repository's normal local navigation tools and do not invoke codemap.",
     `Task: ${task.prompt}`,
+    ...agentImpactPublicTestInstruction(task),
     ...(mode === "curated" ? [curatedContexts.get(task.id)!] : []),
   ].join("\n\n");
 }

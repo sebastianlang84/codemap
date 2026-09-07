@@ -13,6 +13,7 @@ export interface AgentImpactTask {
   repo: string;
   sourceUrl: string;
   prompt: string;
+  publicTestCommand?: string[];
   baseCommit: string;
   fixCommit: string;
   expectedPaths: string[];
@@ -55,6 +56,7 @@ export interface AgentImpactManifest {
     maxTokenRatio: number;
     maxAgentDurationRatio: number;
     maxPairedLosses: number;
+    minFasterPairs?: number;
   };
   pilotGate: {
     minValidPairs: number;
@@ -71,6 +73,7 @@ export interface OracleValidationResult {
   baseFailureKind: "assertion" | "other" | "timeout";
   baseFails: boolean;
   referencePasses: boolean;
+  publicTestExitCodes?: { base: Array<number | null>; reference: Array<number | null> };
   valid: boolean;
   error?: string;
 }
@@ -100,6 +103,9 @@ export interface AgentImpactRunResult {
   timedOut: boolean;
   agentDurationMs: number;
   indexDurationMs: number;
+  setupDurationMs?: number;
+  verifierDurationMs?: number;
+  originalPatchSha256?: string;
   verifierExitCode: number | null;
   success: boolean;
   infrastructureError?: string;
@@ -218,6 +224,9 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
       positiveNumber(efficiency[key], `efficiencyGate.${key}`);
     }
     nonNegativeInteger(efficiency.maxPairedLosses, "efficiencyGate.maxPairedLosses");
+    if (efficiency.minFasterPairs !== undefined && nonNegativeInteger(efficiency.minFasterPairs, "efficiencyGate.minFasterPairs") > tasks.length) {
+      throw new Error("efficiencyGate.minFasterPairs cannot exceed task count");
+    }
   }
   return value as AgentImpactManifest;
 }
@@ -397,6 +406,14 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
   if (!repoIds.has(repo)) throw new Error(`tasks[${index}].repo references unknown repository ${repo}`);
   const sourceUrl = string(task.sourceUrl, `tasks[${index}].sourceUrl`);
   const prompt = string(task.prompt, `tasks[${index}].prompt`);
+  let publicTestCommand: string[] | undefined;
+  if (task.publicTestCommand !== undefined) {
+    if (!Array.isArray(task.publicTestCommand) || task.publicTestCommand.length === 0 || task.publicTestCommand.some(item => typeof item !== "string" || item.includes("\0"))) {
+      throw new Error(`tasks[${index}].publicTestCommand must be non-empty argv without NUL`);
+    }
+    string(task.publicTestCommand[0], `tasks[${index}].publicTestCommand[0]`);
+    publicTestCommand = [...task.publicTestCommand] as string[];
+  }
   const baseCommit = sha(task.baseCommit, `tasks[${index}].baseCommit`);
   const fixCommit = sha(task.fixCommit, `tasks[${index}].fixCommit`);
   if (baseCommit === fixCommit) throw new Error(`tasks[${index}] baseCommit and fixCommit must differ`);
@@ -427,6 +444,7 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     repo,
     sourceUrl,
     prompt,
+    ...(publicTestCommand ? { publicTestCommand } : {}),
     baseCommit,
     fixCommit,
     expectedPaths,
@@ -587,7 +605,7 @@ export function evaluateAgentImpactEfficiencyGate(
   let baselineCost = 0, treatmentCost = 0;
   let baselineTokens = 0, treatmentTokens = 0;
   let baselineTime = 0, treatmentTime = 0;
-  let losses = 0;
+  let losses = 0, fasterPairs = 0;
   for (const task of manifest.tasks) {
     const pair = results.filter((run) => run.taskId === task.id);
     const baseline = pair.filter((run) => run.mode === "baseline");
@@ -611,6 +629,7 @@ export function evaluateAgentImpactEfficiencyGate(
     baselineTokens += totalTokens(a.usage); treatmentTokens += totalTokens(b.usage);
     baselineTime += a.agentDurationMs; treatmentTime += b.agentDurationMs;
     losses += Number(a.success && !b.success);
+    fasterPairs += Number(b.agentDurationMs < a.agentDurationMs);
   }
   for (const [metric, numerator, denominator, maximum] of [
     ["costRatio", treatmentCost, baselineCost, threshold.maxCostRatio],
@@ -622,7 +641,14 @@ export function evaluateAgentImpactEfficiencyGate(
     if (!Number.isFinite(ratio) || ratio > maximum) issues.push(issue(metric, `<= ${maximum}`, Number.isFinite(ratio) ? ratio : "unavailable"));
   }
   if (losses > threshold.maxPairedLosses) issues.push(issue("pairedLosses", `<= ${threshold.maxPairedLosses}`, losses));
+  if (threshold.minFasterPairs !== undefined && fasterPairs < threshold.minFasterPairs) issues.push(issue("fasterPairs", `>= ${threshold.minFasterPairs}`, fasterPairs));
   return { passed: issues.length === 0, issues };
+}
+
+export function agentImpactPublicTestInstruction(task: AgentImpactTask): string[] {
+  if (!task.publicTestCommand) return [];
+  const command = task.publicTestCommand.map(arg => `'${arg.replaceAll("'", "'\\''")}'`).join(" ");
+  return [`Focused test command (verified on the prepared repository): ${command}`];
 }
 
 export function agentImpactTreatmentInstruction(manifest: AgentImpactManifest): string {

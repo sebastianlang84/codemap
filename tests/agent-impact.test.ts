@@ -10,6 +10,7 @@ import {
   evaluateAgentImpactPilotGate,
   evaluateAgentImpactEfficiencyGate,
   agentImpactTreatmentInstruction,
+  agentImpactPublicTestInstruction,
   hashAgentImpactJson,
   parseAgentImpactManifest,
   parseAgentImpactCheckpoint,
@@ -25,6 +26,24 @@ import {
 
 const manifestRaw = readFileSync(new URL("../scripts/eval-agent-impact.manifest.json", import.meta.url), "utf8");
 const manifest = parseAgentImpactManifest(manifestRaw);
+
+test("public test argv survives parsing and shell rendering without interpolation", () => {
+  const raw = JSON.parse(manifestRaw);
+  const argv = [process.execPath, "-e", "process.stdout.write(JSON.stringify(process.argv.slice(1)))", "--", "a'b", "$(false)", "`false`", "two words", ""];
+  raw.tasks[0].publicTestCommand = argv;
+  const parsed = parseAgentImpactManifest(JSON.stringify(raw));
+  assert.deepEqual(parsed.tasks[0]!.publicTestCommand, argv);
+  const instruction = agentImpactPublicTestInstruction(parsed.tasks[0]!)[0]!;
+  const rendered = instruction.slice(instruction.indexOf(": ") + 2);
+  const child = spawnSync("sh", ["-c", rendered], { encoding: "utf8" });
+  assert.equal(child.status, 0, child.stderr);
+  assert.deepEqual(JSON.parse(child.stdout), argv.slice(4));
+  assert.deepEqual(agentImpactPublicTestInstruction(manifest.tasks[0]!), []);
+  for (const bad of [[], [""], ["node", 1], ["node", "x\0y"]]) {
+    raw.tasks[0].publicTestCommand = bad;
+    assert.throws(() => parseAgentImpactManifest(JSON.stringify(raw)), /publicTestCommand/);
+  }
+});
 
 test("agent-impact smoke corpus is explicit, medium-effort, pinned, and development-only", () => {
   assert.equal(manifest.corpus.purpose, "harness-smoke");
@@ -383,6 +402,23 @@ test("efficiency gate requires savings, all pairs, matching model/auth and zero 
   assert.ok(gate().issues.some(issue => issue.metric === "agentDurationRatio"));
   results.pop();
   assert.ok(gate().issues.some(issue => issue.metric === "completePairs"));
+});
+
+test("efficiency gate rejects savings concentrated in too few faster tasks", () => {
+  const candidate = structuredClone(optionalManifest);
+  candidate.efficiencyGate!.minFasterPairs = 3;
+  const results = candidate.tasks.flatMap((task, index) => ["baseline", "codemap"].map(mode => {
+    const result = run(task.id, mode as "baseline" | "codemap", true, {}, 80);
+    result.authentication = "setup-token";
+    result.usage.costUsd = mode === "baseline" ? 1 : .8;
+    result.agentDurationMs = mode === "baseline" ? 100 : index < 2 ? 20 : 100;
+    return result;
+  }));
+  assert.deepEqual(evaluateAgentImpactEfficiencyGate(candidate, results).issues.map(item => item.metric), ["fasterPairs"]);
+  results[5]!.agentDurationMs = 99;
+  assert.equal(evaluateAgentImpactEfficiencyGate(candidate, results).passed, true);
+  candidate.efficiencyGate!.minFasterPairs = candidate.tasks.length + 1;
+  assert.throws(() => parseAgentImpactManifest(JSON.stringify(candidate)), /minFasterPairs/);
 });
 
 test("optional corpus freezes eight tasks, two repos and verified dependency locks", () => {
