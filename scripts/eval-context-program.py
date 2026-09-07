@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import tempfile
 
@@ -39,7 +38,11 @@ def main():
             root = Path(directory)
             repo = root / 'repo'
             repo.mkdir()
-            archive = run(['git', '-C', str(args.cache / case['repo']), 'archive', case['baseCommit']])
+            cache = args.cache / case['repo']
+            reference_diff = run(['git', '-C', str(cache), 'diff', case['baseCommit'], case['fixCommit']])
+            if digest(reference_diff) != case['evidence']['referenceDiffSha256']:
+                raise ValueError(f"Reference diff drift: {case['id']}")
+            archive = run(['git', '-C', str(cache), 'archive', case['baseCommit']])
             subprocess.run(['tar', '-x', '-C', str(repo)], input=archive, check=True)
             env = dict(os.environ, CODEMAP_HOME=str(root / 'state'), CODEMAP_TELEMETRY='0')
             def local(command):
@@ -64,7 +67,7 @@ def main():
                 path = (repo / item['path']).resolve()
                 source_valid = False
                 if path.is_relative_to(repo) and path.is_file():
-                    lines = path.read_text().splitlines()
+                    lines = path.read_text().split('\n')
                     start, end = item.get('startLine', 0), item.get('endLine', 0)
                     source_valid = 1 <= start <= end <= len(lines) and item.get('text') == '\n'.join(lines[start - 1:end])
                 spans.append({**{key: item.get(key) for key in ('path', 'startLine', 'endLine', 'reasons', 'scope', 'truncated') if key in item},
