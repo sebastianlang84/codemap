@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "baselineProductCommit": "11b7f1e8c30c6a53fe5db88f5d49a59e0fa9a078",
+  "candidateBaseCommit": "2dcec1c",
+  "baselineGate": {
+    "passed": true,
+    "paired": {
+      "pairs": 24,
+      "wins": 7,
+      "losses": 0,
+      "ties": 17,
+      "maxSingleLoss": 0,
+      "losingTasks": []
+    },
+    "issues": [],
+    "warnings": []
+  },
+  "candidateGate": {
+    "passed": false,
+    "paired": {
+      "pairs": 24,
+      "wins": 6,
+      "losses": 2,
+      "ties": 16,
+      "maxSingleLoss": 0.5,
+      "losingTasks": [
+        {
+          "task": "macrolens :: NL regression workbench chart session restore",
+          "loss": 0.5
+        },
+        {
+          "task": "pi-ext-memory :: NL regression handoff scope precedence",
+          "loss": 0.333
+        }
+      ]
+    },
+    "issues": [
+      {
+        "label": "codemap_search_context",
+        "metric": "contextLossesVsSearch",
+        "expected": "<= 1",
+        "actual": 2
+      },
+      {
+        "label": "codemap_search_context",
+        "metric": "maxSingleContextLossVsSearch",
+        "expected": "<= 0.25",
+        "actual": 0.5
+      }
+    ],
+    "warnings": []
+  },
+  "unchangedLexicalAndSearchControls": true,
+  "changedContextCases": [
+    {
+      "repo": "macrolens",
+      "task": "NL regression workbench chart session restore",
+      "baselineContextRecall": 1,
+      "candidateContextRecall": 0.5,
+      "baselineSuccess": false,
+      "candidateSuccess": false,
+      "baselineFiles": [
+        "apps/web/src/lib/equity-quotes.ts",
+        "apps/web/src/lib/__tests__/series-workbench-chart.test.ts",
+        "apps/web/src/lib/series-workbench-chart.ts",
+        "apps/web/src/lib/__tests__/equity-quotes.test.ts",
+        "apps/web/src/components/series-workbench.tsx"
+      ],
+      "candidateFiles": [
+        "apps/web/src/lib/equity-quotes.ts",
+        "apps/web/src/lib/use-series-workbench-session.ts",
+        "apps/web/src/lib/__tests__/series-workbench-chart.test.ts"
+      ]
+    },
+    {
+      "repo": "macrolens",
+      "task": "NL regression macro signal threshold boundaries",
+      "baselineContextRecall": 0.5,
+      "candidateContextRecall": 0.5,
+      "baselineSuccess": false,
+      "candidateSuccess": false,
+      "baselineFiles": [
+        "apps/web/src/lib/__tests__/macro-threshold-mirror.test.ts",
+        "docker-compose.yml",
+        "apps/web/src/types/macro.ts",
+        "apps/web/src/lib/__tests__/macro-derivations.test.ts",
+        "apps/web/src/lib/macro-signal-rules.ts"
+      ],
+      "candidateFiles": [
+        "apps/web/src/lib/__tests__/macro-threshold-mirror.test.ts",
+        "apps/web/src/lib/regime-score.ts",
+        "docker-compose.yml",
+        "apps/web/src/types/macro.ts",
+        "apps/web/src/lib/__tests__/macro-derivations.test.ts"
+      ]
+    },
+    {
+      "repo": "alpha-cycles",
+      "task": "controlled run trigger API",
+      "baselineContextRecall": 1,
+      "candidateContextRecall": 1,
+      "baselineSuccess": true,
+      "candidateSuccess": true,
+      "baselineFiles": [
+        "api/app.py",
+        "docker-compose.webapp.yml",
+        "docker-compose.yml",
+        "PRD_webapp.md",
+        "ui/src/App.tsx"
+      ],
+      "candidateFiles": [
+        "api/app.py",
+        "src/fourier_cycles_pipeline.py",
+        "docker-compose.webapp.yml",
+        "docker-compose.yml",
+        "PRD_webapp.md"
+      ]
+    },
+    {
+      "repo": "pi-ext-memory",
+      "task": "NL regression handoff scope precedence",
+      "baselineContextRecall": 0.333,
+      "candidateContextRecall": 0,
+      "baselineSuccess": false,
+      "candidateSuccess": false,
+      "baselineFiles": [
+        "src/pi-extension/commands.ts",
+        "test/pi-extension/retrieval.test.ts",
+        "test/pi-extension/tools.test.ts",
+        "test/pi-extension/commands.test.ts",
+        "test/pi-extension/audit.test.ts"
+      ],
+      "candidateFiles": [
+        "src/pi-extension/commands.ts",
+        "src/pi-extension/audit.ts",
+        "test/pi-extension/commands.test.ts",
+        "test/pi-extension/audit.test.ts"
+      ]
+    },
+    {
+      "repo": "pi-ext-memory",
+      "task": "NL regression legacy project audit preview",
+      "baselineContextRecall": 0.333,
+      "candidateContextRecall": 0.333,
+      "baselineSuccess": false,
+      "candidateSuccess": false,
+      "baselineFiles": [
+        "src/pi-extension/audit.ts",
+        "test/pi-extension/tools.test.ts",
+        "test/pi-extension/audit.test.ts",
+        "src/core/index.ts",
+        "src/core/policy.ts"
+      ],
+      "candidateFiles": [
+        "src/pi-extension/audit.ts",
+        "src/pi-extension/retrieval.ts",
+        "test/pi-extension/tools.test.ts",
+        "test/pi-extension/audit.test.ts",
+        "src/core/index.ts"
+      ]
+    },
+    {
+      "repo": "pi-ext-astgrep",
+      "task": "NL regression ambiguous sg binary",
+      "baselineContextRecall": 0.667,
+      "candidateContextRecall": 0.333,
+      "baselineSuccess": false,
+      "candidateSuccess": false,
+      "baselineFiles": [
+        "src/ast-grep/binary-path.ts",
+        "test/binary-path.test.ts",
+        "test/cli-args.test.ts",
+        "src/ast-grep/cli.ts",
+        "src/ast-grep/tools.ts"
+      ],
+      "candidateFiles": [
+        "src/ast-grep/binary-path.ts",
+        "src/index.ts",
+        "src/ast-grep/process-timeout.ts",
+        "test/binary-path.test.ts",
+        "test/cli-args.test.ts"
+      ]
+    }
+  ],
+  "claimBoundary": "Local live-repository gate rerun; not a frozen external holdout or agent-effect measurement."
+}

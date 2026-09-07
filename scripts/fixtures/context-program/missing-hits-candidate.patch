@@ -1,0 +1,176 @@
+diff --git a/dist/core/context-builder.js b/dist/core/context-builder.js
+index bd00f02..1fa8713 100644
+--- a/dist/core/context-builder.js
++++ b/dist/core/context-builder.js
+@@ -55,6 +55,13 @@ function buildCodeMapContextInternal(options, inheritedDiagnostics, depth = 0) {
+                     reasons: [...(related?.reasons ?? []), ...(item.reasons ?? [])],
+                 });
+             }
++            const baseline = readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []);
++            const functions = readFirst.items.slice(0, 5)
++                .filter(item => item.kind === "function" && !isTestReadFirstPath(item.path) && !isNoisyIndexedPath(db, item.path))
++                .map(item => matchedChunkForItem(db, item))
++                .filter(item => item.kind === "function" && "text" in item && !!item.text);
++            const selected = restoreMissingFunctionHits(baseline, functions, request.limit);
++            const selectedPaths = selected.map(item => item.path);
+             return {
+                 target: request.target,
+                 targetForm: "query",
+@@ -66,11 +73,17 @@ function buildCodeMapContextInternal(options, inheritedDiagnostics, depth = 0) {
+                 changed: anchored.changed,
+                 missing: anchored.missing,
+                 deleted: anchored.deleted,
+-                readFirst: readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []),
++                readFirst: selected,
+                 relatedTests: anchored.relatedTests,
+                 relatedDocs: anchored.relatedDocs,
+                 warnings: uniqueStrings([...warnings, ...anchored.warnings]),
+-                readPlan,
++                readPlan: selected === baseline ? readPlan : {
++                    ...readPlan,
++                    selected: selectedPaths,
++                    budget: { ...readPlan.budget, selected: selected.length, dropped: Math.max(0, readPlan.budget.available - selected.length) },
++                    decisions: readPlan.decisions.map(decision => ({ ...decision, selected: selectedPaths.includes(decision.path),
++                        rank: selectedPaths.includes(decision.path) ? selectedPaths.indexOf(decision.path) + 1 : undefined })),
++                },
+             };
+         }
+         const related = relatedPaths(db, readFirst.base, request.pathFilter);
+@@ -389,3 +402,28 @@ function hasStemAffinity(baseStem, candidateStem) {
+ function sortByLocality(base, paths) {
+     return paths.filter((path) => path !== base).sort((left, right) => localityScore(base, right) - localityScore(base, left) || left.localeCompare(right));
+ }
++export function restoreMissingFunctionHits(baseline, functions, limit) {
++    const covers = (outer, inner) => outer.path === inner.path && outer.startLine <= inner.startLine && outer.endLine >= inner.endLine;
++    const missing = functions.filter(item => !baseline.some(existing => covers(existing, item))).slice(0, 2);
++    if (!baseline.length || !missing.length)
++        return baseline;
++    const bytes = (item) => Buffer.byteLength("text" in item ? item.text : "");
++    const budget = baseline.reduce((sum, item) => sum + bytes(item), 0);
++    const selected = [baseline[0]];
++    let used = bytes(baseline[0]);
++    for (const item of missing) {
++        if (selected.length >= limit || used + bytes(item) > budget || selected.some(existing => covers(existing, item)))
++            continue;
++        selected.push(item);
++        used += bytes(item);
++    }
++    if (selected.length === 1)
++        return baseline;
++    for (const item of baseline.slice(1)) {
++        if (selected.length >= limit || used + bytes(item) > budget)
++            continue;
++        selected.push(item);
++        used += bytes(item);
++    }
++    return selected;
++}
+diff --git a/src/core/context-builder.ts b/src/core/context-builder.ts
+index c3abc0b..2e2250d 100644
+--- a/src/core/context-builder.ts
++++ b/src/core/context-builder.ts
+@@ -117,6 +117,13 @@ function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDi
+           reasons: [...(related?.reasons ?? []), ...(item.reasons ?? [])],
+         });
+       }
++      const baseline = readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []);
++      const functions = readFirst.items.slice(0, 5)
++        .filter(item => item.kind === "function" && !isTestReadFirstPath(item.path) && !isNoisyIndexedPath(db, item.path))
++        .map(item => matchedChunkForItem(db, item))
++        .filter(item => item.kind === "function" && "text" in item && !!item.text);
++      const selected = restoreMissingFunctionHits(baseline, functions, request.limit);
++      const selectedPaths = selected.map(item => item.path);
+       return {
+         target: request.target,
+         targetForm: "query",
+@@ -128,11 +135,17 @@ function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDi
+         changed: anchored.changed,
+         missing: anchored.missing,
+         deleted: anchored.deleted,
+-        readFirst: readPlan.selected.flatMap((path) => itemByPath.get(path) ?? []),
++        readFirst: selected,
+         relatedTests: anchored.relatedTests,
+         relatedDocs: anchored.relatedDocs,
+         warnings: uniqueStrings([...warnings, ...anchored.warnings]),
+-        readPlan,
++        readPlan: selected === baseline ? readPlan : {
++          ...readPlan,
++          selected: selectedPaths,
++          budget: { ...readPlan.budget, selected: selected.length, dropped: Math.max(0, readPlan.budget.available - selected.length) },
++          decisions: readPlan.decisions.map(decision => ({ ...decision, selected: selectedPaths.includes(decision.path),
++            rank: selectedPaths.includes(decision.path) ? selectedPaths.indexOf(decision.path) + 1 : undefined })),
++        },
+       };
+     }
+     const related = relatedPaths(db, readFirst.base, request.pathFilter);
+@@ -506,3 +519,23 @@ function hasStemAffinity(baseStem: string, candidateStem: string): boolean {
+ function sortByLocality(base: string, paths: string[]): string[] {
+   return paths.filter((path) => path !== base).sort((left, right) => localityScore(base, right) - localityScore(base, left) || left.localeCompare(right));
+ }
++
++export function restoreMissingFunctionHits(baseline: CodeMapReadFirstItem[], functions: CodeMapReadFirstItem[], limit: number): CodeMapReadFirstItem[] {
++  const covers = (outer: CodeMapReadFirstItem, inner: CodeMapReadFirstItem) => outer.path === inner.path && outer.startLine <= inner.startLine && outer.endLine >= inner.endLine;
++  const missing = functions.filter(item => !baseline.some(existing => covers(existing, item))).slice(0, 2);
++  if (!baseline.length || !missing.length) return baseline;
++  const bytes = (item: CodeMapReadFirstItem) => Buffer.byteLength("text" in item ? item.text : "");
++  const budget = baseline.reduce((sum, item) => sum + bytes(item), 0);
++  const selected = [baseline[0]];
++  let used = bytes(baseline[0]);
++  for (const item of missing) {
++    if (selected.length >= limit || used + bytes(item) > budget || selected.some(existing => covers(existing, item))) continue;
++    selected.push(item); used += bytes(item);
++  }
++  if (selected.length === 1) return baseline;
++  for (const item of baseline.slice(1)) {
++    if (selected.length >= limit || used + bytes(item) > budget) continue;
++    selected.push(item); used += bytes(item);
++  }
++  return selected;
++}
+diff --git a/tests/context-missing-hits.test.ts b/tests/context-missing-hits.test.ts
+new file mode 100644
+index 0000000..8ada745
+--- /dev/null
++++ b/tests/context-missing-hits.test.ts
+@@ -0,0 +1,41 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { restoreMissingFunctionHits } from "../src/core/context-builder.ts";
++import type { CodeMapReadFirstItem } from "../src/core/context-builder.ts";
++
++function item(path: string, text: string, startLine = 1, endLine = startLine): CodeMapReadFirstItem {
++  return { path, text, startLine, endLine, language: "javascript", kind: "function", snippet: text,
++    reasons: [{ kind: "import", label: "existing evidence" }] };
++}
++
++test("covered functions leave the original items, reasons and order untouched", () => {
++  const baseline = [item("a.js", "first", 1, 8), item("b.js", "second", 3, 10)];
++  assert.equal(restoreMissingFunctionHits(baseline, [item("b.js", "inner", 5, 7)], 8), baseline);
++  assert.equal(restoreMissingFunctionHits(baseline, [], 8), baseline);
++});
++
++test("missing functions follow the first item and retain baseline relative order and evidence", () => {
++  const baseline = [item("a.js", "first"), item("b.js", "second"), item("c.js", "third")];
++  const addition = item("new.js", "new");
++  const selected = restoreMissingFunctionHits(baseline, [addition], 3);
++  assert.deepEqual(selected, [baseline[0], addition, baseline[1]]);
++  assert.equal(selected[0], baseline[0]);
++  assert.equal(selected[2].reasons, baseline[1].reasons);
++});
++
++test("actual UTF-8 bytes and excerpt limits constrain additions", () => {
++  const baseline = [item("a.js", "a"), item("b.js", "bb")];
++  assert.equal(restoreMissingFunctionHits(baseline, [item("new.js", "€")], 8), baseline);
++  assert.equal(restoreMissingFunctionHits(baseline, [item("new.js", "x")], 1), baseline);
++  assert.deepEqual(restoreMissingFunctionHits(baseline, [item("new.js", "é")], 8), [baseline[0], item("new.js", "é")]);
++});
++
++test("at most two missing functions are considered, with contained additions suppressed", () => {
++  const baseline = [item("a.js", "a"), item("b.js", "long baseline")];
++  const first = item("x.js", "xx", 1, 10);
++  const second = item("y.js", "yy");
++  const third = item("z.js", "zz");
++  const selected = restoreMissingFunctionHits(baseline, [first, second, third], 8);
++  assert.deepEqual(selected, [baseline[0], first, second]);
++  assert.deepEqual(restoreMissingFunctionHits(baseline, [first, item("x.js", "inside", 2, 3)], 8), [baseline[0], first]);
++});
