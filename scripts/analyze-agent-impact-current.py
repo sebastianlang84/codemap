@@ -33,16 +33,18 @@ def percentile(values, probability):
     return values[lo] + (values[hi] - values[lo]) * (position - lo)
 
 
-def bootstrap(pairs, key):
+def bootstrap(pairs, key, stratified=False):
+    strata = [[p for p in pairs if p['repo'] == repo] for repo in sorted({p['repo'] for p in pairs})] if stratified else [pairs]
     rng = random.Random(SEED)
     estimates = []
     for _ in range(DRAWS):
-        sample = [pairs[rng.randrange(len(pairs))] for _ in pairs]
+        sample = [stratum[rng.randrange(len(stratum))] for stratum in strata for _ in stratum]
         value = ratio(sum(p['codemap'][key] for p in sample), sum(p['baseline'][key] for p in sample))
         if value is not None:
             estimates.append(value)
     estimates.sort()
-    return {'draws': DRAWS, 'validDraws': len(estimates), 'seed': SEED,
+    return {'draws': DRAWS, 'validDraws': len(estimates), 'seed': SEED, 'stratifiedByRepo': stratified,
+            'stratumSizes': [len(stratum) for stratum in strata],
             'percentile95': [percentile(estimates, q) for q in (0.025, 0.975)] if len(estimates) == DRAWS else None}
 
 
@@ -58,6 +60,7 @@ def run_metrics(run):
         raise ValueError('Missing success verdict')
     result = {key: run.get(key) for key in TIMES}
     result.update({key: usage[key] for key in TOKENS})
+    result.update({key: run.get(key) for key in ('infrastructureError', 'agentStarted', 'timedOut')})
     result.update(totalTokens=sum(usage[key] for key in TOKENS), success=run['success'], runOrder=run['runOrder'])
     result['totalMeasuredDurationMs'] = sum(result[key] for key in TIMES) if all(result[key] is not None for key in TIMES) else None
     return result
@@ -182,6 +185,8 @@ def analyze(manifest_path, evidence_path, directories):
         subset = [p for p in pairs if p['repo'] == repo]
         repositories[repo] = aggregate(subset)
         repositories[repo]['bootstrap'] = {key: bootstrap(subset, key) for key in ('agentDurationMs', 'totalTokens')} if subset else None
+    overall = aggregate(pairs)
+    overall['bootstrap'] = {key: bootstrap(pairs, key, stratified=True) for key in ('agentDurationMs', 'totalTokens')} if pairs else None
     selected = [p[m] for p in pairs for m in MODES]
     timings = [r['toolTiming'] for r in selected if r.get('toolTiming') is not None]
     loads = [r['hostLoadRange'] for r in selected if 'hostLoadRange' in r]
@@ -189,11 +194,11 @@ def analyze(manifest_path, evidence_path, directories):
             'evidenceFileSha256': sha(evidence_path), 'gate': evidence['gate'],
             **({'efficiencyGate': evidence['efficiencyGate']} if 'efficiencyGate' in evidence else {}),
             'complete': not missing, 'plannedPairs': len(tasks), 'completedPairs': len(pairs), 'missingPairs': missing,
-            'repositories': repositories, 'overall': aggregate(pairs), 'tasks': pairs, 'traceInventory': inventory,
+            'repositories': repositories, 'overall': overall, 'tasks': pairs, 'traceInventory': inventory,
             'traceSummary': {'requested': bool(directories), 'matchedRuns': sum(r['traceMatched'] for r in selected),
                              'timedRuns': len(timings), 'toolTiming': {k: sum(t[k] for t in timings) for k in timings[0]} if timings else None,
                              'hostLoadRuns': len(loads), 'hostLoadRange': [[min(r[i][0] for r in loads), max(r[i][1] for r in loads)] for i in range(3)] if loads else None},
-            'method': {'ratio': 'codemap / baseline; ratios of sums', 'bootstrap': '10000 paired task draws with replacement within each repo; seed 20260907 reset per metric/repo; linear percentile 95% interval',
+            'method': {'ratio': 'codemap / baseline; ratios of sums', 'bootstrap': '10000 paired task draws with replacement within each repo, retaining stratum sizes; overall ratio of sums across resampled repos; seed 20260907 reset per metric/summary; linear percentile 95% interval',
                        'tokens': 'normalized input + cache read + cache creation + output; cache counted once',
                        'timing': 'tool timings measure JSONL reception; union per run, then summed; missing endpoints excluded; no inference of model-only time',
                        'manifest': 'manifestFileSha256 hashes supplied bytes; manifestSha256 is the runner stable-JSON hash copied from evidence, not recomputed',

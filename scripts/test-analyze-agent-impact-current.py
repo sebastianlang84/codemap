@@ -23,6 +23,15 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(a.bootstrap(pairs, 'value'), a.bootstrap(pairs, 'value'))
         self.assertEqual(a.percentile([1, 2, 3, 4], .25), 1.75)
 
+    def test_stratified_overall_preserves_repo_weights(self):
+        pairs = [{'repo': repo, 'baseline': {'value': base}, 'codemap': {'value': treated}}
+                 for repo, base, treated in [('a', 10, 100), ('b', 100, 100), ('b', 100, 100)]]
+        result = a.bootstrap(pairs, 'value', stratified=True)
+        self.assertEqual(result['stratumSizes'], [1, 2])
+        self.assertEqual(result['percentile95'], [300 / 210, 300 / 210])
+        self.assertNotEqual(result['percentile95'], a.bootstrap(pairs, 'value')['percentile95'])
+        self.assertNotEqual(result['percentile95'][0], (10 + 1 + 1) / 3)
+
     def test_overlap_and_missing(self):
         trace = {'toolTimings': [{'observedStartMs': s, 'observedEndMs': e, 'command': 'SECRET'}
                                 for s, e in [(0, 10), (5, 20), (30, 40), (None, 50), (60, None), (90, 80)]]}
@@ -55,7 +64,8 @@ class AnalysisTests(unittest.TestCase):
                     run = {'repo': repo, 'taskId': task, 'mode': mode, 'runOrder': order,
                            'usage': {'inputTokens': 10 * factor, 'cacheReadInputTokens': 20 * factor,
                                      'cacheCreationInputTokens': 5 * factor, 'outputTokens': 5 * factor},
-                           **{key: 10 * factor for key in a.TIMES}, 'success': mode == 'baseline',
+                           **{key: 10 * factor for key in a.TIMES}, 'success': mode == 'baseline', 'agentStarted': True, 'timedOut': False,
+                           'infrastructureError': 'synthetic failure' if mode == 'codemap' else None,
                            'originalPatchSha256': a.sha(patch)}
                     runs.append(run)
                     trace = {'taskId': task, 'mode': mode, 'runOrder': order, 'stdout': 'SECRET', 'stderr': 'SECRET',
@@ -69,6 +79,10 @@ class AnalysisTests(unittest.TestCase):
             evidence.write_text(json.dumps(original))
             report = a.analyze(manifest, evidence, directories)
             self.assertTrue(report['complete'])
+            self.assertTrue(report['overall']['bootstrap']['totalTokens']['stratifiedByRepo'])
+            self.assertEqual(report['tasks'][0]['codemap']['infrastructureError'], 'synthetic failure')
+            self.assertTrue(report['tasks'][0]['baseline']['agentStarted'])
+            self.assertFalse(report['tasks'][0]['baseline']['timedOut'])
             self.assertEqual(report['gate'], original['gate'])
             self.assertEqual(report['completedPairs'], 2)
             self.assertEqual(report['tasks'][0]['baseline']['totalTokens'], 40)
