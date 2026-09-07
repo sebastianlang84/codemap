@@ -4,11 +4,8 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 Aktueller Nutzenstand: [abgeschlossener Agentenvergleich](docs/developer/agent-impact-current-development-result.md).
 
-## Externe Suchalternative vergleichen
-
-- [ ] [Eingefrorener Vergleich](docs/developer/search-tool-comparison-protocol.md):
-  pgr ist isoliert gebaut und getestet. Lokaler Replay gegen rg/CodeMap sowie
-  BM25-Diagnose in Arbeit; Agentenserie nur bei bestandenem lokalen Gate.
+Suchalternativen: [lokaler Vergleich abgeschlossen](docs/developer/search-tool-comparison-result.md);
+PGR und BM25 verfehlen die Fortsetzungsbedingungen. Keine Umstellung.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
