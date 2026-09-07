@@ -107,8 +107,9 @@ Owner-authorized [selected-context diagnosis](../developer/agent-impact-context-
 completed on 2026-09-07: all three arms solved 3/4 tasks. Selected source used 40.9% less
 agent time and 46.8% fewer tokens than normal navigation; current CodeMap used more.
 The directional diagnostic signal passed, with privileged manual selection and different
-test strategies. A reproduced JavaScript symbol-extraction miss is the next bounded
-maintenance candidate. No correction or automatic further model series is included.
+test strategies. The reproduced JavaScript definition miss is
+[corrected and regression-tested](../developer/javascript-definitions.md).
+No further model series is authorized.
 
 The original proposal below remains historical, not authorization for another run.
 

@@ -2,20 +2,6 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-## Agenten-Nutzen: Fehlerpflege
-
-[Kontextdiagnose](docs/developer/agent-impact-context-result.md) abgeschlossen:
-alle Varianten lösen 3/4 Aufgaben. Manuell ausgewählter Quellkontext benötigt gegenüber
-normaler Suche 40,9 % weniger Agentenzeit und 46,8 % weniger Tokens; CodeMap selbst
-31,6 % mehr Zeit und 33,4 % mehr Tokens. Unterschiedliche Teststrategien und ein
-schwieriger Fehlversuch prägen die Summen. Kein allgemeiner Nutzennachweis.
-
-- [ ] JavaScript-Funktionszuweisungen korrekt erkennen; Callback-Aufrufe nicht als Definitionen zählen.
-  - Reproduziert am Express-Stand: `res.send` fehlt als Symbol; ein `sendfile`-Aufruf wird als Methode erkannt.
-  - [Reproduktion](docs/developer/agent-impact-context-symbol-probe.json), `python3 scripts/probe-context-symbols.py`.
-  - Nächster begrenzter Kandidat: Fälle und Kontrollen vor Änderung festlegen; bestehende Messreihen müssen bestehen.
-  - Noch keine Korrektur umgesetzt. Keine automatische weitere Modellserie oder verpflichtende Nutzung.
-
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 
 [`docs/de/wie-der-index-funktioniert.md`](docs/de/wie-der-index-funktioniert.md) erklärt

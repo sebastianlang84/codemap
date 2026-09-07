@@ -223,11 +223,16 @@ function readFirstItems(
       direct: true,
     };
   }
-  // Deterministic target resolution: an exact path wins, then the shortest path, then lexicographic.
+  // An exact symbol must not become a partial filename match (send -> test/res.send.js).
+  const exactSymbol = !exact && db.prepare(
+    "select 1 from symbols s join files f on f.id = s.file_id " +
+    "where lower(s.name) = lower(?) and s.kind != 'heading' and f.path like ? escape '\\' limit 1",
+  ).get(request.target, request.pathFilter);
+  // After exact paths and symbols, choose the shortest partial path, then lexicographic.
   // Without ORDER BY the old `limit 1` returned whichever row SQLite scanned first — for an ambiguous
   // basename (e.g. two `operations.ts`) that anchor was unspecified, the exact "wrong-anchor" failure
   // the confidence logic warns about. `limit 6` bounds the query for pathological broad targets.
-  const matches = db.prepare(
+  const matches = exactSymbol ? [] : db.prepare(
     "select id, path, language from files where (path = ? or path like ? escape '\\') and path like ? escape '\\' " +
       "order by (path = ?) desc, length(path), path limit 6",
   ).all(request.target, request.targetLike, request.pathFilter, request.target) as Array<{ id: number; path: string; language: string }>;

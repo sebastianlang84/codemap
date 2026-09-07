@@ -1,4 +1,5 @@
 import type { Chunk } from "./types.ts";
+import { assignedFunctionNames, isRegexStart, regexEnd } from "./javascript-syntax.ts";
 
 const fixedChunkSize = 80;
 const fixedChunkOverlap = 10;
@@ -88,6 +89,7 @@ function structureKind(line: string, language: string): "function" | "class" | u
   if (/^\s*(export\s+)?(default\s+)?(async\s+)?function(\s+[A-Za-z_$][\w$]*)?(<.*>)?\s*\(/.test(line)) return "function";
   if (/^\s*export\s+default\s+(async\s*)?(\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>/.test(line)) return "function";
   if (isConstArrowDeclaration(line)) return "function";
+  if (assignedFunctionNames(line).length > 0) return "function";
   return undefined;
 }
 
@@ -167,28 +169,6 @@ function braceDelta(line: string, state: BraceScanState): { depth: number; opene
   if (state.quote !== "`") state.quote = undefined;
   state.escape = false;
   return { depth, opened };
-}
-
-function isRegexStart(line: string, slashIndex: number): boolean {
-  const before = line.slice(0, slashIndex).trimEnd();
-  if (!before) return true;
-  if (/\b(return|throw|yield)$/.test(before) || before.endsWith("=>")) return true;
-  const previous = before[before.length - 1];
-  return "=([{!?:;,|&".includes(previous);
-}
-
-function regexEnd(line: string, slashIndex: number): number {
-  let inClass = false;
-  let escape = false;
-  for (let i = slashIndex + 1; i < line.length; i++) {
-    const char = line[i];
-    if (escape) { escape = false; continue; }
-    if (char === "\\") { escape = true; continue; }
-    if (char === "[") { inClass = true; continue; }
-    if (char === "]") { inClass = false; continue; }
-    if (char === "/" && !inClass) return i;
-  }
-  return slashIndex;
 }
 
 function hasBodyOpen(line: string): boolean {

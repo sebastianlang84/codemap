@@ -333,3 +333,8 @@ codemap context test/example.test.js:695-764 --json
 Use `--limit 1` for just that chunk. Missing or uncovered locations fail explicitly;
 refresh a stale index before reusing line numbers. Exact indexed filenames take precedence,
 including filenames with numeric colon suffixes. Plain paths still start at the file header.
+
+For name targets, exact non-heading symbols take precedence over partial filenames;
+exact indexed paths still win. JavaScript function assignments such as
+`res.send = function(body) { ... }` are searchable by `res.send` and `send`.
+Run `codemap index` after upgrading to refresh existing symbols and chunks.

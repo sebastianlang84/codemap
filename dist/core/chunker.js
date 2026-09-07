@@ -1,3 +1,4 @@
+import { assignedFunctionNames, isRegexStart, regexEnd } from "./javascript-syntax.js";
 const fixedChunkSize = 80;
 const fixedChunkOverlap = 10;
 const structuredLanguages = new Set(["typescript", "javascript", "tsx", "jsx", "python", "py"]);
@@ -86,6 +87,8 @@ function structureKind(line, language) {
     if (/^\s*export\s+default\s+(async\s*)?(\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>/.test(line))
         return "function";
     if (isConstArrowDeclaration(line))
+        return "function";
+    if (assignedFunctionNames(line).length > 0)
         return "function";
     return undefined;
 }
@@ -187,41 +190,6 @@ function braceDelta(line, state) {
         state.quote = undefined;
     state.escape = false;
     return { depth, opened };
-}
-function isRegexStart(line, slashIndex) {
-    const before = line.slice(0, slashIndex).trimEnd();
-    if (!before)
-        return true;
-    if (/\b(return|throw|yield)$/.test(before) || before.endsWith("=>"))
-        return true;
-    const previous = before[before.length - 1];
-    return "=([{!?:;,|&".includes(previous);
-}
-function regexEnd(line, slashIndex) {
-    let inClass = false;
-    let escape = false;
-    for (let i = slashIndex + 1; i < line.length; i++) {
-        const char = line[i];
-        if (escape) {
-            escape = false;
-            continue;
-        }
-        if (char === "\\") {
-            escape = true;
-            continue;
-        }
-        if (char === "[") {
-            inClass = true;
-            continue;
-        }
-        if (char === "]") {
-            inClass = false;
-            continue;
-        }
-        if (char === "/" && !inClass)
-            return i;
-    }
-    return slashIndex;
 }
 function hasBodyOpen(line) {
     return /\)\s*(:.*)?\{/.test(line) || /=>\s*\{/.test(line) || /\b(class|interface|enum)\b.*\{/.test(line);

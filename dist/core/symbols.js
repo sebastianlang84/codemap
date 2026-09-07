@@ -4,7 +4,6 @@ const patterns = [
     { kind: "function", rx: /^\s*(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(/ },
     { kind: "interface", rx: /^\s*(?:export\s+)?interface\s+([A-Za-z_$][\w$]*)/ },
     { kind: "type", rx: /^\s*(?:export\s+)?type\s+([A-Za-z_$][\w$]*)/ },
-    { kind: "method", rx: /^\s*(?:public\s+|private\s+|protected\s+)?([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*[:{]/ },
     { kind: "class", rx: /^\s*class\s+([A-Za-z_][\w]*)/ },
     { kind: "function", rx: /^\s*(?:async\s+)?def\s+([A-Za-z_][\w]*)\s*\(/ },
     { kind: "heading", rx: /^\s{0,3}#{1,6}\s+(.+)/ },
@@ -117,6 +116,18 @@ export function extractSymbols(text, language) {
     const lines = text.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        if (language === "javascript" || language === "typescript") {
+            const assigned = assignedFunctionNames(line);
+            if (assigned.length) {
+                symbols.push(...assigned.map(name => ({ name, kind: "function", startLine: i + 1, signature: line.trim().slice(0, 240) })));
+                continue;
+            }
+            const method = methodName(line);
+            if (method && !["if", "for", "while", "switch", "catch", "return", "function"].includes(method)) {
+                symbols.push({ name: method, kind: "method", startLine: i + 1, signature: line.trim().slice(0, 240) });
+                continue;
+            }
+        }
         for (const pattern of patterns) {
             if (pattern.kind === "heading" && language !== "markdown")
                 continue;
@@ -136,3 +147,4 @@ export function extractSymbols(text, language) {
     }
     return symbols;
 }
+import { assignedFunctionNames, methodName } from "./javascript-syntax.js";

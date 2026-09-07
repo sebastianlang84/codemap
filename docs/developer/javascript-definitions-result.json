@@ -1,0 +1,159 @@
+{
+  "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+  "sourceSha256": "39ce89d1b09f15fd44fc3e44787d7ec03aa8bb90750590dd3622c8ce093dc538",
+  "implementationHashes": {
+    "symbols.js": "94e856f4a5e50eb9e6504e8963ce43b51162913cc69fc215fdf18f54853ee671",
+    "chunker.js": "0c7e630ec905cc3a5c91dea461c5efaafcc7fd275d4fef917d6e2107c65d0eac",
+    "index-store.js": "d5e4b68121f170f056552e1b514fdd311e590baca9f0c932c1e8d6e2a6de57cd",
+    "javascript-syntax.js": "45a0aca70aacdd785509b6587e50b49f0aa5e1e2036887239bef6708434f0947"
+  },
+  "definitionNames": [
+    "res.send",
+    "send"
+  ],
+  "searches": [
+    {
+      "query": "res.send Uint8Array text/plain UTF-8 charset response",
+      "targetRank": 1,
+      "topFive": [
+        {
+          "path": "lib/response.js",
+          "startLine": 112,
+          "endLine": 112,
+          "kind": "function"
+        },
+        {
+          "path": "test/res.send.js",
+          "startLine": 71,
+          "endLine": 150,
+          "kind": "text"
+        },
+        {
+          "path": "test/res.set.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text"
+        },
+        {
+          "path": "test/res.format.js",
+          "startLine": 182,
+          "endLine": 248,
+          "kind": "function"
+        },
+        {
+          "path": "test/res.jsonp.js",
+          "startLine": 211,
+          "endLine": 290,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "query": "res.send",
+      "targetRank": 1,
+      "topFive": [
+        {
+          "path": "lib/response.js",
+          "startLine": 112,
+          "endLine": 112,
+          "kind": "function"
+        },
+        {
+          "path": "test/res.send.js",
+          "startLine": 281,
+          "endLine": 360,
+          "kind": "text"
+        },
+        {
+          "path": "test/res.format.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text"
+        },
+        {
+          "path": "test/res.sendFile.js",
+          "startLine": 1,
+          "endLine": 1,
+          "kind": "file"
+        },
+        {
+          "path": "test/res.sendStatus.js",
+          "startLine": 1,
+          "endLine": 1,
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "query": "send",
+      "targetRank": 1,
+      "topFive": [
+        {
+          "path": "lib/response.js",
+          "startLine": 112,
+          "endLine": 112,
+          "kind": "function"
+        },
+        {
+          "path": "test/res.send.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text"
+        },
+        {
+          "path": "test/exports.js",
+          "startLine": 71,
+          "endLine": 71,
+          "kind": "function"
+        },
+        {
+          "path": "examples/route-map/index.js",
+          "startLine": 30,
+          "endLine": 76,
+          "kind": "text"
+        },
+        {
+          "path": "test/res.format.js",
+          "startLine": 1,
+          "endLine": 80,
+          "kind": "text"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "target": "res.send",
+      "path": "lib/response.js",
+      "startLine": 112,
+      "endLine": 212,
+      "sourceBytes": 2301,
+      "completeExactBody": true
+    },
+    {
+      "target": "send",
+      "path": "lib/response.js",
+      "startLine": 112,
+      "endLine": 212,
+      "sourceBytes": 2301,
+      "completeExactBody": true
+    },
+    {
+      "target": "lib/response.js:112",
+      "path": "lib/response.js",
+      "startLine": 112,
+      "endLine": 212,
+      "sourceBytes": 2301,
+      "completeExactBody": true
+    }
+  ],
+  "checks": {
+    "assignedNames": true,
+    "callNotDefinition": true,
+    "allQueriesFindTargetInFive": true,
+    "exactQueriesRankFirst": true,
+    "allContextsComplete": true
+  },
+  "passed": true,
+  "claimBoundary": "Frozen retrospective local case; no agent-benefit or generalization claim."
+}

@@ -154,6 +154,11 @@ Lockfiles are supported text files, not generated binaries. They may be indexed 
 
 Symbol extraction uses cheap deterministic regexes. `ast-grep` is not part of indexing; when installed locally, the search-quality benchmark may use it only as optional structural ground truth.
 
+JavaScript/TypeScript function-expression assignments expose the assigned target and
+short property name, with structured function chunks. Method detection balances
+parameter parentheses to exclude callback calls. Extraction version 9 rebuilds stored
+symbols and chunks on the next `codemap index`.
+
 ### Language support tiers
 
 Priority languages are TypeScript, JavaScript, C, and C++ (product scope in [`../product/PRD.md#priority-languages`](../product/PRD.md#priority-languages)). Support is layered per capability, so a language may have symbols without structured chunking:
