@@ -1,0 +1,471 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-09-08",
+  "codeMapCommit": "3b7a0bc33ee5575bfbc891e0cd5bb855d68ec7f4",
+  "pgrCommit": "2e702e6521ef26fe1f4a104ce56dca4531e1d6e4",
+  "pgrBinarySha256": "b63714ea3d75af7cda5c287998e69e6f71afd549f525bb6b51ec6fa623fb87d9",
+  "sourceManifests": {
+    "scripts/eval-context-program.manifest.json": "76923b4af5e895a0e09aa76901b1dc10a730ee047f9ab16938850173c046c4eb",
+    "scripts/eval-agent-impact-program-development.manifest.json": "c64e4cf167309208451f5d0aea6ee7964e392e7fa2c07d9ba6885efeb9cda301"
+  },
+  "settings": {
+    "searchLimit": 10,
+    "matchesPerFile": 3,
+    "readFiles": 8,
+    "readLines": 160,
+    "readBefore": 40,
+    "sourceBytes": 16384,
+    "repeats": 5,
+    "rgResponse": "First three original matching lines per file, ten files in path order, rendered path:line:text; no JSON transport overhead in responseBytes.",
+    "pgrOutputProfile": "full_v4"
+  },
+  "termCases": [
+    {
+      "id": "express-pr-6285",
+      "repo": "express",
+      "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+      "query": "res.send Uint8Array text/plain UTF-8 charset response",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 112,
+          "endLine": 212,
+          "sha256": "053a37db47f86bd21f209db3c1524191d0760e0cc2e9ef0e2970d5a69db82806",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/res.send.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6774",
+      "repo": "fastify",
+      "baseCommit": "27f4d6222dd945238e96c1fdaa632d5dc3c37b2c",
+      "query": "plugin dependency unregistered error catalog error codes",
+      "group": "multifile",
+      "requiredTargets": [
+        {
+          "path": "lib/plugin-utils.js",
+          "startLine": 64,
+          "endLine": 78,
+          "sha256": "728d0239d2ad030728034acc42da6e6f558fb4a74ee6b135122015fe892af835",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/internals/errors.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        },
+        {
+          "path": "lib/errors.js",
+          "reason": "Defines and exports matching Fastify error constructors."
+        },
+        {
+          "path": "types/errors.d.ts",
+          "reason": "Public error-code union must match the new constructor."
+        },
+        {
+          "path": "docs/Reference/Errors.md",
+          "reason": "Requested public error catalog must list the new code."
+        },
+        {
+          "path": "fastify.js",
+          "reason": "Public errorCodes export must remain consistent."
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6746",
+      "repo": "fastify",
+      "baseCommit": "fc9eafddae37dea167d2affc26a29a04f9412047",
+      "query": "HTTP/2 large Buffer string Content-Length cancellation trailers response",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/reply.js",
+          "startLine": 575,
+          "endLine": 683,
+          "sha256": "0f5bb1532c92da47a38b487f907300011c8748216f771fa949641534ad217bff",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        },
+        {
+          "path": "lib/reply.js",
+          "startLine": 823,
+          "endLine": 878,
+          "sha256": "dfa60426563e6edee98ef43510a3532c7f63b6f3ae92ddb3e6ee4b16f32f3d8b",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/http2/plain.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6714",
+      "repo": "fastify",
+      "baseCommit": "6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "query": "reply trailer handler callback promise first completion chunked framing Content-Length",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/reply.js",
+          "startLine": 823,
+          "endLine": 877,
+          "sha256": "6a460897849ca332b04b50a87a6a95296ef222a4420b1117b021ffbf88fd0916",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/reply-trailers.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "express-pr-6903",
+      "repo": "express",
+      "baseCommit": "a479419b16f5b97eb20f5dbae5848708ff30ce2d",
+      "query": "app.render null undefined options callback application locals",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/application.js",
+          "startLine": 522,
+          "endLine": 575,
+          "sha256": "3d998ea00bd85e61dea111d6c6686282b037c6bd220e522c08dcbcd202225671",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/app.render.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "express-pr-4885",
+      "repo": "express",
+      "baseCommit": "6ed3439584b6bc77b0f1156f8797700df063fa63",
+      "query": "res.links array URLs relation Link header",
+      "group": "simple-control",
+      "requiredTargets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 91,
+          "endLine": 97,
+          "sha256": "db60a7b181d276d07a3fb88dd1caa12bf7b67d50f2e315951c1b82b2723fa7c8",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/res.links.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "express-pr-6073",
+      "repo": "express",
+      "baseCommit": "d2de128a32f1ce3d360bbe3fad56afa026fc8832",
+      "query": "res.sendFile respect application etag setting",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 365,
+          "endLine": 404,
+          "sha256": "6f3c8e8545cf2db6f2f6737071bd1f1b078d535bf420fe98c6e0083104050c4b",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/res.sendFile.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6483",
+      "repo": "fastify",
+      "baseCommit": "ff7eff5eec8a820b2c6f79b477e1a784bbf42341",
+      "query": "custom validator returned falsy value replace request parameter",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/validation.js",
+          "startLine": 118,
+          "endLine": 144,
+          "sha256": "045ba2d63dbdcd9e556a49428c3fdc6746accc2c0ece36232988cd3716424149",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": []
+    },
+    {
+      "id": "fastify-pr-6838",
+      "repo": "fastify",
+      "baseCommit": "ab9b96eb2f93373949c253933eddb46f6772bbf4",
+      "query": "findRoute lowercase mixed case HTTP method",
+      "group": "function-selection",
+      "requiredTargets": [
+        {
+          "path": "lib/route.js",
+          "startLine": 180,
+          "endLine": 198,
+          "sha256": "4faedea53c1ead9a314cd482564ad5aaba6a0f51dbb7f9246652680f3857d310",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/find-route.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "flask-pr-6096",
+      "repo": "flask",
+      "baseCommit": "514fc6b3e8402e4c646d5284e97a4f0ab50a7c4b",
+      "query": "IPv6 SERVER_NAME development server and session_transaction cookies",
+      "group": "multifile",
+      "requiredTargets": [
+        {
+          "path": "src/flask/app.py",
+          "startLine": 632,
+          "endLine": 753,
+          "sha256": "48ee166a14b450e3690674124bfc86c601c2b8abd8e8bdc8d56266eb61368ab1",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        },
+        {
+          "path": "src/flask/testing.py",
+          "startLine": 136,
+          "endLine": 183,
+          "sha256": "e9daa9b37cf8cf45ccc0d7435ad2a89ca8c0470eda764dee2ada857400ad7b93",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "tests/test_basic.py",
+          "reason": "Existing behavioral test surface for the requested change."
+        },
+        {
+          "path": "tests/test_testing.py",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6942",
+      "repo": "fastify",
+      "baseCommit": "eaff726a68c629c1aedc99f96b3c4b95dfdb38d1",
+      "query": "mediaType",
+      "group": "simple-control",
+      "requiredTargets": [
+        {
+          "path": "lib/content-type.js",
+          "startLine": 186,
+          "endLine": 186,
+          "sha256": "f351e47775b5b9ce45bdcb6b8ecefefee3ab22a60a742f6d8516d7ec3a2148b7",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/content-type.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    },
+    {
+      "id": "fastify-pr-6846",
+      "repo": "fastify",
+      "baseCommit": "27938ac777c15482a81881b29f86c82b025f7fae",
+      "query": "getParser",
+      "group": "simple-control",
+      "requiredTargets": [
+        {
+          "path": "lib/content-type-parser.js",
+          "startLine": 119,
+          "endLine": 156,
+          "sha256": "cfcc884e63b738b240ffa18f3a4b9cb736ab4440a53a3a6cacd99eebb258535e",
+          "basis": "Complete base function containing the behavior changed by the reference patch."
+        }
+      ],
+      "requiredPaths": [
+        {
+          "path": "test/content-parser.test.js",
+          "reason": "Existing behavioral test surface for the requested change."
+        }
+      ]
+    }
+  ],
+  "regexCases": [
+    {
+      "id": "program-development-01",
+      "repo": "express",
+      "baseCommit": "f739b162d9cc9fcfc1f514c2441c69f9fcb4364d",
+      "query": "download\\s*\\(|Content-Disposition|res\\.download",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "traceRunOrder": 1,
+      "traceItemId": "item_1",
+      "traceSha256": "ebe2054c1d94011cdc433d6afab6b1a8437cd5a9323c463024bab1fe4f920f01"
+    },
+    {
+      "id": "program-development-02",
+      "repo": "fastify",
+      "baseCommit": "9bbf60978d013c26663b7be8031ecc12e6db12bd",
+      "query": "x-forwarded-(host|proto)|trustProxy|raw\\.socket|remoteAddress",
+      "expectedPaths": [
+        "lib/request.js"
+      ],
+      "traceRunOrder": 3,
+      "traceItemId": "item_6",
+      "traceSha256": "7bdad696995902b272a8e40c53c1c1ea6e0d13e82b0745219f1dc3570b9cf726"
+    },
+    {
+      "id": "program-development-03",
+      "repo": "flask",
+      "baseCommit": "b7c1290528f907c9f41afcdfd33a2227c73e26d3",
+      "query": "url_for|URL|url builder|endpoint|_external|_scheme|anchor|route",
+      "expectedPaths": [
+        "src/flask/app.py"
+      ],
+      "traceRunOrder": 5,
+      "traceItemId": "item_1",
+      "traceSha256": "3728846bd3b2713a2bcdab098ffb5debdc5d5a3809504ece3e318fe153a976a7"
+    },
+    {
+      "id": "program-development-04",
+      "repo": "express",
+      "baseCommit": "1cc816993832eba829a2f556f7c08e27e6371301",
+      "query": "function serialize|maxAge|option maxAge",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "traceRunOrder": 7,
+      "traceItemId": "item_7",
+      "traceSha256": "d75ebf69a292a913634c5ba39b65c2433d2302878f5583be920bc4ac6dabf1e4"
+    },
+    {
+      "id": "program-development-05",
+      "repo": "fastify",
+      "baseCommit": "d76dbcd58bf6d82bba167cdc74a79d2f74dbcb97",
+      "query": "ROUTE_LOG|logLevel|FST_ERR_ROUTE|errors",
+      "expectedPaths": [
+        "lib/errors.js",
+        "lib/route.js",
+        "types/errors.d.ts",
+        "docs/Reference/Errors.md"
+      ],
+      "traceRunOrder": 9,
+      "traceItemId": "item_1",
+      "traceSha256": "9c166e7d04f3c448211d269bf4317e4ab05a9a13805970146d134f3535839674"
+    },
+    {
+      "id": "program-development-06",
+      "repo": "flask",
+      "baseCommit": "10bdf61a0f751f3cb000f8f8ac5ac5b4bb535677",
+      "query": "TRUSTED|host_matching|url_map|create_url_adapter|request_context|BadRequest|config.setdefault|DEFAULT_CONFIG",
+      "expectedPaths": [
+        "src/flask/app.py"
+      ],
+      "traceRunOrder": 11,
+      "traceItemId": "item_3",
+      "traceSha256": "a0b5311060eb0618c3a02178d5fb23f2d32ea9de6a70ef6e3c392a4886928b66"
+    },
+    {
+      "id": "program-development-07",
+      "repo": "express",
+      "baseCommit": "160b91cbf79b595712b694c3513c347551d17fbe",
+      "query": "clearCookie|ClearCookie|res\\.clearCookie|maxAge|expires",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "traceRunOrder": 13,
+      "traceItemId": "item_1",
+      "traceSha256": "4edb16777985805bcf38d428e5223a34b227e250a856c4892cf946c8e3a4bccb"
+    },
+    {
+      "id": "program-development-08",
+      "repo": "fastify",
+      "baseCommit": "af92d0d2a9280a41e23fea4dc2b5cfff41169d5d",
+      "query": "\\.port|port:",
+      "expectedPaths": [
+        "lib/request.js"
+      ],
+      "traceRunOrder": 15,
+      "traceItemId": "item_3",
+      "traceSha256": "98a74b1774122bc7593944e1f7518429cf15fe84e35a7d079cf18a895d7c75a8"
+    },
+    {
+      "id": "program-development-09",
+      "repo": "flask",
+      "baseCommit": "85c5d93cbd049c4bd0679c36fd1ddcae8c37b642",
+      "query": "template_filter|template_test|template_global|app_template|filter\\(|test\\(|global\\(",
+      "expectedPaths": [
+        "src/flask/sansio/app.py",
+        "src/flask/sansio/blueprints.py"
+      ],
+      "traceRunOrder": 17,
+      "traceItemId": "item_1",
+      "traceSha256": "2fc664452fe244ef7e58e9d77be5d1bc50719c5a44f0e5782fde33197926bd11"
+    },
+    {
+      "id": "program-development-10",
+      "repo": "express",
+      "baseCommit": "10b9b507b7d113d04965cccd8d170ee524e3d555",
+      "query": "default|format\\(",
+      "expectedPaths": [
+        "lib/response.js"
+      ],
+      "traceRunOrder": 19,
+      "traceItemId": "item_4",
+      "traceSha256": "e84b9c0e079f4d5a4106c24f09f1b42444451e557ff78b6f63b25933f7d1ff62"
+    },
+    {
+      "id": "program-development-11",
+      "repo": "fastify",
+      "baseCommit": "af079bd4c60c3cbebedc7640517d7288468fb5eb",
+      "query": "Ajv|coerc|schema|validator|validate",
+      "expectedPaths": [
+        "lib/validation.js"
+      ],
+      "traceRunOrder": 21,
+      "traceItemId": "item_1",
+      "traceSha256": "399e75762d4fea9d42eeeae78afa62af36058824219c17707af44da2c98821d7"
+    },
+    {
+      "id": "program-development-12",
+      "repo": "flask",
+      "baseCommit": "941efd4a36ed0f27e13758874f95e3aa1d3ee163",
+      "query": "SECRET_KEY_FALLBACKS|get_signing_serializer|fallback",
+      "expectedPaths": [
+        "src/flask/sessions.py"
+      ],
+      "traceRunOrder": 23,
+      "traceItemId": "item_6",
+      "traceSha256": "005e9108a3100dc4d7764185a3db866a2e1ff5094c60a6d6348f059ecee7b1d0"
+    }
+  ]
+}
