@@ -89,3 +89,5 @@ Das vollständige CodeMap-Profil einschließlich Eval-Dateien war lesbar eingebu
 Fremde Dateien waren per Auftrag verboten, aber nicht sämtlich technisch verborgen.
 Kein solcher Zugriff ist in den Befehlen erkennbar; das ist keine vollständige
 Dateisystem- oder Netzwerkbeobachtung. Produktcode, Version und Installation unverändert.
+
+[Literaturvergleich](code-search-literature.md): direkte Grep-/Indexvergleiche und ihre Übertragungsgrenzen.
