@@ -59,11 +59,19 @@ export function codexContainerArgs(binary: string, root: string, profile: string
 }
 
 export function codexPythonRuntimeBindings(root: string): string[] {
-  const venv = join(root, "repo", ".venv");
+  const prefixes = new Set<string>();
+  for (const relative of [".venv", ".venv/quality"]) {
+    const prefix = pythonRuntimePrefix(root, join(root, "repo", relative));
+    if (prefix) prefixes.add(prefix);
+  }
+  return [...prefixes].flatMap(prefix => ["--ro-bind", prefix, prefix]);
+}
+
+function pythonRuntimePrefix(root: string, venv: string): string | undefined {
   const interpreter = join(venv, "bin", "python");
-  if (!existsSync(interpreter)) return [];
+  if (!existsSync(interpreter)) return;
   const executable = realpathSync(interpreter);
-  if (executable.startsWith(`${realpathSync(root)}${sep}`) || executable.startsWith("/usr/")) return [];
+  if (executable.startsWith(`${realpathSync(root)}${sep}`) || executable.startsWith("/usr/")) return;
   const prefix = dirname(dirname(executable));
   const version = /^cpython-(\d+\.\d+)\.\d+-[A-Za-z0-9_.-]+$/.exec(basename(prefix));
   const home = /^home\s*=\s*(.+)$/m.exec(readFileSync(join(venv, "pyvenv.cfg"), "utf8"))?.[1].trim();
@@ -73,7 +81,7 @@ export function codexPythonRuntimeBindings(root: string): string[] {
     throw new Error("Unsupported external Python runtime; expected a dedicated uv CPython installation");
   }
   // Expose only the pinned interpreter and its standard library, never the host home/cache.
-  return ["--ro-bind", prefix, prefix];
+  return prefix;
 }
 
 export function parseCodexJson(raw: string, requestedModel: string): AgentUsage {

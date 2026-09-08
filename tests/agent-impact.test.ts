@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -27,6 +27,45 @@ import {
 
 const manifestRaw = readFileSync(new URL("../scripts/eval-agent-impact.manifest.json", import.meta.url), "utf8");
 const manifest = parseAgentImpactManifest(manifestRaw);
+
+test("three-arm manifests preserve search-only adoption and reject diagnostic mixing", () => {
+  const raw = JSON.parse(readFileSync("scripts/eval-agent-impact-luna.manifest.json", "utf8"));
+  raw.comparison = "navigation-three-arm";
+  const parsed = parseAgentImpactManifest(JSON.stringify(raw));
+  assert.equal(parsed.comparison, "navigation-three-arm");
+  const directory = mkdtempSync(join(tmpdir(), "codemap-three-arm-"));
+  try {
+    const path = join(directory, "manifest.json");
+    writeFileSync(path, JSON.stringify(raw));
+    const result = spawnSync(process.execPath, ["--experimental-strip-types", "scripts/eval-agent-impact.ts", "--manifest", path, "--dry-run"], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    const plan = JSON.parse(result.stdout);
+    assert.equal(plan.plannedRuns, raw.tasks.length * 3);
+    assert.deepEqual(plan.modes, ["baseline", "search", "codemap"]);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+  const baseline = run("one", "baseline", true, {}, 100);
+  const search = run("one", "codemap", true, { search: 1 }, 100);
+  assert.equal(summarizeAgentImpact([baseline, search], "search-only").treatmentAdoptionRate, 1);
+  search.codemapCommands.context = 1;
+  assert.equal(summarizeAgentImpact([baseline, search], "search-only").treatmentAdoptionRate, 0);
+  raw.diagnostic = "curated-context";
+  assert.throws(() => parseAgentImpactManifest(JSON.stringify(raw)), /comparison/);
+});
+
+test("total-time gate includes indexing and verifier work", () => {
+  const task = manifest.tasks[0]!;
+  const configured: AgentImpactManifest = { ...manifest, tasks: [task], efficiencyGate: {
+    durationMetric: "agent-index-verifier", maxCostRatio: null, maxTokenRatio: 1.1,
+    maxAgentDurationRatio: .85, maxPairedLosses: 0, minFasterPairs: 1,
+  } };
+  const a = run(task.id, "baseline", true, {}, 100);
+  const b = run(task.id, "codemap", true, { search: 1, context: 1 }, 100);
+  for (const result of [a, b]) { result.authentication = "setup-token"; result.usage.actualModel = manifest.agent.model; result.verifierDurationMs = 10; }
+  a.agentDurationMs = 100; b.agentDurationMs = 50; b.indexDurationMs = 100;
+  assert.ok(evaluateAgentImpactEfficiencyGate(configured, [a, b]).issues.some(item => item.metric === "totalDurationRatio"));
+  b.indexDurationMs = 0;
+  assert.equal(evaluateAgentImpactEfficiencyGate(configured, [a, b]).passed, true);
+});
 
 test("commit provenance requires the exact reference fix and repository", () => {
   const raw = JSON.parse(manifestRaw);

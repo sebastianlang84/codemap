@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -67,6 +68,17 @@ test("oracle validation checks public tests before hidden replacements and rejec
     assert.equal(featureTypes.oracle.quality.base[0][0].exitCode, 1);
     assert.equal(featureTypes.oracle.quality.base[0][0].passed, true);
     assert.equal(featureTypes.oracle.quality.reference[0][0].exitCode, 0);
+    const source = "scripts/fixtures/agent-impact-reference-marker.patch";
+    const sha256 = createHash("sha256").update(readFileSync(source)).digest("hex");
+    manifest.tasks[0].referencePatch = { source, sha256 };
+    manifest.tasks[0].qualityChecks[0].command.args = ["-e", "if(!require('node:fs').existsSync('type-marker.cjs')){console.error('missing signature');process.exit(1)}"];
+    const augmented = validate();
+    assert.equal(augmented.status, 0, "augmentation must reach the reference only");
+    assert.equal(augmented.oracle.quality.base[0][0].exitCode, 1);
+    assert.equal(augmented.oracle.quality.reference[0][0].exitCode, 0);
+    manifest.tasks[0].referencePatch.sha256 = "0".repeat(64);
+    assert.match(validate().oracle.error, /Reference patch hash mismatch/);
+    delete manifest.tasks[0].referencePatch;
     delete manifest.tasks[0].qualityChecks;
     manifest.tasks[0].publicTestCommand = [process.execPath, "does-not-exist.cjs"];
     const bad = validate();

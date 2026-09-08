@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export type AgentImpactMode = "baseline" | "codemap" | "curated";
+export type AgentImpactMode = "baseline" | "codemap" | "curated" | "search";
 
 export interface AgentImpactCommand {
   file: string;
@@ -37,6 +37,7 @@ export interface AgentImpactTask {
   expectedBaseFailure: string;
   forbiddenChangePaths: string[];
   setupFiles: Array<{ source: string; target: string; sha256: string }>;
+  referencePatch?: { source: string; sha256: string };
   sourceContext?: Array<{ path: string; start: number; end: number; sha256: string }>;
   setup: AgentImpactCommand;
   verify: AgentImpactCommand;
@@ -45,6 +46,7 @@ export interface AgentImpactTask {
 export interface AgentImpactManifest {
   schemaVersion: 1;
   diagnostic?: "curated-context";
+  comparison?: "navigation-three-arm";
   corpus: {
     id: string;
     version: number;
@@ -57,7 +59,7 @@ export interface AgentImpactManifest {
     provider: "claude-code" | "codex-cli";
     model: string;
     effort: "medium" | "high";
-    navigationWorkflow: "search-then-context" | "context-first" | "optional" | "location-first";
+    navigationWorkflow: "search-then-context" | "context-first" | "optional" | "location-first" | "search-only";
     maxBudgetUsdPerRun: number | null;
     timeoutMs: number;
     maxInfrastructureRetries?: number;
@@ -69,6 +71,7 @@ export interface AgentImpactManifest {
   repositories: Array<{ id: string; remote: string }>;
   tasks: AgentImpactTask[];
   efficiencyGate?: {
+    durationMetric?: "agent" | "agent-index-verifier";
     maxCostRatio: number | null;
     maxTokenRatio: number;
     maxAgentDurationRatio: number;
@@ -93,6 +96,7 @@ export interface OracleValidationResult {
   publicTestExitCodes?: { base: Array<number | null>; reference: Array<number | null> };
   publicSandboxPassed?: boolean;
   quality?: { base: AgentImpactQualityResult[][]; reference: AgentImpactQualityResult[][] };
+  sandboxQuality?: Array<{ phase: "base" | "reference"; mode: AgentImpactMode; checks: AgentImpactQualityResult[] }>;
   valid: boolean;
   error?: string;
 }
@@ -191,10 +195,13 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
     throw new Error("agent.effort must be medium, or high for Codex CLI");
   }
   const navigationWorkflow = agent.navigationWorkflow ?? "search-then-context";
-  if (navigationWorkflow !== "search-then-context" && navigationWorkflow !== "context-first" && navigationWorkflow !== "optional" && navigationWorkflow !== "location-first") {
+  if (navigationWorkflow !== "search-then-context" && navigationWorkflow !== "context-first" && navigationWorkflow !== "optional" && navigationWorkflow !== "location-first" && navigationWorkflow !== "search-only") {
     throw new Error("agent.navigationWorkflow is unsupported");
   }
   agent.navigationWorkflow = navigationWorkflow;
+  if (root.comparison !== undefined && (root.comparison !== "navigation-three-arm" || root.diagnostic !== undefined || agent.provider !== "codex-cli")) {
+    throw new Error("Unsupported comparison configuration");
+  }
   if (agent.provider === "codex-cli") {
     if (agent.maxBudgetUsdPerRun !== null) throw new Error("Codex CLI has no USD budget limiter; maxBudgetUsdPerRun must be null");
   } else positiveNumber(agent.maxBudgetUsdPerRun, "agent.maxBudgetUsdPerRun");
@@ -244,6 +251,9 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
   nonNegativeInteger(gate.maxBudgetExhaustedRuns, "pilotGate.maxBudgetExhaustedRuns");
   if (root.efficiencyGate !== undefined) {
     const efficiency = record(root.efficiencyGate, "efficiencyGate");
+    if (efficiency.durationMetric !== undefined && efficiency.durationMetric !== "agent" && efficiency.durationMetric !== "agent-index-verifier") {
+      throw new Error("Unsupported efficiency durationMetric");
+    }
     for (const key of ["maxCostRatio", "maxTokenRatio", "maxAgentDurationRatio"]) {
       if (key === "maxCostRatio" && agent.provider === "codex-cli" && efficiency[key] === null) continue;
       positiveNumber(efficiency[key], `efficiencyGate.${key}`);
@@ -365,7 +375,9 @@ export function summarizeAgentImpact(
     treatmentTokens += totalTokens(treatment.usage);
     baselineDuration += baseline.agentDurationMs;
     treatmentDuration += treatment.agentDurationMs;
-    const followedWorkflow = navigationWorkflow === "optional"
+    const followedWorkflow = navigationWorkflow === "search-only"
+      ? (treatment.codemapCommands.search ?? 0) > 0 && (treatment.codemapCommands.context ?? 0) === 0
+      : navigationWorkflow === "optional"
       ? (treatment.codemapCommands.search ?? 0) + (treatment.codemapCommands.context ?? 0) > 0
       : navigationWorkflow === "context-first"
       ? (treatment.codemapCommands.context ?? 0) > 0
@@ -463,6 +475,15 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error(`tasks[${index}].setupFiles[${fileIndex}].sha256 must be SHA-256`);
     return { source, target, sha256 };
   });
+  let referencePatch: AgentImpactTask["referencePatch"];
+  if (task.referencePatch !== undefined) {
+    const entry = record(task.referencePatch, "referencePatch");
+    const source = repoPath(entry.source, "referencePatch.source");
+    const sha256 = string(entry.sha256, "referencePatch.sha256");
+    if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error("referencePatch.sha256 must be SHA-256");
+    if (setupFiles.some(file => file.source === source)) throw new Error("Reference patch must not be an agent setup file");
+    referencePatch = { source, sha256 };
+  }
   const sourceContext = task.sourceContext === undefined ? undefined : optionalArray(task.sourceContext, "sourceContext").map(item => {
     const entry = record(item, "sourceContext entry");
     const path = repoPath(entry.path, "sourceContext.path");
@@ -496,6 +517,7 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     expectedBaseFailure,
     forbiddenChangePaths,
     setupFiles,
+    ...(referencePatch ? { referencePatch } : {}),
     ...(sourceContext ? { sourceContext } : {}),
     setup: command(task.setup, `tasks[${index}].setup`),
     verify: command(task.verify, `tasks[${index}].verify`),
@@ -671,14 +693,16 @@ export function evaluateAgentImpactEfficiencyGate(
     }
     baselineCost += a.usage.costUsd ?? NaN; treatmentCost += b.usage.costUsd ?? NaN;
     baselineTokens += totalTokens(a.usage); treatmentTokens += totalTokens(b.usage);
-    baselineTime += a.agentDurationMs; treatmentTime += b.agentDurationMs;
+    const duration = (run: AgentImpactRunResult) => run.agentDurationMs + (threshold.durationMetric === "agent-index-verifier"
+      ? run.indexDurationMs + (run.verifierDurationMs ?? NaN) : 0);
+    baselineTime += duration(a); treatmentTime += duration(b);
     losses += Number(a.success && !b.success);
-    fasterPairs += Number(b.agentDurationMs < a.agentDurationMs);
+    fasterPairs += Number(duration(b) < duration(a));
   }
   for (const [metric, numerator, denominator, maximum] of [
     ["costRatio", treatmentCost, baselineCost, threshold.maxCostRatio],
     ["tokenRatio", treatmentTokens, baselineTokens, threshold.maxTokenRatio],
-    ["agentDurationRatio", treatmentTime, baselineTime, threshold.maxAgentDurationRatio],
+    [threshold.durationMetric === "agent-index-verifier" ? "totalDurationRatio" : "agentDurationRatio", treatmentTime, baselineTime, threshold.maxAgentDurationRatio],
   ] as const) {
     if (maximum === null) continue;
     const ratio = denominator > 0 ? numerator / denominator : NaN;
@@ -698,6 +722,9 @@ export function agentImpactPublicTestInstruction(task: AgentImpactTask): string[
 }
 
 export function agentImpactTreatmentInstruction(manifest: AgentImpactManifest): string {
+  if (manifest.agent.navigationWorkflow === "search-only") {
+    return 'For initial code navigation, use codemap search "<task terms>" --json. Read matching files with ordinary local tools. Do not use codemap context. Use ordinary search if results are weak or for exhaustive matches.';
+  }
   if (manifest.agent.navigationWorkflow === "location-first") {
     return 'For initial code navigation, use codemap search "<task terms>" --json, then codemap context "<trusted-hit-path>:<start>-<end>" --json --limit 1 to read the hit. Increase the limit only for related context. Use ordinary tools if results are weak or for exhaustive matches; read known files directly.';
   }

@@ -37,6 +37,13 @@ Produktänderungen bleiben einzeln prüfbar. Keine Releases, Tags oder globale U
    und Verifier-Hashes vor dem ersten Modellaufruf festhalten; keine laufenden Produkt-
    Experimente während der Zeitmessung.
 
+Gesamtzeit im neuen Vergleich umfasst Modelllauf, Indexierung und abschließende
+Verifikation einschließlich Typchecks. Einrichtung und Sandbox-Vorprüfung werden
+separat erfasst. Suche allein darf keinen Kontextaufruf verwenden; ihr Ergebnis
+wird getrennt vom bisherigen Ablauf gegen dieselbe normale Suche bewertet.
+Eine nötige lokale Referenzkorrektur erhält einen eigenen SHA-256 und wird nur
+im Referenzworkspace angewandt, nie in den Agentenarmen.
+
 Ein verworfener Versuch schließt seinen Prüfauftrag mit Befund und Grenze ab; er ist
 keine Reparatur. Korrektheitsfixes benötigen keinen künstlichen Effizienznachweis.
 Suche allein ohne Gewinn widerlegt gezielten Kontext nicht automatisch. Rohtraces

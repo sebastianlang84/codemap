@@ -25,6 +25,16 @@ test("venv exposes only its dedicated external CPython runtime read-only", () =>
     writeFileSync(join(venv, "pyvenv.cfg"), `home = ${runtime}/bin\n`);
     symlinkSync(join(runtime, "bin", "python3.14"), join(venv, "bin", "python"));
     assert.deepEqual(codexPythonRuntimeBindings(root), ["--ro-bind", runtime, runtime]);
+    const quality = join(venv, "quality");
+    const typingRuntime = join(parent, "cpython-3.11.14-linux-x86_64-gnu");
+    mkdirSync(join(quality, "bin"), { recursive: true });
+    mkdirSync(join(typingRuntime, "bin"), { recursive: true });
+    mkdirSync(join(typingRuntime, "lib", "python3.11"), { recursive: true });
+    writeFileSync(join(typingRuntime, "bin", "python3.11"), "fixture");
+    writeFileSync(join(typingRuntime, "lib", "python3.11", "os.py"), "fixture");
+    writeFileSync(join(quality, "pyvenv.cfg"), `home = ${typingRuntime}/bin\n`);
+    symlinkSync(join(typingRuntime, "bin", "python3.11"), join(quality, "bin", "python"));
+    assert.deepEqual(codexPythonRuntimeBindings(root), ["--ro-bind", runtime, runtime, "--ro-bind", typingRuntime, typingRuntime]);
     writeFileSync(join(venv, "pyvenv.cfg"), "home = /etc\n");
     assert.throws(() => codexPythonRuntimeBindings(root), /Unsupported external Python/);
     rmSync(join(venv, "bin", "python"));

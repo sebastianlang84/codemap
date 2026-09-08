@@ -1,0 +1,6 @@
+diff --git a/type-marker.cjs b/type-marker.cjs
+new file mode 100644
+--- /dev/null
++++ b/type-marker.cjs
+@@ -0,0 +1 @@
++module.exports = true;

@@ -84,7 +84,8 @@ const manifestRaw = readFileSync(args.manifestPath, "utf8");
 const manifest = parseAgentImpactManifest(manifestRaw);
 const manifestSha256 = hashAgentImpactJson(JSON.parse(manifestRaw));
 const selectedTasks = selectTasks(manifest, args.taskIds);
-const allModes: AgentImpactMode[] = manifest.diagnostic ? ["baseline", "codemap", "curated"] : ["baseline", "codemap"];
+const allModes: AgentImpactMode[] = manifest.comparison ? ["baseline", "search", "codemap"]
+  : manifest.diagnostic ? ["baseline", "codemap", "curated"] : ["baseline", "codemap"];
 const modes: AgentImpactMode[] = args.mode === "all" ? allModes : [args.mode];
 if (modes.some(mode => !allModes.includes(mode))) throw new Error("Mode is not enabled by manifest");
 const curatedContexts = new Map<string, string>();
@@ -142,7 +143,8 @@ try {
     if (manifest.diagnostic) curatedContexts.set(task.id, renderCuratedContext(task, path => git(repositoryCaches.get(task.repo)!, ["show", `${task.baseCommit}:${path}`])));
   }
   const profile = runtimeProfile = args.validateOnly && !args.validateSandboxes ? undefined : ensureCodeMapProfile(manifest, args);
-  const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir, args.validateSandboxes ? profile : undefined));
+  const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir,
+    args.validateSandboxes || (manifest.comparison && !args.validateOnly) ? profile : undefined));
   const results = !args.validateOnly && args.resume ? loadCheckpoint(args.evidenceOutput!, manifestSha256, manifest) : [];
   const agentReport = {
     provider: manifest.agent.provider,
@@ -210,7 +212,12 @@ function buildReport(
   results: AgentImpactRunResult[],
   workdir?: string,
 ): Record<string, unknown> {
-  const summary = summarizeAgentImpact(results.filter(item => item.mode !== "curated"), manifest.agent.navigationWorkflow);
+  const pairedResults = results.filter(item => item.mode === "baseline" || item.mode === "codemap");
+  const summary = summarizeAgentImpact(pairedResults, manifest.agent.navigationWorkflow);
+  const searchResults = results.filter(item => item.mode === "baseline" || item.mode === "search")
+    .map(item => item.mode === "search" ? { ...item, mode: "codemap" as const } : item);
+  const searchManifest: AgentImpactManifest = { ...manifest, agent: { ...manifest.agent, navigationWorkflow: "search-only" } };
+  const searchSummary = summarizeAgentImpact(searchResults, "search-only");
   if (manifest.agent.provider === "codex-cli") summary.totalCostUsd = null;
   return {
     schemaVersion: 1,
@@ -225,9 +232,19 @@ function buildReport(
     results,
     ...(supersededInfrastructure.length ? { supersededInfrastructure } : {}),
     summary,
+    ...(manifest.comparison ? { comparison: { kind: manifest.comparison,
+      durationMetric: manifest.efficiencyGate?.durationMetric ?? "agent",
+      timing: Object.fromEntries(["baseline", "search", "codemap"].map(mode => {
+        const runs = results.filter(item => item.mode === mode);
+        return [mode, { runs: runs.length, agentMs: runs.reduce((sum, item) => sum + item.agentDurationMs, 0),
+          indexMs: runs.reduce((sum, item) => sum + item.indexDurationMs, 0),
+          verifierMs: runs.every(item => item.verifierDurationMs !== undefined) ? runs.reduce((sum, item) => sum + item.verifierDurationMs!, 0) : null }];
+      })),
+      search: { summary: searchSummary, gate: evaluateAgentImpactPilotGate(searchManifest, oracles, searchSummary),
+        ...(manifest.efficiencyGate ? { efficiencyGate: evaluateAgentImpactEfficiencyGate(searchManifest, searchResults) } : {}) } } } : {}),
     ...(manifest.diagnostic ? { diagnostic: summarizeContextDiagnostic(results, manifest.tasks.length) } : {}),
     gate: evaluateAgentImpactPilotGate(manifest, oracles, summary),
-    ...(manifest.efficiencyGate ? { efficiencyGate: evaluateAgentImpactEfficiencyGate(manifest, results) } : {}),
+    ...(manifest.efficiencyGate ? { efficiencyGate: evaluateAgentImpactEfficiencyGate(manifest, pairedResults) } : {}),
     claimBoundary: claimBoundary(manifest.corpus.purpose),
     ...(workdir ? { workdir } : {}),
   };
@@ -266,12 +283,19 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
   try {
     base = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-base`, task.baseCommit);
     fixed = prepareWorkspace(task, repoCache, parent, `oracle-${task.id}-fix`, task.fixCommit);
+    if (task.referencePatch) {
+      const patch = readFileSync(join(repoRoot, task.referencePatch.source));
+      if (createHash("sha256").update(patch).digest("hex") !== task.referencePatch.sha256) throw new Error("Reference patch hash mismatch");
+      execFileSync("git", ["apply", "--check", "-"], { cwd: fixed.repo, input: patch });
+      execFileSync("git", ["apply", "-"], { cwd: fixed.repo, input: patch });
+    }
     const publicSpec = task.publicTestCommand ? { file: task.publicTestCommand[0]!, args: task.publicTestCommand.slice(1), timeoutMs: task.verify.timeoutMs } : undefined;
     const publicResults = publicSpec ? {
       base: [runSpec(publicSpec, base.repo, baseEnv()), runSpec(publicSpec, base.repo, baseEnv())],
       reference: [runSpec(publicSpec, fixed.repo, baseEnv()), runSpec(publicSpec, fixed.repo, baseEnv())],
     } : undefined;
     const publicPasses = !publicResults || [...publicResults.base, ...publicResults.reference].every(item => item.status === 0 && !item.timedOut && !item.error);
+    const sandboxQuality: NonNullable<OracleValidationResult["sandboxQuality"]> = [];
     if (sandboxProfile) {
       if (!task.publicTestCommand) throw new Error("Sandbox validation requires a public test command");
       for (const workspace of [base, fixed]) for (const mode of ["baseline", "codemap"] as const) {
@@ -279,6 +303,9 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
         if (mode === "codemap") prepareCodeMap(workspace, sandboxProfile, env);
         verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, sandboxProfile, env, mode === "codemap",
           { argv: task.publicTestCommand, timeoutMs: task.verify.timeoutMs });
+        const phase = workspace === base ? "base" : "reference";
+        const checks = runQualityChecks(task.qualityChecks, phase, command => runSandboxSpec(command, workspace, sandboxProfile, env));
+        sandboxQuality.push({ phase, mode, checks });
       }
     }
     applyHiddenTests(task, repoCache, base.repo);
@@ -288,7 +315,7 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
       base: [0, 1].map(() => runQualityChecks(task.qualityChecks, "base", command => runSpec(command, base!.repo, baseEnv()))),
       reference: [0, 1].map(() => runQualityChecks(task.qualityChecks, "reference", command => runSpec(command, fixed!.repo, baseEnv()))),
     };
-    const qualityPasses = [...quality.base, ...quality.reference].flat().every(item => item.passed);
+    const qualityPasses = [...quality.base, ...quality.reference, ...sandboxQuality.map(item => item.checks)].flat().every(item => item.passed);
     const baseFailureKind = baseResults.some((item) => item.timedOut)
       ? "timeout"
       : baseResults.every((item) => `${item.stdout}\n${item.stderr}`.includes(task.expectedBaseFailure)) ? "assertion" : "other";
@@ -303,6 +330,7 @@ function validateOracle(task: AgentImpactTask, repoCache: string, parent: string
       referencePasses,
       valid: baseFails && referencePasses && baseFailureKind === "assertion" && publicPasses && qualityPasses,
       ...(task.qualityChecks ? { quality } : {}),
+      ...(sandboxProfile && task.qualityChecks ? { sandboxQuality } : {}),
       ...(publicResults ? { publicTestExitCodes: { base: publicResults.base.map(item => item.status), reference: publicResults.reference.map(item => item.status) } } : {}),
       ...(sandboxProfile ? { publicSandboxPassed: true } : {}),
       ...((baseResults.some((item) => item.error) || fixResults.some((item) => item.error))
@@ -350,10 +378,10 @@ async function runAgentAttempt(options: {
     workspace = prepareWorkspace(task, repoCache, runRoot, `run-${runOrder}-${task.id}-${mode}`, task.baseCommit);
     const env = agentEnv(workspace, mode, profileDir);
     setupDurationMs = Math.round(performance.now() - setupStartedAt);
-    if (mode === "codemap") indexDurationMs = prepareCodeMap(workspace, profileDir, env);
+    if (mode === "codemap" || mode === "search") indexDurationMs = prepareCodeMap(workspace, profileDir, env, mode === "search");
     if (isCodex) {
       const preflightStartedAt = performance.now();
-      verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, profileDir, env, mode === "codemap",
+      verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, profileDir, env, mode === "codemap" || mode === "search",
         task.publicTestCommand ? { argv: task.publicTestCommand, timeoutMs: task.verify.timeoutMs } : undefined);
       preflightDurationMs = Math.round(performance.now() - preflightStartedAt);
       console.error(`[agent-impact] sandbox preflight passed: ${task.id} ${mode}`);
@@ -563,12 +591,12 @@ function ensureCodeMapProfile(manifest: AgentImpactManifest, options: ParsedArgs
   });
 }
 
-function prepareCodeMap(workspace: PreparedWorkspace, profileDir: string, env: NodeJS.ProcessEnv): number {
+function prepareCodeMap(workspace: PreparedWorkspace, profileDir: string, env: NodeJS.ProcessEnv, searchOnly = false): number {
   const binDir = join(workspace.root, "bin");
   mkdirSync(binDir, { recursive: true });
   const target = join(profileDir, "dist", "cli", "bin.js");
   const wrapper = join(binDir, "codemap");
-  const script = `#!/bin/sh\ncase "$1" in search|context|index|status) printf '%s\\n' "$1" >> "$CODEMAP_CALL_LOG";; esac\nexec "${process.execPath}" "${target}" "$@"\n`;
+  const script = `#!/bin/sh\ncase "$1" in search|context|index|status) printf '%s\\n' "$1" >> "$CODEMAP_CALL_LOG";; esac\n${searchOnly ? 'if [ "$1" = context ]; then echo "context is unavailable in the search-only arm" >&2; exit 2; fi\n' : ''}exec "${process.execPath}" "${target}" "$@"\n`;
   writeFileSync(wrapper, script, { mode: 0o700 });
   chmodSync(wrapper, 0o700);
   env.PATH = `${binDir}:${env.PATH}`;
@@ -593,8 +621,8 @@ function agentEnv(workspace: PreparedWorkspace, mode: AgentImpactMode, profileDi
     DISABLE_AUTOUPDATER: "1",
     CODEMAP_EVAL_WORKSPACE: workspace.repo,
   };
-  if (mode !== "codemap" && commandOnPath("codemap", env.PATH!)) throw new Error("baseline PATH still resolves codemap");
-  if (mode === "codemap" && !existsSync(join(profileDir, "dist", "cli", "bin.js"))) throw new Error("treatment profile binary missing");
+  if (mode !== "codemap" && mode !== "search" && commandOnPath("codemap", env.PATH!)) throw new Error("baseline PATH still resolves codemap");
+  if ((mode === "codemap" || mode === "search") && !existsSync(join(profileDir, "dist", "cli", "bin.js"))) throw new Error("treatment profile binary missing");
   return env;
 }
 
@@ -617,6 +645,13 @@ function runSpec(spec: AgentImpactCommand, cwd: string, env: NodeJS.ProcessEnv):
     timedOut: child.signal === "SIGTERM" || child.signal === "SIGKILL",
     ...(child.error ? { error: child.error.message } : {}),
   };
+}
+
+function runSandboxSpec(spec: AgentImpactCommand, workspace: PreparedWorkspace, profile: string, env: NodeJS.ProcessEnv): CommandResult {
+  return runSpec({ file: "bwrap", args: [...codexContainerArgs(resolveCodexBin(), workspace.root, profile),
+    "sandbox", "-P", "fixture", "-C", workspace.repo,
+    "-c", 'permissions.fixture.extends=":workspace"', "-c", 'permissions.fixture.network.enabled=true',
+    "--", spec.file, ...spec.args], timeoutMs: spec.timeoutMs + 20_000 }, workspace.repo, codexContainerEnv(env));
 }
 
 function captureDiff(repo: string, task: AgentImpactTask): Pick<AgentImpactRunResult, "changedPaths" | "forbiddenChanges" | "addedLines" | "deletedLines" | "expectedPathRecall"> {
@@ -785,7 +820,7 @@ function parseArgs(raw: string[]): ParsedArgs {
     else if (name === "--task") parsed.taskIds.push(value());
     else if (name === "--mode") {
       const mode = value();
-      if (mode !== "baseline" && mode !== "codemap" && mode !== "curated" && mode !== "all") throw new Error(`Unsupported mode: ${mode}`);
+      if (mode !== "baseline" && mode !== "codemap" && mode !== "curated" && mode !== "search" && mode !== "all") throw new Error(`Unsupported mode: ${mode}`);
       parsed.mode = mode;
     } else if (name === "--approve-budget-usd") parsed.approveBudgetUsd = parsePositive(value(), name);
     else if (name === "--evidence-output") parsed.evidenceOutput = resolve(value());
@@ -811,7 +846,7 @@ function parsePositive(value: string, label: string): number {
 }
 
 function printHelp(): void {
-  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and provider limits\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --validate-sandboxes          Also run public tests inside both Codex sandbox arms; no login/model\n  --approve-budget-usd <n>      Claude USD-equivalent limiter\n  --run-codex                   Start fixed Codex runs using existing login\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|codemap|curated|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
+  console.log(`Usage: npm run eval:agent-impact -- [options]\n\nOptions:\n  --dry-run                     Show tasks and provider limits\n  --validate-oracles            Prove base-fail/reference-fix-pass without agent calls\n  --validate-sandboxes          Also run public tests inside both Codex sandbox arms; no login/model\n  --approve-budget-usd <n>      Claude USD-equivalent limiter\n  --run-codex                   Start fixed Codex runs using existing login\n  --task <id>                   Select one task (repeatable)\n  --mode baseline|search|codemap|curated|all   Select arm(s), default all\n  --offline                     Require existing repository cache\n  --quality-gate                Fail when harness/adoption gate fails\n  --evidence-output <path>      Checkpoint and write stable evidence for a full paired run\n  --resume                      Resume matching completed runs from evidence output\n  --trace-dir <path>            Retain raw provider output outside Git worktrees\n  --keep-workdir                Preserve temporary workspaces for diagnosis\n  --cache-dir <path>            Select maintainer cache\n  --manifest <path>             Select manifest`);
 }
 
 function tail(value: string, length = 1200): string {
@@ -835,7 +870,9 @@ function agentPrompt(task: AgentImpactTask, mode: AgentImpactMode, manifest: Age
   return [
     "Implement the requested fix in this repository. Work autonomously. Run the relevant tests.",
     "Do not inspect git history, commits, remotes, or files outside this workspace. Do not commit or push. Do not install dependencies; they are already prepared.",
-    mode === "codemap"
+    mode === "search"
+      ? agentImpactTreatmentInstruction({ ...manifest, agent: { ...manifest.agent, navigationWorkflow: "search-only" } })
+      : mode === "codemap"
       ? agentImpactTreatmentInstruction(manifest)
       : "CodeMap is unavailable in this control run. Use the repository's normal local navigation tools and do not invoke codemap.",
     `Task: ${task.prompt}`,
