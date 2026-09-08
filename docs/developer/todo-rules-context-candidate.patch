@@ -1,0 +1,26 @@
+diff --git a/src/core/navigation-read-plan.ts b/src/core/navigation-read-plan.ts
+index 2b9bac2..beaecbf 100644
+--- a/src/core/navigation-read-plan.ts
++++ b/src/core/navigation-read-plan.ts
+@@ -125,19 +125,8 @@ function buildSearchContextReadPlan(searchPaths: string[], contextPaths: Context
+   const archivedSearchPaths = remainingSearchPaths.filter(isArchivedDocumentationPath);
+   const entries = uniqueEntries([
+     entry(firstSearchPath, "first_search"),
+-    ...visibleSearchPairPaths.map((path) => entry(path, "visible_search_pair")),
+-    ...uncoveredVisibleTests.map((path) => entry(path, "uncovered_visible_test")),
+-    ...(routeAdapterEntry ? prioritizedDirectImports.map((item) => entry(item.path, "route_direct_import")) : []),
+-    ...(routeAdapterEntry ? prioritizedDirectImportTests.map((item) => entry(item.path, "route_direct_import_test")) : []),
+-    ...(routeAdapterEntry ? [] : prioritizedConfigs.map((item) => entry(item.path, "prioritized_config"))),
+-    ...prioritizedTests.map((item) => entry(item.path, "prioritized_test")),
+-    ...contextBackedSearchPaths.map((path) => entry(path, "context_backed_search")),
+-    ...(routeAdapterEntry ? [] : prioritizedDirectImports.map((item) => entry(item.path, "direct_import"))),
+-    ...(routeAdapterEntry ? [] : prioritizedDirectImportTests.map((item) => entry(item.path, "direct_import_test"))),
+-    ...activeSearchPaths.map((path) => entry(path, "active_search")),
+-    ...(routeAdapterEntry ? prioritizedConfigs.map((item) => entry(item.path, "prioritized_config")) : []),
+-    ...remainingContext.map((item) => entry(item.path, "remaining_context")),
+-    ...archivedSearchPaths.map((path) => entry(path, "archived_search")),
++    ...laterSearchPaths.map((path) => entry(path, "active_search")),
++    ...contextEntries.map((item) => entry(item.path, "remaining_context")),
+   ]);
+   return { limit: cappedLimit, selected: entries.slice(0, cappedLimit).map((item) => item.path), entries, contextByPath, searchRankByPath };
+ }

@@ -1,0 +1,14 @@
+{
+  "productPatchSha256": "877fac14a48e4ffd4355288093118e2d3aac484134b9238043d34860137b4208",
+  "decision": "discard",
+  "functionalRegressions": 11,
+  "additionalHarnessFailures": 2,
+  "logs": {
+    "todo-rules-product-tests.log": "0dfe12e38eab1eb04a1f7606f68449257f969d35c613b4145341624027057c2f",
+    "todo-rules-targeted-red.log": "11501a7580da8fa068b181cb41f6166f2967a4ca068dc55cd5d5ebeae6d33c93",
+    "todo-rules-targeted-green.log": "e21dd740a93a69e11b06c72c476248646b8dcd03b085c699eafd44aede50062b",
+    "todo-rules-read-plan-green.log": "39ab7a6ed9ef8efaf28b2c8bb7b4c98160f8b76d16cf7819992ef4aa627a1ac5",
+    "todo-rules-context-gate.log": "91238cbfc822c7405d04d4f95a7fccfeb97d164812d0d024f4fa13b0a947780f",
+    "todo-rules-navigation-gate.log": "84064a4dd7be8df01e0c222ccfde85ec9021cce1a65b5bad00e3311a0da1ae2e"
+  }
+}
