@@ -1,0 +1,1396 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-08",
+  "modelsCalled": 0,
+  "corpus": "twelve known development cases; no confirmation data inspected",
+  "manifestSha256": "6d1a42fa7cf24e48d0da50453659e1ae7f61beb9b789dcc91fb69f1b9460c9b0",
+  "sourceManifestSha256": "c64e4cf167309208451f5d0aea6ee7964e392e7fa2c07d9ba6885efeb9cda301",
+  "validation": "Commands executed twice on isolated base/reference archives. Express uses actual runner --validate-oracles; typed cases use same manifest setup/commands and separate runtime checks. No sandbox claim.",
+  "discardedAttempt": "Initial /tmp run exhausted tmpfs; discarded and repeated under maintainer cache. A later intentional process pause was not used for timing claims.",
+  "cases": [
+    {
+      "taskId": "program-development-01",
+      "repo": "express",
+      "baseCommit": "f739b162d9cc9fcfc1f514c2441c69f9fcb4364d",
+      "fixCommit": "03dc3671874b214f67dacaca90f39a1c389f822e",
+      "expectedBaseFailure": "should allow options to res.sendFile()",
+      "qualityChecks": [],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-01.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "d4e9d9b3c92519435e1c2df72bab392bb37312379f93316503fe53ca6b2ce96c"
+        }
+      ],
+      "coverage": "Public and upstream hidden runtime tests; JavaScript repository has no in-repo TypeScript contract for these APIs. No artificial type gate.",
+      "oracle": {
+        "taskId": "program-development-01",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "baseFailureKind": "assertion",
+        "baseFails": true,
+        "referencePasses": true,
+        "valid": true,
+        "quality": {
+          "base": [
+            [],
+            []
+          ],
+          "reference": [
+            [],
+            []
+          ]
+        },
+        "publicTestExitCodes": {
+          "base": [
+            0,
+            0
+          ],
+          "reference": [
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "taskId": "program-development-02",
+      "repo": "fastify",
+      "baseCommit": "9bbf60978d013c26663b7be8031ecc12e6db12bd",
+      "fixCommit": "21b4c3c101038030e552ad2cfcca3f43a349f464",
+      "expectedBaseFailure": "Request with trust proxy and undefined socket does not trust x-forwarded-host/proto",
+      "qualityChecks": [
+        {
+          "id": "typescript-suite",
+          "command": {
+            "file": "npm",
+            "args": [
+              "run",
+              "test:typescript"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        }
+      ],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-02.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "7cc0eba6ba5b9c72bf7026ba65d346c5d06e87f7acb4a9cb20831493cf992ddd"
+        }
+      ],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 0,
+                "outputSha256": "3741decb9d1b363e9ffa45494ed0e1ddb2ba4bef1965ffca6fb3e7b32f1b89e3",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "3741decb9d1b363e9ffa45494ed0e1ddb2ba4bef1965ffca6fb3e7b32f1b89e3",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 0,
+                "outputSha256": "3741decb9d1b363e9ffa45494ed0e1ddb2ba4bef1965ffca6fb3e7b32f1b89e3",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "3741decb9d1b363e9ffa45494ed0e1ddb2ba4bef1965ffca6fb3e7b32f1b89e3",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "2c0e6f61c5543f7150cede100c8daea1b68e0b3b481ab76288b525e0dbc670ff",
+              "lastOutputLine": "# duration_ms 1646.104111"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "32de859d34ff147c6b16e4e8614a63b995cbc2bef1cd2f8c9b9418e9f9339f16",
+              "lastOutputLine": "# duration_ms 1915.20424"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "9cda5ec9d55afe34cfb9af2705c947c1042cd12beed1cdbe757f78db9c878572",
+              "lastOutputLine": "# duration_ms 1651.799569"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "b1ff9eb0d321b4bd5c94f7af01ba0c4237df7e9925d290654ff3fe5fc3b5ead7",
+              "lastOutputLine": "# duration_ms 1619.902488"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "e7e33c3fc9a73d632c8b8d17deb7966e4eb03c20a644a0316b345c7361a00135",
+              "lastOutputLine": "# duration_ms 1541.587944"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "4c52e1f80e8f8d8935d175e16d801e2fd71439ac66fa6a1e9f024c945f3a5a63",
+              "lastOutputLine": "# duration_ms 1161.44574"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "69d30ce63175bdd9913c537b4c2903376bb29e11978ed0b3d1f67c92182e06b4",
+              "lastOutputLine": "# duration_ms 1780.555888"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "3dcf80aa4daf3ad8aa633c1c463f52b6fc4b7cfecfe729e62c72a3d8789f4c66",
+              "lastOutputLine": "# duration_ms 1583.714663"
+            }
+          ]
+        }
+      },
+      "coverage": "Full upstream TypeScript suite with pinned npm lockfile.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": true
+    },
+    {
+      "taskId": "program-development-03",
+      "repo": "flask",
+      "baseCommit": "b7c1290528f907c9f41afcdfd33a2227c73e26d3",
+      "fixCommit": "438edcdf01c392619449a6bdbb18f6cf72ef7bb9",
+      "expectedBaseFailure": "test_url_for_with_self",
+      "qualityChecks": [
+        {
+          "id": "mypy-source",
+          "command": {
+            "file": ".venv/quality/bin/mypy",
+            "args": [
+              "src/flask"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        }
+      ],
+      "publicSetupFiles": [],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "ba7339291a411df071ebb7780efb0a8206c5d415b93196dbf7513aed7f11692a",
+              "lastOutputLine": "  return outcome.get_result()"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "7461ffcceff2edb50a25572d86952addd66da9d59c7b43f9b02899a8502f06d6",
+              "lastOutputLine": "31 passed in 0.24s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "30e3c2cec291d37ec55752cf4fdf880e1d18240514d558af037f3265f1afe22c",
+              "lastOutputLine": "  return outcome.get_result()"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "4a04f0530e57cef10667ffae94e994e8504fa5ca5b426a31ed9facb9d7906bc4",
+              "lastOutputLine": "32 passed in 0.35s"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "f2482e2ff75bc0fa0ac16feb9ed14ecf31994ce7965ee0908b53a31305d15532",
+              "lastOutputLine": "1 failed, 31 passed in 0.47s"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "ed7428427c63eac62d79509fcfa3c90d654bcbfd405cfd98754ab1156c84c308",
+              "lastOutputLine": "1 failed, 31 passed in 0.29s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "33ab5521f069d67100385932f9b224cca1a30999519f56b10c81ecd820d8e643",
+              "lastOutputLine": "32 passed in 0.23s"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "75b53581398c119795dddd10966f9491cdfd5585fe5b0008ae6f78aa738c230e",
+              "lastOutputLine": "32 passed in 0.26s"
+            }
+          ]
+        }
+      },
+      "coverage": "Full src/flask mypy using pinned typing dependencies.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": true
+    },
+    {
+      "taskId": "program-development-04",
+      "repo": "express",
+      "baseCommit": "1cc816993832eba829a2f556f7c08e27e6371301",
+      "fixCommit": "5855339455a7f60774bef4166829e742a5056fa8",
+      "expectedBaseFailure": "should not throw on null",
+      "qualityChecks": [],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-04.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "db58d017a0640dcbc35f04ae4da5c66e3cf4ef4077611d6086c6789e5aa39614"
+        }
+      ],
+      "coverage": "Public and upstream hidden runtime tests; JavaScript repository has no in-repo TypeScript contract for these APIs. No artificial type gate.",
+      "oracle": {
+        "taskId": "program-development-04",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "baseFailureKind": "assertion",
+        "baseFails": true,
+        "referencePasses": true,
+        "valid": true,
+        "quality": {
+          "base": [
+            [],
+            []
+          ],
+          "reference": [
+            [],
+            []
+          ]
+        },
+        "publicTestExitCodes": {
+          "base": [
+            0,
+            0
+          ],
+          "reference": [
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "taskId": "program-development-05",
+      "repo": "fastify",
+      "baseCommit": "d76dbcd58bf6d82bba167cdc74a79d2f74dbcb97",
+      "fixCommit": "2ae3e1d73491c023080efed566204c470cb49fd0",
+      "expectedBaseFailure": "FST_ERR_ROUTE_LOG_LEVEL_INVALID",
+      "qualityChecks": [
+        {
+          "id": "typescript-suite",
+          "command": {
+            "file": "npm",
+            "args": [
+              "run",
+              "test:typescript"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "feature-failure",
+          "expectedBaseFailure": "FST_ERR_ROUTE_LOG_LEVEL_INVALID"
+        }
+      ],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-05.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "7cc0eba6ba5b9c72bf7026ba65d346c5d06e87f7acb4a9cb20831493cf992ddd"
+        },
+        {
+          "source": "scripts/fixtures/agent-impact-quality-development/route-error.test-d.ts",
+          "target": "test/types/quality-route-error.test-d.ts",
+          "sha256": "9220f97bc8d86b6b16cdaeb8429dfbbe3cec39f2b63022b95b53219076c9f303"
+        }
+      ],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 1,
+                "outputSha256": "851d04b725c7b07fee986fa9b2174e5ac71a6495fc06b3cc734b91d6d86ce4c1",
+                "lastOutputLine": "  1 error"
+              },
+              {
+                "exitCode": 1,
+                "outputSha256": "851d04b725c7b07fee986fa9b2174e5ac71a6495fc06b3cc734b91d6d86ce4c1",
+                "lastOutputLine": "  1 error"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 0,
+                "outputSha256": "3741decb9d1b363e9ffa45494ed0e1ddb2ba4bef1965ffca6fb3e7b32f1b89e3",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "3741decb9d1b363e9ffa45494ed0e1ddb2ba4bef1965ffca6fb3e7b32f1b89e3",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "cae18e45d74db5a8e908a88aedc2ab37eb455d3543a5c0cf079014c991313477",
+              "lastOutputLine": "# duration_ms 1687.440052"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "2dd8b8fe46d32ba4eb705026b71f337748ebb444698accf0e182fc629cbe946e",
+              "lastOutputLine": "# duration_ms 1655.492218"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "bc2e91bdcdd607318869e7043405b70642a5649342ccf249f4a28c08f611e251",
+              "lastOutputLine": "# duration_ms 1736.962957"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "076933b2f40cefca7561d219a142dfcb4d0856caa30c6ea5e52a3e8553f00080",
+              "lastOutputLine": "# duration_ms 1497.994576"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "3f98ae06515a29918011ce7279d81c66254ef42dcc0b3571edc44a864583fed2",
+              "lastOutputLine": "# duration_ms 1877.895247"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "c549f5aa7192fab480f453e84e82f8b5ada29be0de1698eb8b3d9bfebd58f738",
+              "lastOutputLine": "# duration_ms 1986.95947"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "a7c3e0d053bb650282ff0ce3d226ee97eb17823db5cf122f85582908ab6d2745",
+              "lastOutputLine": "# duration_ms 1946.788634"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "3d1317bc0125634482592ea0803a7fdd9a20c436d4a3381857c04cfb6cf67b22",
+              "lastOutputLine": "# duration_ms 2102.610956"
+            }
+          ]
+        }
+      },
+      "coverage": "Full upstream TypeScript suite with pinned npm lockfile. Public fixture requires the new error symbol to satisfy FastifyErrorConstructor.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": true
+    },
+    {
+      "taskId": "program-development-06",
+      "repo": "flask",
+      "baseCommit": "10bdf61a0f751f3cb000f8f8ac5ac5b4bb535677",
+      "fixCommit": "4f7156f2c3271613b34d04040b502b9d7ae35eb9",
+      "expectedBaseFailure": "test_trusted_hosts_config",
+      "qualityChecks": [
+        {
+          "id": "mypy-source",
+          "command": {
+            "file": ".venv/quality/bin/mypy",
+            "args": [
+              "src/flask"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        }
+      ],
+      "publicSetupFiles": [],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "e0ef5a6c578dfbac5594622aa556f755f35578916ffb5f51d104abf94c2a9c91",
+              "lastOutputLine": "  return outcome.get_result()"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "fa9cd0e25dcc1e230610463c80c04cc48c6c326debe3521403b94a8e7f25f4ae",
+              "lastOutputLine": "2 passed in 0.04s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "3c1966978d301dc769137c0682139dbbaeb7372f25127736d7e5eb81cac26df1",
+              "lastOutputLine": "  return outcome.get_result()"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "ed0d6c079627b8413ba6fa1e9b0419bf2bb3f2c7f1917b91d9f908f1f9a678d2",
+              "lastOutputLine": "3 passed in 0.16s"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "14e45c0dae1b6a49c832c79bb50dbfb81b941d33a6e791afe2559d18415e81ec",
+              "lastOutputLine": "1 failed, 2 passed in 0.17s"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "61cb76877c347daca479edc03a0db9f26adfe2fd656f3328411c67d5d18c8d93",
+              "lastOutputLine": "1 failed, 2 passed in 0.26s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "ed0d6c079627b8413ba6fa1e9b0419bf2bb3f2c7f1917b91d9f908f1f9a678d2",
+              "lastOutputLine": "3 passed in 0.16s"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "1d3314562a9345a9f75b1adf32d61168822c00d316f7db85833230bba023e448",
+              "lastOutputLine": "3 passed in 0.15s"
+            }
+          ]
+        }
+      },
+      "coverage": "Full src/flask mypy using pinned typing dependencies.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": true
+    },
+    {
+      "taskId": "program-development-07",
+      "repo": "express",
+      "baseCommit": "160b91cbf79b595712b694c3513c347551d17fbe",
+      "fixCommit": "82fc12a40b3e6694e9a2c9b1376e7548d95779f6",
+      "expectedBaseFailure": "should ignore maxAge",
+      "qualityChecks": [],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-07.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "632d6905df2ff5d87b58662fa33158783ea4e41aa9487d14bc85555f3e98453f"
+        }
+      ],
+      "coverage": "Public and upstream hidden runtime tests; JavaScript repository has no in-repo TypeScript contract for these APIs. No artificial type gate.",
+      "oracle": {
+        "taskId": "program-development-07",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "baseFailureKind": "assertion",
+        "baseFails": true,
+        "referencePasses": true,
+        "valid": true,
+        "quality": {
+          "base": [
+            [],
+            []
+          ],
+          "reference": [
+            [],
+            []
+          ]
+        },
+        "publicTestExitCodes": {
+          "base": [
+            0,
+            0
+          ],
+          "reference": [
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "taskId": "program-development-08",
+      "repo": "fastify",
+      "baseCommit": "af92d0d2a9280a41e23fea4dc2b5cfff41169d5d",
+      "fixCommit": "39f0f24233cf6da2fef48551f51be2f589f7d5d0",
+      "expectedBaseFailure": ".port parses port correctly",
+      "qualityChecks": [
+        {
+          "id": "typescript-suite",
+          "command": {
+            "file": "npm",
+            "args": [
+              "run",
+              "test:typescript"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        }
+      ],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-08.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "f47c2472b89e7f273685e557a4df0aed145dfb83afd06d342fade708ebb24b54"
+        }
+      ],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 0,
+                "outputSha256": "e9e97e0c9863191118de92d274302ccc9fac4aed36d7f25ebf1a7060a0355ecf",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "e9e97e0c9863191118de92d274302ccc9fac4aed36d7f25ebf1a7060a0355ecf",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 0,
+                "outputSha256": "e9e97e0c9863191118de92d274302ccc9fac4aed36d7f25ebf1a7060a0355ecf",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "e9e97e0c9863191118de92d274302ccc9fac4aed36d7f25ebf1a7060a0355ecf",
+                "lastOutputLine": "> tsc test/types/import.ts --target es2022 --moduleResolution node16 --module node16 --noEmit && tsd"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "5d3fee2f9fb7369e93bacbaf54b03d4c1e24301446244500d5306c03dd12c106",
+              "lastOutputLine": "# duration_ms 100.83834"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "40ebc07473c0f5ef8b8db77dfcbadb8e5c4cbbd171783a730bf12c7634aea89d",
+              "lastOutputLine": "# duration_ms 104.17187"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "dca8f6cbe993ed7d3a64f5e5426c0c869f7b195bc10c91d84acc53baeac623bc",
+              "lastOutputLine": "# duration_ms 102.10825"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "83d6aa6a60967eb68b3cbc765c428089113e1a5594dec8d83e28adc1ff612cbf",
+              "lastOutputLine": "# duration_ms 104.936011"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "e634452369e26788c5474fa826d455abd3ecd9b0974427283e3f75583e35a743",
+              "lastOutputLine": "# duration_ms 88.597598"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "76e82ab3855c617b3973d13c6f99cfd1e19f5356c2d8e8badbef632cec635f3a",
+              "lastOutputLine": "# duration_ms 89.531051"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "218cba3f7c6964c88e28c6e111f6acfc8796db13c561a12649a329052075f4b9",
+              "lastOutputLine": "# duration_ms 88.575335"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "20fa9a91bc4a4f81814ecea3dabaf228e3bdf4f6a4e2a173b68ff1f1a610769a",
+              "lastOutputLine": "# duration_ms 87.722181"
+            }
+          ]
+        }
+      },
+      "coverage": "Full upstream TypeScript suite with pinned npm lockfile.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": true
+    },
+    {
+      "taskId": "program-development-09",
+      "repo": "flask",
+      "baseCommit": "85c5d93cbd049c4bd0679c36fd1ddcae8c37b642",
+      "fixCommit": "daf1510a4bda652ac2cfca03ec5567b03ddf8bf1",
+      "expectedBaseFailure": "test_template_filter",
+      "qualityChecks": [
+        {
+          "id": "mypy-source",
+          "command": {
+            "file": ".venv/bin/mypy",
+            "args": [
+              "src/flask"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        },
+        {
+          "id": "mypy-callers-existing",
+          "command": {
+            "file": ".venv/bin/mypy",
+            "args": [
+              "--follow-imports=silent",
+              "quality_decorators_existing.py"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        },
+        {
+          "id": "mypy-callers-bare",
+          "command": {
+            "file": ".venv/bin/mypy",
+            "args": [
+              "--follow-imports=silent",
+              "quality_decorators_bare.py"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "feature-failure",
+          "expectedBaseFailure": "Argument 1 to \"template_filter\""
+        }
+      ],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-quality-development/decorators-existing.py",
+          "target": "quality_decorators_existing.py",
+          "sha256": "1acb36e063517210aae04d53a0d714e2c7015e769b825ab001bf4fc47fcbe10a"
+        },
+        {
+          "source": "scripts/fixtures/agent-impact-quality-development/decorators-bare.py",
+          "target": "quality_decorators_bare.py",
+          "sha256": "c6b2ba29bb2180c83258ac766573ced503266083e9ac678f6520e1df0b1d56e6"
+        }
+      ],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ],
+            "mypy-callers-existing": [
+              {
+                "exitCode": 0,
+                "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+                "lastOutputLine": "Success: no issues found in 1 source file"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+                "lastOutputLine": "Success: no issues found in 1 source file"
+              }
+            ],
+            "mypy-callers-bare": [
+              {
+                "exitCode": 1,
+                "outputSha256": "b33887cb6202e56fb2b35c139f5fbb705bde1d3fd169385b2e490b5cd53e45d6",
+                "lastOutputLine": "Found 14 errors in 1 file (checked 1 source file)"
+              },
+              {
+                "exitCode": 1,
+                "outputSha256": "b33887cb6202e56fb2b35c139f5fbb705bde1d3fd169385b2e490b5cd53e45d6",
+                "lastOutputLine": "Found 14 errors in 1 file (checked 1 source file)"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ],
+            "mypy-callers-existing": [
+              {
+                "exitCode": 1,
+                "outputSha256": "307b901410df4632ac0029c2ed18523360966b27f75fce4d89c2735ab33b3101",
+                "lastOutputLine": "Found 18 errors in 1 file (checked 1 source file)"
+              },
+              {
+                "exitCode": 1,
+                "outputSha256": "307b901410df4632ac0029c2ed18523360966b27f75fce4d89c2735ab33b3101",
+                "lastOutputLine": "Found 18 errors in 1 file (checked 1 source file)"
+              }
+            ],
+            "mypy-callers-bare": [
+              {
+                "exitCode": 1,
+                "outputSha256": "0eeaeb63a1016766597ef19f77147316e1ebce7711f3121607ab0639232caf6d",
+                "lastOutputLine": "Found 10 errors in 1 file (checked 1 source file)"
+              },
+              {
+                "exitCode": 1,
+                "outputSha256": "0eeaeb63a1016766597ef19f77147316e1ebce7711f3121607ab0639232caf6d",
+                "lastOutputLine": "Found 10 errors in 1 file (checked 1 source file)"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "49d338beff8362dd041685bfda065626e8322216ebdf37737aa314f6a2d8050b",
+              "lastOutputLine": "92 passed in 0.49s"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "1f0629c71c178f33e973b72b41b3fd0eaf772eb876a4ffc2c28f706d117d5ad1",
+              "lastOutputLine": "92 passed in 0.39s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "23fcf03ff14634a8864ea952f5214a11f91c24c98ad89fd603411c79bdd2f0c0",
+              "lastOutputLine": "92 passed in 0.75s"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "b30789b256bef78ec3b675d0f9d040856c53abd1634f273a6f2b22cf1efb7c30",
+              "lastOutputLine": "92 passed in 0.47s"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "fa2ed7c62e76b167b6ed42bea1a3426abcc42c48cc4278ce6d25da45b18041c6",
+              "lastOutputLine": "6 failed, 86 passed in 0.66s"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "f5b3f8cfecf94bd8d72aeaaa6fdaa25c9c8558db3e65da672f4693f8c029bc32",
+              "lastOutputLine": "6 failed, 86 passed in 0.47s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "94300dad0f67c6109f2d5fd861354f62cc07a1af5201057272f0b3f40338b29a",
+              "lastOutputLine": "92 passed in 0.43s"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "3273e91f81e2ad3be17ee970c3d2ce455a60924b2e9f080041619f898ab10716",
+              "lastOutputLine": "92 passed in 0.46s"
+            }
+          ]
+        }
+      },
+      "coverage": "Full src/flask mypy using pinned typing dependencies. Separate caller fixtures assert str/bool across all six decorators: (), positional names, keyword names and bare syntax.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": false
+    },
+    {
+      "taskId": "program-development-10",
+      "repo": "express",
+      "baseCommit": "10b9b507b7d113d04965cccd8d170ee524e3d555",
+      "fixCommit": "9482b82d0b9c498140561087d68f0409078a86ea",
+      "expectedBaseFailure": "should be invoked instead of auto-responding",
+      "qualityChecks": [],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-10.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "7aa6efc8d44cba1e6d6081fd4630d4a8c48ec9d4b5d922d51b157d4b956b2c81"
+        }
+      ],
+      "coverage": "Public and upstream hidden runtime tests; JavaScript repository has no in-repo TypeScript contract for these APIs. No artificial type gate.",
+      "oracle": {
+        "taskId": "program-development-10",
+        "baseHiddenTestExitCodes": [
+          1,
+          1
+        ],
+        "referenceFixExitCodes": [
+          0,
+          0
+        ],
+        "baseFailureKind": "assertion",
+        "baseFails": true,
+        "referencePasses": true,
+        "valid": true,
+        "quality": {
+          "base": [
+            [],
+            []
+          ],
+          "reference": [
+            [],
+            []
+          ]
+        },
+        "publicTestExitCodes": {
+          "base": [
+            0,
+            0
+          ],
+          "reference": [
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "taskId": "program-development-11",
+      "repo": "fastify",
+      "baseCommit": "af079bd4c60c3cbebedc7640517d7288468fb5eb",
+      "fixCommit": "9493c0fb716cb7eb7c3568702912e3abb92f3193",
+      "expectedBaseFailure": "root primitive values coerced by Ajv are assigned to the request",
+      "qualityChecks": [
+        {
+          "id": "typescript-suite",
+          "command": {
+            "file": "npm",
+            "args": [
+              "run",
+              "test:types"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        }
+      ],
+      "publicSetupFiles": [
+        {
+          "source": "scripts/fixtures/agent-impact-locks/program-development-11.package-lock.json",
+          "target": "package-lock.json",
+          "sha256": "9277ae16226b6a13ff1b6c607af6459b58c1c6425b358d28b09ce36521020afb"
+        }
+      ],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 0,
+                "outputSha256": "00ed81ff178fccc5d1ddd3de4966b56ec144c1c89922e20ce6d9afe496d78961",
+                "lastOutputLine": "Duration:   158.6s"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "0d8d91ef66d642ece31d7ecbddb238aa9e4981d4783430e78e66138021bb0424",
+                "lastOutputLine": "Duration:   153.7s"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "typescript-suite": [
+              {
+                "exitCode": 0,
+                "outputSha256": "e0213542a887ef4be0d5dc683eb35772e005d5de7ca713bd79f37fa0cfdc4aa0",
+                "lastOutputLine": "Duration:   87.8s"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "afcd1590124980216ce317a7dfe37aec1e952e044c0d956623e679215dca1bae",
+                "lastOutputLine": "Duration:   70.6s"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "28808a71c99949b6a581138312a84f14e8f22d4f9d94ecd1daa3945dcfe0c356",
+              "lastOutputLine": "# duration_ms 1214.616642"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "1e19b398a40798efb26b0d00e05923e7aff546929eb068a0ae889f8e74189098",
+              "lastOutputLine": "# duration_ms 1242.583094"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "784bad0306dda353c44d29bda0fd3ad68fdc3a917f9b21a955ea06a7bcbe9005",
+              "lastOutputLine": "# duration_ms 1019.273209"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "0dc198814c5c76c420c5c6338aa58903efcd0e58d84dfb058f803c00ac565f48",
+              "lastOutputLine": "# duration_ms 1045.479848"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "9ccc83c5ad8da39fe0775b6edb8240aeb4b31ef74d69abb9f196df36623db903",
+              "lastOutputLine": "# duration_ms 347.980152"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "6094233a8d6fd47976fe31e14516bedc4794176c8c0390688e1cd631ea994368",
+              "lastOutputLine": "# duration_ms 353.117266"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "18d81dd9c9ad2110fdbd5f1e3929941d0ac62e268772da16a1c2555e70f200d9",
+              "lastOutputLine": "# duration_ms 384.943806"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "4380273c5dc3a8287189f488f540500eda377f24b5c4c4c2fa0722e9dc2cc8ee",
+              "lastOutputLine": "# duration_ms 301.363818"
+            }
+          ]
+        }
+      },
+      "coverage": "Full upstream TypeScript suite with pinned npm lockfile.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": true
+    },
+    {
+      "taskId": "program-development-12",
+      "repo": "flask",
+      "baseCommit": "941efd4a36ed0f27e13758874f95e3aa1d3ee163",
+      "fixCommit": "fb54159861708558b5f5658ebdc14709d984361c",
+      "expectedBaseFailure": "test_session_secret_key_fallbacks",
+      "qualityChecks": [
+        {
+          "id": "mypy-source",
+          "command": {
+            "file": ".venv/bin/mypy",
+            "args": [
+              "src/flask"
+            ],
+            "timeoutMs": 300000
+          },
+          "baseline": "pass"
+        }
+      ],
+      "publicSetupFiles": [],
+      "qualityVariants": {
+        "base": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ]
+          }
+        },
+        "reference": {
+          "setupExitCode": 0,
+          "checks": {
+            "mypy-source": [
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              },
+              {
+                "exitCode": 0,
+                "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+                "lastOutputLine": "Success: no issues found in 24 source files"
+              }
+            ]
+          }
+        }
+      },
+      "runtime": {
+        "public": {
+          "base": [
+            {
+              "exitCode": 0,
+              "outputSha256": "036f720162bed8ae83dc851650c41c0438f87e26296ddfe7cc4b2133ccf99d70",
+              "lastOutputLine": "  return outcome.get_result()"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "07b1d2c80f58210dd3307b453d1d87f04c5173759d21c042a348e72e5282219a",
+              "lastOutputLine": "130 passed in 0.46s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "115e5402289cdf4f9e0b5b35f5bce5c5b69fa3a9ed752a52d8331ed13ef5bce2",
+              "lastOutputLine": "  return outcome.get_result()"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "1e996c60156e7271e1cdaac1df939ca54f5f853e89f13839110dc099a2f1d727",
+              "lastOutputLine": "130 passed in 0.55s"
+            }
+          ]
+        },
+        "hidden": {
+          "base": [
+            {
+              "exitCode": 1,
+              "outputSha256": "1e89641fcd2161ebcc901034c324b1d08ca9e5d2a4953631e339ed086b786fe8",
+              "lastOutputLine": "1 failed, 129 passed in 0.71s"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "c67150a488d90801a13d8781502b60cc49c860a1dc35351ab320d6f33f82b84d",
+              "lastOutputLine": "1 failed, 129 passed in 0.57s"
+            }
+          ],
+          "reference": [
+            {
+              "exitCode": 0,
+              "outputSha256": "5d0da2574fe9e54562b8137f23eed5b0d6633501c64808712d6239b2e48dca4b",
+              "lastOutputLine": "130 passed in 0.45s"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "9adc4a2ea2d249e7e7f27a4984ed3a799cf3a4e58793f8477d9b961a0cc3aae6",
+              "lastOutputLine": "130 passed in 0.47s"
+            }
+          ]
+        }
+      },
+      "coverage": "Full src/flask mypy using pinned typing dependencies.",
+      "runtimeOracleValid": true,
+      "qualityOracleValid": true
+    }
+  ],
+  "archivedPatchRegression": {
+    "purpose": "Post-hoc detector validation only; not reference authoring or candidate tuning.",
+    "baseCommit": "85c5d93cbd049c4bd0679c36fd1ddcae8c37b642",
+    "variants": {
+      "archived-bad-codemap": {
+        "patchSha256": "4c8d95ffbf7970c1b69dc6b55782de298d830e4901d4f8710411de78166bc1d1",
+        "checks": {
+          "mypy-source": [
+            {
+              "exitCode": 1,
+              "outputSha256": "9c5df664a7b875fbe7ca7182fb3f18497bfd9e26d073eb718cc634905be9c31a",
+              "lastOutputLine": "Found 2 errors in 2 files (checked 24 source files)"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "9c5df664a7b875fbe7ca7182fb3f18497bfd9e26d073eb718cc634905be9c31a",
+              "lastOutputLine": "Found 2 errors in 2 files (checked 24 source files)"
+            }
+          ],
+          "mypy-callers-existing": [
+            {
+              "exitCode": 1,
+              "outputSha256": "6a547f2393c8628704225818c1fc59e20782ac70ce322d22be447f65e8ab9cc6",
+              "lastOutputLine": "Found 54 errors in 1 file (checked 1 source file)"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "6a547f2393c8628704225818c1fc59e20782ac70ce322d22be447f65e8ab9cc6",
+              "lastOutputLine": "Found 54 errors in 1 file (checked 1 source file)"
+            }
+          ],
+          "mypy-callers-bare": [
+            {
+              "exitCode": 1,
+              "outputSha256": "82d9b31942cb098b45da58140db274da489e8260bf86ef9d04f82a28fda44727",
+              "lastOutputLine": "Found 12 errors in 1 file (checked 1 source file)"
+            },
+            {
+              "exitCode": 1,
+              "outputSha256": "82d9b31942cb098b45da58140db274da489e8260bf86ef9d04f82a28fda44727",
+              "lastOutputLine": "Found 12 errors in 1 file (checked 1 source file)"
+            }
+          ]
+        }
+      },
+      "archived-repaired-baseline": {
+        "patchSha256": "2418811bb3933779bc895414245ffb7b846284dfedce421554bdc46ebda42d0b",
+        "checks": {
+          "mypy-source": [
+            {
+              "exitCode": 0,
+              "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+              "lastOutputLine": "Success: no issues found in 24 source files"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+              "lastOutputLine": "Success: no issues found in 24 source files"
+            }
+          ],
+          "mypy-callers-existing": [
+            {
+              "exitCode": 0,
+              "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+              "lastOutputLine": "Success: no issues found in 1 source file"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+              "lastOutputLine": "Success: no issues found in 1 source file"
+            }
+          ],
+          "mypy-callers-bare": [
+            {
+              "exitCode": 0,
+              "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+              "lastOutputLine": "Success: no issues found in 1 source file"
+            },
+            {
+              "exitCode": 0,
+              "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+              "lastOutputLine": "Success: no issues found in 1 source file"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "referenceAugmentation": {
+    "provenance": "Local reference augmentation authored from task and public caller contracts; upstream reference fails strict caller contract. Not derived from archived agent patches.",
+    "fixCommit": "daf1510a4bda652ac2cfca03ec5567b03ddf8bf1",
+    "patchSha256": "d0ace75c7607d4802b4f902d1270f1d917d240064155a0de51c84fca194e6941",
+    "patchApplicationMatchesValidatedSources": true,
+    "checks": {
+      "mypy-source": [
+        {
+          "exitCode": 0,
+          "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+          "lastOutputLine": "Success: no issues found in 24 source files"
+        },
+        {
+          "exitCode": 0,
+          "outputSha256": "fa935e779fe5886f2480e415c7e46616bdedad407f9da1cca28e7d341d95f4d7",
+          "lastOutputLine": "Success: no issues found in 24 source files"
+        }
+      ],
+      "mypy-callers-existing": [
+        {
+          "exitCode": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+          "lastOutputLine": "Success: no issues found in 1 source file"
+        },
+        {
+          "exitCode": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+          "lastOutputLine": "Success: no issues found in 1 source file"
+        }
+      ],
+      "mypy-callers-bare": [
+        {
+          "exitCode": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+          "lastOutputLine": "Success: no issues found in 1 source file"
+        },
+        {
+          "exitCode": 0,
+          "outputSha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+          "lastOutputLine": "Success: no issues found in 1 source file"
+        }
+      ],
+      "behavioral": [
+        {
+          "exitCode": 0,
+          "outputSha256": "7ffe3bd10ed8268a3e75b7d77a0d167b9330b23f68e688746600c46edeb3aef9",
+          "lastOutputLine": "92 passed in 2.84s"
+        },
+        {
+          "exitCode": 0,
+          "outputSha256": "ecd48f268b11691fcfee6201b72d5750e472a13d224935827b6a9e60318a23d5",
+          "lastOutputLine": "92 passed in 1.83s"
+        }
+      ]
+    }
+  },
+  "remainingGates": [
+    "Integrate Oracle-only referencePatch schema/application; patch must never be exposed to agent workspaces or profiles.",
+    "Run all mandatory checks in actual agent sandbox arms, including Python3.11.14 runtime binding for nested .venv/quality.",
+    "Freeze final product commit and arm protocol before model calls."
+  ],
+  "agentCallsReady": false
+}
