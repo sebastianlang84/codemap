@@ -37,3 +37,21 @@ Real-Repo. Fehlgeschlagene lokale Kandidaten werden verworfen; unveränderte
 Produktgates wären für solche Prototypen kein Wirksamkeitsnachweis. Kein Retuning.
 Die genauen Implementierungen bleiben als inaktives Skript erhalten. Kein Bump:
 ausschließlich Entwicklungsevidenz, keine aktivierte Produktänderung.
+
+## Ergänzende Kontrollen
+
+Nach Joint-Ausgabe angeforderter Diagnosevergleich, kein neuer Kandidat:
+`search(query,8)` → `context(first.path:first.startLine-first.endLine,8)`.
+Unverändertes heutiges Verhalten; keine künstliche Querycontext-Bytekappe in dieser
+Kontrolle. Fehlende Sollspannen und Begleitpfade beschreiben verbleibenden Lesebedarf,
+keine tatsächlich beobachteten Agentenaufrufe. Keine Nachstimmung des Joint-Kandidaten.
+
+Vor Unsicheranker-Ausgabe zusätzlich festgelegte Kleinstfixture: `a.ts` und `b.ts`
+enthalten dieselbe exportierte Funktion `dispatchMessage`, die ihr Argument
+zurückgibt. Zweite Fixture ergänzt in `b.ts` einen Kommentar `handler`. Abfragen je
+Fixture: `dispatchMessage handler`, `handler dispatchMessage`,
+`dispatchmessage handler`. Gemessen werden erste zwei Scores, relatives Gefälle,
+Ankerwechsel, ausgegebene Spannen und Source-/Budgetwahrheit. Beide Implementierungen
+bleiben relevant. Exakte und eventuell knappe Ties sind Diagnosefälle; sie erhöhen
+nicht den Zwölf-Fall-Gewinn. Falls keine knappe Nichtgleichheit entsteht, wird das
+als fehlende Evidenz gemeldet, nicht die Fixture nachgestimmt.
