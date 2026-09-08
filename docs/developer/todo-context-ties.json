@@ -1,0 +1,386 @@
+[
+  {
+    "fixture": "equal",
+    "query": "dispatchMessage handler",
+    "anchors": [
+      {
+        "query": "dispatchMessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 1
+          }
+        ]
+      },
+      {
+        "query": "dispatchmessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 1
+          }
+        ]
+      },
+      {
+        "query": "handler dispatchMessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 1
+          }
+        ]
+      }
+    ],
+    "uncertain": true,
+    "baselineBytes": 140,
+    "candidateBytes": 140,
+    "budgetPreserved": true,
+    "sourceIntegrity": true,
+    "baselinePaths": [
+      "a.ts",
+      "b.ts"
+    ],
+    "candidatePaths": [
+      "a.ts",
+      "b.ts"
+    ]
+  },
+  {
+    "fixture": "equal",
+    "query": "handler dispatchMessage",
+    "anchors": [
+      {
+        "query": "handler dispatchMessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 1
+          }
+        ]
+      },
+      {
+        "query": "handler dispatchmessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 1
+          }
+        ]
+      },
+      {
+        "query": "dispatchMessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 1
+          }
+        ]
+      }
+    ],
+    "uncertain": true,
+    "baselineBytes": 140,
+    "candidateBytes": 140,
+    "budgetPreserved": true,
+    "sourceIntegrity": true,
+    "baselinePaths": [
+      "a.ts",
+      "b.ts"
+    ],
+    "candidatePaths": [
+      "a.ts",
+      "b.ts"
+    ]
+  },
+  {
+    "fixture": "equal",
+    "query": "dispatchmessage handler",
+    "anchors": [
+      {
+        "query": "dispatchmessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 1
+          }
+        ]
+      },
+      {
+        "query": "dispatchmessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 1
+          }
+        ]
+      },
+      {
+        "query": "handler dispatchmessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 1
+          }
+        ]
+      }
+    ],
+    "uncertain": true,
+    "baselineBytes": 140,
+    "candidateBytes": 140,
+    "budgetPreserved": true,
+    "sourceIntegrity": true,
+    "baselinePaths": [
+      "a.ts",
+      "b.ts"
+    ],
+    "candidatePaths": [
+      "a.ts",
+      "b.ts"
+    ]
+  },
+  {
+    "fixture": "comment",
+    "query": "dispatchMessage handler",
+    "anchors": [
+      {
+        "query": "dispatchMessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 2
+          }
+        ]
+      },
+      {
+        "query": "dispatchmessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 2
+          }
+        ]
+      },
+      {
+        "query": "handler dispatchMessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 2
+          }
+        ]
+      }
+    ],
+    "uncertain": true,
+    "baselineBytes": 140,
+    "candidateBytes": 140,
+    "budgetPreserved": true,
+    "sourceIntegrity": true,
+    "baselinePaths": [
+      "a.ts",
+      "b.ts"
+    ],
+    "candidatePaths": [
+      "a.ts",
+      "b.ts"
+    ]
+  },
+  {
+    "fixture": "comment",
+    "query": "handler dispatchMessage",
+    "anchors": [
+      {
+        "query": "handler dispatchMessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 2
+          }
+        ]
+      },
+      {
+        "query": "handler dispatchmessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 2
+          }
+        ]
+      },
+      {
+        "query": "dispatchMessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 49.25,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 49.25,
+            "startLine": 2
+          }
+        ]
+      }
+    ],
+    "uncertain": true,
+    "baselineBytes": 140,
+    "candidateBytes": 140,
+    "budgetPreserved": true,
+    "sourceIntegrity": true,
+    "baselinePaths": [
+      "a.ts",
+      "b.ts"
+    ],
+    "candidatePaths": [
+      "a.ts",
+      "b.ts"
+    ]
+  },
+  {
+    "fixture": "comment",
+    "query": "dispatchmessage handler",
+    "anchors": [
+      {
+        "query": "dispatchmessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 2
+          }
+        ]
+      },
+      {
+        "query": "dispatchmessage handler",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 2
+          }
+        ]
+      },
+      {
+        "query": "handler dispatchmessage",
+        "hits": [
+          {
+            "path": "a.ts",
+            "score": 46.875,
+            "startLine": 1
+          },
+          {
+            "path": "b.ts",
+            "score": 46.875,
+            "startLine": 2
+          }
+        ]
+      }
+    ],
+    "uncertain": true,
+    "baselineBytes": 140,
+    "candidateBytes": 140,
+    "budgetPreserved": true,
+    "sourceIntegrity": true,
+    "baselinePaths": [
+      "a.ts",
+      "b.ts"
+    ],
+    "candidatePaths": [
+      "a.ts",
+      "b.ts"
+    ]
+  }
+]

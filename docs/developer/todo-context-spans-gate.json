@@ -1,0 +1,27 @@
+{
+  "baseCommit": "ef10b97",
+  "patchSha256": "95be59f30e7be234ab53cd1995cc8bc84ca6a1824ac407ae873dca3188abe6b4",
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exitCode": 0
+  },
+  "tests": {
+    "command": "npm test",
+    "exitCode": 1,
+    "pass": 341,
+    "fail": 1,
+    "count": 342,
+    "failure": "natural provider outage requests keep provider implementations in the search plus context read plan",
+    "expectedMissing": [
+      "apps/web/src/lib/providers/yahoo.ts",
+      "apps/web/src/types/macro.ts"
+    ],
+    "unexpectedAdded": [
+      "apps/web/src/lib/macro-derivations.ts",
+      "apps/web/src/lib/margin-debt-derivations.ts"
+    ]
+  },
+  "laterGates": "Not run after deterministic existing-test failure, including real-repo.",
+  "decision": "discard",
+  "productPatchActive": false
+}

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "manifestSha256": "76923b4af5e895a0e09aa76901b1dc10a730ee047f9ab16938850173c046c4eb",
-  "runnerSha256": "3636da4ed6782da477b9b5f06dab66cba5eaef313135f26dfff86837381783e3",
-  "cliSha256": "7ba5691a1d84a395b08da5a799fed460dc0848192afd35956d66bc705fada958",
+  "runnerSha256": "ded23ae3274a702aa40622d28e8b162c3209f37daaf36f76058f3f6e0bf7729e",
+  "cliSha256": "61b61509659d4d200699bc3e30b90079002d36271140765a3db1911f29b22102",
   "contextBuilderSha256": "9c69b1113ef5abe4de12fb7d4a415ea005d13cdd2b70e831426a62c566082e51",
   "nodeVersion": "v22.23.2",
-  "mode": "baseline",
+  "mode": "candidate",
   "cases": [
     {
       "id": "express-pr-6285",
@@ -22,6 +22,8 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/res.send.js",
@@ -149,7 +151,7 @@
         }
       ],
       "sourceBytes": 14710,
-      "responseBytes": 27948,
+      "responseBytes": 25390,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -170,9 +172,11 @@
           "endLine": 78,
           "sha256": "728d0239d2ad030728034acc42da6e6f558fb4a74ee6b135122015fe892af835",
           "basis": "Complete base function containing the behavior changed by the reference patch.",
-          "complete": false
+          "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/internals/errors.test.js",
@@ -223,6 +227,20 @@
             }
           ],
           "sourceBytes": 61,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/plugin-utils.js",
+          "startLine": 64,
+          "endLine": 78,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/plugin-utils.js"
+            }
+          ],
+          "sourceBytes": 442,
           "sourceMatchesSpan": true
         },
         {
@@ -316,25 +334,11 @@
           ],
           "sourceBytes": 476,
           "sourceMatchesSpan": true
-        },
-        {
-          "path": "package.json",
-          "startLine": 1,
-          "endLine": 80,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "plugin dependency unregistered error catalog error codes"
-            }
-          ],
-          "sourceBytes": 3408,
-          "sourceMatchesSpan": true
         }
       ],
-      "sourceBytes": 6765,
-      "responseBytes": 16819,
-      "completeTargets": false,
+      "sourceBytes": 3799,
+      "responseBytes": 10690,
+      "completeTargets": true,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
       "sourceBudgetPreserved": true,
@@ -354,7 +358,7 @@
           "endLine": 683,
           "sha256": "0f5bb1532c92da47a38b487f907300011c8748216f771fa949641534ad217bff",
           "basis": "Complete base function containing the behavior changed by the reference patch.",
-          "complete": false
+          "complete": true
         },
         {
           "path": "lib/reply.js",
@@ -365,11 +369,13 @@
           "complete": false
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/http2/plain.test.js",
           "reason": "Existing behavioral test surface for the requested change.",
-          "included": true
+          "included": false
         }
       ],
       "spans": [
@@ -390,6 +396,34 @@
             }
           ],
           "sourceBytes": 290,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/content-type-parser.js",
+          "startLine": 245,
+          "endLine": 316,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/content-type-parser.js"
+            }
+          ],
+          "sourceBytes": 2158,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/reply.js",
+          "startLine": 575,
+          "endLine": 683,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/reply.js"
+            }
+          ],
+          "sourceBytes": 3703,
           "sourceMatchesSpan": true
         },
         {
@@ -434,70 +468,10 @@
           ],
           "sourceBytes": 2200,
           "sourceMatchesSpan": true
-        },
-        {
-          "path": "test/http2/constraint.test.js",
-          "startLine": 1,
-          "endLine": 80,
-          "reasons": [
-            {
-              "kind": "sibling_test",
-              "label": "name/path-related test",
-              "sourcePath": "test/http2/constraint.test.js",
-              "targetPath": "docs/Reference/HTTP2.md"
-            }
-          ],
-          "sourceBytes": 1960,
-          "sourceMatchesSpan": true
-        },
-        {
-          "path": "test/http2/head.test.js",
-          "startLine": 1,
-          "endLine": 35,
-          "reasons": [
-            {
-              "kind": "sibling_test",
-              "label": "name/path-related test",
-              "sourcePath": "test/http2/head.test.js",
-              "targetPath": "docs/Reference/HTTP2.md"
-            }
-          ],
-          "sourceBytes": 782,
-          "sourceMatchesSpan": true
-        },
-        {
-          "path": "test/http2/plain.test.js",
-          "startLine": 1,
-          "endLine": 69,
-          "reasons": [
-            {
-              "kind": "sibling_test",
-              "label": "name/path-related test",
-              "sourcePath": "test/http2/plain.test.js",
-              "targetPath": "docs/Reference/HTTP2.md"
-            }
-          ],
-          "sourceBytes": 1770,
-          "sourceMatchesSpan": true
-        },
-        {
-          "path": "test/http2/secure-with-fallback.test.js",
-          "startLine": 1,
-          "endLine": 80,
-          "reasons": [
-            {
-              "kind": "sibling_test",
-              "label": "name/path-related test",
-              "sourcePath": "test/http2/secure-with-fallback.test.js",
-              "targetPath": "docs/Reference/HTTP2.md"
-            }
-          ],
-          "sourceBytes": 1934,
-          "sourceMatchesSpan": true
         }
       ],
-      "sourceBytes": 13072,
-      "responseBytes": 26729,
+      "sourceBytes": 12487,
+      "responseBytes": 21310,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -521,6 +495,8 @@
           "complete": false
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/reply-trailers.test.js",
@@ -546,6 +522,20 @@
             }
           ],
           "sourceBytes": 361,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/content-type.js",
+          "startLine": 44,
+          "endLine": 158,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/content-type.js"
+            }
+          ],
+          "sourceBytes": 3347,
           "sourceMatchesSpan": true
         },
         {
@@ -577,20 +567,6 @@
           "sourceMatchesSpan": true
         },
         {
-          "path": "test/promises.test.js",
-          "startLine": 71,
-          "endLine": 126,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
-            }
-          ],
-          "sourceBytes": 1742,
-          "sourceMatchesSpan": true
-        },
-        {
           "path": "test/stream-serializers.test.js",
           "startLine": 1,
           "endLine": 41,
@@ -611,58 +587,10 @@
           ],
           "sourceBytes": 851,
           "sourceMatchesSpan": true
-        },
-        {
-          "path": "docs/Reference/Reply.md",
-          "startLine": 360,
-          "endLine": 372,
-          "reasons": [
-            {
-              "kind": "related_doc",
-              "label": "name/path-related documentation",
-              "sourcePath": "docs/Reference/Reply.md",
-              "targetPath": "lib/reply.js"
-            },
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
-            }
-          ],
-          "sourceBytes": 373,
-          "sourceMatchesSpan": true
-        },
-        {
-          "path": "lib/content-type-parser.js",
-          "startLine": 197,
-          "endLine": 243,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
-            }
-          ],
-          "sourceBytes": 1175,
-          "sourceMatchesSpan": true
-        },
-        {
-          "path": "test/internals/reply.test.js",
-          "startLine": 907,
-          "endLine": 913,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
-            }
-          ],
-          "sourceBytes": 349,
-          "sourceMatchesSpan": true
         }
       ],
-      "sourceBytes": 7324,
-      "responseBytes": 19945,
+      "sourceBytes": 7032,
+      "responseBytes": 14315,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -686,6 +614,8 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/app.render.js",
@@ -820,7 +750,7 @@
         }
       ],
       "sourceBytes": 129795,
-      "responseBytes": 146152,
+      "responseBytes": 143573,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -844,6 +774,8 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/res.links.js",
@@ -972,7 +904,7 @@
         }
       ],
       "sourceBytes": 6970,
-      "responseBytes": 18090,
+      "responseBytes": 15528,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -996,6 +928,8 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/res.sendFile.js",
@@ -1021,6 +955,20 @@
             }
           ],
           "sourceBytes": 999,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/application.js",
+          "startLine": 351,
+          "endLine": 383,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/application.js"
+            }
+          ],
+          "sourceBytes": 733,
           "sourceMatchesSpan": true
         },
         {
@@ -1107,24 +1055,10 @@
           ],
           "sourceBytes": 263,
           "sourceMatchesSpan": true
-        },
-        {
-          "path": "History.md",
-          "startLine": 1,
-          "endLine": 3860,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "res.sendFile respect application etag setting"
-            }
-          ],
-          "sourceBytes": 122597,
-          "sourceMatchesSpan": true
         }
       ],
-      "sourceBytes": 132799,
-      "responseBytes": 149890,
+      "sourceBytes": 10935,
+      "responseBytes": 21358,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -1145,9 +1079,11 @@
           "endLine": 144,
           "sha256": "045ba2d63dbdcd9e556a49428c3fdc6746accc2c0ece36232988cd3716424149",
           "basis": "Complete base function containing the behavior changed by the reference patch.",
-          "complete": false
+          "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [],
       "spans": [
         {
@@ -1167,6 +1103,20 @@
             }
           ],
           "sourceBytes": 2718,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/validation.js",
+          "startLine": 118,
+          "endLine": 144,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/validation.js"
+            }
+          ],
+          "sourceBytes": 768,
           "sourceMatchesSpan": true
         },
         {
@@ -1260,26 +1210,12 @@
           ],
           "sourceBytes": 1418,
           "sourceMatchesSpan": true
-        },
-        {
-          "path": "lib/content-type.js",
-          "startLine": 52,
-          "endLine": 191,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "custom validator returned falsy value replace request parameter"
-            }
-          ],
-          "sourceBytes": 4289,
-          "sourceMatchesSpan": true
         }
       ],
-      "sourceBytes": 13020,
-      "responseBytes": 25956,
-      "completeTargets": false,
-      "completeTaskPackage": false,
+      "sourceBytes": 9499,
+      "responseBytes": 19568,
+      "completeTargets": true,
+      "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
       "sourceBudgetPreserved": true,
       "baselineSourceByteCap": 13020,
@@ -1301,6 +1237,8 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/find-route.test.js",
@@ -1326,6 +1264,20 @@
             }
           ],
           "sourceBytes": 492,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/route.js",
+          "startLine": 77,
+          "endLine": 584,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/route.js"
+            }
+          ],
+          "sourceBytes": 17916,
           "sourceMatchesSpan": true
         },
         {
@@ -1400,20 +1352,6 @@
           "sourceMatchesSpan": true
         },
         {
-          "path": "docs/Reference/Server.md",
-          "startLine": 1251,
-          "endLine": 2517,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "findRoute lowercase mixed case HTTP method"
-            }
-          ],
-          "sourceBytes": 40526,
-          "sourceMatchesSpan": true
-        },
-        {
           "path": "types/utils.d.ts",
           "startLine": 1,
           "endLine": 80,
@@ -1428,8 +1366,8 @@
           "sourceMatchesSpan": true
         }
       ],
-      "sourceBytes": 53472,
-      "responseBytes": 68021,
+      "sourceBytes": 30862,
+      "responseBytes": 41845,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -1450,7 +1388,7 @@
           "endLine": 753,
           "sha256": "48ee166a14b450e3690674124bfc86c601c2b8abd8e8bdc8d56266eb61368ab1",
           "basis": "Complete base function containing the behavior changed by the reference patch.",
-          "complete": true
+          "complete": false
         },
         {
           "path": "src/flask/testing.py",
@@ -1458,9 +1396,11 @@
           "endLine": 183,
           "sha256": "e9daa9b37cf8cf45ccc0d7435ad2a89ca8c0470eda764dee2ada857400ad7b93",
           "basis": "Complete base function containing the behavior changed by the reference patch.",
-          "complete": false
+          "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "tests/test_basic.py",
@@ -1491,6 +1431,34 @@
             }
           ],
           "sourceBytes": 72,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "src/flask/testing.py",
+          "startLine": 109,
+          "endLine": 262,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "src/flask/testing.py"
+            }
+          ],
+          "sourceBytes": 5446,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "src/flask/sessions.py",
+          "startLine": 100,
+          "endLine": 270,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "src/flask/sessions.py"
+            }
+          ],
+          "sourceBytes": 7658,
           "sourceMatchesSpan": true
         },
         {
@@ -1571,53 +1539,10 @@
           ],
           "sourceBytes": 0,
           "sourceMatchesSpan": true
-        },
-        {
-          "path": "tests/type_check/typing_app_decorators.py",
-          "startLine": 1,
-          "endLine": 9,
-          "reasons": [
-            {
-              "kind": "sibling_test",
-              "label": "name/path-related test",
-              "sourcePath": "tests/type_check/typing_app_decorators.py",
-              "targetPath": "src/flask/app.py"
-            }
-          ],
-          "sourceBytes": 130,
-          "sourceMatchesSpan": true
-        },
-        {
-          "path": "src/flask/app.py",
-          "startLine": 109,
-          "endLine": 1625,
-          "reasons": [
-            {
-              "kind": "reverse_import",
-              "label": "file imports target",
-              "sourcePath": "src/flask/app.py",
-              "targetPath": "src/flask/testing.py",
-              "specifier": "./testing"
-            },
-            {
-              "kind": "import",
-              "label": "local import",
-              "sourcePath": "src/flask/testing.py",
-              "targetPath": "src/flask/app.py",
-              "specifier": "./app"
-            },
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "IPv6 SERVER_NAME development server and session_transaction cookies"
-            }
-          ],
-          "sourceBytes": 61762,
-          "sourceMatchesSpan": true
         }
       ],
-      "sourceBytes": 63659,
-      "responseBytes": 75858,
+      "sourceBytes": 14871,
+      "responseBytes": 22996,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -1641,6 +1566,8 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/content-type.test.js",
@@ -1802,7 +1729,7 @@
         }
       ],
       "sourceBytes": 17813,
-      "responseBytes": 32268,
+      "responseBytes": 29440,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -1826,6 +1753,8 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
       "requiredPaths": [
         {
           "path": "test/content-parser.test.js",
@@ -1969,7 +1898,7 @@
         }
       ],
       "sourceBytes": 16873,
-      "responseBytes": 30045,
+      "responseBytes": 27662,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -1981,8 +1910,8 @@
   ],
   "summary": {
     "caseCount": 12,
-    "completeTargets": 7,
-    "completeTaskPackages": 7,
+    "completeTargets": 9,
+    "completeTaskPackages": 8,
     "allBudgetsPreserved": true,
     "allSourceIntegrity": true
   },

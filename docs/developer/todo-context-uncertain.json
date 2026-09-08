@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "manifestSha256": "76923b4af5e895a0e09aa76901b1dc10a730ee047f9ab16938850173c046c4eb",
-  "runnerSha256": "3636da4ed6782da477b9b5f06dab66cba5eaef313135f26dfff86837381783e3",
-  "cliSha256": "7ba5691a1d84a395b08da5a799fed460dc0848192afd35956d66bc705fada958",
+  "runnerSha256": "ded23ae3274a702aa40622d28e8b162c3209f37daaf36f76058f3f6e0bf7729e",
+  "cliSha256": "61b61509659d4d200699bc3e30b90079002d36271140765a3db1911f29b22102",
   "contextBuilderSha256": "9c69b1113ef5abe4de12fb7d4a415ea005d13cdd2b70e831426a62c566082e51",
   "nodeVersion": "v22.23.2",
-  "mode": "baseline",
+  "mode": "candidate",
   "cases": [
     {
       "id": "express-pr-6285",
@@ -22,6 +22,54 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "res.send Uint8Array text/plain UTF-8 charset response",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 50.2,
+              "startLine": 112
+            },
+            {
+              "path": "test/res.send.js",
+              "score": 37.8,
+              "startLine": 71
+            }
+          ]
+        },
+        {
+          "query": "res.send uint8array text/plain utf-8 charset response",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 50.38461538461539,
+              "startLine": 112
+            },
+            {
+              "path": "test/res.send.js",
+              "score": 38.15384615384616,
+              "startLine": 71
+            }
+          ]
+        },
+        {
+          "query": "response charset UTF-8 text/plain Uint8Array res.send",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 50.2,
+              "startLine": 112
+            },
+            {
+              "path": "test/res.send.js",
+              "score": 37.8,
+              "startLine": 71
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": false,
       "requiredPaths": [
         {
           "path": "test/res.send.js",
@@ -149,7 +197,7 @@
         }
       ],
       "sourceBytes": 14710,
-      "responseBytes": 27948,
+      "responseBytes": 26031,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -173,6 +221,54 @@
           "complete": false
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "plugin dependency unregistered error catalog error codes",
+          "hits": [
+            {
+              "path": "test/plugin.3.test.js",
+              "score": 59,
+              "startLine": 244
+            },
+            {
+              "path": "lib/errors.js",
+              "score": 43,
+              "startLine": 518
+            }
+          ]
+        },
+        {
+          "query": "plugin dependency unregistered error catalog error codes",
+          "hits": [
+            {
+              "path": "test/plugin.3.test.js",
+              "score": 59,
+              "startLine": 244
+            },
+            {
+              "path": "lib/errors.js",
+              "score": 43,
+              "startLine": 518
+            }
+          ]
+        },
+        {
+          "query": "codes error catalog error unregistered dependency plugin",
+          "hits": [
+            {
+              "path": "test/plugin.3.test.js",
+              "score": 59,
+              "startLine": 244
+            },
+            {
+              "path": "lib/errors.js",
+              "score": 43,
+              "startLine": 518
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": false,
       "requiredPaths": [
         {
           "path": "test/internals/errors.test.js",
@@ -333,7 +429,7 @@
         }
       ],
       "sourceBytes": 6765,
-      "responseBytes": 16819,
+      "responseBytes": 14973,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -365,6 +461,54 @@
           "complete": false
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "HTTP/2 large Buffer string Content-Length cancellation trailers response",
+          "hits": [
+            {
+              "path": "docs/Reference/HTTP2.md",
+              "score": 39.5,
+              "startLine": 3
+            },
+            {
+              "path": "test/content-length.test.js",
+              "score": 37.5,
+              "startLine": 71
+            }
+          ]
+        },
+        {
+          "query": "http/2 large buffer string content-length cancellation trailers response",
+          "hits": [
+            {
+              "path": "docs/Reference/HTTP2.md",
+              "score": 39.5,
+              "startLine": 3
+            },
+            {
+              "path": "test/content-length.test.js",
+              "score": 37.5,
+              "startLine": 71
+            }
+          ]
+        },
+        {
+          "query": "response trailers cancellation Content-Length string Buffer large HTTP/2",
+          "hits": [
+            {
+              "path": "docs/Reference/HTTP2.md",
+              "score": 39.5,
+              "startLine": 3
+            },
+            {
+              "path": "test/content-length.test.js",
+              "score": 37.5,
+              "startLine": 71
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": true,
       "requiredPaths": [
         {
           "path": "test/http2/plain.test.js",
@@ -398,9 +542,9 @@
           "endLine": 150,
           "reasons": [
             {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "HTTP/2 large Buffer string Content-Length cancellation trailers response"
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "test/content-length.test.js"
             }
           ],
           "sourceBytes": 2060,
@@ -497,7 +641,7 @@
         }
       ],
       "sourceBytes": 13072,
-      "responseBytes": 26729,
+      "responseBytes": 24793,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -521,6 +665,54 @@
           "complete": false
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "reply trailer handler callback promise first completion chunked framing Content-Length",
+          "hits": [
+            {
+              "path": "lib/reply.js",
+              "score": 50.25,
+              "startLine": 301
+            },
+            {
+              "path": "test/content-parser.test.js",
+              "score": 47,
+              "startLine": 8
+            }
+          ]
+        },
+        {
+          "query": "reply trailer handler callback promise first completion chunked framing content-length",
+          "hits": [
+            {
+              "path": "lib/reply.js",
+              "score": 50.25,
+              "startLine": 301
+            },
+            {
+              "path": "test/content-parser.test.js",
+              "score": 47,
+              "startLine": 8
+            }
+          ]
+        },
+        {
+          "query": "Content-Length framing chunked completion first promise callback handler trailer reply",
+          "hits": [
+            {
+              "path": "lib/reply.js",
+              "score": 50.25,
+              "startLine": 301
+            },
+            {
+              "path": "test/content-parser.test.js",
+              "score": 47,
+              "startLine": 8
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": true,
       "requiredPaths": [
         {
           "path": "test/reply-trailers.test.js",
@@ -554,9 +746,9 @@
           "endLine": 8,
           "reasons": [
             {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "test/content-parser.test.js"
             }
           ],
           "sourceBytes": 46,
@@ -662,7 +854,7 @@
         }
       ],
       "sourceBytes": 7324,
-      "responseBytes": 19945,
+      "responseBytes": 17898,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -686,6 +878,54 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "app.render null undefined options callback application locals",
+          "hits": [
+            {
+              "path": "lib/application.js",
+              "score": 59.666666666666664,
+              "startLine": 522
+            },
+            {
+              "path": "test/app.render.js",
+              "score": 52.666666666666664,
+              "startLine": 69
+            }
+          ]
+        },
+        {
+          "query": "app.render null undefined options callback application locals",
+          "hits": [
+            {
+              "path": "lib/application.js",
+              "score": 59.666666666666664,
+              "startLine": 522
+            },
+            {
+              "path": "test/app.render.js",
+              "score": 52.666666666666664,
+              "startLine": 69
+            }
+          ]
+        },
+        {
+          "query": "locals application callback options undefined null app.render",
+          "hits": [
+            {
+              "path": "lib/application.js",
+              "score": 59.666666666666664,
+              "startLine": 522
+            },
+            {
+              "path": "test/app.render.js",
+              "score": 52.666666666666664,
+              "startLine": 69
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": false,
       "requiredPaths": [
         {
           "path": "test/app.render.js",
@@ -820,7 +1060,7 @@
         }
       ],
       "sourceBytes": 129795,
-      "responseBytes": 146152,
+      "responseBytes": 144311,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -844,6 +1084,54 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "res.links array URLs relation Link header",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 49.9,
+              "startLine": 91
+            },
+            {
+              "path": "lib/request.js",
+              "score": 49.3,
+              "startLine": 64
+            }
+          ]
+        },
+        {
+          "query": "res.links array urls relation link header",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 50.125,
+              "startLine": 91
+            },
+            {
+              "path": "lib/request.js",
+              "score": 49.375,
+              "startLine": 64
+            }
+          ]
+        },
+        {
+          "query": "header Link relation URLs array res.links",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 49.9,
+              "startLine": 91
+            },
+            {
+              "path": "lib/request.js",
+              "score": 49.3,
+              "startLine": 64
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": true,
       "requiredPaths": [
         {
           "path": "test/res.links.js",
@@ -869,6 +1157,20 @@
             }
           ],
           "sourceBytes": 237,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/request.js",
+          "startLine": 64,
+          "endLine": 83,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/request.js"
+            }
+          ],
+          "sourceBytes": 429,
           "sourceMatchesSpan": true
         },
         {
@@ -955,24 +1257,10 @@
           ],
           "sourceBytes": 263,
           "sourceMatchesSpan": true
-        },
-        {
-          "path": "lib/request.js",
-          "startLine": 64,
-          "endLine": 83,
-          "reasons": [
-            {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "res.links array URLs relation Link header"
-            }
-          ],
-          "sourceBytes": 429,
-          "sourceMatchesSpan": true
         }
       ],
       "sourceBytes": 6970,
-      "responseBytes": 18090,
+      "responseBytes": 16051,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -996,6 +1284,54 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "res.sendFile respect application etag setting",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 41.75,
+              "startLine": 365
+            },
+            {
+              "path": "test/res.send.js",
+              "score": 37.75,
+              "startLine": 351
+            }
+          ]
+        },
+        {
+          "query": "res.sendfile respect application etag setting",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 50.285714285714285,
+              "startLine": 365
+            },
+            {
+              "path": "test/res.sendFile.js",
+              "score": 40,
+              "startLine": 71
+            }
+          ]
+        },
+        {
+          "query": "setting etag application respect res.sendFile",
+          "hits": [
+            {
+              "path": "lib/response.js",
+              "score": 41.75,
+              "startLine": 365
+            },
+            {
+              "path": "test/res.send.js",
+              "score": 37.75,
+              "startLine": 351
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": true,
       "requiredPaths": [
         {
           "path": "test/res.sendFile.js",
@@ -1029,9 +1365,9 @@
           "endLine": 430,
           "reasons": [
             {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "res.sendFile respect application etag setting"
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "test/res.send.js"
             }
           ],
           "sourceBytes": 1995,
@@ -1124,7 +1460,7 @@
         }
       ],
       "sourceBytes": 132799,
-      "responseBytes": 149890,
+      "responseBytes": 147887,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -1148,6 +1484,54 @@
           "complete": false
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "custom validator returned falsy value replace request parameter",
+          "hits": [
+            {
+              "path": "lib/request.js",
+              "score": 36.25,
+              "startLine": 296
+            },
+            {
+              "path": "lib/content-type.js",
+              "score": 27.125,
+              "startLine": 52
+            }
+          ]
+        },
+        {
+          "query": "custom validator returned falsy value replace request parameter",
+          "hits": [
+            {
+              "path": "lib/request.js",
+              "score": 36.25,
+              "startLine": 296
+            },
+            {
+              "path": "lib/content-type.js",
+              "score": 27.125,
+              "startLine": 52
+            }
+          ]
+        },
+        {
+          "query": "parameter request replace value falsy returned validator custom",
+          "hits": [
+            {
+              "path": "lib/request.js",
+              "score": 36.25,
+              "startLine": 296
+            },
+            {
+              "path": "lib/content-type.js",
+              "score": 27.125,
+              "startLine": 52
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": false,
       "requiredPaths": [],
       "spans": [
         {
@@ -1277,7 +1661,7 @@
         }
       ],
       "sourceBytes": 13020,
-      "responseBytes": 25956,
+      "responseBytes": 23935,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -1301,6 +1685,54 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "findRoute lowercase mixed case HTTP method",
+          "hits": [
+            {
+              "path": "lib/route.js",
+              "score": 58.5,
+              "startLine": 180
+            },
+            {
+              "path": "docs/Reference/Server.md",
+              "score": 41.375,
+              "startLine": 1492
+            }
+          ]
+        },
+        {
+          "query": "findroute lowercase mixed case http method",
+          "hits": [
+            {
+              "path": "lib/route.js",
+              "score": 49.5,
+              "startLine": 180
+            },
+            {
+              "path": "docs/Reference/Server.md",
+              "score": 41.5,
+              "startLine": 1492
+            }
+          ]
+        },
+        {
+          "query": "method HTTP case mixed lowercase findRoute",
+          "hits": [
+            {
+              "path": "lib/route.js",
+              "score": 58.5,
+              "startLine": 180
+            },
+            {
+              "path": "docs/Reference/Server.md",
+              "score": 41.375,
+              "startLine": 1492
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": false,
       "requiredPaths": [
         {
           "path": "test/find-route.test.js",
@@ -1429,7 +1861,7 @@
         }
       ],
       "sourceBytes": 53472,
-      "responseBytes": 68021,
+      "responseBytes": 66041,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -1461,6 +1893,54 @@
           "complete": false
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "IPv6 SERVER_NAME development server and session_transaction cookies",
+          "hits": [
+            {
+              "path": "src/flask/testing.py",
+              "score": 53.9,
+              "startLine": 136
+            },
+            {
+              "path": "src/flask/cli.py",
+              "score": 30.6,
+              "startLine": 945
+            }
+          ]
+        },
+        {
+          "query": "ipv6 server_name development server and session_transaction cookies",
+          "hits": [
+            {
+              "path": "src/flask/testing.py",
+              "score": 54,
+              "startLine": 136
+            },
+            {
+              "path": "src/flask/cli.py",
+              "score": 30.666666666666668,
+              "startLine": 945
+            }
+          ]
+        },
+        {
+          "query": "cookies session_transaction and server development SERVER_NAME IPv6",
+          "hits": [
+            {
+              "path": "src/flask/testing.py",
+              "score": 53.9,
+              "startLine": 136
+            },
+            {
+              "path": "src/flask/cli.py",
+              "score": 30.6,
+              "startLine": 945
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": false,
       "requiredPaths": [
         {
           "path": "tests/test_basic.py",
@@ -1617,7 +2097,7 @@
         }
       ],
       "sourceBytes": 63659,
-      "responseBytes": 75858,
+      "responseBytes": 73826,
       "completeTargets": false,
       "completeTaskPackage": false,
       "excerptBudgetPreserved": true,
@@ -1641,6 +2121,54 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "mediaType",
+          "hits": [
+            {
+              "path": "lib/content-type.js",
+              "score": 49,
+              "startLine": 74
+            },
+            {
+              "path": "test/reply-media-type.test.js",
+              "score": 48,
+              "startLine": 1
+            }
+          ]
+        },
+        {
+          "query": "mediatype",
+          "hits": [
+            {
+              "path": "docs/Reference/Reply.md",
+              "score": 29,
+              "startLine": 134
+            },
+            {
+              "path": "lib/content-type.js",
+              "score": 28,
+              "startLine": 74
+            }
+          ]
+        },
+        {
+          "query": "mediaType",
+          "hits": [
+            {
+              "path": "lib/content-type.js",
+              "score": 49,
+              "startLine": 74
+            },
+            {
+              "path": "test/reply-media-type.test.js",
+              "score": 48,
+              "startLine": 1
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": true,
       "requiredPaths": [
         {
           "path": "test/content-type.test.js",
@@ -1674,9 +2202,9 @@
           "endLine": 80,
           "reasons": [
             {
-              "kind": "search_result",
-              "label": "fallback search result",
-              "specifier": "mediaType"
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "test/reply-media-type.test.js"
             }
           ],
           "sourceBytes": 2038,
@@ -1802,7 +2330,7 @@
         }
       ],
       "sourceBytes": 17813,
-      "responseBytes": 32268,
+      "responseBytes": 29950,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
@@ -1826,6 +2354,54 @@
           "complete": true
         }
       ],
+      "experimentalAnchors": [
+        {
+          "query": "getParser",
+          "hits": [
+            {
+              "path": "lib/content-type-parser.js",
+              "score": 100,
+              "startLine": 119
+            },
+            {
+              "path": "test/content-parser.test.js",
+              "score": 47.5,
+              "startLine": 81
+            }
+          ]
+        },
+        {
+          "query": "getparser",
+          "hits": [
+            {
+              "path": "lib/content-type-parser.js",
+              "score": 79,
+              "startLine": 119
+            },
+            {
+              "path": "test/content-parser.test.js",
+              "score": 25,
+              "startLine": 81
+            }
+          ]
+        },
+        {
+          "query": "getParser",
+          "hits": [
+            {
+              "path": "lib/content-type-parser.js",
+              "score": 100,
+              "startLine": 119
+            },
+            {
+              "path": "test/content-parser.test.js",
+              "score": 47.5,
+              "startLine": 81
+            }
+          ]
+        }
+      ],
+      "experimentalUncertain": false,
       "requiredPaths": [
         {
           "path": "test/content-parser.test.js",
@@ -1969,7 +2545,7 @@
         }
       ],
       "sourceBytes": 16873,
-      "responseBytes": 30045,
+      "responseBytes": 28205,
       "completeTargets": true,
       "completeTaskPackage": true,
       "excerptBudgetPreserved": true,
