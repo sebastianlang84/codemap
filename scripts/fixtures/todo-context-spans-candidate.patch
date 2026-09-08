@@ -1,0 +1,30 @@
+diff --git a/src/core/context-builder.ts b/src/core/context-builder.ts
+index c3abc0b..5f3dc5d 100644
+--- a/src/core/context-builder.ts
++++ b/src/core/context-builder.ts
+@@ -74,7 +74,24 @@ interface ContextDiagnostics {
+ }
+ 
+ export function buildCodeMapContext(options: CodeMapContextOptions): CodeMapContextPackage {
+-  return buildCodeMapContextInternal(options);
++  const base = buildCodeMapContextInternal(options);
++  if (base.targetForm !== "query") return base;
++  const hits = searchCodeMap({ ...options, query: options.target, limit: 8 });
++  const covered = (item: CodeMapReadFirstItem, items: CodeMapReadFirstItem[]) => items.some(other =>
++    item.path === other.path && other.startLine <= item.startLine && other.endLine >= item.endLine);
++  const bytes = (item: CodeMapReadFirstItem) => Buffer.byteLength("text" in item ? item.text : "");
++  const cap = base.readFirst.reduce((sum, item) => sum + bytes(item), 0);
++  const added = hits.filter(hit => /^(function|class|type|interface|export)$/.test(hit.kind))
++    .map(hit => buildCodeMapContextInternal({ ...options, target: `${hit.path}:${hit.startLine}-${hit.endLine}` }).readFirst[0])
++    .filter((item): item is CodeMapReadFirstItem => Boolean(item) && !covered(item!, base.readFirst)).slice(0, 2);
++  const selected: CodeMapReadFirstItem[] = [];
++  let used = 0;
++  for (const item of [base.readFirst[0], ...added, ...base.readFirst.slice(1)]) {
++    if (!item || covered(item, selected) || selected.length >= Math.min(Math.max(options.limit ?? 8, 1), 25) || used + bytes(item) > cap) continue;
++    selected.push(item);
++    used += bytes(item);
++  }
++  return { ...base, readFirst: selected };
+ }
+ 
+ function buildCodeMapContextInternal(options: CodeMapContextOptions, inheritedDiagnostics?: ContextDiagnostics, depth = 0): CodeMapContextPackage {

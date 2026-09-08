@@ -1,0 +1,2095 @@
+{
+  "schemaVersion": 1,
+  "manifestSha256": "76923b4af5e895a0e09aa76901b1dc10a730ee047f9ab16938850173c046c4eb",
+  "runnerSha256": "ded23ae3274a702aa40622d28e8b162c3209f37daaf36f76058f3f6e0bf7729e",
+  "cliSha256": "61b61509659d4d200699bc3e30b90079002d36271140765a3db1911f29b22102",
+  "contextBuilderSha256": "9c69b1113ef5abe4de12fb7d4a415ea005d13cdd2b70e831426a62c566082e51",
+  "nodeVersion": "v22.23.2",
+  "mode": "candidate",
+  "cases": [
+    {
+      "id": "express-pr-6285",
+      "group": "function-selection",
+      "baseCommit": "af7cd90893f4619212e01f271fbaa10f3176fb33",
+      "query": "res.send Uint8Array text/plain UTF-8 charset response",
+      "targets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 112,
+          "endLine": 212,
+          "sha256": "053a37db47f86bd21f209db3c1524191d0760e0cc2e9ef0e2970d5a69db82806",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/res.send.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/response.js",
+          "startLine": 112,
+          "endLine": 188,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/response.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1784,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.send.js",
+          "startLine": 82,
+          "endLine": 147,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1623,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.set.js",
+          "startLine": 1,
+          "endLine": 63,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1566,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.format.js",
+          "startLine": 182,
+          "endLine": 232,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1429,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.jsonp.js",
+          "startLine": 211,
+          "endLine": 271,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1788,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.sendFile.js",
+          "startLine": 892,
+          "endLine": 899,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 115,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.attachment.js",
+          "startLine": 18,
+          "endLine": 78,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1485,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.download.js",
+          "startLine": 84,
+          "endLine": 142,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.send Uint8Array text/plain UTF-8 charset response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1771,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 11561,
+      "responseBytes": 29022,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 14710,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "fastify-pr-6774",
+      "group": "multifile",
+      "baseCommit": "27f4d6222dd945238e96c1fdaa632d5dc3c37b2c",
+      "query": "plugin dependency unregistered error catalog error codes",
+      "targets": [
+        {
+          "path": "lib/plugin-utils.js",
+          "startLine": 64,
+          "endLine": 78,
+          "sha256": "728d0239d2ad030728034acc42da6e6f558fb4a74ee6b135122015fe892af835",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/internals/errors.test.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": false
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        },
+        {
+          "path": "lib/errors.js",
+          "reason": "Defines and exports matching Fastify error constructors.",
+          "included": true
+        },
+        {
+          "path": "types/errors.d.ts",
+          "reason": "Public error-code union must match the new constructor.",
+          "included": false
+        },
+        {
+          "path": "docs/Reference/Errors.md",
+          "reason": "Requested public error catalog must list the new code.",
+          "included": false
+        },
+        {
+          "path": "fastify.js",
+          "reason": "Public errorCodes export must remain consistent.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "test/plugin.3.test.js",
+          "startLine": 244,
+          "endLine": 244,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "test/plugin.3.test.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "plugin dependency unregistered error catalog error codes"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 46,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/internals/plugin.test.js",
+          "startLine": 149,
+          "endLine": 154,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "plugin dependency unregistered error catalog error codes"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 159,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/esm/plugin.mjs",
+          "startLine": 2,
+          "endLine": 2,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "plugin dependency unregistered error catalog error codes"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 39,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/plugin.1.test.js",
+          "startLine": 34,
+          "endLine": 35,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "plugin dependency unregistered error catalog error codes"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 92,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/plugin.4.test.js",
+          "startLine": 87,
+          "endLine": 87,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "plugin dependency unregistered error catalog error codes"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 42,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "fastify.js",
+          "startLine": 28,
+          "endLine": 80,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "test/plugin.3.test.js",
+              "targetPath": "fastify.js",
+              "specifier": "../fastify"
+            },
+            {
+              "kind": "test_of",
+              "label": "source file tested by target",
+              "sourcePath": "test/plugin.3.test.js",
+              "targetPath": "fastify.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1855,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/errors.js",
+          "startLine": 518,
+          "endLine": 525,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "plugin dependency unregistered error catalog error codes"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 358,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "package.json",
+          "startLine": 1,
+          "endLine": 52,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "plugin dependency unregistered error catalog error codes"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2712,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 5303,
+      "responseBytes": 15936,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 6765,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "fastify-pr-6746",
+      "group": "function-selection",
+      "baseCommit": "fc9eafddae37dea167d2affc26a29a04f9412047",
+      "query": "HTTP/2 large Buffer string Content-Length cancellation trailers response",
+      "targets": [
+        {
+          "path": "lib/reply.js",
+          "startLine": 575,
+          "endLine": 683,
+          "sha256": "0f5bb1532c92da47a38b487f907300011c8748216f771fa949641534ad217bff",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        },
+        {
+          "path": "lib/reply.js",
+          "startLine": 823,
+          "endLine": 878,
+          "sha256": "dfa60426563e6edee98ef43510a3532c7f63b6f3ae92ddb3e6ee4b16f32f3d8b",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/http2/plain.test.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "docs/Reference/HTTP2.md",
+          "startLine": 1,
+          "endLine": 7,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "docs/Reference/HTTP2.md"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "HTTP/2 large Buffer string Content-Length cancellation trailers response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 187,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/content-length.test.js",
+          "startLine": 86,
+          "endLine": 148,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "HTTP/2 large Buffer string Content-Length cancellation trailers response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1604,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/reply-trailers.test.js",
+          "startLine": 1,
+          "endLine": 64,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "HTTP/2 large Buffer string Content-Length cancellation trailers response"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1621,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/http2/closing.test.js",
+          "startLine": 1,
+          "endLine": 61,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/http2/closing.test.js",
+              "targetPath": "docs/Reference/HTTP2.md"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1753,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/http2/constraint.test.js",
+          "startLine": 17,
+          "endLine": 80,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/http2/constraint.test.js",
+              "targetPath": "docs/Reference/HTTP2.md"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1563,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/http2/head.test.js",
+          "startLine": 1,
+          "endLine": 28,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/http2/head.test.js",
+              "targetPath": "docs/Reference/HTTP2.md"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 590,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/http2/plain.test.js",
+          "startLine": 17,
+          "endLine": 69,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/http2/plain.test.js",
+              "targetPath": "docs/Reference/HTTP2.md"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1404,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/http2/secure-with-fallback.test.js",
+          "startLine": 19,
+          "endLine": 80,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/http2/secure-with-fallback.test.js",
+              "targetPath": "docs/Reference/HTTP2.md"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1529,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 10251,
+      "responseBytes": 26592,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 13072,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "fastify-pr-6714",
+      "group": "function-selection",
+      "baseCommit": "6d202c6203f33ceb709dbcf6311b2d7152a8a057",
+      "query": "reply trailer handler callback promise first completion chunked framing Content-Length",
+      "targets": [
+        {
+          "path": "lib/reply.js",
+          "startLine": 823,
+          "endLine": 877,
+          "sha256": "6a460897849ca332b04b50a87a6a95296ef222a4420b1117b021ffbf88fd0916",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/reply-trailers.test.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/reply.js",
+          "startLine": 301,
+          "endLine": 308,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/reply.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 249,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/reply-trailers.test.js",
+          "startLine": 212,
+          "endLine": 276,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1937,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/promises.test.js",
+          "startLine": 71,
+          "endLine": 114,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1361,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/stream-serializers.test.js",
+          "startLine": 1,
+          "endLine": 27,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/stream-serializers.test.js",
+              "targetPath": "lib/reply.js",
+              "specifier": "../lib/reply"
+            },
+            {
+              "kind": "reverse_test",
+              "label": "test file imports target",
+              "sourcePath": "test/stream-serializers.test.js",
+              "targetPath": "lib/reply.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 651,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "docs/Reference/Reply.md",
+          "startLine": 360,
+          "endLine": 369,
+          "reasons": [
+            {
+              "kind": "related_doc",
+              "label": "name/path-related documentation",
+              "sourcePath": "docs/Reference/Reply.md",
+              "targetPath": "lib/reply.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 263,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/content-type-parser.js",
+          "startLine": 197,
+          "endLine": 232,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 918,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/internals/reply.test.js",
+          "startLine": 909,
+          "endLine": 913,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "reply trailer handler callback promise first completion chunked framing Content-Length"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 249,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 5628,
+      "responseBytes": 17048,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 7324,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "express-pr-6903",
+      "group": "function-selection",
+      "baseCommit": "a479419b16f5b97eb20f5dbae5848708ff30ce2d",
+      "query": "app.render null undefined options callback application locals",
+      "targets": [
+        {
+          "path": "lib/application.js",
+          "startLine": 522,
+          "endLine": 575,
+          "sha256": "3d998ea00bd85e61dea111d6c6686282b037c6bd220e522c08dcbcd202225671",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/app.render.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/application.js",
+          "startLine": 522,
+          "endLine": 561,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/application.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1037,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/app.render.js",
+          "startLine": 69,
+          "endLine": 69,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 52,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/app.engine.js",
+          "startLine": 15,
+          "endLine": 67,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1466,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/app.locals.js",
+          "startLine": 2,
+          "endLine": 20,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 641,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/response.js",
+          "startLine": 894,
+          "endLine": 911,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 423,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "History.md",
+          "startLine": 715,
+          "endLine": 3882,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 99247,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/view.js",
+          "startLine": 133,
+          "endLine": 152,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "lib/application.js",
+              "targetPath": "lib/view.js",
+              "specifier": "./view"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 490,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "examples/view-constructor/github-view.js",
+          "startLine": 36,
+          "endLine": 48,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "app.render null undefined options callback application locals"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 319,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 103675,
+      "responseBytes": 219410,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 129795,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "express-pr-4885",
+      "group": "simple-control",
+      "baseCommit": "6ed3439584b6bc77b0f1156f8797700df063fa63",
+      "query": "res.links array URLs relation Link header",
+      "targets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 91,
+          "endLine": 97,
+          "sha256": "db60a7b181d276d07a3fb88dd1caa12bf7b67d50f2e315951c1b82b2723fa7c8",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/res.links.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/response.js",
+          "startLine": 91,
+          "endLine": 94,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/response.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.links array URLs relation Link header"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 162,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.links.js",
+          "startLine": 1,
+          "endLine": 38,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.links array URLs relation Link header"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1020,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.location.js",
+          "startLine": 183,
+          "endLine": 249,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.links array URLs relation Link header"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1791,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.sendFile.js",
+          "startLine": 89,
+          "endLine": 89,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.links array URLs relation Link header"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 36,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.set.js",
+          "startLine": 1,
+          "endLine": 63,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.links array URLs relation Link header"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1566,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.append.js",
+          "startLine": 107,
+          "endLine": 111,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.links array URLs relation Link header"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 300,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/app.response.js",
+          "startLine": 1,
+          "endLine": 8,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/app.response.js",
+              "targetPath": "lib/response.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 172,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/request.js",
+          "startLine": 64,
+          "endLine": 77,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.links array URLs relation Link header"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 310,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 5357,
+      "responseBytes": 15904,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 6970,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "express-pr-6073",
+      "group": "function-selection",
+      "baseCommit": "d2de128a32f1ce3d360bbe3fad56afa026fc8832",
+      "query": "res.sendFile respect application etag setting",
+      "targets": [
+        {
+          "path": "lib/response.js",
+          "startLine": 365,
+          "endLine": 404,
+          "sha256": "6f3c8e8545cf2db6f2f6737071bd1f1b078d535bf420fe98c6e0083104050c4b",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/res.sendFile.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/response.js",
+          "startLine": 365,
+          "endLine": 395,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/response.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.sendFile respect application etag setting"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 773,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.send.js",
+          "startLine": 351,
+          "endLine": 412,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.sendFile respect application etag setting"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1573,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.sendFile.js",
+          "startLine": 1,
+          "endLine": 64,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.sendFile respect application etag setting"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1701,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.json.js",
+          "startLine": 141,
+          "endLine": 175,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.sendFile respect application etag setting"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 928,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.jsonp.js",
+          "startLine": 292,
+          "endLine": 345,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.sendFile respect application etag setting"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1358,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/res.attachment.js",
+          "startLine": 1,
+          "endLine": 59,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.sendFile respect application etag setting"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1423,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/app.response.js",
+          "startLine": 1,
+          "endLine": 8,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/app.response.js",
+              "targetPath": "lib/response.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 172,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "History.md",
+          "startLine": 729,
+          "endLine": 3860,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "res.sendFile respect application etag setting"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 98057,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 105985,
+      "responseBytes": 224105,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 132799,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "fastify-pr-6483",
+      "group": "function-selection",
+      "baseCommit": "ff7eff5eec8a820b2c6f79b477e1a784bbf42341",
+      "query": "custom validator returned falsy value replace request parameter",
+      "targets": [
+        {
+          "path": "lib/validation.js",
+          "startLine": 118,
+          "endLine": 144,
+          "sha256": "045ba2d63dbdcd9e556a49428c3fdc6746accc2c0ece36232988cd3716424149",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [],
+      "spans": [
+        {
+          "path": "lib/request.js",
+          "startLine": 296,
+          "endLine": 356,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/request.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "custom validator returned falsy value replace request parameter"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2144,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/schema-special-usage.test.js",
+          "startLine": 705,
+          "endLine": 762,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "custom validator returned falsy value replace request parameter"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1481,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/validation-error-handling.test.js",
+          "startLine": 840,
+          "endLine": 887,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "custom validator returned falsy value replace request parameter"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1700,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/internals/request-validate.test.js",
+          "startLine": 201,
+          "endLine": 208,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "custom validator returned falsy value replace request parameter"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 296,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/genReqId.test.js",
+          "startLine": 95,
+          "endLine": 95,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "custom validator returned falsy value replace request parameter"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 33,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/schema-validation.test.js",
+          "startLine": 314,
+          "endLine": 315,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "custom validator returned falsy value replace request parameter"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 116,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/diagnostics-channel/404.test.js",
+          "startLine": 1,
+          "endLine": 35,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/diagnostics-channel/404.test.js",
+              "targetPath": "lib/request.js",
+              "specifier": "../../lib/request"
+            },
+            {
+              "kind": "reverse_test",
+              "label": "test file imports target",
+              "sourcePath": "test/diagnostics-channel/404.test.js",
+              "targetPath": "lib/request.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1098,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/content-type.js",
+          "startLine": 83,
+          "endLine": 191,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "custom validator returned falsy value replace request parameter"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 3355,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 10223,
+      "responseBytes": 26836,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 13020,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "fastify-pr-6838",
+      "group": "function-selection",
+      "baseCommit": "ab9b96eb2f93373949c253933eddb46f6772bbf4",
+      "query": "findRoute lowercase mixed case HTTP method",
+      "targets": [
+        {
+          "path": "lib/route.js",
+          "startLine": 180,
+          "endLine": 198,
+          "sha256": "4faedea53c1ead9a314cd482564ad5aaba6a0f51dbb7f9246652680f3857d310",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/find-route.test.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/route.js",
+          "startLine": 180,
+          "endLine": 191,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/route.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "findRoute lowercase mixed case HTTP method"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 372,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/types/route.tst.ts",
+          "startLine": 58,
+          "endLine": 127,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "findRoute lowercase mixed case HTTP method"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2478,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/find-route.test.js",
+          "startLine": 1,
+          "endLine": 64,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "findRoute lowercase mixed case HTTP method"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1520,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/route.3.test.js",
+          "startLine": 11,
+          "endLine": 19,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "findRoute lowercase mixed case HTTP method"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 297,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/route.1.test.js",
+          "startLine": 89,
+          "endLine": 150,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "findRoute lowercase mixed case HTTP method"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2059,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/constrained-routes.test.js",
+          "startLine": 1,
+          "endLine": 61,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/constrained-routes.test.js",
+              "targetPath": "lib/route.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1235,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "docs/Reference/Server.md",
+          "startLine": 1251,
+          "endLine": 2239,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "findRoute lowercase mixed case HTTP method"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 32390,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "types/utils.d.ts",
+          "startLine": 1,
+          "endLine": 65,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "findRoute lowercase mixed case HTTP method"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2287,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 42638,
+      "responseBytes": 93116,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 53472,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "flask-pr-6096",
+      "group": "multifile",
+      "baseCommit": "514fc6b3e8402e4c646d5284e97a4f0ab50a7c4b",
+      "query": "IPv6 SERVER_NAME development server and session_transaction cookies",
+      "targets": [
+        {
+          "path": "src/flask/app.py",
+          "startLine": 632,
+          "endLine": 753,
+          "sha256": "48ee166a14b450e3690674124bfc86c601c2b8abd8e8bdc8d56266eb61368ab1",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": true
+        },
+        {
+          "path": "src/flask/testing.py",
+          "startLine": 136,
+          "endLine": 183,
+          "sha256": "e9daa9b37cf8cf45ccc0d7435ad2a89ca8c0470eda764dee2ada857400ad7b93",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "tests/test_basic.py",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        },
+        {
+          "path": "tests/test_testing.py",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "src/flask/testing.py",
+          "startLine": 136,
+          "endLine": 136,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "src/flask/testing.py"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "IPv6 SERVER_NAME development server and session_transaction cookies"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 28,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "tests/test_testing.py",
+          "startLine": 192,
+          "endLine": 195,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "IPv6 SERVER_NAME development server and session_transaction cookies"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 158,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "tests/test_basic.py",
+          "startLine": 1526,
+          "endLine": 1528,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "IPv6 SERVER_NAME development server and session_transaction cookies"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 85,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "tests/test_reqctx.py",
+          "startLine": 62,
+          "endLine": 95,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "IPv6 SERVER_NAME development server and session_transaction cookies"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 965,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "tests/test_appctx.py",
+          "startLine": 1,
+          "endLine": 6,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "tests/test_appctx.py",
+              "targetPath": "src/flask/testing.py",
+              "specifier": "flask/testing"
+            },
+            {
+              "kind": "reverse_test",
+              "label": "test file imports target",
+              "sourcePath": "tests/test_appctx.py",
+              "targetPath": "src/flask/testing.py"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 73,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "tests/test_apps/cliapp/__init__.py",
+          "startLine": 1,
+          "endLine": 1,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "tests/test_apps/cliapp/__init__.py",
+              "targetPath": "src/flask/cli.py"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 0,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "tests/type_check/typing_app_decorators.py",
+          "startLine": 1,
+          "endLine": 5,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "tests/type_check/typing_app_decorators.py",
+              "targetPath": "src/flask/app.py"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 87,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "src/flask/app.py",
+          "startLine": 109,
+          "endLine": 1318,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "src/flask/app.py",
+              "targetPath": "src/flask/testing.py",
+              "specifier": "./testing"
+            },
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "src/flask/testing.py",
+              "targetPath": "src/flask/app.py",
+              "specifier": "./app"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "IPv6 SERVER_NAME development server and session_transaction cookies"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 49386,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 50782,
+      "responseBytes": 110293,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 63659,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "fastify-pr-6942",
+      "group": "simple-control",
+      "baseCommit": "eaff726a68c629c1aedc99f96b3c4b95dfdb38d1",
+      "query": "mediaType",
+      "targets": [
+        {
+          "path": "lib/content-type.js",
+          "startLine": 186,
+          "endLine": 186,
+          "sha256": "f351e47775b5b9ce45bdcb6b8ecefefee3ab22a60a742f6d8516d7ec3a2148b7",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/content-type.test.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/content-type.js",
+          "startLine": 84,
+          "endLine": 185,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/content-type.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "mediaType"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 3270,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/reply-media-type.test.js",
+          "startLine": 1,
+          "endLine": 62,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "mediaType"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1598,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/request-media-type.test.js",
+          "startLine": 1,
+          "endLine": 64,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "mediaType"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1639,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/internals/content-type-parser.test.js",
+          "startLine": 1,
+          "endLine": 31,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/internals/content-type-parser.test.js",
+              "targetPath": "lib/content-type-parser.js"
+            },
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/internals/content-type-parser.test.js",
+              "targetPath": "lib/content-type.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 811,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/content-type-parser.js",
+          "startLine": 126,
+          "endLine": 158,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "lib/content-type-parser.js",
+              "targetPath": "lib/content-type.js",
+              "specifier": "./content-type"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "mediaType"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1237,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/handle-request.js",
+          "startLine": 45,
+          "endLine": 93,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "lib/handle-request.js",
+              "targetPath": "lib/content-type.js",
+              "specifier": "./content-type"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "mediaType"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1780,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/content-type.test.js",
+          "startLine": 87,
+          "endLine": 150,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/content-type.test.js",
+              "targetPath": "lib/content-type.js",
+              "specifier": "../lib/content-type"
+            },
+            {
+              "kind": "reverse_test",
+              "label": "test file imports target",
+              "sourcePath": "test/content-type.test.js",
+              "targetPath": "lib/content-type.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "mediaType"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2251,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/schemas.js",
+          "startLine": 145,
+          "endLine": 190,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "mediaType"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1515,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 14101,
+      "responseBytes": 34475,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 17813,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    },
+    {
+      "id": "fastify-pr-6846",
+      "group": "simple-control",
+      "baseCommit": "27938ac777c15482a81881b29f86c82b025f7fae",
+      "query": "getParser",
+      "targets": [
+        {
+          "path": "lib/content-type-parser.js",
+          "startLine": 119,
+          "endLine": 156,
+          "sha256": "cfcc884e63b738b240ffa18f3a4b9cb736ab4440a53a3a6cacd99eebb258535e",
+          "basis": "Complete base function containing the behavior changed by the reference patch.",
+          "complete": false
+        }
+      ],
+      "experimentalAnchors": null,
+      "experimentalUncertain": null,
+      "requiredPaths": [
+        {
+          "path": "test/content-parser.test.js",
+          "reason": "Existing behavioral test surface for the requested change.",
+          "included": true
+        }
+      ],
+      "spans": [
+        {
+          "path": "lib/content-type-parser.js",
+          "startLine": 119,
+          "endLine": 145,
+          "reasons": [
+            {
+              "kind": "target",
+              "label": "direct target file",
+              "targetPath": "lib/content-type-parser.js"
+            },
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "getParser"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 994,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/content-parser.test.js",
+          "startLine": 81,
+          "endLine": 138,
+          "reasons": [
+            {
+              "kind": "search_result",
+              "label": "fallback search result",
+              "specifier": "getParser"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2547,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/internals/content-type-parser.test.js",
+          "startLine": 1,
+          "endLine": 31,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "test/internals/content-type-parser.test.js",
+              "targetPath": "lib/content-type-parser.js",
+              "specifier": "../../lib/content-type-parser"
+            },
+            {
+              "kind": "reverse_test",
+              "label": "test file imports target",
+              "sourcePath": "test/internals/content-type-parser.test.js",
+              "targetPath": "lib/content-type-parser.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 811,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/content-type.js",
+          "startLine": 1,
+          "endLine": 52,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "lib/content-type-parser.js",
+              "targetPath": "lib/content-type.js",
+              "specifier": "./content-type"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2163,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/symbols.js",
+          "startLine": 1,
+          "endLine": 59,
+          "reasons": [
+            {
+              "kind": "import",
+              "label": "local import",
+              "sourcePath": "lib/content-type-parser.js",
+              "targetPath": "lib/symbols.js",
+              "specifier": "./symbols"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2831,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/content-type.test.js",
+          "startLine": 1,
+          "endLine": 65,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/content-type.test.js",
+              "targetPath": "lib/content-type.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 2042,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "test/fastify-instance.test.js",
+          "startLine": 1,
+          "endLine": 71,
+          "reasons": [
+            {
+              "kind": "sibling_test",
+              "label": "name/path-related test",
+              "sourcePath": "test/fastify-instance.test.js",
+              "targetPath": "fastify.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 1412,
+          "sourceMatchesSpan": true
+        },
+        {
+          "path": "lib/plugin-override.js",
+          "startLine": 1,
+          "endLine": 23,
+          "reasons": [
+            {
+              "kind": "reverse_import",
+              "label": "file imports target",
+              "sourcePath": "lib/plugin-override.js",
+              "targetPath": "lib/content-type-parser.js",
+              "specifier": "./content-type-parser.js"
+            }
+          ],
+          "truncated": true,
+          "sourceBytes": 491,
+          "sourceMatchesSpan": true
+        }
+      ],
+      "sourceBytes": 13291,
+      "responseBytes": 32057,
+      "completeTargets": false,
+      "completeTaskPackage": false,
+      "excerptBudgetPreserved": true,
+      "sourceBudgetPreserved": true,
+      "baselineSourceByteCap": 16873,
+      "sourceIntegrity": true,
+      "metadataAudit": "Reasons and scope retained verbatim for review; semantic reason truth is not automatically certified."
+    }
+  ],
+  "summary": {
+    "caseCount": 12,
+    "completeTargets": 0,
+    "completeTaskPackages": 0,
+    "allBudgetsPreserved": true,
+    "allSourceIntegrity": true
+  },
+  "claimBoundary": "Historical retrieval development only. Required paths certify presence of source, not complete test/type/doc content. No agent benefit or executed fix correctness claim."
+}

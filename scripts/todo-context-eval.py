@@ -94,7 +94,7 @@ def main():
               'cliSha256': digest(cli.read_bytes()),
               'contextBuilderSha256': digest((cli.parent.parent / 'core/context-builder.js').read_bytes()),
               'nodeVersion': run(['node', '--version']).decode().strip(),
-              'mode': 'candidate' if baseline else 'baseline', 'experiment': os.environ.get('CODEMAP_CONTEXT_EXPERIMENT'), 'prototypeSha256': digest(Path(__file__).with_name('todo-context-prototype.mjs').read_bytes()), 'cases': rows,
+              'mode': 'candidate' if baseline else 'baseline', 'cases': rows,
               'summary': {'caseCount': len(rows), 'completeTargets': sum(row['completeTargets'] for row in rows),
                           'completeTaskPackages': sum(row['completeTaskPackage'] for row in rows),
                           'allBudgetsPreserved': all(row['excerptBudgetPreserved'] and row['sourceBudgetPreserved'] for row in rows),
