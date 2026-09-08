@@ -7,69 +7,18 @@ Aktueller Nutzenstand: [abgeschlossener Agentenvergleich](docs/developer/agent-i
 Suchalternativen: [lokaler Vergleich abgeschlossen](docs/developer/search-tool-comparison-result.md);
 PGR und BM25 verfehlen die Fortsetzungsbedingungen. Keine Umstellung.
 
-## Belegte Schwächen und offene Prüfaufträge
+## Prüfprogramm vom 8. September
 
-Gesammelt am 2026-09-08; **keine Produktänderung oder neue Nutzenevaluation gestartet**.
-[Grundsatzbewertung](docs/product/roadmap.md#grundsatzbewertung-2026-09-08).
-Die Reihenfolge priorisiert Arbeit, sie ist keine Zusage für einen größeren Umbau.
+Korrektheitsfixes, Adapterprüfung sowie Kontext- und Regelversuche sind
+[abgearbeitet](docs/developer/todo-work-result.md). Kein Kontext-/Regelkandidat
+bestand alle Bedingungen. Literale Dateileseverweise bleiben mit dokumentiertem
+Bereichs-/Budgetbefund zurückgestellt.
 
-### Vor weiteren Agentenvergleichen
-
-- [ ] Gleiche vollständige Qualitätsprüfung für beide Varianten erzwingen.
-  Bei typisierten APIs interne Typen und bestehende/neue Aufrufsignaturen prüfen;
-  Prüfbefehle vor Modellstart auf Basis und Referenz validieren.
-  [Beleg](docs/developer/agent-impact-current-development-result.md#nachprüfung-des-flask-dekoratorfalls).
-- [ ] Eingebundenes CodeMap-Profil auf Laufzeitdateien begrenzen.
-  Eval-Code, Manifeste und Lösungen technisch aus beiden Agentenarmen ausschließen;
-  im echten Sandboxprofil prüfen. Bisher kein Zugriff beobachtet, aber Zugriff möglich.
-- [ ] Tatsächlich sichtbare Ausgabe pro Adapter erfassen und Folgelesen unterscheiden.
-  CLI-Text und MCP-Text liefern Kontextpositionen; Quelltext steht in CLI-JSON,
-  MCP-Strukturdaten und Pi-Tooltext. Prüfen, was der jeweilige Host dem Modell zeigt.
-  Erneutes Lesen nach einer bloßen Positionsliste ist keine redundante Arbeit.
-
-### Grundsatzentscheidung vorbereiten
-
-- [ ] Eigenständigen Nutzen der gerankten Suche vom Kontextablauf trennen.
-  Nach den Integritätskorrekturen einen Vergleich von adaptiver rg-Nutzung, CodeMap-Suche
-  allein und dem bisherigen Ablauf planen. Qualität, Gesamtzeit, Tokens und notwendiges
-  Folgelesen vorab festlegen; Befehlszahl allein ist kein Nutzenmaß. Bekannte Fälle sind
-  Entwicklung, keine neue unabhängige Bestätigung. Ein negatives Ergebnis für Suche allein
-  widerlegt gezielte Kontextergänzung nicht automatisch; keine Serie hiermit gestartet.
-
-### Kontext und Suche
-
-- [ ] Mehrere relevante Bereiche derselben Datei erhalten und verlorene Suchtreffer beheben.
-  Suche dedupliziert nach Pfad, Query-Kontext übernimmt pro Pfad einen Treffer.
-  Funktions-, Typ- und Exportstellen getrennt prüfen; zusätzliche Bereiche dürfen
-  keine bisherigen Pflichtbereiche verdrängen. Zwei frühere Kandidaten sind verworfen.
-  [Belege und verworfene Ansätze](docs/developer/context-program-experiments.md).
-- [ ] Gesamtbudget für Quelltext und gezielte Teilausschnitte entwerfen und messen.
-  Das Produktlimit zählt Einträge, nicht Bytes/Tokens. Ein Markdown-Abschnitt mit
-  602 Zeilen bleibt ein Chunk; im Plugin-Fall übersteigt ein relevanter Chunk bereits
-  das experimentelle Gesamtbudget. Pflichtbereiche, Kürzungen und Auslassungen prüfen.
-- [ ] Aufgabenfrage und bekannte Fundstelle gemeinsam nutzbar machen — zunächst lokal prüfen.
-  Heute nimmt Kontext entweder ein Ziel oder eine Query; Pfadziele und Nachbarn starten
-  am ersten Chunk. Einen gemeinsamen Aufruf gegen denselben heutigen Zweischritt messen;
-  behalten nur bei gleicher Quellenqualität und weniger nötigem Folgelesen.
-- [ ] Lange Suchfragen und unsichere Anker als eigene Fälle absichern.
-  Query-Plan verwendet für reguläre Begriffe nur die ersten zwölf Wörter; ein später
-  genanntes entscheidendes Symbol kann fehlen. Query-Kontext expandiert stets Rang 1;
-  der berechnete Scoreabstand steuert diesen Pfad nicht. Vor Änderung Eingabevarianten
-  und knappe Ranggleichstände einfrieren; keine bloße Vergrößerung aller Limits.
-- [ ] Falsche Importkanten durch Kommentare/Strings ausschließen.
-  Reproduziert: `// import { x } from "./fake";` wird als Import extrahiert.
-  Negativfälle und echte Imports gemeinsam prüfen, bevor mehr Beziehungen dazukommen.
-- [ ] Fehlende Typ-/Dateiverweise gezielt erfassen und lösen, wenn passende Ausschnitte vorliegen.
-  Bekannt: fehlende `.d.ts`-Auflösung und literale Dateileseverweise; absolute Python-Imports
-  sind nicht abgedeckt. Für jeden Fall lokale Auflösung und fremde Pakete unterscheiden;
-  richtige Dateipfade allein zählen nicht als vollständiger Aufgabenkontext.
-- [ ] Nutzen der Ranking- und Kontext-Sonderregeln einzeln prüfen.
-  BM25-Feinwerte werden im Zusatzscore weitgehend eingeebnet; feste Dateirollen und
-  Lesereihenfolgen sind nur teilweise empirisch begründet. Gegen einfachere Kontrollen
-  bei gleichem Kandidatenpool/Lesebudget messen und neue Repo-Strukturen zurückhalten.
-  Der jüngste BM25-Versuch ist kein Beleg für eine pauschale Ersetzung.
-
-Startzeit, Workspace-Aliasse und C/C++-Abdeckung stehen weiter unten bereits separat.
+- [ ] Vollständige Sandboxprüfung der zwölf Aufgaben abschließen und den eingefrorenen
+  Vergleich aus normaler Suche, CodeMap-Suche allein und bisherigem Kontextablauf
+  durchführen. [Protokoll](docs/developer/todo-work-program.md),
+  [Freeze](docs/developer/todo-agent-comparison-freeze.json).
+  Unabhängige Bestätigung bleibt bis zum bestandenen Entwicklungsgate gesperrt.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

@@ -5,7 +5,9 @@
 CLI-Text liefert Positionen, CLI-JSON enthält Quelltext. MCP liefert Positionen
 im Text und Quelltext in `structuredContent`. Pi liefert Quelltext im Tooltext
 und in den Details; die gekürzte UI-Anzeige ist nicht die Werkzeugantwort.
-Die tatsächliche Modellansicht eines MCP- oder Pi-Hosts wurde nicht geprüft.
+Eine separate [Hostprobe](todo-host-output-result.md) bestätigt vollständigen
+Quelltext im Pi-Providerrequest und bei ausdrücklicher MCP-Weitergabe über Codex
+Code-Mode. Direkte MCP-Nutzung anderer Hosts bleibt unbestätigt.
 
 In 24 historischen Codex-CLI-Traces stehen 234 Befehle und 14 Kontextaufrufe,
 alle mit JSON angefordert. Elf Antworten enthalten auswertbaren Quelltext;

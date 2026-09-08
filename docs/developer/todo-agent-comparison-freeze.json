@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "productCommit": "389e394567adfc19f78133ef323e96158503f105",
+  "manifestFileSha256": "1f6f68d22ea4b24cbd9df330c817c11c190012cf9af1bb22d58d0295eb8133d2",
+  "manifestCanonicalSha256": "203f29dd95a2e03e2000f950eb934f16f166626ab653bf28a303f5ad5570cb82",
+  "verifierFiles": {
+    "scripts/eval-agent-impact-auth.ts": "fc3681b6529133ae88501d97fe65b6cca5310f3df176569f8e23a1dc726588b3",
+    "scripts/eval-agent-impact-codex.ts": "1a4d4c43c027309385e581e0be2c132c14a9cc054ae384ce6cc94f5bd1617fe9",
+    "scripts/eval-agent-impact-context.ts": "ec26fe5130dadb26ebf8267b0a514daed255d99fa4828b028768dca6120022aa",
+    "scripts/eval-agent-impact-lib.ts": "41661230ed407fe873c1b2dd8c3344aaa4d5fb430c0a371819f23701b1a08f8b",
+    "scripts/eval-agent-impact-process.ts": "b9097f428343cfe555f10cf97d11577d53cf9cf2b9a8fd7d17571f788fdbe8de",
+    "scripts/eval-agent-impact-quality.ts": "02b169c0acc69abfc287b12ed02a5d965843d3686edd46f5e0e4b90613661f56",
+    "scripts/eval-agent-impact-runtime-profile.ts": "7117f05d09ee1872e9631cc41b74f80830d2948c634dce18b5fdd6a364e39a65",
+    "scripts/eval-agent-impact-trace.ts": "9ade827c573ace1a555d4f18d6d47d18facfdc31a09f93a4068a52578a5573e3",
+    "scripts/eval-agent-impact.ts": "0461c6b8c326baa5471394db7b89addea2c1ff9bb961b647410b85287bc7db2c"
+  },
+  "regularCalls": 36,
+  "maxInfrastructureReplacements": 2,
+  "confirmationCalls": 0,
+  "confirmationCondition": "Only a development arm passing all frozen gates may unlock at most twelve untouched pairs.",
+  "claimBoundary": "Known development tasks; no independent confirmation claim.",
+  "navigationAuditSha256": "aec8651afdd45c4ae72304f3319ba596bd464caa5d7758281c940041bf5ad2e4"
+}

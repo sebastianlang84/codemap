@@ -5,7 +5,7 @@
     "version": 1,
     "frozenAt": "2026-09-08",
     "purpose": "development-pilot",
-    "selectionProtocol": "Derivative of the twelve observed program-development cases; same tasks with public mandatory quality checks. Development evidence only; no confirmation cases inspected.",
+    "selectionProtocol": "Twelve known development tasks; rotating adaptive local search, CodeMap search alone, and location-preserving search/context. Identical complete quality checks and runtime profile. Local reference augmentation for case 09 is oracle-only. Development evidence, no confirmation content inspected.",
     "orderSeed": 0
   },
   "agent": {
@@ -18,7 +18,7 @@
     "maxInfrastructureRetries": 2
   },
   "codemapProfile": {
-    "gitCommit": "1f348c456f7efc13007a8372376e766d9d13272b",
+    "gitCommit": "389e394567adfc19f78133ef323e96158503f105",
     "expectedVersion": "0.10.1"
   },
   "repositories": [
@@ -887,12 +887,14 @@
     "maxTokenRatio": 1.1,
     "maxAgentDurationRatio": 0.85,
     "maxPairedLosses": 0,
-    "minFasterPairs": 8
+    "minFasterPairs": 8,
+    "durationMetric": "agent-index-verifier"
   },
   "preparation": {
     "productProfileStatus": "provisional; freeze final product commit before model calls",
     "modelsCalled": 0,
     "sourceManifest": "scripts/eval-agent-impact-program-development.manifest.json",
     "qualityStatus": "base/reference checks recorded in docs/developer/todo-quality-validation.json; local reference augmentation required for09; sandbox and final profile freeze pending"
-  }
+  },
+  "comparison": "navigation-three-arm"
 }

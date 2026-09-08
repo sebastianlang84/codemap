@@ -44,6 +44,12 @@ wird getrennt vom bisherigen Ablauf gegen dieselbe normale Suche bewertet.
 Eine nötige lokale Referenzkorrektur erhält einen eigenen SHA-256 und wird nur
 im Referenzworkspace angewandt, nie in den Agentenarmen.
 
+Folgelesen wird vorab als beobachtete gewöhnliche Navigation und exakt wiederholter
+vollständiger Kontextausschnitt erfasst. Für Wiederholungen zählen abgeschlossene Ausgaben
+bis zum ersten protokollierten Dateiänderungsereignis; unerkannte Shell-Schreibzugriffe
+und partielle Überlappungen bleiben eine Grenze. Notwendigkeit oder vermeidbare Zeit
+werden daraus nicht behauptet. Maßgeblich bleiben Qualität, Gesamtzeit und Tokens.
+
 Ein verworfener Versuch schließt seinen Prüfauftrag mit Befund und Grenze ab; er ist
 keine Reparatur. Korrektheitsfixes benötigen keinen künstlichen Effizienznachweis.
 Suche allein ohne Gewinn widerlegt gezielten Kontext nicht automatisch. Rohtraces
