@@ -1,0 +1,131 @@
+--- a/src/flask/sansio/app.py
++++ b/src/flask/sansio/app.py
+@@ -661,7 +661,15 @@
+             self.view_functions[endpoint] = view_func
+
++    @t.overload
++    def template_filter(self, name: T_template_filter) -> T_template_filter: ...
++
++    @t.overload
++    def template_filter(
++        self, name: str | None = None
++    ) -> t.Callable[[T_template_filter], T_template_filter]: ...
++
+     @setupmethod
+     def template_filter(
+-        self, name: t.Callable[..., t.Any] | str | None = None
++        self, name: T_template_filter | str | None = None
+     ) -> t.Callable[[T_template_filter], T_template_filter] | T_template_filter:
+         """A decorator that is used to register custom template filter.
+@@ -711,8 +719,16 @@
+         self.jinja_env.filters[name or f.__name__] = f
+
++    @t.overload
++    def template_test(self, name: T_template_test) -> T_template_test: ...
++
++    @t.overload
++    def template_test(
++        self, name: str | None = None
++    ) -> t.Callable[[T_template_test], T_template_test]: ...
++
+     @setupmethod
+     def template_test(
+-        self, name: t.Callable[..., t.Any] | str | None = None
+-    ) -> t.Callable[[T_template_test], T_template_test] | T_template_filter:
++        self, name: T_template_test | str | None = None
++    ) -> t.Callable[[T_template_test], T_template_test] | T_template_test:
+         """A decorator that is used to register custom template test.
+         You can specify a name for the test, otherwise the function
+@@ -750,5 +766,5 @@
+             # def func():
+
+-            func = name
++            func = t.cast(T_template_test, name)
+             self.add_template_test(func)
+             return func
+@@ -774,8 +790,16 @@
+         self.jinja_env.tests[name or f.__name__] = f
+
++    @t.overload
++    def template_global(self, name: T_template_global) -> T_template_global: ...
++
++    @t.overload
++    def template_global(
++        self, name: str | None = None
++    ) -> t.Callable[[T_template_global], T_template_global]: ...
++
+     @setupmethod
+     def template_global(
+-        self, name: t.Callable[..., t.Any] | str | None = None
+-    ) -> t.Callable[[T_template_global], T_template_global] | T_template_filter:
++        self, name: T_template_global | str | None = None
++    ) -> t.Callable[[T_template_global], T_template_global] | T_template_global:
+         """A decorator that is used to register a custom template global function.
+         You can specify a name for the global function, otherwise the function
+--- a/src/flask/sansio/blueprints.py
++++ b/src/flask/sansio/blueprints.py
+@@ -441,7 +441,15 @@
+         )
+
+-    @setupmethod
++    @t.overload
++    def app_template_filter(self, name: T_template_filter) -> T_template_filter: ...
++
++    @t.overload
+     def app_template_filter(
+-        self, name: t.Callable[..., t.Any] | str | None = None
++        self, name: str | None = None
++    ) -> t.Callable[[T_template_filter], T_template_filter]: ...
++
++    @setupmethod
++    def app_template_filter(
++        self, name: T_template_filter | str | None = None
+     ) -> t.Callable[[T_template_filter], T_template_filter] | T_template_filter:
+         """Register a template filter, available in any template rendered by the
+@@ -485,8 +493,16 @@
+         self.record_once(register_template)
+
+-    @setupmethod
++    @t.overload
++    def app_template_test(self, name: T_template_test) -> T_template_test: ...
++
++    @t.overload
+     def app_template_test(
+-        self, name: t.Callable[..., t.Any] | str | None = None
+-    ) -> t.Callable[[T_template_test], T_template_test] | T_template_filter:
++        self, name: str | None = None
++    ) -> t.Callable[[T_template_test], T_template_test]: ...
++
++    @setupmethod
++    def app_template_test(
++        self, name: T_template_test | str | None = None
++    ) -> t.Callable[[T_template_test], T_template_test] | T_template_test:
+         """Register a template test, available in any template rendered by the
+         application. Equivalent to :meth:`.Flask.template_test`.
+@@ -504,5 +520,5 @@
+             # def func():
+
+-            func = name
++            func = t.cast(T_template_test, name)
+             self.add_app_template_test(func)
+             return func
+@@ -533,8 +549,16 @@
+         self.record_once(register_template)
+
+-    @setupmethod
++    @t.overload
++    def app_template_global(self, name: T_template_global) -> T_template_global: ...
++
++    @t.overload
+     def app_template_global(
+-        self, name: t.Callable[..., t.Any] | str | None = None
+-    ) -> t.Callable[[T_template_global], T_template_global] | T_template_filter:
++        self, name: str | None = None
++    ) -> t.Callable[[T_template_global], T_template_global]: ...
++
++    @setupmethod
++    def app_template_global(
++        self, name: T_template_global | str | None = None
++    ) -> t.Callable[[T_template_global], T_template_global] | T_template_global:
+         """Register a template global, available in any template rendered by the
+         application. Equivalent to :meth:`.Flask.template_global`.
