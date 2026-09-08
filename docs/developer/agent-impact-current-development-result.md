@@ -1,4 +1,6 @@
-# Aktueller CodeMap-Stand im Agentenvergleich
+# Früherer CodeMap-Stand im Agentenvergleich
+
+Aktueller Stand: [Dreifachvergleich mit vollständiger Qualitätsprüfung](todo-agent-development-result.md).
 
 2026-09-08. **Effizienz-Gate verfehlt; kein verlässlicher Zusatznutzen belegt.**
 Alle zwölf Paare wurden ausgeführt. Die unabhängige Bestätigung bleibt geschlossen.

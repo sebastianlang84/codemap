@@ -12,7 +12,7 @@ neue Aufrufe verwenden die Korrekturen bereits. Laufende Hosts wurden nicht neu 
 | Vollständige Qualitätsprüfung | Gleiche deklarierte Prüfungen für beide Agentenvarianten; interne Typen und alte/neue Aufrufe zählen zur Korrektheit. Zwölf Referenzen validiert, Fall 09 mit expliziter lokaler Referenzkorrektur. [Beleg](todo-quality-validation.md). |
 | Laufzeitprofil | Nur geprüfte Laufzeitdateien und Produktionsabhängigkeiten werden eingebunden; Eval-Dateien und Lösungen ausgeschlossen. |
 | Adapterausgabe | [CLI-Traces](todo-adapter-audit.md) und [echte Hostrequests](todo-host-output-result.md) geprüft: Pi und ausdrücklich weitergereichte Codex-MCP-Antworten enthalten den vollständigen Quelltext. |
-| Suche allein | Drei Varianten mit zwölf bekannten Aufgaben vorbereitet; [Freeze](todo-agent-comparison-freeze.json). Noch keine Nutzenaussage. |
+| Suche allein | [36 Läufe abgeschlossen](todo-agent-development-result.md), alle korrekt. Suche: +20,0 % Zeit / +40,4 % Tokens; Kontext: +28,9 % / +58,3 %. Beide Effizienz-Gates verfehlt; keine unabhängige Bestätigung. |
 | Mehrere Bereiche | Lokal zwei zusätzliche vollständige Ziele, aber benötigte Dateien in bestehendem Test verloren; verworfen. |
 | Quelltextbudget | 20,47 % weniger Bytes, alle sieben vollständigen Fälle verloren; verworfen. |
 | Aufgabe und Fundstelle | Gegen heutigen Zweischritt gleiche Vollständigkeit, 4,60 % weniger Bytes; kein ausreichender Gewinn. |

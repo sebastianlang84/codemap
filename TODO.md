@@ -2,7 +2,7 @@
 
 Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.md`](CHANGELOG.md), Eval-Befunde in die passenden Dokumente unter [`docs/developer/`](docs/developer/), Produkt-/Architekturkontext in [`docs/product/roadmap.md`](docs/product/roadmap.md#future-work) und [`docs/developer/architecture.md`](docs/developer/architecture.md).
 
-Aktueller Nutzenstand: [abgeschlossener Agentenvergleich](docs/developer/agent-impact-current-development-result.md).
+Aktueller Nutzenstand: [abgeschlossener Agentenvergleich](docs/developer/todo-agent-development-result.md).
 
 Suchalternativen: [lokaler Vergleich abgeschlossen](docs/developer/search-tool-comparison-result.md);
 PGR und BM25 verfehlen die Fortsetzungsbedingungen. Keine Umstellung.
@@ -14,11 +14,9 @@ Korrektheitsfixes, Adapterprüfung sowie Kontext- und Regelversuche sind
 bestand alle Bedingungen. Literale Dateileseverweise bleiben mit dokumentiertem
 Bereichs-/Budgetbefund zurückgestellt.
 
-- [ ] Den eingefrorenen Vergleich aus normaler Suche, CodeMap-Suche allein und bisherigem Kontextablauf
-  durchführen. [Protokoll](docs/developer/todo-work-program.md),
-  [Freeze](docs/developer/todo-agent-comparison-freeze.json).
-  Alle zwölf Aufgaben bestehen die vollständige Sandboxprüfung.
-  Unabhängige Bestätigung bleibt bis zum bestandenen Entwicklungsgate gesperrt.
+Der [Vergleich mit 36 Agentenläufen](docs/developer/todo-agent-development-result.md)
+ist abgeschlossen: alle Lösungen korrekt, beide Effizienz-Gates verfehlt.
+Die unabhängigen Fälle bleiben geschlossen.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen
 

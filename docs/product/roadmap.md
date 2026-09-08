@@ -47,6 +47,12 @@ Do not start embeddings, vector stores, graph work, or broad AST integration unt
 
 ### Grundsatzbewertung 2026-09-08
 
+Das anschließende [Prüfprogramm](../developer/todo-work-result.md) ist abgeschlossen.
+Späte Query-Symbole und Scheinimporte sind korrigiert, `.d.ts`-/Python-Verweise ergänzt.
+Alle 36 Agentenlösungen bestehen die vollständige Qualitätsprüfung; reine CodeMap-Suche
+und Kontext verfehlen beide das Effizienz-Gate. Die folgenden Mechanikbefunde beschreiben
+den Ausgangsstand; ihre Bearbeitung und verbleibenden Grenzen stehen im Prüfbericht.
+
 **Bewertung: Der lokale Index ist ein plausibler Ansatz; ein verlässlicher Vorteil der
 heutigen automatischen Kontextauswahl ist nicht belegt.** SQLite, lexikalische Suche
 und deterministische Extraktion verhindern nützliche Navigation nicht. Das vollständige
@@ -82,7 +88,7 @@ Aufruf ist zu prüfen, ob er wirklich Folgelesen ersetzt; heutige Auswahl bleibt
 Gleiche vollständige Qualitätsprüfungen und abgeschirmte Eval-Dateien sind Voraussetzung
 weiterer Agentenvergleiche.
 Kein Beleg rechtfertigt jetzt einen größeren Graphen, einen Parserwechsel, Embeddings
-oder das bloße Verstellen von Punktwerten. Die [gesammelten TODOs](../../TODO.md#belegte-schwächen-und-offene-prüfaufträge)
+oder das bloße Verstellen von Punktwerten. Die [gesammelten TODOs](../../TODO.md#prüfprogramm-vom-8-september)
 sind Prüfaufträge, keine beschlossene Neuentwicklung.
 
 Peer-Debate: zwei unabhängige `gemini-3.8-flash-medium`-Instanzen, beide medium;
@@ -96,11 +102,10 @@ Lokales Protokoll: `2026-09-08-codemap-foundation-medium`, SHA-256
 
 ### Arbeitsprogramm: verlässlicher Nutzen bei Code-Aufgaben
 
-Der anschließende [Vergleich des bestehenden Produkts](../developer/agent-impact-current-development-result.md)
-ist abgeschlossen; sein Effizienz-Gate ist verfehlt. Die unabhängigen Fälle bleiben geschlossen.
-Nächste Hypothese: Aufgabenfrage und bekannte Fundstelle in einem kompakten Aufruf
-nutzen, um fehlende Bereiche zu ergänzen und zusätzliche Werkzeugrunden zu vermeiden.
-Das ist ein neuer Entwicklungsansatz, keine freigegebene weitere Modellserie.
+Der jüngste [Dreifachvergleich](../developer/todo-agent-development-result.md) ist abgeschlossen;
+beide Effizienz-Gates sind verfehlt. Die unabhängigen Fälle bleiben geschlossen.
+Aufgabenfrage plus Fundstelle wurde lokal geprüft und wegen unzureichenden Gewinns verworfen.
+Weitere Entwicklung braucht einen neuen konkreten Befund; keine weitere Modellserie ist freigegeben.
 Das abgeschlossene Verbesserungsprogramm bleibt unten als Verlauf dokumentiert.
 
 Stand: 2026-09-07. Programm abgeschlossen: Messgrundlage geprüft, beide Produktkandidaten verworfen;

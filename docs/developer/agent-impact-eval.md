@@ -8,6 +8,9 @@ changed paths.
 It is not part of `npm run verify` and does not run in CI: every agent attempt is paid and
 non-deterministic.
 
+Latest completed development run: [36 runs with full quality checks](todo-agent-development-result.md).
+Both CodeMap arms passed quality and failed the efficiency gate; confirmation remains closed.
+
 ## Safety and validity
 
 - The manifest pins full source, fix, and CodeMap commits. Each base must fail the named hidden-test
