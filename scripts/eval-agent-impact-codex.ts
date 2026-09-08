@@ -135,7 +135,7 @@ export function codexContainerEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 
 export function verifyCodexSandbox(binary: string, root: string, workspace: string, profile: string, env: NodeJS.ProcessEnv, treatment: boolean,
   publicTest?: { argv: string[]; timeoutMs: number }): void {
-  const probe = `const cp=require('node:child_process');
+  const probe = `process.chdir(${JSON.stringify(workspace)});const cp=require('node:child_process');
     cp.execFileSync('/bin/bash',['-lc','rg --version && rg --files | head -1 && node --version && npm --version']);
     if (${treatment}) cp.execFileSync('/bin/bash',['-lc','codemap status --json']);
     const test=${JSON.stringify(publicTest ?? null)};
@@ -144,7 +144,7 @@ export function verifyCodexSandbox(binary: string, root: string, workspace: stri
     s.on('error',()=>process.exit(1));
     s.listen(0,'127.0.0.1',async()=>{try{const r=await fetch('http://127.0.0.1:'+s.address().port);if(await r.text()!=='ok')process.exitCode=1;}finally{s.close()}});`;
   const result = spawnSync("bwrap", [...codexContainerArgs(binary, root, profile),
-    "sandbox", "-P", "fixture", "-C", workspace,
+    "sandbox", "-P", "fixture", "-C", root,
     "-c", 'permissions.fixture.extends=":workspace"',
     "-c", 'permissions.fixture.network.enabled=true',
     "--", process.execPath, "-e", probe,

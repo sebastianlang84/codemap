@@ -144,19 +144,21 @@ test("Codex sandbox permits local HTTP regression tests only with network enable
 test("navigation preflight checks both arms without counting harness calls as adoption", t => {
   const binary = join(process.env.HOME!, ".local/bin/codex");
   if (!existsSync(binary)) { t.skip("Codex CLI not installed"); return; }
-  const root = mkdtempSync(join(tmpdir(), "codemap-nav-test-"));
+  const root = mkdtempSync("/var/tmp/codemap-nav-test-");
+  const workspace = join(root, "repo");
   const profile = mkdtempSync(join(tmpdir(), "codemap-profile-test-"));
   try {
     mkdirSync(join(root, "bin"));
-    writeFileSync(join(root, "example.js"), "const present = true;\n");
+    mkdirSync(workspace);
+    writeFileSync(join(workspace, "example.js"), "const present = true;\n");
     const env = { PATH: "/usr/local/bin:/usr/bin:/bin", CODEMAP_CALL_LOG: join(root, "agent-calls.log") };
-    verifyCodexSandbox(binary, root, root, profile, env, false,
+    verifyCodexSandbox(binary, root, workspace, profile, env, false,
       { argv: [process.execPath, "-e", "require('node:fs').writeFileSync('public-test-ran', 'yes')"], timeoutMs: 5000 });
-    assert.equal(readFileSync(join(root, "public-test-ran"), "utf8"), "yes");
-    assert.throws(() => verifyCodexSandbox(binary, root, root, profile, env, false,
+    assert.equal(readFileSync(join(workspace, "public-test-ran"), "utf8"), "yes");
+    assert.throws(() => verifyCodexSandbox(binary, root, workspace, profile, env, false,
       { argv: [process.execPath, "-e", "process.exit(7)"], timeoutMs: 5000 }), /preflight failed/);
     writeFileSync(join(root, "bin", "codemap"), '#!/bin/sh\necho status >> "$CODEMAP_CALL_LOG"\necho {}\n', { mode: 0o700 });
-    verifyCodexSandbox(binary, root, root, profile, env, true);
+    verifyCodexSandbox(binary, root, workspace, profile, env, true);
     assert.equal(existsSync(env.CODEMAP_CALL_LOG), false);
     assert.match(readFileSync(join(root, "preflight-calls.log"), "utf8"), /status/);
   } finally { rmSync(root, { recursive: true, force: true }); rmSync(profile, { recursive: true, force: true }); }

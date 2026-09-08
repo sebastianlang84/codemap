@@ -143,8 +143,13 @@ try {
     if (manifest.diagnostic) curatedContexts.set(task.id, renderCuratedContext(task, path => git(repositoryCaches.get(task.repo)!, ["show", `${task.baseCommit}:${path}`])));
   }
   const profile = runtimeProfile = args.validateOnly && !args.validateSandboxes ? undefined : ensureCodeMapProfile(manifest, args);
-  const oracles = selectedTasks.map((task) => validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir,
-    args.validateSandboxes || (manifest.comparison && !args.validateOnly) ? profile : undefined));
+  const oracles = selectedTasks.map((task) => {
+    console.error(`[agent-impact] validating oracle: ${task.id}`);
+    const result = validateOracle(task, repositoryCaches.get(task.repo)!, runRoot, args.keepWorkdir,
+      args.validateSandboxes || (manifest.comparison && !args.validateOnly) ? profile : undefined);
+    console.error(`[agent-impact] oracle ${result.valid ? "passed" : "FAILED"}: ${task.id}`);
+    return result;
+  });
   const results = !args.validateOnly && args.resume ? loadCheckpoint(args.evidenceOutput!, manifestSha256, manifest) : [];
   const agentReport = {
     provider: manifest.agent.provider,
@@ -649,9 +654,10 @@ function runSpec(spec: AgentImpactCommand, cwd: string, env: NodeJS.ProcessEnv):
 
 function runSandboxSpec(spec: AgentImpactCommand, workspace: PreparedWorkspace, profile: string, env: NodeJS.ProcessEnv): CommandResult {
   return runSpec({ file: "bwrap", args: [...codexContainerArgs(resolveCodexBin(), workspace.root, profile),
-    "sandbox", "-P", "fixture", "-C", workspace.repo,
+    "sandbox", "-P", "fixture", "-C", workspace.root,
     "-c", 'permissions.fixture.extends=":workspace"', "-c", 'permissions.fixture.network.enabled=true',
-    "--", spec.file, ...spec.args], timeoutMs: spec.timeoutMs + 20_000 }, workspace.repo, codexContainerEnv(env));
+    "--", "/bin/sh", "-c", 'cd "$1" && shift && exec "$@"', "quality-check", workspace.repo,
+    spec.file, ...spec.args], timeoutMs: spec.timeoutMs + 20_000 }, workspace.repo, codexContainerEnv(env));
 }
 
 function captureDiff(repo: string, task: AgentImpactTask): Pick<AgentImpactRunResult, "changedPaths" | "forbiddenChanges" | "addedLines" | "deletedLines" | "expectedPathRecall"> {
