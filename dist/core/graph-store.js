@@ -1,6 +1,6 @@
 import { readAllIndexedSourceTexts } from "./indexed-source.js";
 import { extractLocalReferences, resolveIndexedReference } from "./local-references.js";
-export const GRAPH_VERSION = "2";
+export const GRAPH_VERSION = "3";
 const GRAPH_VERSION_KEY = "graph_version";
 export function hasGraphMetadata(db) {
     const stored = db.prepare("select value from meta where key = ?").get(GRAPH_VERSION_KEY);
@@ -75,7 +75,7 @@ function extractorFor(language, path, kind) {
     if (kind === "include")
         return "cpp-include-regex";
     if (language === "python" || language === "py" || lowerPath.endsWith(".py"))
-        return "python-relative-import-regex";
+        return "python-local-import-regex";
     return "ts-js-local-import-regex";
 }
 function toGraphDependency(row) {

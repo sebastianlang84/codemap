@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Ignore JavaScript imports inside comments, strings and recognized regular expressions; resolve unambiguous local declaration files and absolute Python imports. Refreshing an existing index rebuilds the corrected reference graph.
+
+- Preserve explicit identifiers beyond the first twelve query words without increasing the term cap.
+
+- Validate agent fixes against declared full quality checks and isolate the evaluation runtime from manifests, tests and reference solutions.
+
 - Include directly importing tests in related-test suggestions even when filenames differ, and prioritize their import evidence in expanded context.
 
 - Recognize JavaScript function assignments under their target and short property names, return complete function context, and stop treating callback calls as methods. Exact symbol context now precedes partial filename matches. Run `codemap index` to rebuild existing indexes.

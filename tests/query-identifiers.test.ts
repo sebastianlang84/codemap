@@ -4,6 +4,10 @@ import { planQuery } from "../src/core/query-plan.ts";
 
 const padding = "please find the code that handles the response when a client cancels";
 const identifiers = ["sendTrailers", "send_trailers", "response.sendTrailers", "HTTPResponseWriter"];
+test("long prose preserves the original prefix budget", () => {
+  assert.deepEqual(planQuery("workbench chart interval and x range settings should survive reload from local storage").terms,
+    ["workbench", "chart", "interval", "and", "range", "settings", "should", "survive", "reload", "from", "local", "xrange", "localstorage"]);
+});
 for (const identifier of identifiers) {
   for (const position of ["start", "middle", "end"] as const) {
     const query = position === "start" ? `${identifier} ${padding}`

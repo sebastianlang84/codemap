@@ -1,0 +1,923 @@
+{
+  "schemaVersion": 1,
+  "codeCommit": "fd27c82",
+  "scope": "24 original current-development Codex CLI traces; no MCP/Pi host trace captured",
+  "sourceAudit": {
+    "path": "docs/developer/agent-impact-current-navigation-audit.json",
+    "sha256": "e0df67afd2772fcd57cf4a0cc651499a24de51971ef65ebd1e936310bdef7156"
+  },
+  "method": "Completed command_execution aggregated_output only. raw_decode first JSON value permits trailing Node warning. All context requests inspected. Overlap lower bound: before first completed file_change only; literal sed ranges targeting same file verified by exact contiguous output match, or rg path/line records verified against previously visible context text. Other output forms excluded. Counts are observed content repetition, not proof of avoidable work or time cost. Output truncation checks use explicit markers and successful full JSON parse; host internal truncation not observable.",
+  "adapters": {
+    "cliPlain": {
+      "sourceInText": false,
+      "evidence": "src/cli/main.ts:169-179"
+    },
+    "cliJson": {
+      "sourceInText": true,
+      "evidence": "src/cli/main.ts:169"
+    },
+    "mcp": {
+      "sourceInContentText": false,
+      "sourceInStructuredContent": true,
+      "hostModelVisibilityVerified": false,
+      "evidence": "src/mcp/server.ts:88-93,133-136,168-178"
+    },
+    "pi": {
+      "sourceInContentText": true,
+      "sourceInDetails": true,
+      "collapsedUiIsFullPayload": false,
+      "hostModelVisibilityVerified": false,
+      "evidence": "src/pi-extension/tools.ts:8-9,78-91,108"
+    }
+  },
+  "totals": {
+    "traces": 24,
+    "commands": 234,
+    "contextCalls": 14,
+    "jsonRequested": 14,
+    "plainRequested": 0,
+    "contextFailed": 2,
+    "contextEmptyOutput": 1,
+    "contextParseableJson": 11,
+    "contextWithSource": 11,
+    "contextExplicitTruncationMarkers": 0,
+    "overlappingReadCommands": 17,
+    "runsWithOverlappingReads": 11,
+    "completeExcerptRereadCommands": 5,
+    "matchedLineOccurrences": 220,
+    "matchedNonblankLineOccurrences": 197
+  },
+  "runs": [
+    {
+      "runOrder": 1,
+      "mode": "baseline",
+      "traceSha256": "ebe2054c1d94011cdc433d6afab6b1a8437cd5a9323c463024bab1fe4f920f01",
+      "commands": 7,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 2,
+      "mode": "codemap",
+      "traceSha256": "4968ca9723be9ad0e42c847ad3254514911fd963d72f38a6a4b3c87fd7c0a5d4",
+      "commands": 13,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 2803,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 549,
+              "endLine": 591,
+              "sourceBytes": 1042,
+              "sourceSha256": "8e7517ff831d32ab9611592833b28b4725744dd5ac9c4c0ca447e955a4be2818"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 3,
+          "contextCommandOrdinal": 2,
+          "path": "lib/response.js",
+          "matchedLineCount": 43,
+          "matchedNonblankLineCount": 37,
+          "fullExcerpt": true,
+          "methods": [
+            "sed-range-exact-output"
+          ],
+          "sourceLineNumbers": [
+            549,
+            550,
+            551,
+            552,
+            553,
+            554,
+            555,
+            556,
+            557,
+            558,
+            559,
+            560,
+            561,
+            562,
+            563,
+            564,
+            565,
+            566,
+            567,
+            568,
+            569,
+            570,
+            571,
+            572,
+            573,
+            574,
+            575,
+            576,
+            577,
+            578,
+            579,
+            580,
+            581,
+            582,
+            583,
+            584,
+            585,
+            586,
+            587,
+            588,
+            589,
+            590,
+            591
+          ]
+        },
+        {
+          "commandOrdinal": 4,
+          "contextCommandOrdinal": 2,
+          "path": "lib/response.js",
+          "matchedLineCount": 1,
+          "matchedNonblankLineCount": 1,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            549
+          ]
+        },
+        {
+          "commandOrdinal": 5,
+          "contextCommandOrdinal": 2,
+          "path": "lib/response.js",
+          "matchedLineCount": 6,
+          "matchedNonblankLineCount": 6,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            564,
+            566,
+            570,
+            571,
+            575,
+            582
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 3,
+      "mode": "codemap",
+      "traceSha256": "7bdad696995902b272a8e40c53c1c1ea6e0d13e82b0745219f1dc3570b9cf726",
+      "commands": 9,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 3652,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "lib/request.js",
+              "startLine": 101,
+              "endLine": 149,
+              "sourceBytes": 1512,
+              "sourceSha256": "559ac73a138892090ecb42c9571ce209d337d335dc3f9db04d89fe49383ac551"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 3,
+          "contextCommandOrdinal": 2,
+          "path": "lib/request.js",
+          "matchedLineCount": 49,
+          "matchedNonblankLineCount": 46,
+          "fullExcerpt": true,
+          "methods": [
+            "sed-range-exact-output"
+          ],
+          "sourceLineNumbers": [
+            101,
+            102,
+            103,
+            104,
+            105,
+            106,
+            107,
+            108,
+            109,
+            110,
+            111,
+            112,
+            113,
+            114,
+            115,
+            116,
+            117,
+            118,
+            119,
+            120,
+            121,
+            122,
+            123,
+            124,
+            125,
+            126,
+            127,
+            128,
+            129,
+            130,
+            131,
+            132,
+            133,
+            134,
+            135,
+            136,
+            137,
+            138,
+            139,
+            140,
+            141,
+            142,
+            143,
+            144,
+            145,
+            146,
+            147,
+            148,
+            149
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 4,
+      "mode": "baseline",
+      "traceSha256": "8def6dae1a54529acb56c9f883728475b640648b49bd0fc0f076780a4aef5d94",
+      "commands": 8,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 5,
+      "mode": "baseline",
+      "traceSha256": "3728846bd3b2713a2bcdab098ffb5debdc5d5a3809504ece3e318fe153a976a7",
+      "commands": 5,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 6,
+      "mode": "codemap",
+      "traceSha256": "a947c59be41832ece09d17bd0422b85ba22911a86ece23b971ac77f52462cd67",
+      "commands": 10,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 0,
+          "truncationMarker": false,
+          "excerpts": [],
+          "parseableJson": false
+        }
+      ],
+      "overlaps": []
+    },
+    {
+      "runOrder": 7,
+      "mode": "codemap",
+      "traceSha256": "d75ebf69a292a913634c5ba39b65c2433d2302878f5583be920bc4ac6dabf1e4",
+      "commands": 12,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 1,
+          "outputCharacters": 255,
+          "truncationMarker": false,
+          "excerpts": [],
+          "parseableJson": false
+        },
+        {
+          "commandOrdinal": 3,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 2364,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 854,
+              "endLine": 883,
+              "sourceBytes": 654,
+              "sourceSha256": "5f4d8f1e3dbcd8c696cfdade3964d39583fb0eca97cdebbd4b4278568723b8b8"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 5,
+          "contextCommandOrdinal": 3,
+          "path": "lib/response.js",
+          "matchedLineCount": 30,
+          "matchedNonblankLineCount": 23,
+          "fullExcerpt": true,
+          "methods": [
+            "sed-range-exact-output"
+          ],
+          "sourceLineNumbers": [
+            854,
+            855,
+            856,
+            857,
+            858,
+            859,
+            860,
+            861,
+            862,
+            863,
+            864,
+            865,
+            866,
+            867,
+            868,
+            869,
+            870,
+            871,
+            872,
+            873,
+            874,
+            875,
+            876,
+            877,
+            878,
+            879,
+            880,
+            881,
+            882,
+            883
+          ]
+        },
+        {
+          "commandOrdinal": 6,
+          "contextCommandOrdinal": 3,
+          "path": "lib/response.js",
+          "matchedLineCount": 3,
+          "matchedNonblankLineCount": 3,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            871,
+            872,
+            873
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 8,
+      "mode": "baseline",
+      "traceSha256": "fad9e55d5027830c5ee7b98ec8cd49aba0ca5512f947f1a579c2bd516a8fb19f",
+      "commands": 5,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 9,
+      "mode": "baseline",
+      "traceSha256": "9c166e7d04f3c448211d269bf4317e4ab05a9a13805970146d134f3535839674",
+      "commands": 12,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 10,
+      "mode": "codemap",
+      "traceSha256": "3643d1bff354625aa8c28be7583423cd1667269471c5225938b9bc0307259d49",
+      "commands": 20,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 20719,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "lib/route.js",
+              "startLine": 75,
+              "endLine": 588,
+              "sourceBytes": 18271,
+              "sourceSha256": "5acba8678b488bb7e7c8f68a9a30ebe9dccab27aedd24715a6885013d1dad6d1"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 4,
+          "contextCommandOrdinal": 2,
+          "path": "lib/route.js",
+          "matchedLineCount": 9,
+          "matchedNonblankLineCount": 9,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            155,
+            158,
+            160,
+            217,
+            221,
+            286,
+            345,
+            384,
+            464
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 11,
+      "mode": "codemap",
+      "traceSha256": "a0b5311060eb0618c3a02178d5fb23f2d32ea9de6a70ef6e3c392a4886928b66",
+      "commands": 21,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 9670,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "src/flask/wrappers.py",
+              "startLine": 18,
+              "endLine": 219,
+              "sourceBytes": 7677,
+              "sourceSha256": "0ee482fc3ef7b1fa1a34597af5ceb8d0a572cf07fd3c8ce5dd8620ee2407e393"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 3,
+          "contextCommandOrdinal": 2,
+          "path": "src/flask/wrappers.py",
+          "matchedLineCount": 2,
+          "matchedNonblankLineCount": 2,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            215,
+            219
+          ]
+        },
+        {
+          "commandOrdinal": 6,
+          "contextCommandOrdinal": 2,
+          "path": "src/flask/wrappers.py",
+          "matchedLineCount": 2,
+          "matchedNonblankLineCount": 2,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            69,
+            86
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 12,
+      "mode": "baseline",
+      "traceSha256": "e5140908405a68a10235ee2b9bc0c440142db3f60f717af98525048cfd1758b6",
+      "commands": 15,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 13,
+      "mode": "baseline",
+      "traceSha256": "4edb16777985805bcf38d428e5223a34b227e250a856c4892cf946c8e3a4bccb",
+      "commands": 5,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 14,
+      "mode": "codemap",
+      "traceSha256": "e780961ad97631df9b254fb2a1ac2d0b712fdc813268366045709fd7464180a3",
+      "commands": 7,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 1,
+          "outputCharacters": 255,
+          "truncationMarker": false,
+          "excerpts": [],
+          "parseableJson": false
+        },
+        {
+          "commandOrdinal": 3,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 1357,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 709,
+              "endLine": 713,
+              "sourceBytes": 163,
+              "sourceSha256": "8fd14dc5d6d3fa0539ab083a15ad2630b3426cfb2e8bcb4e45eb58aa03e616ea"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 4,
+          "contextCommandOrdinal": 3,
+          "path": "lib/response.js",
+          "matchedLineCount": 5,
+          "matchedNonblankLineCount": 4,
+          "fullExcerpt": true,
+          "methods": [
+            "rg-numbered-exact-output",
+            "sed-range-exact-output"
+          ],
+          "sourceLineNumbers": [
+            709,
+            710,
+            711,
+            712,
+            713
+          ]
+        },
+        {
+          "commandOrdinal": 5,
+          "contextCommandOrdinal": 3,
+          "path": "lib/response.js",
+          "matchedLineCount": 2,
+          "matchedNonblankLineCount": 2,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            709,
+            710
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 15,
+      "mode": "codemap",
+      "traceSha256": "98a74b1774122bc7593944e1f7518429cf15fe84e35a7d079cf18a895d7c75a8",
+      "commands": 6,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 4315,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "lib/request.js",
+              "startLine": 223,
+              "endLine": 302,
+              "sourceBytes": 2127,
+              "sourceSha256": "eb998a3f136105e513af5192bdd2ce822b570bb94c0c2ac79a8c442627fed4e4"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 3,
+          "contextCommandOrdinal": 2,
+          "path": "lib/request.js",
+          "matchedLineCount": 17,
+          "matchedNonblankLineCount": 16,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            248,
+            249,
+            250,
+            251,
+            252,
+            253,
+            254,
+            255,
+            256,
+            257,
+            258,
+            259,
+            260,
+            261,
+            262,
+            263,
+            264
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 16,
+      "mode": "baseline",
+      "traceSha256": "e0859a75a83c598feaea571434924b63c0b486a35b02ae9511c45ec0c897df3e",
+      "commands": 4,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 17,
+      "mode": "baseline",
+      "traceSha256": "2fc664452fe244ef7e58e9d77be5d1bc50719c5a44f0e5782fde33197926bd11",
+      "commands": 11,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 18,
+      "mode": "codemap",
+      "traceSha256": "a8d873f9d0182dcd7644f9c5f2865c1a5805b694d965a873759fd6ae969faaaa",
+      "commands": 10,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 22764,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "src/flask/sansio/blueprints.py",
+              "startLine": 119,
+              "endLine": 632,
+              "sourceBytes": 20239,
+              "sourceSha256": "e88679354c446f79b9d763c3799cc0515b4bce2696a8b0650a038909e81a4202"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 3,
+          "contextCommandOrdinal": 2,
+          "path": "src/flask/sansio/blueprints.py",
+          "matchedLineCount": 3,
+          "matchedNonblankLineCount": 3,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            444,
+            478,
+            516
+          ]
+        },
+        {
+          "commandOrdinal": 5,
+          "contextCommandOrdinal": 2,
+          "path": "src/flask/sansio/blueprints.py",
+          "matchedLineCount": 9,
+          "matchedNonblankLineCount": 9,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            446,
+            454,
+            462,
+            480,
+            490,
+            498,
+            518,
+            528,
+            536
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 19,
+      "mode": "codemap",
+      "traceSha256": "e84b9c0e079f4d5a4106c24f09f1b42444451e557ff78b6f63b25933f7d1ff62",
+      "commands": 6,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 2217,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "lib/response.js",
+              "startLine": 683,
+              "endLine": 710,
+              "sourceBytes": 582,
+              "sourceSha256": "9ee06f7fe470ff2459c705f62fdc9cd26be70a3de6e8f8868afc54b09669be72"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 4,
+          "contextCommandOrdinal": 2,
+          "path": "lib/response.js",
+          "matchedLineCount": 28,
+          "matchedNonblankLineCount": 23,
+          "fullExcerpt": true,
+          "methods": [
+            "sed-range-exact-output"
+          ],
+          "sourceLineNumbers": [
+            683,
+            684,
+            685,
+            686,
+            687,
+            688,
+            689,
+            690,
+            691,
+            692,
+            693,
+            694,
+            695,
+            696,
+            697,
+            698,
+            699,
+            700,
+            701,
+            702,
+            703,
+            704,
+            705,
+            706,
+            707,
+            708,
+            709,
+            710
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 20,
+      "mode": "baseline",
+      "traceSha256": "60ca5fcce5053c0c3b65b994be9993c1d2f073325480fd47128ddb7e01ae8de7",
+      "commands": 5,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 21,
+      "mode": "baseline",
+      "traceSha256": "399e75762d4fea9d42eeeae78afa62af36058824219c17707af44da2c98821d7",
+      "commands": 15,
+      "contexts": [],
+      "overlaps": []
+    },
+    {
+      "runOrder": 22,
+      "mode": "codemap",
+      "traceSha256": "e75e7cecd70a49afae781cc7846212a68deb6fbf627ebc84f2960a79f9f31e56",
+      "commands": 12,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 2159,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "test/schema-validation.test.js",
+              "startLine": 318,
+              "endLine": 336,
+              "sourceBytes": 552,
+              "sourceSha256": "5662789f2ff1cde56ec22d9272e34f2547ecac09141ed72b929fa2711c572b1d"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 3,
+          "contextCommandOrdinal": 2,
+          "path": "test/schema-validation.test.js",
+          "matchedLineCount": 6,
+          "matchedNonblankLineCount": 6,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            318,
+            321,
+            322,
+            329,
+            332,
+            333
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 23,
+      "mode": "codemap",
+      "traceSha256": "005e9108a3100dc4d7764185a3db866a2e1ff5094c60a6d6348f059ecee7b1d0",
+      "commands": 10,
+      "contexts": [
+        {
+          "commandOrdinal": 2,
+          "jsonRequested": true,
+          "exitCode": 0,
+          "outputCharacters": 5524,
+          "truncationMarker": false,
+          "excerpts": [
+            {
+              "path": "src/flask/sessions.py",
+              "startLine": 298,
+              "endLine": 398,
+              "sourceBytes": 3657,
+              "sourceSha256": "cb23378c337d282c9b94649611c36548e28478d57e277c6110a28dc8b5fc8909"
+            }
+          ],
+          "parseableJson": true
+        }
+      ],
+      "overlaps": [
+        {
+          "commandOrdinal": 5,
+          "contextCommandOrdinal": 2,
+          "path": "src/flask/sessions.py",
+          "matchedLineCount": 5,
+          "matchedNonblankLineCount": 5,
+          "fullExcerpt": false,
+          "methods": [
+            "rg-numbered-exact-output"
+          ],
+          "sourceLineNumbers": [
+            317,
+            323,
+            324,
+            337,
+            386
+          ]
+        }
+      ]
+    },
+    {
+      "runOrder": 24,
+      "mode": "baseline",
+      "traceSha256": "85483310ac59f8fe428a27960c1f8256d0f16c529baf7bf5ca33706f71b719e1",
+      "commands": 6,
+      "contexts": [],
+      "overlaps": []
+    }
+  ]
+}

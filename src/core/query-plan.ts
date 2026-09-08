@@ -67,7 +67,7 @@ function selectTerms(terms: string[]): string[] {
   // Preserve explicit code names before prose consumes the bounded query budget.
   const priority = (term: string): number => {
     if (/[a-z0-9][A-Z]|[A-Z]{2}[a-z]|[\p{L}\p{N}][_.\/$-][\p{L}\p{N}]|^[/$][\p{L}\p{N}]/u.test(term)) return 0;
-    return stopWords.has(term.toLowerCase()) ? 2 : 1;
+    return 1;
   };
   return terms.map((term, index) => ({ term, index, priority: priority(term) }))
     .sort((left, right) => left.priority - right.priority || left.index - right.index)
