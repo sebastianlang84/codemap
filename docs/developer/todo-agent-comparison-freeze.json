@@ -19,5 +19,6 @@
   "confirmationCalls": 0,
   "confirmationCondition": "Only a development arm passing all frozen gates may unlock at most twelve untouched pairs.",
   "claimBoundary": "Known development tasks; no independent confirmation claim.",
-  "navigationAuditSha256": "aec8651afdd45c4ae72304f3319ba596bd464caa5d7758281c940041bf5ad2e4"
+  "navigationAuditSha256": "aec8651afdd45c4ae72304f3319ba596bd464caa5d7758281c940041bf5ad2e4",
+  "sandboxValidationSha256": "c829392216a34ee976efeb4b7db64b9abccc1b5a5d6bf3297f029c91072fa3cf"
 }

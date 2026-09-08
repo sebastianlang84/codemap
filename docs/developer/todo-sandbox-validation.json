@@ -1,0 +1,1343 @@
+{
+  "schemaVersion": 1,
+  "validationOnly": true,
+  "modelCalls": 0,
+  "manifestSha256": "203f29dd95a2e03e2000f950eb934f16f166626ab653bf28a303f5ad5570cb82",
+  "codemapProfile": {
+    "gitCommit": "389e394567adfc19f78133ef323e96158503f105",
+    "expectedVersion": "0.10.1"
+  },
+  "agent": {
+    "provider": "codex-cli",
+    "requestedModel": "gpt-5.6-luna",
+    "effort": "medium",
+    "navigationWorkflow": "location-first",
+    "codexVersion": "codex-cli 0.153.4",
+    "modelEvidence": "requested-only; CLI does not report response model",
+    "maxBudgetUsdPerRun": null,
+    "isolationConfigSha256": "74af79b093554077bc957d58a6fc66eed118b0ce89368a252c589fa25d1c5d90"
+  },
+  "rawReportSha256": "0239ee8f9b1c9d89a955c9623498667cd4cdfbf4ce5bdca4049879a6fbd9aa06",
+  "oracles": [
+    {
+      "taskId": "program-development-01",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": []
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-02",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "857ff70d54e705d9e310d0ca2e40a62af14397fc8b18c8f0851d27f6879fbbe1"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "857ff70d54e705d9e310d0ca2e40a62af14397fc8b18c8f0851d27f6879fbbe1"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "857ff70d54e705d9e310d0ca2e40a62af14397fc8b18c8f0851d27f6879fbbe1"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "857ff70d54e705d9e310d0ca2e40a62af14397fc8b18c8f0851d27f6879fbbe1"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "64ee494d92c629db1822a5fcb67dda80c3700e0a72072c7a7dc6d85e80948b15"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "64ee494d92c629db1822a5fcb67dda80c3700e0a72072c7a7dc6d85e80948b15"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "64ee494d92c629db1822a5fcb67dda80c3700e0a72072c7a7dc6d85e80948b15"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "64ee494d92c629db1822a5fcb67dda80c3700e0a72072c7a7dc6d85e80948b15"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-03",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-04",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": []
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-05",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "13ef903477389e5272e643fce882ea5877d4a2ee297c1c715252cac7c67d44b6"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "13ef903477389e5272e643fce882ea5877d4a2ee297c1c715252cac7c67d44b6"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "857ff70d54e705d9e310d0ca2e40a62af14397fc8b18c8f0851d27f6879fbbe1"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "857ff70d54e705d9e310d0ca2e40a62af14397fc8b18c8f0851d27f6879fbbe1"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "418e71722d73d38732c98849d3e0a790aa6265a1b8b1d08e9a8be10131809ba4"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "418e71722d73d38732c98849d3e0a790aa6265a1b8b1d08e9a8be10131809ba4"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "64ee494d92c629db1822a5fcb67dda80c3700e0a72072c7a7dc6d85e80948b15"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "64ee494d92c629db1822a5fcb67dda80c3700e0a72072c7a7dc6d85e80948b15"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-06",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-07",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": []
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-08",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "6fbdd96423678b3277a3f3cb79809c3383ddd17ea908596d6b62a9c58ecb3af4"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "6fbdd96423678b3277a3f3cb79809c3383ddd17ea908596d6b62a9c58ecb3af4"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "6fbdd96423678b3277a3f3cb79809c3383ddd17ea908596d6b62a9c58ecb3af4"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "6fbdd96423678b3277a3f3cb79809c3383ddd17ea908596d6b62a9c58ecb3af4"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "2f7229a47c9c0cf07894995fa81a604b2eade6e264f5b735971b29ca9b2902d5"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "2f7229a47c9c0cf07894995fa81a604b2eade6e264f5b735971b29ca9b2902d5"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "2f7229a47c9c0cf07894995fa81a604b2eade6e264f5b735971b29ca9b2902d5"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "2f7229a47c9c0cf07894995fa81a604b2eade6e264f5b735971b29ca9b2902d5"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-09",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "0563e414daefc2eb2f144362b6a2ef94b3648567cf033cc9ce90030b68e970db"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "0563e414daefc2eb2f144362b6a2ef94b3648567cf033cc9ce90030b68e970db"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "0563e414daefc2eb2f144362b6a2ef94b3648567cf033cc9ce90030b68e970db"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 1,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "0563e414daefc2eb2f144362b6a2ef94b3648567cf033cc9ce90030b68e970db"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            },
+            {
+              "id": "mypy-callers-existing",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            },
+            {
+              "id": "mypy-callers-bare",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "54a4342c1ae024ddbaea41764f6b8eebc3bde567302652e595f17d8291e31859"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-10",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": []
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": []
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-11",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "a4030e5c7a58937e7cc0e6d15fe05f8c9fa169238add9de1b3a147515e5799b9"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "4ff37e49a2b6a258657cac81643a47442bb49fff1f492a51adbc1ce171f968ea"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "bb55af26b7d7a579c29bdfdf64fab1b67081c0cca052fc80621f87c3d47e487f"
+            }
+          ],
+          [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "ee0ea266b0ffcbca0f5a8bc0fe503fbe0ac5703939c81d350dd7f90267adffe3"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "6c057ad8ba0f534a1973cc807f6f64b23759e882c4a6f54d6ca12d19aba005f0"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "bf04d0c62748bdc8711c105c92e1c1ba18c56510744f1c1b608fe713c2a5277d"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "a02dbf08e6a611e356177d856dde195ec0b4e1ce10c0037dc75d0efca3d9a566"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "typescript-suite",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "5c49fe065ffba4da4c8d24fab62902e11a50cdb6be608216ec7cb82de549a0e7"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    },
+    {
+      "taskId": "program-development-12",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "baseFailureKind": "assertion",
+      "baseFails": true,
+      "referencePasses": true,
+      "valid": true,
+      "quality": {
+        "base": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        ],
+        "reference": [
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ],
+          [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        ]
+      },
+      "sandboxQuality": [
+        {
+          "phase": "base",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "base",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "baseline",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        },
+        {
+          "phase": "reference",
+          "mode": "codemap",
+          "checks": [
+            {
+              "id": "mypy-source",
+              "exitCode": 0,
+              "timedOut": false,
+              "passed": true,
+              "outputSha256": "56b8de8b601d2a4f97dddd81befe52ae289566ebee01bdd64e087925c980e451"
+            }
+          ]
+        }
+      ],
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "publicSandboxPassed": true
+    }
+  ]
+}

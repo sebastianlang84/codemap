@@ -14,10 +14,10 @@ Korrektheitsfixes, Adapterprüfung sowie Kontext- und Regelversuche sind
 bestand alle Bedingungen. Literale Dateileseverweise bleiben mit dokumentiertem
 Bereichs-/Budgetbefund zurückgestellt.
 
-- [ ] Vollständige Sandboxprüfung der zwölf Aufgaben abschließen und den eingefrorenen
-  Vergleich aus normaler Suche, CodeMap-Suche allein und bisherigem Kontextablauf
+- [ ] Den eingefrorenen Vergleich aus normaler Suche, CodeMap-Suche allein und bisherigem Kontextablauf
   durchführen. [Protokoll](docs/developer/todo-work-program.md),
   [Freeze](docs/developer/todo-agent-comparison-freeze.json).
+  Alle zwölf Aufgaben bestehen die vollständige Sandboxprüfung.
   Unabhängige Bestätigung bleibt bis zum bestandenen Entwicklungsgate gesperrt.
 
 ## Deutschsprachiges Erklärdokument — faktisch geprüft, redaktionell offen

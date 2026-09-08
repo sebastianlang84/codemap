@@ -23,4 +23,4 @@ Public fixtures are shared setup files with SHA-256 hashes and forbidden-change 
 
 [Machine-readable results](todo-quality-validation.json) record both repetitions, source/reference identities, fixture hashes and archived-patch checks. Express uses the actual oracle runner; typed tasks use the same manifest commands in isolated archives. An initial run exhausted `/tmp` and was discarded, then repeated in the maintainer cache. These are correctness checks, not timing measurements.
 
-Before model calls: integrate Oracle-only reference-patch handling, run every public quality command inside the actual sandbox arms, bind the nested Python 3.11.14 runtime, and freeze the final product commit and arm protocol. No sandbox pass or agent benefit is claimed here.
+Integration complete: reference patches apply only to the oracle workspace, both Python runtimes are bound, and all twelve tasks pass the [actual sandbox checks](todo-sandbox-validation.json). The [comparison freeze](todo-agent-comparison-freeze.json) pins the product, verifier and three arms. No agent benefit follows from these checks.
