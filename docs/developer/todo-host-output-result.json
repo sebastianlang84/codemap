@@ -1,0 +1,65 @@
+{
+  "productBase": "ac8c4bd",
+  "sourceTree": "cb7ca1474bde40b45052c065e9e4dc5462c67559",
+  "runnerSha256": "90deb12b2f05f55e2b949e44395797d2fc0e060c3521d07ee18989477eb26919",
+  "hostVersions": {
+    "pi": "0.80.6",
+    "codex": "0.153.4",
+    "node": "v22.23.2"
+  },
+  "source": {
+    "fileBytes": 1300,
+    "fileSha256": "d22c05f2fd4ed7eb3d6ba9c2ea670add6c898490c8737d7bf1da9c9d5db2bb93",
+    "indexedBlockBytes": 1299,
+    "indexedBlockSha256": "ebad1d15e84f2bf9382744fdca99bad7a2629a0dbdf58f15e7ca0ff4a9748c44",
+    "marker": "CODEMAP_HOST_DUMMY_FULL_SOURCE_A72_END",
+    "markerByteOffset": 1257,
+    "lines": [
+      1,
+      48
+    ]
+  },
+  "boundary": {
+    "network": "bwrap --unshare-all; loopback stub inside same namespace",
+    "credentials": "Fresh allowlist environment, dummy auth; user HOME/config/auth files not mounted",
+    "modelCalls": 0,
+    "fixtureOnly": true
+  },
+  "hosts": {
+    "pi": {
+      "exitCode": 0,
+      "requests": 2,
+      "markerInFollowup": true,
+      "sourceInFollowup": true,
+      "followupSha256": "fd4fad80e2f942d226eb019f37541228dc5ebf640e29f03d3a6495c6e1824555",
+      "stdoutSha256": "76e7599763f79c71decfc895f51b7c272945eebbaee81ce269e5e6a83865eb73",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "toolOutputCount": 1,
+      "hasStructuredContent": false,
+      "route": "messages[].role=tool.content JSON -> readFirst[].text",
+      "firstRequestContainsMarker": false
+    },
+    "codex": {
+      "exitCode": 0,
+      "requests": 2,
+      "markerInFollowup": true,
+      "sourceInFollowup": true,
+      "followupSha256": "34831f9659a1c2fe72afb8c1a6f01686ccef0e754aebd45139aa331ba950c455",
+      "stdoutSha256": "f7a191f1e0baf3d71510bc7036abc73534155c93e94264f927aeaf51cf043822",
+      "stderrSha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721",
+      "toolOutputCount": 1,
+      "hasStructuredContent": true,
+      "route": "input[].custom_tool_call_output.output[].text JSON -> structuredContent.readFirst[].text",
+      "firstRequestContainsMarker": false,
+      "mcpCallCompleted": true,
+      "forwardingCode": "text(await tools.mcp__codemap__codemap_context({target:\"probe.ts\"}));",
+      "actualProbeRunnerSha256": "0db7962a5c95a7c5e6fe9710ebcda554a0c83a4ad12f8f597ae77ffe982d781a"
+    }
+  },
+  "attemptLimits": {
+    "pi": "one host approach; successful",
+    "codex": "direct MCP attempt invalid without code-mode-host; code-mode approach successful after additional_tools stub-parser correction; failed parser run had 6 automatic local HTTP retries",
+    "failedAttemptsAreNotContentEvidence": true
+  },
+  "claimBoundary": "Only captured local host serialization for these versions/routes; no real model processing, direct MCP without Code Mode, other versions or agent benefit claim."
+}
