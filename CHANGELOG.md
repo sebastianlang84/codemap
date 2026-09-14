@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Tell agents in the bundled navigation skill what CodeMap is, which query terms rank well, and where its results stop, so a skill-capable agent can judge on its own when the index is the right tool.
+
 - Ignore JavaScript imports inside comments, strings and recognized regular expressions; resolve unambiguous local declaration files and absolute Python imports. Refreshing an existing index rebuilds the corrected reference graph.
 
 - Preserve explicit identifiers beyond the first twelve query words without increasing the term cap.
