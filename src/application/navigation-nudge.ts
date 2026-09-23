@@ -16,7 +16,8 @@ export function codeMapNavigationNudge(
   if (!shouldNudgeForCodeMapNavigationCommand(command, { cwd: options.cwd })) return { nudge: false };
   try {
     const repoStatus = status(options.cwd, { stateDir: options.stateDir });
-    if (repoStatus.readiness !== "ready" || repoStatus.headChanged) {
+    // An incomplete index run leaves outdated rows behind; do not steer searches to it until a full run.
+    if (repoStatus.readiness !== "ready" || repoStatus.headChanged || repoStatus.incomplete) {
       return { nudge: false, readiness: repoStatus.readiness, root: repoStatus.root };
     }
     return {

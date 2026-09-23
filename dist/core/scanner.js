@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { relative, join, resolve, posix } from "node:path";
 import { createScanPolicy, detectLanguage } from "./scan-policy.js";
 export { detectLanguage };
 export function createScanState() {
-    return { skipped: 0, skippedReasons: {}, warnings: [], incomplete: false, scanned: 0 };
+    return { skipped: 0, skippedReasons: {}, warnings: [], incomplete: false, scanned: 0, unreadable: [] };
 }
 /**
  * Lazily yield scanned files, one at a time, mutating `state` as it goes. The indexer consumes this
@@ -28,6 +28,8 @@ export function* scanRepoStream(root, options, state) {
             // Can't list this directory (permissions, race). Skip its subtree but mark the scan incomplete
             // so its previously-indexed files are not mistaken for deletions.
             state.incomplete = true;
+            const relDir = relative(root, dir).split("\\").join("/");
+            state.unreadable.push(relDir ? `${relDir}/` : "");
             state.warnings.push(`Unreadable directory ${dir}: ${String(error)}`);
             skipOne("unreadable directory");
             return;
@@ -88,6 +90,7 @@ export function* scanRepoStream(root, options, state) {
                 // A single file vanished mid-scan (ENOENT race) or became unreadable (EACCES). Skip it and
                 // mark the scan incomplete so the deletion pass is suppressed for this run.
                 state.incomplete = true;
+                state.unreadable.push(relPath);
                 state.warnings.push(`Unreadable file ${relPath}: ${String(error)}`);
                 skipOne("unreadable file");
             }
@@ -106,7 +109,22 @@ export function* scanRepoStream(root, options, state) {
                 state.warnings.push(`Invalid pathPrefix outside repository: ${options.pathPrefix}`);
             }
             else {
-                yield* walk(scopedRoot);
+                const blocked = prefixBlockReason(root, prefix, policy);
+                if (blocked === "symlink") {
+                    // readdir would follow the link and index its target (possibly outside the repo) under the
+                    // prefix path; a full scan never enters a symlink either.
+                    state.incomplete = true;
+                    // Nothing under the prefix was checked; its old rows must not count as freshly verified.
+                    state.unreadable.push(prefix);
+                    state.warnings.push(`Invalid pathPrefix through a symlink: ${options.pathPrefix}`);
+                }
+                else if (blocked) {
+                    // The full scan skips this subtree, so the scoped scan yields nothing and prunes its rows.
+                    state.warnings.push(`pathPrefix is excluded from indexing (${blocked}): ${options.pathPrefix}`);
+                }
+                else {
+                    yield* walk(scopedRoot);
+                }
             }
         }
         else {
@@ -115,8 +133,28 @@ export function* scanRepoStream(root, options, state) {
     }
     catch (error) {
         state.incomplete = true;
+        state.unreadable.push(prefix);
         state.warnings.push(String(error));
     }
+}
+// Apply the checks a full walk makes on every directory it enters to each ancestor of the prefix, so
+// a scoped scan cannot reach a subtree the full scan would skip.
+function prefixBlockReason(root, prefix, policy) {
+    const parts = prefix.replace(/\/$/, "").split("/");
+    for (let index = 1; index <= parts.length; index++) {
+        const relPath = parts.slice(0, index).join("/");
+        try {
+            if (lstatSync(join(root, relPath)).isSymbolicLink())
+                return "symlink";
+        }
+        catch {
+            return undefined; // missing path: walk() reports it as an unreadable directory
+        }
+        const skip = policy.entrySkipReason(relPath, true);
+        if (skip)
+            return skip;
+    }
+    return undefined;
 }
 /** Eager scan: materialize every file. Used by index-health, which needs the full current file set. */
 export function scanRepo(root, options = {}) {

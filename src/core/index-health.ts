@@ -2,10 +2,12 @@ import { lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { openRepoDb } from "./db.ts";
 import { readGitWorkingTreeStatus, type GitDirtyFile } from "./git-status.ts";
-import { readIndexedFileStats } from "./index-store.ts";
+import { readIndexedFileStats, readUnreadablePaths } from "./index-store.ts";
 import { createScanPolicy } from "./scan-policy.ts";
 import { scanRepo } from "./scanner.ts";
 import { escapeLike } from "./text-util.ts";
+
+const INDEX_INCOMPLETE_WARNING = "Last index run was incomplete (unreadable paths); some indexed files may be outdated.";
 
 export interface IndexStatusCounts {
   indexed: boolean;
@@ -18,6 +20,8 @@ export interface IndexStatusCounts {
 
 export interface IndexHealth {
   stale: boolean;
+  /** An earlier index run could not read a path inside (or containing) the queried scope. */
+  incomplete: boolean;
   changed: number;
   missing: number;
   deleted: number;
@@ -67,6 +71,11 @@ export function cheapIndexHealth(db: ReturnType<typeof openRepoDb>, root: string
   } else {
     stale = false;
   }
+  const incomplete = hasIncompleteIndexRun(db, pathPrefix);
+  if (incomplete) {
+    stale = true;
+    warnings.push(INDEX_INCOMPLETE_WARNING);
+  }
   const indexedFile = db.prepare("select mtime_ms as mtimeMs, size from files where path=?");
   const filePolicy = createScanPolicy(root, { discoverNestedWorktrees: false });
   let directoryPolicy: ReturnType<typeof createScanPolicy> | undefined;
@@ -99,7 +108,7 @@ export function cheapIndexHealth(db: ReturnType<typeof openRepoDb>, root: string
     stale = true;
     warnings.push(`Working tree changed in ${relevantDirty.length} indexable path${relevantDirty.length === 1 ? "" : "s"}; run full status for file-level counts.`);
   }
-  return { stale, changed: 0, missing: 0, deleted: 0, currentHead, headChanged, dirty: git.dirty, dirtyFiles: git.dirtyFiles, warnings };
+  return { stale, incomplete, changed: 0, missing: 0, deleted: 0, currentHead, headChanged, dirty: git.dirty, dirtyFiles: git.dirtyFiles, warnings };
 }
 
 function directoryContainsIndexableFile(root: string, relDir: string, policy: ReturnType<typeof createScanPolicy>): boolean {
@@ -176,13 +185,23 @@ export function fullIndexHealth(db: ReturnType<typeof openRepoDb>, root: string,
   // clear it. Files added or removed under such a directory still surface as changed/missing/deleted
   // through the hash comparison above, so no real drift is lost. `dirty`/`dirtyFiles` stay the raw
   // git view.
-  const indexRelevantDirtyFiles = dirtyFiles.filter((file) => indexed.has(file.path) || current.has(file.path));
+  // A dirty file whose indexed hash already equals its current content (re-indexed after the edit) is
+  // not drift; counting it kept `stale` true after every refresh until the edit was committed.
+  const indexRelevantDirtyFiles = dirtyFiles.filter((file) => (indexed.has(file.path) || current.has(file.path)) && indexed.get(file.path) !== current.get(file.path));
   const hasIndexedGitBaseline = Boolean(indexedHead && git.currentHead);
   const dirtyIndexedFiles = hasIndexedGitBaseline ? indexRelevantDirtyFiles.length : 0;
   if (headChanged) warnings.push("Git HEAD changed since last index.");
   if (dirtyIndexedFiles > 0) warnings.push(`Working tree dirty: ${dirtyIndexedFiles} indexed file${dirtyIndexedFiles === 1 ? "" : "s"}.`);
-  const stale = fileDrift || headChanged || dirtyIndexedFiles > 0;
-  return { stale, changed, missing, deleted, skipped: scan.skipped, skippedReasons: scan.skippedReasons, currentHead: git.currentHead, headChanged, dirty, dirtyFiles, warnings };
+  const incomplete = hasIncompleteIndexRun(db, pathPrefix);
+  if (incomplete) warnings.push(INDEX_INCOMPLETE_WARNING);
+  const stale = fileDrift || headChanged || dirtyIndexedFiles > 0 || incomplete;
+  return { stale, incomplete, changed, missing, deleted, skipped: scan.skipped, skippedReasons: scan.skippedReasons, currentHead: git.currentHead, headChanged, dirty, dirtyFiles, warnings };
+}
+
+// A recorded unreadable path overlaps the queried scope when either contains the other; "" (unknown
+// scope) overlaps every scope.
+function hasIncompleteIndexRun(db: ReturnType<typeof openRepoDb>, pathPrefix: string): boolean {
+  return readUnreadablePaths(db).some((path) => path.startsWith(pathPrefix) || pathPrefix.startsWith(path));
 }
 
 function readPathAwareMeta(db: ReturnType<typeof openRepoDb>, baseKey: string, pathPrefix: string): string | null {

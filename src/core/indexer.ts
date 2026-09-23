@@ -21,7 +21,7 @@ export function indexRepo(options: { cwd?: string; approve?: boolean; pathPrefix
   const scanState = createScanState();
   const files = scanRepoStream(info.root, { pathPrefix, knownFiles }, scanState);
   try {
-    const update = applyIndexUpdate({ db, files, pathPrefix, indexedHead: readGitHead(info.root), allowDeletions: () => !scanState.incomplete });
+    const update = applyIndexUpdate({ db, files, pathPrefix, indexedHead: readGitHead(info.root), allowDeletions: () => !scanState.incomplete, unreadablePaths: () => scanState.unreadable });
     return { scanned: scanState.scanned, indexed: update.indexed, skipped: scanState.skipped, skippedReasons: scanState.skippedReasons, removed: update.removed, warnings: scanState.warnings, dbPath: info.dbPath, root: info.root, pathPrefix };
   } catch (error) {
     try { db.exec("rollback"); } catch { /* already closed or not in transaction */ }
@@ -41,10 +41,10 @@ export function status(cwd = process.cwd(), options: { health?: "cheap" | "full"
     if (!(err instanceof Error && err.message.startsWith("Not inside a Git repository"))) {
       throw err;
     }
-    return { readiness: "not_git", root: cwd, key: "", remote: undefined, approved: false, dbPath: "", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] as string[] };
+    return { readiness: "not_git", root: cwd, key: "", remote: undefined, approved: false, dbPath: "", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, incomplete: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] as string[] };
   }
   if (!info.approved) {
-    return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] as string[] };
+    return { ...info, readiness: "not_approved", indexed: false, files: 0, chunks: 0, symbols: 0, lastIndexedAt: null, indexedHead: null, health: healthMode, stale: false, incomplete: false, changed: 0, missing: 0, deleted: 0, currentHead: null, headChanged: false, dirty: false, dirtyFiles: [], warnings: [] as string[] };
   }
   const db = openRepoDb(info.dbPath);
   try {

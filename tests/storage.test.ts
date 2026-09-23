@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdtempSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -15,6 +15,7 @@ const { searchCodeMap } = await import("../src/core/search.ts");
 const { codemapContext } = await import("../src/core/context.ts");
 const { getRepoInfo, repoKey, listRegistryRepos, approveRepo, resolveStateDir } = await import("../src/core/repo.ts");
 const { scanRepo, scanRepoStream, createScanState } = await import("../src/core/scanner.ts");
+const { openRepoDb } = await import("../src/core/db.ts");
 
 test("scanRepoStream yields the same files and state as the eager scanRepo", (t) => {
   const root = fixtureRepo(t);
@@ -321,4 +322,48 @@ test("CodeMap uses state storage for registry and repo DBs", (t) => {
   assert.match(info.dbPath, /\.local\/share\/codemap\/repos\//);
   assert.ok(existsSync(join(storageHome, ".local", "share", "codemap", "registry.sqlite")));
   assert.ok(existsSync(info.dbPath));
+});
+
+test("state GC refuses to run on an unreadable registry instead of pruning every index", (t) => {
+  const stateDir = mkdtempSync(join(tmpdir(), "pi-codemap-gc-bad-registry-"));
+  t.after(() => rmSync(stateDir, { recursive: true, force: true }));
+  mkdirSync(join(stateDir, "repos"), { recursive: true });
+  const dbPath = join(stateDir, "repos", `${"1".repeat(24)}.sqlite`);
+  writeFileSync(dbPath, "index");
+  // A registry file whose repos table is missing (e.g. damaged or from a foreign tool).
+  const registry = new DatabaseSync(join(stateDir, "registry.sqlite"));
+  registry.exec("create table other(x)");
+  registry.close();
+
+  assert.throws(() => pruneState({ stateDir, apply: true }), /no such table/);
+  assert.ok(existsSync(dbPath), "no index DB is deleted when the registry cannot be read");
+});
+
+test("a second writer waits for a running index transaction instead of failing", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "pi-codemap-busy-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const dbPath = join(dir, "repo.sqlite");
+  openRepoDb(dbPath).close();
+  const holder = `
+    const { DatabaseSync } = require("node:sqlite");
+    const db = new DatabaseSync(${JSON.stringify(dbPath)});
+    db.exec("begin immediate");
+    process.stdout.write("locked\\n");
+    setTimeout(() => { db.exec("commit"); db.close(); }, 700);
+  `;
+  const child = spawn(process.execPath, ["-e", holder], { stdio: ["ignore", "pipe", "ignore"] });
+  return new Promise<void>((resolveTest, rejectTest) => {
+    child.stdout.once("data", () => {
+      try {
+        const db = openRepoDb(dbPath);
+        db.exec("begin immediate");
+        db.exec("commit");
+        db.close();
+        resolveTest();
+      } catch (error) {
+        rejectTest(error);
+      }
+    });
+    child.on("error", rejectTest);
+  });
 });

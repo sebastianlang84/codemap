@@ -21,7 +21,19 @@ function handleLine(line) {
         write({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Invalid Request: JSON-RPC batching is not supported" } });
         return;
     }
-    const response = dispatch(parsed);
+    if (!parsed || typeof parsed !== "object") {
+        write({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Invalid Request: expected a JSON-RPC object" } });
+        return;
+    }
+    let response;
+    try {
+        response = dispatch(parsed);
+    }
+    catch (error) {
+        // Keep the transport alive: one bad message must not end the session for every later request.
+        const id = parsed.id;
+        response = { jsonrpc: "2.0", id: typeof id === "string" || typeof id === "number" ? id : null, error: { code: -32603, message: `Internal error: ${error instanceof Error ? error.message : String(error)}` } };
+    }
     if (response)
         write(response);
 }

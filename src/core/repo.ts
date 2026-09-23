@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
+import { SQLITE_BUSY_TIMEOUT_MS } from "./db.ts";
 import type { RepoInfo } from "./types.ts";
 
 export interface StateOptions {
@@ -96,7 +97,7 @@ export function repoKey(root: string): string {
 function registryDb(options: StateOptions = {}): DatabaseSync {
   const activeRegistryPath = getRegistryPath(options);
   mkdirSync(dirname(activeRegistryPath), { recursive: true });
-  const db = new DatabaseSync(activeRegistryPath);
+  const db = openRegistry(activeRegistryPath);
   db.exec(`
     create table if not exists repos (
       key text primary key,
@@ -145,15 +146,23 @@ export interface RegistryRepo {
   rootPath: string;
 }
 
-/** Read approved repos from the registry without creating it. Returns [] when no registry exists yet. */
+function openRegistry(path: string): DatabaseSync {
+  const db = new DatabaseSync(path);
+  db.exec(`pragma busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}`);
+  return db;
+}
+
+/**
+ * Read approved repos from the registry without creating it. Returns [] when no registry exists yet.
+ * A registry that exists but cannot be read throws: state GC treats every DB missing from this list
+ * as an orphan, so an empty fallback would mark all indexes for deletion.
+ */
 export function listRegistryRepos(options: StateOptions = {}): RegistryRepo[] {
   const registryPath = join(resolveStateDir(options.stateDir), "registry.sqlite");
   if (!existsSync(registryPath)) return [];
-  const db = new DatabaseSync(registryPath);
+  const db = openRegistry(registryPath);
   try {
     return db.prepare("select key, root_path as rootPath from repos").all() as unknown as RegistryRepo[];
-  } catch {
-    return [];
   } finally {
     db.close();
   }
@@ -164,7 +173,7 @@ export function removeRegistryRepos(keys: string[], options: StateOptions = {}):
   if (keys.length === 0) return 0;
   const registryPath = join(resolveStateDir(options.stateDir), "registry.sqlite");
   if (!existsSync(registryPath)) return 0;
-  const db = new DatabaseSync(registryPath);
+  const db = openRegistry(registryPath);
   try {
     const stmt = db.prepare("delete from repos where key = ?");
     let removed = 0;

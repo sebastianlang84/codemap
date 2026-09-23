@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -264,4 +264,22 @@ test("cli usage-report has stable empty JSON and strict filters", (t) => {
   assert.equal(unreadable.code, 1);
   assert.equal(unreadable.err, "Unable to read the local usage telemetry log");
   assert.equal(unreadable.err.includes(stateDir), false);
+});
+
+test("cli nudge-check stays silent after an incomplete index run", (t) => {
+  if (process.getuid?.() === 0) return t.skip("root can read a chmod 000 directory");
+  const { root, stateDir } = cliRepo(t);
+  const io = { cwd: root };
+  mkdirSync(join(root, "lib"));
+  writeFileSync(join(root, "lib", "extra.ts"), "export const extra = 1;\n");
+  runCli(["index", "--approve", "--state-dir", stateDir], io);
+  assert.equal(runCli(["nudge-check", "rg renderWidget", "--state-dir", stateDir], io).code, 1);
+
+  chmodSync(join(root, "lib"), 0o000);
+  t.after(() => { try { chmodSync(join(root, "lib"), 0o755); } catch { /* already removed */ } });
+  runCli(["index", "--state-dir", stateDir], io);
+  const afterPartial = runCli(["nudge-check", "rg renderWidget", "--state-dir", stateDir], io);
+  chmodSync(join(root, "lib"), 0o755);
+  assert.equal(afterPartial.code, 0);
+  assert.equal(afterPartial.out, "");
 });

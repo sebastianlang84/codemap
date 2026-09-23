@@ -3,10 +3,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 
+export const SQLITE_BUSY_TIMEOUT_MS = 15_000;
+
 export function openRepoDb(dbPath: string): DatabaseSync {
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
-  db.exec("pragma journal_mode = wal; pragma foreign_keys = on;");
+  // Wait for a concurrent writer (another agent's index run) instead of failing at once with
+  // "database is locked"; set first so the WAL switch and migration also wait.
+  db.exec(`pragma busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}; pragma journal_mode = wal; pragma foreign_keys = on;`);
   migrate(db);
   return db;
 }

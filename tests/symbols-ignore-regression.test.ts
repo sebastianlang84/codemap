@@ -54,3 +54,27 @@ test("gitignore directory globs exclude generated trees at every depth", (t) => 
     ".gitignore",
   );
 });
+
+test("anchored gitignore patterns only match at their own level", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "pi-codemap-ignore-anchored-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeFileSync(join(dir, ".gitignore"), "/fixtures\n/out/\n/*.log\nfixed/name\n");
+  const rules = loadIgnoreRules(dir);
+
+  assert.equal(shouldSkip("fixtures", true, rules), ".gitignore");
+  assert.equal(shouldSkip("packages/a/fixtures", true, rules), undefined, "/fixtures is anchored to the root");
+  assert.equal(shouldSkip("out", true, rules), ".gitignore");
+  assert.equal(shouldSkip("packages/out", true, rules), undefined, "/out/ is anchored to the root");
+  assert.equal(shouldSkip("app.log", false, rules), ".gitignore");
+  assert.equal(shouldSkip("sub/app.log", false, rules), undefined, "/*.log is anchored to the root");
+  assert.equal(shouldSkip("fixed/name", true, rules), ".gitignore");
+  assert.equal(shouldSkip("sub/name", true, rules), undefined, "a middle slash anchors too");
+});
+
+test("multi-segment built-in directories are skipped", () => {
+  const rules = { gitignore: [], codemapignore: [] };
+  assert.equal(shouldSkip(".pi/npm", true, rules), "ignored directory");
+  assert.equal(shouldSkip(".pi/npm/pkg/index.ts", false, rules), "ignored directory");
+  assert.equal(shouldSkip("tools/.pi/git/x.ts", false, rules), "ignored directory");
+  assert.equal(shouldSkip(".pi/extensions/x.ts", false, rules), undefined);
+});

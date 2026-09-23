@@ -3,9 +3,11 @@ import { dirname, join } from "node:path";
 import { escapeRegExp } from "./text-util.ts";
 
 const ignoredDirs = new Set([
-  ".git", "node_modules", "dist", "build", "target", ".next", "coverage", "vendor", ".turbo", ".cache", ".idea", ".vscode", ".pi/npm", ".pi/git",
+  ".git", "node_modules", "dist", "build", "target", ".next", "coverage", "vendor", ".turbo", ".cache", ".idea", ".vscode",
   ".venv", "venv", "env", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", "site-packages", ".gradle", ".parcel-cache",
 ]);
+// Multi-segment entries: relPath is compared per segment above, so these need a sequence match.
+const ignoredDirPaths = [".pi/npm", ".pi/git"];
 const ignoredFiles = [
   /\.min\.js$/i,
   /\.png$/i,
@@ -46,6 +48,7 @@ function loadIgnoreFile(path: string): string[] {
 export function shouldSkip(relPath: string, isDir: boolean, rules: IgnoreRules): string | undefined {
   const parts = relPath.split("/");
   if (parts.some((part) => ignoredDirs.has(part))) return "ignored directory";
+  if (ignoredDirPaths.some((dir) => `/${relPath}/`.includes(`/${dir}/`))) return "ignored directory";
   const name = parts[parts.length - 1] ?? relPath;
   if (!isDir && ignoredFiles.some((rx) => rx.test(name))) return "binary/generated extension";
   if (!isDir && secretish.some((rx) => rx.test(name) || rx.test(relPath))) return "secret-like file";
@@ -96,11 +99,14 @@ function patternMatches(relPath: string, name: string, rawPattern: string): bool
   if (!pattern) return false;
   const directoryOnly = pattern.endsWith("/");
   if (directoryOnly) pattern = pattern.slice(0, -1);
+  // gitignore: a leading or middle slash anchors the pattern to the .gitignore's directory, so it must
+  // not fall back to matching a same-named entry deeper in the tree.
+  const anchored = rawPattern.startsWith("/") || pattern.includes("/");
   const candidates = directoryOnly ? pathPrefixes(relPath) : [relPath];
   if (/[*?]/.test(pattern)) {
     const rx = globToRegExp(pattern);
     if (candidates.some((candidate) => rx.test(candidate))) return true;
-    if (!pattern.includes("/")) {
+    if (!anchored) {
       const names = directoryOnly
         ? candidates.map((candidate) => candidate.slice(candidate.lastIndexOf("/") + 1))
         : [name];
@@ -109,11 +115,11 @@ function patternMatches(relPath: string, name: string, rawPattern: string): bool
     return false;
   }
   if (directoryOnly) {
-    return pattern.includes("/")
+    return anchored
       ? candidates.includes(pattern)
       : relPath.split("/").includes(pattern);
   }
-  return relPath === pattern || relPath.startsWith(pattern + "/") || name === pattern;
+  return relPath === pattern || relPath.startsWith(pattern + "/") || (!anchored && name === pattern);
 }
 
 function pathPrefixes(relPath: string): string[] {

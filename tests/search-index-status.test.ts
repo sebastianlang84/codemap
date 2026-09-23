@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, mkdirSync, rmSync, statSync, symlinkSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, rmSync, statSync, symlinkSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -503,4 +503,131 @@ export function cheapStatusAdded() {
   assert.equal(full.stale, true);
   assert.equal(full.missing, 1);
   assert.match(full.warnings.join("\n"), /Index stale/);
+});
+
+function committedRepo(t: import("node:test").TestContext, files: Record<string, string>): string {
+  const root = mkdtempSync(join(tmpdir(), "pi-codemap-review-fix-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "codemap@example.test"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "CodeMap Test"], { cwd: root });
+  for (const [path, text] of Object.entries(files)) {
+    mkdirSync(join(root, path, ".."), { recursive: true });
+    writeFileSync(join(root, path), text);
+  }
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["commit", "-m", "initial"], { cwd: root, stdio: "ignore" });
+  return root;
+}
+
+test("full status is fresh again once an uncommitted edit has been indexed", (t) => {
+  const root = committedRepo(t, { "src/tracked.ts": "export const tracked = 1;\n" });
+  indexRepo({ cwd: root, approve: true });
+  writeFileSync(join(root, "src", "tracked.ts"), "export const tracked = 2;\n");
+  indexRepo({ cwd: root });
+
+  const result = status(root, { health: "full" });
+  assert.equal(result.changed, 0);
+  assert.equal(result.dirty, true, "git still reports the edit");
+  assert.equal(result.stale, false, "re-indexing the edit clears staleness");
+});
+
+test("pathPrefix never follows a symlink out of the repository", (t) => {
+  const root = committedRepo(t, { "src/a.ts": "export const a = 1;\n" });
+  const outside = mkdtempSync(join(tmpdir(), "pi-codemap-outside-"));
+  t.after(() => rmSync(outside, { recursive: true, force: true }));
+  writeFileSync(join(outside, "secret-free.ts"), "export const foreign = 1;\n");
+  symlinkSync(outside, join(root, "ext"));
+
+  const result = indexRepo({ cwd: root, approve: true, pathPrefix: "ext" });
+  assert.equal(result.indexed, 0);
+  assert.ok(result.warnings.some((warning) => warning.includes("through a symlink")), JSON.stringify(result.warnings));
+});
+
+test("a directory replaced by a symlink keeps the index stale after a prefix run", (t) => {
+  const root = committedRepo(t, { "src/a.ts": "export const a = 1;\n", "lib/b.ts": "export const b = 1;\n" });
+  indexRepo({ cwd: root, approve: true });
+  const outside = mkdtempSync(join(tmpdir(), "pi-codemap-outside-"));
+  t.after(() => rmSync(outside, { recursive: true, force: true }));
+  rmSync(join(root, "lib"), { recursive: true });
+  symlinkSync(outside, join(root, "lib"));
+
+  indexRepo({ cwd: root, pathPrefix: "lib" });
+  const result = status(root);
+  assert.equal(result.incomplete, true);
+  assert.equal(result.stale, true, "the unverified lib/ rows must not pass as fresh");
+});
+
+test("pathPrefix inside an ignored directory indexes nothing", (t) => {
+  const root = committedRepo(t, { "src/a.ts": "export const a = 1;\n", ".gitignore": "/generated/\n" });
+  mkdirSync(join(root, "generated"));
+  writeFileSync(join(root, "generated", "out.ts"), "export const out = 1;\n");
+
+  const result = indexRepo({ cwd: root, approve: true, pathPrefix: "generated" });
+  assert.equal(result.indexed, 0);
+  assert.ok(result.warnings.some((warning) => warning.includes("excluded from indexing")), JSON.stringify(result.warnings));
+});
+
+test("an incomplete index run keeps the index stale until a complete run", (t) => {
+  if (process.getuid?.() === 0) return t.skip("root can read a chmod 000 directory");
+  const root = committedRepo(t, { "src/a.ts": "export const a = 1;\n", "lib/b.ts": "export const b = 1;\n" });
+  indexRepo({ cwd: root, approve: true });
+  chmodSync(join(root, "lib"), 0o000);
+  t.after(() => { try { chmodSync(join(root, "lib"), 0o755); } catch { /* already restored or removed */ } });
+
+  const partial = indexRepo({ cwd: root });
+  assert.ok(partial.warnings.some((warning) => warning.startsWith("Unreadable directory")));
+  for (const health of ["cheap", "full"] as const) {
+    const result = status(root, { health });
+    assert.equal(result.stale, true, `${health} health reports the incomplete run`);
+    assert.ok(result.warnings.some((warning) => warning.startsWith("Last index run was incomplete")), JSON.stringify(result.warnings));
+  }
+
+  chmodSync(join(root, "lib"), 0o755);
+  indexRepo({ cwd: root });
+  assert.equal(status(root).stale, false, "a complete run clears the flag");
+});
+
+test("an incomplete path-prefix run is visible from the global and every overlapping scope", (t) => {
+  if (process.getuid?.() === 0) return t.skip("root can read a chmod 000 directory");
+  const root = committedRepo(t, {
+    "services/api/a.ts": "export const a = 1;\n",
+    "services/api/locked/b.ts": "export const b = 1;\n",
+    "web/c.ts": "export const c = 1;\n",
+  });
+  indexRepo({ cwd: root, approve: true });
+  chmodSync(join(root, "services", "api", "locked"), 0o000);
+  t.after(() => { try { chmodSync(join(root, "services", "api", "locked"), 0o755); } catch { /* already removed */ } });
+  indexRepo({ cwd: root, pathPrefix: "services/api" });
+
+  assert.equal(status(root).stale, true, "global scope");
+  assert.equal(status(root, { pathPrefix: "services" }).stale, true, "enclosing scope");
+  assert.equal(status(root, { pathPrefix: "services/api/locked" }).stale, true, "nested scope");
+  assert.equal(status(root, { pathPrefix: "web" }).incomplete, false, "a disjoint scope is unaffected");
+
+  chmodSync(join(root, "services", "api", "locked"), 0o755);
+  indexRepo({ cwd: root });
+  assert.equal(status(root).incomplete, false, "a complete global run clears narrower flags");
+});
+
+test("a complete path-prefix run clears what an incomplete global run could not read", (t) => {
+  if (process.getuid?.() === 0) return t.skip("root can read a chmod 000 directory");
+  const root = committedRepo(t, {
+    "services/api/locked/b.ts": "export const b = 1;\n",
+    "web/locked/c.ts": "export const c = 1;\n",
+  });
+  indexRepo({ cwd: root, approve: true });
+  const apiLocked = join(root, "services", "api", "locked");
+  const webLocked = join(root, "web", "locked");
+  chmodSync(apiLocked, 0o000);
+  chmodSync(webLocked, 0o000);
+  t.after(() => { for (const dir of [apiLocked, webLocked]) { try { chmodSync(dir, 0o755); } catch { /* already removed */ } } });
+  indexRepo({ cwd: root });
+
+  chmodSync(apiLocked, 0o755);
+  indexRepo({ cwd: root, pathPrefix: "services/api" });
+  assert.equal(status(root, { pathPrefix: "services/api" }).incomplete, false, "the re-read scope is complete again");
+  assert.equal(status(root, { pathPrefix: "web" }).incomplete, true, "the still-unreadable scope stays flagged");
+  assert.equal(status(root).incomplete, true, "globally one path is still unread");
+  chmodSync(webLocked, 0o755);
 });

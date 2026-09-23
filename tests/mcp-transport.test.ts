@@ -61,3 +61,14 @@ test("stdout stays JSON-pure even when a tool call loads the SQLite core", () =>
   assert.equal(parsed[0].jsonrpc, "2.0");
   assert.ok(Array.isArray(parsed[0].result.content), "returns a tool result");
 });
+
+test("a non-object JSON message is rejected without ending the session", () => {
+  const { parsed } = runTransport([
+    "null",
+    "42",
+    '"text"',
+    '{"jsonrpc":"2.0","id":7,"method":"ping"}',
+  ]);
+  assert.equal(parsed.filter((m) => m.id === null && m.error?.code === -32600).length, 3);
+  assert.deepEqual(parsed.find((m) => m.id === 7)?.result, {}, "later requests are still answered");
+});

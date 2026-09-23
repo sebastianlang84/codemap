@@ -4,6 +4,10 @@ import { extractSymbols } from "./symbols.js";
 // Bump on any change that alters stored chunks/symbols so existing indexes are rebuilt on next run.
 // 9: JavaScript function assignments and balanced method parameter lists.
 export const INDEX_VERSION = "9";
+// Paths an index run could not read (directories end in "/", "" = unknown scope). Their files keep
+// old rows, so the HEAD baseline written alongside would otherwise claim a fresh index. A later run
+// clears the entries inside its own scope and records whatever it could not read itself.
+export const INDEX_INCOMPLETE_KEY = "index_unreadable_paths";
 function prepareWriteStatements(db) {
     return {
         selectFile: db.prepare("select id, hash, mtime_ms from files where path = ?"),
@@ -22,7 +26,7 @@ function prepareWriteStatements(db) {
     };
 }
 export function applyIndexUpdate(options) {
-    const { db, files, pathPrefix, indexedHead, allowDeletions = true } = options;
+    const { db, files, pathPrefix, indexedHead, allowDeletions = true, unreadablePaths } = options;
     const indexVersionKey = pathPrefix ? `index_version:${pathPrefix}` : "index_version";
     const lastIndexedAtKey = pathPrefix ? `last_indexed_at:${pathPrefix}` : "last_indexed_at";
     const indexedHeadKey = pathPrefix ? `indexed_head:${pathPrefix}` : "indexed_head";
@@ -44,6 +48,7 @@ export function applyIndexUpdate(options) {
     if (indexed > 0 || removed > 0 || forceGraphRebuild)
         rebuildFileReferenceGraph(db);
     writeIndexMetadata(db, indexVersionKey, lastIndexedAtKey, indexedHeadKey, indexedHead, INDEX_VERSION);
+    writeUnreadablePaths(db, pathPrefix, unreadablePaths?.() ?? []);
     db.exec("commit");
     return { indexed, removed };
 }
@@ -69,6 +74,28 @@ function writeIndexMetadata(db, indexVersionKey, lastIndexedAtKey, indexedHeadKe
     db.prepare("insert or replace into meta(key, value) values (?, ?)").run(lastIndexedAtKey, new Date().toISOString());
     db.prepare("insert or replace into meta(key, value) values (?, ?)").run(indexedHeadKey, indexedHead ?? "");
     db.prepare("insert or replace into meta(key, value) values (?, ?)").run(indexVersionKey, indexVersion);
+}
+export function readUnreadablePaths(db) {
+    const value = db.prepare("select value from meta where key = ?").get(INDEX_INCOMPLETE_KEY)?.value;
+    if (!value)
+        return [];
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed.filter((path) => typeof path === "string") : [""];
+    }
+    catch {
+        return [""];
+    }
+}
+function writeUnreadablePaths(db, pathPrefix, fresh) {
+    // An entry inside this run's scope was re-read (or is in `fresh` again); entries outside it, and an
+    // unknown-scope "" entry from a wider run, stay until a run covering them succeeds.
+    const kept = readUnreadablePaths(db).filter((path) => !path.startsWith(pathPrefix));
+    const next = [...new Set([...kept, ...fresh])].sort();
+    if (next.length === 0)
+        db.prepare("delete from meta where key = ?").run(INDEX_INCOMPLETE_KEY);
+    else
+        db.prepare("insert or replace into meta(key, value) values (?, ?)").run(INDEX_INCOMPLETE_KEY, JSON.stringify(next));
 }
 function upsertIndexedFile(stmts, file, forceReindex) {
     const existing = stmts.selectFile.get(file.relPath);

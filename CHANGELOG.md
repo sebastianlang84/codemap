@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix review findings: anchored `.gitignore` patterns (`/fixtures`, `/*.log`, `a/b`) no longer hide same-named paths deeper in the tree; `.pi/npm` and `.pi/git` are skipped as intended; `status --full` is fresh again once an uncommitted edit has been indexed; an index run that could not read every path keeps the index stale until a complete run; `--path-prefix` refuses symlinks and indexes nothing inside skipped directories; concurrent index runs wait up to 15 s for the SQLite lock instead of failing; `gc:state` aborts on an unreadable registry instead of treating every index as orphaned; the MCP server answers non-object JSON with an Invalid Request error instead of exiting. Run `codemap index` to pick up previously ignored files.
+
 - Tell agents in the bundled navigation skill what CodeMap is, which query terms rank well, and where its results stop, so a skill-capable agent can judge on its own when the index is the right tool.
 
 - Ignore JavaScript imports inside comments, strings and recognized regular expressions; resolve unambiguous local declaration files and absolute Python imports. Refreshing an existing index rebuilds the corrected reference graph.
