@@ -1,14 +1,13 @@
 ---
 name: navigating-with-codemap
-description: Locate repository implementations, symbols, imports, callers, and tests with the CodeMap CLI, a local ranked index of the repository. Use when scouting or mapping code, and before grep, rg (ripgrep), find, fd, glob, or broad file search for code navigation. Not for log searches, exhaustive literal/regex matches, or reading an already-known file.
+description: Optionally preselect files and line ranges with the CodeMap CLI, a local ranked index of the repository, when the target file or symbol is unknown and a first rg search gives too many or no useful hits. Not for log searches, exhaustive literal/regex matches, or reading an already-known file.
 ---
 
 # Navigating with CodeMap
 
 CodeMap is a local index of a repository. `search` ranks files, symbols, and code chunks for a
 query; `context` returns a read-first plan for a target — its imports, callers, tests, config, and
-docs. One query replaces several broad text searches and the speculative full-file reads that
-follow them. It is deterministic and lexical: no embeddings, no network, nothing leaves the machine.
+docs. It is deterministic and lexical: no embeddings, no network, nothing leaves the machine.
 
 ## Workflow
 

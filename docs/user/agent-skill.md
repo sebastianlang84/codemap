@@ -8,9 +8,10 @@ configuration.
 The skill is optional. CodeMap itself works without it. It passes trusted search locations
 (`path:start-end`) to context with `--limit 1`, expanding related context only when needed.
 
-Its trigger description asks compatible skill loaders to activate it whenever an agent is
-navigating code or is considering `grep`, `rg`/ripgrep, `find`, `fd`, globbing, or another broad file
-search for code navigation. Log searches, exhaustive literal/regex scans, and direct reads of known
+Its trigger description asks compatible skill loaders to activate it only when the target file or
+symbol is unknown and a first `rg` search returns too many or no useful hits. It no longer asks to
+run before every text search: the [2026-09-08 agent comparison](../developer/todo-agent-development-result.md)
+found CodeMap search and context slower and more token-heavy than plain search. Log searches, exhaustive literal/regex scans, and direct reads of known
 files are excluded. Activation remains controlled by the target infrastructure: a portable skill cannot
 intercept a command attempt or guarantee point-of-use loading. Deterministic command interception
 would require a runtime-specific hook and is intentionally outside this harness-agnostic artifact.

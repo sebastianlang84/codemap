@@ -15,9 +15,9 @@ test("bundled navigation skill is harness-agnostic and CLI-first", () => {
   for (const command of ["codemap status", "codemap search", "codemap context", "codemap index"]) {
     assert.match(source, new RegExp(command.replace(" ", "\\s+")), `missing ${command}`);
   }
-  for (const fallback of ["grep", "rg", "ripgrep", "find", "fd", "glob"]) {
-    assert.match(description, new RegExp(`\\b${fallback}\\b`, "i"), `frontmatter trigger does not name ${fallback}`);
-  }
+  // Optional after rg, not a default before it: the 2026-09-08 agent comparison found no efficiency gain.
+  assert.match(description, /^Optionally\b/);
+  assert.match(description, /first rg search/);
   assert.match(source, /literal(?: or |\/)regex match/);
   assert.match(source, /fall back/i);
 

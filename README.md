@@ -18,7 +18,6 @@ The **standalone `codemap` CLI is the primary interface**. The same operations a
 - Orienting in an unfamiliar or large repository.
 - "Where is this feature / symbol / endpoint / config key / script implemented?"
 - "Which file should I read first before I change this one, and what's related to it?"
-- Cutting the grep-and-read token cost an agent pays before it can start real work.
 - Local, offline, privacy-sensitive work where sending code to a remote index is not acceptable.
 
 ## What CodeMap is *not*
@@ -35,6 +34,7 @@ The **standalone `codemap` CLI is the primary interface**. The same operations a
 - **Agent pilot:** on 12 coding tasks, CodeMap produced 0 paired wins, 1 loss, and 11 ties, using 16.4% more tokens. The subsequent retrieval-fix follow-up did not confirm a task-success benefit. [Agent-impact evaluation](docs/developer/agent-impact-eval.md).
 - **Fresh agent follow-up, 2026-09-06:** four tasks produced the same 3/4 successes with and without CodeMap, with 39.7% more tokens and 8.5% more agent time for CodeMap. The predeclared product criteria were not met. [Completed results](docs/developer/agent-impact-eval.md#frozen-excerpt-workflow-pilot).
 - **Luna-high comparisons:** [Optional availability](docs/developer/agent-impact-luna-result.md) solved 8/8 in both arms with no CodeMap use. The [location-first follow-up](docs/developer/agent-impact-location-result.md) solved 4/4 versus baseline 3/4, with 17.0% less agent time and 4.7% more total tokens. Its token-reduction gate failed; one paired win does not establish general benefit.
+- **Three-arm agent comparison, 2026-09-08:** 12 development tasks, all solved in every arm. Against plain search, CodeMap search took 20.0% more time and 40.4% more tokens; search plus context took 28.9% more time and 58.3% more tokens. Agents added CodeMap calls instead of replacing text searches, so CodeMap stays optional rather than a default first step. [Results](docs/developer/todo-agent-development-result.md).
 - **Local regression snapshot, 2026-09-06:** 24 navigation cases retain 7 wins, 0 losses, and 17 ties versus search-only. Query context now preserves matched code excerpts; JavaScript/Python gates check the required lines and function content. These checks establish navigation and excerpt correctness; the agent follow-up does not isolate the excerpt fix.
 
 Maintainer evaluations run from a source checkout:
