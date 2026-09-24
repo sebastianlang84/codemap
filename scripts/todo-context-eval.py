@@ -79,9 +79,16 @@ def main():
                 targets.append({**target, 'complete': complete})
             paths = [{**target, 'included': any(item['path'] == target['path'] and item['sourceMatchesSpan'] and item['sourceBytes'] > 0 for item in spans)} for target in case['requiredPaths']]
             source_bytes = sum(item['sourceBytes'] for item in spans)
+            # Span replay: required target lines covered by valid spans, per compact JSON byte the agent sees.
+            covered_lines = sum(len({line for item in spans if item['sourceMatchesSpan'] and item['path'] == target['path']
+                                     for line in range(max(item['startLine'], target['startLine']), min(item['endLine'], target['endLine']) + 1)})
+                                for target in case['requiredTargets'])
+            target_lines = sum(target['endLine'] - target['startLine'] + 1 for target in case['requiredTargets'])
+            visible_bytes = response.get('visibleBytes') or len(json.dumps(response, separators=(',', ':'), ensure_ascii=False).encode())
             rows.append({'id': case['id'], 'group': case['group'], 'baseCommit': case['baseCommit'],
                          'query': case['query'], 'targets': targets, 'experimentalAnchors': response.get('experimentalAnchors'), 'experimentalUncertain': response.get('experimentalUncertain'), 'requiredPaths': paths, 'spans': spans,
-                         'sourceBytes': source_bytes, 'responseBytes': len(raw),
+                         'sourceBytes': source_bytes, 'responseBytes': len(raw), 'visibleBytes': visible_bytes,
+                         'coveredTargetLines': covered_lines, 'targetLines': target_lines,
                          'completeTargets': all(target['complete'] for target in targets),
                          'completeTaskPackage': all(target['complete'] for target in targets) and all(path['included'] for path in paths),
                          'excerptBudgetPreserved': len(spans) <= manifest['maxExcerpts'],
@@ -98,7 +105,11 @@ def main():
               'summary': {'caseCount': len(rows), 'completeTargets': sum(row['completeTargets'] for row in rows),
                           'completeTaskPackages': sum(row['completeTaskPackage'] for row in rows),
                           'allBudgetsPreserved': all(row['excerptBudgetPreserved'] and row['sourceBudgetPreserved'] for row in rows),
-                          'allSourceIntegrity': all(row['sourceIntegrity'] for row in rows)},
+                          'allSourceIntegrity': all(row['sourceIntegrity'] for row in rows),
+                          'coveredTargetLines': sum(row['coveredTargetLines'] for row in rows),
+                          'targetLines': sum(row['targetLines'] for row in rows),
+                          'visibleBytes': sum(row['visibleBytes'] for row in rows),
+                          'targetLinesPerVisibleKiB': 1024 * sum(row['coveredTargetLines'] for row in rows) / max(1, sum(row['visibleBytes'] for row in rows))},
               'claimBoundary': 'Historical retrieval development only. Required paths certify presence of source, not complete test/type/doc content. No agent benefit or executed fix correctness claim.'}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + '\n')
