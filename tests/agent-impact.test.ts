@@ -28,6 +28,16 @@ import {
 const manifestRaw = readFileSync(new URL("../scripts/eval-agent-impact.manifest.json", import.meta.url), "utf8");
 const manifest = parseAgentImpactManifest(manifestRaw);
 
+test("skill three-arm manifests require both skill texts", () => {
+  const raw = JSON.parse(readFileSync("scripts/eval-agent-impact-luna.manifest.json", "utf8"));
+  raw.comparison = "skill-three-arm";
+  assert.throws(() => parseAgentImpactManifest(JSON.stringify(raw)), /skillArms/);
+  raw.skillArms = { current: "current skill", candidate: "candidate skill" };
+  assert.equal(parseAgentImpactManifest(JSON.stringify(raw)).skillArms?.candidate, "candidate skill");
+  delete raw.comparison;
+  assert.throws(() => parseAgentImpactManifest(JSON.stringify(raw)), /skillArms/);
+});
+
 test("three-arm manifests preserve search-only adoption and reject diagnostic mixing", () => {
   const raw = JSON.parse(readFileSync("scripts/eval-agent-impact-luna.manifest.json", "utf8"));
   raw.comparison = "navigation-three-arm";

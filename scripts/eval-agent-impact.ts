@@ -221,8 +221,9 @@ function buildReport(
   const summary = summarizeAgentImpact(pairedResults, manifest.agent.navigationWorkflow);
   const searchResults = results.filter(item => item.mode === "baseline" || item.mode === "search")
     .map(item => item.mode === "search" ? { ...item, mode: "codemap" as const } : item);
-  const searchManifest: AgentImpactManifest = { ...manifest, agent: { ...manifest.agent, navigationWorkflow: "search-only" } };
-  const searchSummary = summarizeAgentImpact(searchResults, "search-only");
+  const searchWorkflow = manifest.skillArms ? manifest.agent.navigationWorkflow : "search-only";
+  const searchManifest: AgentImpactManifest = { ...manifest, agent: { ...manifest.agent, navigationWorkflow: searchWorkflow } };
+  const searchSummary = summarizeAgentImpact(searchResults, searchWorkflow);
   if (manifest.agent.provider === "codex-cli") summary.totalCostUsd = null;
   return {
     schemaVersion: 1,
@@ -383,7 +384,7 @@ async function runAgentAttempt(options: {
     workspace = prepareWorkspace(task, repoCache, runRoot, `run-${runOrder}-${task.id}-${mode}`, task.baseCommit);
     const env = agentEnv(workspace, mode, profileDir);
     setupDurationMs = Math.round(performance.now() - setupStartedAt);
-    if (mode === "codemap" || mode === "search") indexDurationMs = prepareCodeMap(workspace, profileDir, env, mode === "search");
+    if (mode === "codemap" || mode === "search") indexDurationMs = prepareCodeMap(workspace, profileDir, env, mode === "search" && !manifest.skillArms);
     if (isCodex) {
       const preflightStartedAt = performance.now();
       verifyCodexSandbox(resolveCodexBin(), workspace.root, workspace.repo, profileDir, env, mode === "codemap" || mode === "search",
@@ -876,7 +877,9 @@ function agentPrompt(task: AgentImpactTask, mode: AgentImpactMode, manifest: Age
   return [
     "Implement the requested fix in this repository. Work autonomously. Run the relevant tests.",
     "Do not inspect git history, commits, remotes, or files outside this workspace. Do not commit or push. Do not install dependencies; they are already prepared.",
-    mode === "search"
+    manifest.skillArms && (mode === "search" || mode === "codemap")
+      ? `A navigation skill is available:\n\n${mode === "search" ? manifest.skillArms.current : manifest.skillArms.candidate}`
+      : mode === "search"
       ? agentImpactTreatmentInstruction({ ...manifest, agent: { ...manifest.agent, navigationWorkflow: "search-only" } })
       : mode === "codemap"
       ? agentImpactTreatmentInstruction(manifest)

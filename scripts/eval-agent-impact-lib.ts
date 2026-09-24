@@ -46,7 +46,9 @@ export interface AgentImpactTask {
 export interface AgentImpactManifest {
   schemaVersion: 1;
   diagnostic?: "curated-context";
-  comparison?: "navigation-three-arm";
+  comparison?: "navigation-three-arm" | "skill-three-arm";
+  // skill-three-arm: "search" runs the current skill text, "codemap" the candidate; both may use context.
+  skillArms?: { current: string; candidate: string };
   corpus: {
     id: string;
     version: number;
@@ -199,8 +201,14 @@ export function parseAgentImpactManifest(raw: string): AgentImpactManifest {
     throw new Error("agent.navigationWorkflow is unsupported");
   }
   agent.navigationWorkflow = navigationWorkflow;
-  if (root.comparison !== undefined && (root.comparison !== "navigation-three-arm" || root.diagnostic !== undefined || agent.provider !== "codex-cli")) {
+  if (root.comparison !== undefined && ((root.comparison !== "navigation-three-arm" && root.comparison !== "skill-three-arm") || root.diagnostic !== undefined || agent.provider !== "codex-cli")) {
     throw new Error("Unsupported comparison configuration");
+  }
+  if ((root.comparison === "skill-three-arm") !== (root.skillArms !== undefined)) throw new Error("skillArms requires the skill-three-arm comparison");
+  if (root.skillArms !== undefined) {
+    const arms = record(root.skillArms, "skillArms");
+    string(arms.current, "skillArms.current");
+    string(arms.candidate, "skillArms.candidate");
   }
   if (agent.provider === "codex-cli") {
     if (agent.maxBudgetUsdPerRun !== null) throw new Error("Codex CLI has no USD budget limiter; maxBudgetUsdPerRun must be null");
