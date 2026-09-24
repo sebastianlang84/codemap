@@ -201,3 +201,23 @@ test("python chunking keeps the body after a signature longer than fifty lines",
   const [chunk] = chunkText(source, "python");
   assert.deepEqual([chunk.startLine, chunk.endLine], [1, 63]);
 });
+
+test("large classes split into method chunks and strings never become declarations", () => {
+  const methods = Array.from({ length: 60 }, (_, i) => `    def method_${i}(self):\n        return ${i}\n`);
+  const source = ["class Big:", '    """', "    def fake():", '    """', ...methods].join("\n");
+  const chunks = chunkText(source, "python");
+  assert.ok(chunks.every((chunk) => chunk.kind !== "class" && chunk.endLine - chunk.startLine < 150));
+  assert.ok(!chunks.some((chunk) => chunk.text.startsWith("    def fake")));
+  assert.equal(chunks.filter((chunk) => chunk.kind === "function").length, 60);
+  const small = chunkText("class Small:\n    def run(self):\n        return 1\n", "python");
+  assert.equal(small[0].kind, "class");
+});
+
+test("python chunks keep decorators and javascript regex backticks hide no declarations", () => {
+  const methods = Array.from({ length: 60 }, (_, i) => `    @route("/m${i}")\n    def method_${i}(self):\n        return ${i}\n`);
+  const chunks = chunkText(["class Big:", ...methods].join("\n"), "python");
+  const first = chunks.find((chunk) => chunk.kind === "function")!;
+  assert.ok(first.text.startsWith('    @route("/m0")\n    def method_0(self):'));
+  const script = ["switch (x) { case /`/: break; }", "function real() {", "  return 1;", "}"].join("\n");
+  assert.ok(chunkText(script, "javascript").some((chunk) => chunk.kind === "function" && chunk.text.startsWith("function real")));
+});

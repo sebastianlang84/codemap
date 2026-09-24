@@ -1,6 +1,7 @@
 import { assignedFunctionNames, isRegexStart, regexEnd } from "./javascript-syntax.js";
 const fixedChunkSize = 80;
 const fixedChunkOverlap = 10;
+const largeClassLines = 150;
 const structuredLanguages = new Set(["typescript", "javascript", "tsx", "jsx", "python", "py"]);
 export function chunkText(text, language) {
     const lines = text.split(/\r?\n/);
@@ -57,14 +58,25 @@ function closesFence(line, activeFence) {
 function chunkStructuredCode(lines, language) {
     const chunks = [];
     let cursor = 0;
+    // Only Python: a JavaScript regex such as /`/ would open a false template string and hide real code.
+    const inString = isPython(language) ? pythonLinesStartingInString(lines) : [];
     for (let i = 0; i < lines.length; i++) {
-        const kind = structureKind(lines[i], language);
+        const kind = inString[i] ? undefined : structureKind(lines[i], language);
         if (!kind)
             continue;
-        if (i > cursor)
-            chunks.push(...chunkFixed(lines.slice(cursor, i), "text", cursor).map(({ ordinal: _ordinal, ...chunk }) => chunk));
         const end = isPython(language) ? pythonBlockEnd(lines, i) : (braceBlockEnd(lines, i) ?? i);
-        chunks.push({ startLine: i + 1, endLine: end + 1, kind, text: lines.slice(i, end + 1).join("\n") });
+        // A large Python class is chunked like file content: methods become function chunks, the rest text.
+        // JavaScript class methods are not declarations for structureKind, so large JS classes stay whole.
+        if (kind === "class" && isPython(language) && end - i >= largeClassLines)
+            continue;
+        let start = i;
+        if (isPython(language)) {
+            while (start > cursor && /^\s*@/.test(lines[start - 1]) && indentOf(lines[start - 1]) === indentOf(lines[i]))
+                start--;
+        }
+        if (start > cursor)
+            chunks.push(...chunkFixed(lines.slice(cursor, start), "text", cursor).map(({ ordinal: _ordinal, ...chunk }) => chunk));
+        chunks.push({ startLine: start + 1, endLine: end + 1, kind, text: lines.slice(start, end + 1).join("\n") });
         cursor = end + 1;
         i = end;
     }
