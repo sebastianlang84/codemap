@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Compare no CodeMap, the current skill and a streamlined skill on 12 Django tasks with `gpt-6-luna`: agents used CodeMap in 2/12 and 0/12 tasks, so the skill stays unchanged and CodeMap moves to maintenance. The agent-impact harness gains a `skill-three-arm` comparison that gives each treatment arm its full skill text.
+
 - Split Python classes over 150 lines into method and text chunks, keep single-line decorators with their function, and never read a Python declaration inside a triple-quoted string. Search no longer ranks a whole Flask application class as one chunk; context returns the matched method. All quality gates unchanged; run `codemap index` to rechunk.
 
 - Keep location context bounded and available: `path:line[-end]` inside a class chunk over 150 lines returns the enclosing function or the named lines (at least 80) instead of the whole class; a range across several chunks or past the file end is returned or clamped instead of rejected. In the 2026-09-08 agent traces a 40-line request returned 958 lines and 4 of 15 context calls failed on ranges.
