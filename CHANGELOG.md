@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replay three navigation paths on the frozen twelve-case context corpus and record required target lines per visible byte. Appending up to two definition spans to query context passes all frozen replay gates; no product behavior changes.
+
 - Make the bundled navigation skill optional instead of a default before `rg`: it now triggers only when the target is unknown and a first text search is unhelpful, after the 2026-09-08 three-arm comparison found CodeMap search and context slower and more token-heavy than plain search. README evidence records that result.
 
 - Fix review findings: anchored `.gitignore` patterns (`/fixtures`, `/*.log`, `a/b`) no longer hide same-named paths deeper in the tree; `.pi/npm` and `.pi/git` are skipped as intended; `status --full` is fresh again once an uncommitted edit has been indexed; an index run that could not read every path keeps the index stale until a complete run; `--path-prefix` refuses symlinks and indexes nothing inside skipped directories; concurrent index runs wait up to 15 s for the SQLite lock instead of failing; `gc:state` aborts on an unreadable registry instead of treating every index as orphaned; the MCP server answers non-object JSON with an Invalid Request error instead of exiting. Run `codemap index` to pick up previously ignored files.

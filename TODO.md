@@ -4,6 +4,11 @@ Aktive offene Arbeit für CodeMap. Erledigte Arbeit gehört in den [`CHANGELOG.m
 
 Aktueller Nutzenstand: [abgeschlossener Agentenvergleich](docs/developer/todo-agent-development-result.md).
 
+Span-Replay 2026-09-24: [additive Mehrspannen bestehen alle Replay-Gates](docs/developer/span-replay-result.md)
+(10/12 statt 7/12 vollständige Ziele, +39 % Sollzeilen pro KiB). Offen und jeweils mit eigenem Protokoll:
+Produktübertragung mit externem Holdout; Agentenvergleich auf großem Repo gegen adaptive `rg`-Suche
+(12 Aufgaben je Modell, starkes und schwaches Modell). Scheitert dessen Gate ohne neuen Befund: nur Wartung.
+
 Suchalternativen: [lokaler Vergleich abgeschlossen](docs/developer/search-tool-comparison-result.md);
 PGR und BM25 verfehlen die Fortsetzungsbedingungen. Keine Umstellung.
 
