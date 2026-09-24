@@ -1,7 +1,8 @@
-import { functionChunkAtLine, snippet } from "./chunker.js";
+import { functionChunkAtLine, functionCoveringLines, snippet } from "./chunker.js";
 import { openRepoDb } from "./db.js";
 import { fullIndexHealth, readIndexStatusCounts } from "./index-health.js";
 import { findIndexedRelationships, isConfigReadFirstPath, isNoisyIndexedPath, isNoisyReadFirstPath, isTestReadFirstPath, mergeRelatedPaths, nearConfigReason, relatedDocReason, relatedTestReason, sameDirReason, searchResultReason, targetReason, testOfReason, } from "./relationships.js";
+import { readIndexedSourceText } from "./indexed-source.js";
 import { getRepoInfo } from "./repo.js";
 import { NotApprovedError } from "./errors.js";
 import { searchCodeMap } from "./search.js";
@@ -145,12 +146,7 @@ function readFirstItems(db, request, warnings, cwd, stateDir) {
         if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 1 || end < start) {
             throw new Error("Context location requires positive, ordered line numbers");
         }
-        const chunk = db.prepare(`
-      select f.path, f.language, c.start_line as startLine, c.end_line as endLine, c.kind, c.text
-      from files f join chunks c on c.file_id = f.id
-      where f.path = ? and f.path like ? escape '\\' and c.start_line <= ? and c.end_line >= ?
-      order by c.start_line desc, c.ordinal limit 1
-    `).get(location[1], request.pathFilter, start, end);
+        const chunk = locationChunk(db, location[1], request.pathFilter, start, end);
         if (!chunk)
             throw new Error(`No indexed chunk covers ${request.target}; check the location and refresh the index`);
         return {
@@ -236,6 +232,36 @@ function localReadFirstItems(db, input) {
     if (items.length < limit)
         items.push(...laterTargetItems.slice(0, Math.max(0, limit - items.length)));
     return items.slice(0, limit);
+}
+// A location reads at most the lines it names plus their enclosing function. An unbounded class
+// chunk would return a whole class for a few lines, and a range across chunks or past the file
+// end would fail.
+const locationChunkLines = 150;
+const locationMinimumLines = 80;
+function locationChunk(db, path, pathFilter, start, end) {
+    const covering = db.prepare(`
+    select f.path, f.language, c.start_line as startLine, c.end_line as endLine, c.kind, c.text
+    from files f join chunks c on c.file_id = f.id
+    where f.path = ? and f.path like ? escape '\\' and c.start_line <= ? and c.end_line >= ?
+    order by c.start_line desc, c.ordinal limit 1
+  `).get(path, pathFilter, start, end);
+    if (covering && covering.endLine - covering.startLine < locationChunkLines)
+        return covering;
+    const file = db.prepare("select language from files where path = ? and path like ? escape '\\'")
+        .get(path, pathFilter);
+    const source = file && readIndexedSourceText(db, path);
+    if (!file || !source)
+        return undefined;
+    const lines = source.text.split("\n");
+    if (start > lines.length)
+        return undefined;
+    end = Math.min(end, lines.length);
+    const inner = functionCoveringLines(source.text, file.language, start, end);
+    if (inner && inner.endLine - inner.startLine < locationChunkLines) {
+        return { path, language: file.language, startLine: inner.startLine, endLine: inner.endLine, kind: inner.kind, text: inner.text };
+    }
+    const last = Math.min(lines.length, Math.max(end, start + locationMinimumLines - 1));
+    return { path, language: file.language, startLine: start, endLine: last, kind: "text", text: lines.slice(start - 1, last).join("\n") };
 }
 function matchedChunkForItem(db, item) {
     // Symbol hits may contain only a signature; return the indexed chunk around that hit.

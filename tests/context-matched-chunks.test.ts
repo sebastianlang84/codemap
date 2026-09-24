@@ -131,3 +131,65 @@ test("literal colon-number filenames take precedence over location parsing", (t)
   const result = codemapContext({ cwd: root, target: path, limit: 1 });
   assert.equal(result.contextTarget, path);
 });
+
+test("location context stays bounded inside large classes and spans several chunks", (t) => {
+  const root = fixtureRepo(t);
+  const path = "src/core/app.py";
+  const methods = Array.from({ length: 60 }, (_, i) =>
+    `    def method_${i}(self):\n        value = ${i}\n        return value\n`).join("\n");
+  writeFileSync(join(root, path), `class App:\n    name = "app"\n\n${methods}\n\ndef helper():\n    return 1\n`);
+  const tsPath = "src/core/pair.ts";
+  writeFileSync(join(root, tsPath), "export function first() {\n  return 1;\n}\nexport function second() {\n  return 2;\n}\n");
+  indexRepo({ cwd: root });
+
+  // Line 4 is `def method_0`; lines 5-6 are its body inside a class chunk of ~240 lines.
+  const method = codemapContext({ cwd: root, target: `${path}:5-6`, limit: 1 }).readFirst[0]!;
+  assert.ok("text" in method);
+  assert.deepEqual([method.startLine, method.endLine, method.kind], [4, 6, "function"]);
+  assert.ok(method.text.startsWith("    def method_0(self):"));
+
+  const attribute = codemapContext({ cwd: root, target: `${path}:2`, limit: 1 }).readFirst[0]!;
+  assert.ok("text" in attribute);
+  assert.deepEqual([attribute.startLine, attribute.endLine, attribute.kind], [2, 81, "text"]);
+
+  const across = codemapContext({ cwd: root, target: `${tsPath}:2-5`, limit: 1 }).readFirst[0]!;
+  assert.ok("text" in across && across.text.includes("return 1;") && across.text.includes("return 2;"));
+  assert.equal(across.startLine, 2);
+  const clamped = codemapContext({ cwd: root, target: `${tsPath}:4-99`, limit: 1 }).readFirst[0]!;
+  assert.ok("text" in clamped && clamped.startLine === 4 && clamped.text.includes("return 2;"));
+  assert.throws(() => codemapContext({ cwd: root, target: `${tsPath}:99` }));
+});
+
+test("location context skips functions inside strings and stays fast in long classes", (t) => {
+  const root = fixtureRepo(t);
+  const path = "src/core/big.py";
+  const filler = Array.from({ length: 6000 }, (_, i) => `    attribute_${i} = ${i}`).join("\n");
+  const source = `class Big:\n    note = """\n    def fake():\n        payload\n    """\n${filler}\n`;
+  writeFileSync(join(root, path), source);
+  indexRepo({ cwd: root });
+  const lines = source.split("\n");
+  const check = (target: string, start: number) => {
+    const item = codemapContext({ cwd: root, target, limit: 1 }).readFirst[0]!;
+    assert.ok("text" in item);
+    assert.equal(item.kind, "text");
+    assert.equal(item.startLine, start);
+    assert.equal(item.text, lines.slice(item.startLine - 1, item.endLine).join("\n"));
+  };
+  check(`${path}:4`, 4);
+  const began = performance.now();
+  check(`${path}:6000`, 6000);
+  assert.ok(performance.now() - began < 1000, `slow location lookup: ${performance.now() - began} ms`);
+});
+
+test("location context skips functions inside template strings", (t) => {
+  const root = fixtureRepo(t);
+  const path = "src/core/big.ts";
+  const members = Array.from({ length: 200 }, (_, i) => `  field${i} = ${i};`).join("\n");
+  const source = `export class Big {\n  template = \`\nfunction fake() {\n  payload\n}\n\`;\n${members}\n}\n`;
+  writeFileSync(join(root, path), source);
+  indexRepo({ cwd: root });
+  const item = codemapContext({ cwd: root, target: `${path}:5`, limit: 1 }).readFirst[0]!;
+  assert.ok("text" in item);
+  assert.equal(item.kind, "text");
+  assert.equal(item.text, source.split("\n").slice(item.startLine - 1, item.endLine).join("\n"));
+});

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep location context bounded and available: `path:line[-end]` inside a class chunk over 150 lines returns the enclosing function or the named lines (at least 80) instead of the whole class; a range across several chunks or past the file end is returned or clamped instead of rejected. In the 2026-09-08 agent traces a 40-line request returned 958 lines and 4 of 15 context calls failed on ranges.
+- Keep the body of a Python function whose multi-line signature closes at the `def` indent (Black style) in its chunk; before, the chunk ended at the signature. Run `codemap index` to rechunk.
+
 - Replay three navigation paths on the frozen twelve-case context corpus and record required target lines per visible byte. Appending up to two definition spans to query context passes all frozen replay gates; no product behavior changes.
 
 - Make the bundled navigation skill optional instead of a default before `rg`: it now triggers only when the target is unknown and a first text search is unhelpful, after the 2026-09-08 three-arm comparison found CodeMap search and context slower and more token-heavy than plain search. README evidence records that result.

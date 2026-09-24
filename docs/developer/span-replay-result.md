@@ -29,14 +29,32 @@ deshalb erreicht er kein vollständiges Paket.
 Zwei Fälle mit je rund 145 KB (`express-pr-6903`, `express-pr-6073`) machen fast die Hälfte der
 Bytes von B aus. In beiden Fällen ist das Ziel schon in B vollständig.
 
+## Nachmessung nach drei Ortsfixes
+
+Am selben Tag nach drei Produktfixes erneut gemessen:
+- Ein Ort in einer Klasse über 150 Zeilen liefert die umschließende Funktion oder höchstens die genannten Zeilen,
+  mindestens 80, statt der ganzen Klasse.
+- Ein Bereich über mehrere Chunks oder über das Dateiende wird geliefert beziehungsweise gekürzt statt abgelehnt.
+- Eine Python-Signatur, deren schließende Klammer auf der Einrückung von `def` steht, behält ihren Rumpf im Chunk.
+
+| Arm | Ziele | Pakete | Sollzeilen | Sichtbare Bytes | Sollzeilen/KiB |
+|---|---:|---:|---:|---:|---:|
+| B | 8/12 (vorher 7) | 8/12 (7) | 430 (384) | 619.398 (606.492) | 0,71 (0,65) |
+| S | 7/12 (7) | 0/12 (0) | 308 (308) | 57.037 (79.085) | 5,53 (3,99) |
+| A | 10/12 (10) | 9/12 (9) | 581 (581) | 637.298 (658.207) | 0,93 (0,90) |
+
+Kein Arm verliert ein Ziel, ein Paket oder Sollzeilen. B gewinnt `flask-pr-6096` durch den
+Python-Signaturfix. Dieselben Grenzen gelten: bekannte Fälle, keine Agentenmessung.
+[Basis](span-replay-fix-baseline.json), [Skill](span-replay-fix-skill.json), [Additiv](span-replay-fix-additive.json).
+
 ## Grenzen und nächster Schritt
 
 - **Bekannte Fälle:** Die zwölf Fälle wurden schon am 8. September verwendet, und die Anhängeregel
   folgt aus dem damaligen Ablehnungsgrund.
 - **Keine Agentenmessung:** Der Replay misst weder Agentennutzen noch Laufzeit. Er zeigt nicht, ob ein
   Agent die zusätzlichen Spannen liest, statt die Dateien erneut zu öffnen.
-- **Weitere Schritte:** Produktübertragung, sämtliche bestehenden Tests und Gates sowie der externe
-  Holdout brauchen ein eigenes Protokoll. Der Agentenvergleich gegen adaptive `rg`-Suche bleibt
+- **Weitere Schritte:** Die Übertragung des Kandidaten A ins Produkt braucht ein eigenes Protokoll mit
+  sämtlichen Tests und Gates sowie dem externen Holdout; die Ortsfixes oben sind davon unabhängig. Der Agentenvergleich gegen adaptive `rg`-Suche bleibt
   davon unabhängig offen.
 
 Ergebnisdateien: [Basis](span-replay-baseline.json), [Skill](span-replay-skill.json), [Additiv](span-replay-additive.json).

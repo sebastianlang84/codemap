@@ -63,7 +63,7 @@ function chunkStructuredCode(lines, language) {
             continue;
         if (i > cursor)
             chunks.push(...chunkFixed(lines.slice(cursor, i), "text", cursor).map(({ ordinal: _ordinal, ...chunk }) => chunk));
-        const end = language === "python" || language === "py" ? pythonBlockEnd(lines, i) : (braceBlockEnd(lines, i) ?? i);
+        const end = isPython(language) ? pythonBlockEnd(lines, i) : (braceBlockEnd(lines, i) ?? i);
         chunks.push({ startLine: i + 1, endLine: end + 1, kind, text: lines.slice(i, end + 1).join("\n") });
         cursor = end + 1;
         i = end;
@@ -96,15 +96,34 @@ function structureKind(line, language) {
 export function functionChunkAtLine(text, language, line) {
     if (!structuredLanguages.has(language))
         return undefined;
+    return functionBlockAt(text.split(/\r?\n/), language, line - 1);
+}
+// Innermost function whose block covers lines start..end (1-based, relative to text); the nearest
+// preceding covering declaration is the innermost one, because nested blocks start later.
+export function functionCoveringLines(text, language, start, end) {
+    if (!structuredLanguages.has(language))
+        return undefined;
     const lines = text.split(/\r?\n/);
-    const start = line - 1;
+    const inString = isPython(language) ? pythonLinesStartingInString(lines) : braceLinesStartingInString(lines);
+    for (let i = Math.min(start, lines.length) - 1; i >= 0; i--) {
+        if (inString[i])
+            continue;
+        const chunk = functionBlockAt(lines, language, i);
+        if (chunk && chunk.endLine >= end)
+            return chunk;
+    }
+    return undefined;
+}
+function functionBlockAt(lines, language, start) {
     if (start < 0 || start >= lines.length || structureKind(lines[start], language) !== "function")
         return undefined;
-    const end = language === "python" || language === "py"
-        ? pythonBlockEnd(lines, start) : braceBlockEnd(lines, start);
+    const end = isPython(language) ? pythonBlockEnd(lines, start) : braceBlockEnd(lines, start);
     if (end === undefined)
         return undefined;
-    return { ordinal: 0, startLine: line, endLine: end + 1, kind: "function", text: lines.slice(start, end + 1).join("\n") };
+    return { ordinal: 0, startLine: start + 1, endLine: end + 1, kind: "function", text: lines.slice(start, end + 1).join("\n") };
+}
+function isPython(language) {
+    return language === "python" || language === "py";
 }
 function isConstArrowDeclaration(line) {
     const declaration = line.match(/^\s*(export\s+)?const\s+[A-Za-z_$][\w$]*/);
@@ -208,8 +227,10 @@ function expressionContinuationEnd(lines, start) {
 }
 function pythonBlockEnd(lines, start) {
     const baseIndent = indentOf(lines[start]);
-    let lastNonBlank = start;
-    for (let i = start + 1; i < lines.length; i++) {
+    // A signature may continue over several lines with its closing bracket at the def's indent.
+    const header = pythonHeaderEnd(lines, start);
+    let lastNonBlank = header;
+    for (let i = header + 1; i < lines.length; i++) {
         if (!lines[i].trim())
             continue;
         if (indentOf(lines[i]) <= baseIndent)
@@ -217,6 +238,63 @@ function pythonBlockEnd(lines, start) {
         lastNonBlank = i;
     }
     return lastNonBlank;
+}
+function pythonHeaderEnd(lines, start) {
+    const state = { triple: undefined, depth: 0 };
+    for (let i = start; i < lines.length; i++) {
+        scanPythonLine(lines[i], state);
+        if (state.depth <= 0 && !state.triple)
+            return i;
+    }
+    return start;
+}
+// Tracks triple-quoted strings across lines and bracket depth outside strings and comments.
+function scanPythonLine(line, state) {
+    for (let i = 0; i < line.length; i++) {
+        if (state.triple) {
+            if (line[i] === "\\")
+                i++;
+            else if (line.startsWith(state.triple, i)) {
+                i += 2;
+                state.triple = undefined;
+            }
+            continue;
+        }
+        const char = line[i];
+        if (char === "#")
+            return;
+        if (char === '"' || char === "'") {
+            if (line.startsWith(char.repeat(3), i)) {
+                state.triple = char.repeat(3);
+                i += 2;
+                continue;
+            }
+            for (i++; i < line.length && line[i] !== char; i++)
+                if (line[i] === "\\")
+                    i++;
+            continue;
+        }
+        if ("([{".includes(char))
+            state.depth++;
+        else if (")]}".includes(char))
+            state.depth--;
+    }
+}
+function braceLinesStartingInString(lines) {
+    const state = { blockComment: false, quote: undefined, escape: false };
+    return lines.map((line) => {
+        const inString = state.blockComment || state.quote === "`";
+        braceDelta(line, state);
+        return inString;
+    });
+}
+function pythonLinesStartingInString(lines) {
+    const state = { triple: undefined, depth: 0 };
+    return lines.map((line) => {
+        const inString = Boolean(state.triple);
+        scanPythonLine(line, state);
+        return inString;
+    });
 }
 function indentOf(line) {
     return line.match(/^\s*/)?.[0].length ?? 0;

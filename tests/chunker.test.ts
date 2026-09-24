@@ -173,3 +173,31 @@ test("typescript chunking recognizes anonymous default exports", () => {
   assert.equal(multilineArrow?.startLine, 112);
   assert.equal(multilineArrow?.endLine, 113);
 });
+
+test("python chunking keeps the body of a signature closed at the def indent", () => {
+  const source = [
+    "def session_transaction(",
+    "    self, *args: t.Any, **kwargs: t.Any",
+    ") -> t.Iterator[SessionMixin]:",
+    '    """Open a session (with a paren in a string."""',
+    "    return None",
+    "",
+    "def after():",
+    "    return 1",
+  ].join("\n");
+  const functions = chunkText(source, "python").filter((chunk) => chunk.kind === "function");
+  assert.deepEqual(functions.map((chunk) => [chunk.startLine, chunk.endLine]), [[1, 5], [7, 8]]);
+});
+
+test("python chunking ignores brackets inside a multi-line string in the signature", () => {
+  const source = ['def first(', '    value="""(', '    """,', '):', '    return 1'].join("\n");
+  const [chunk] = chunkText(source, "python");
+  assert.deepEqual([chunk.startLine, chunk.endLine, chunk.kind], [1, 5, "function"]);
+});
+
+test("python chunking keeps the body after a signature longer than fifty lines", () => {
+  const params = Array.from({ length: 60 }, (_, i) => `    p${i},`);
+  const source = ["def long(", ...params, ") -> int:", "    return 1"].join("\n");
+  const [chunk] = chunkText(source, "python");
+  assert.deepEqual([chunk.startLine, chunk.endLine], [1, 63]);
+});

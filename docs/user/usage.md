@@ -329,9 +329,11 @@ Pass the location from a trusted search hit directly:
 codemap context test/example.test.js:695-764 --json
 ```
 
-`path:line` and `path:start-end` select an indexed chunk covering those lines.
-Use `--limit 1` for just that chunk. Missing or uncovered locations fail explicitly;
-refresh a stale index before reusing line numbers. Exact indexed filenames take precedence,
+`path:line` and `path:start-end` select the indexed chunk covering those lines. Inside a
+chunk over 150 lines (a large class) they return the innermost enclosing function, or the named
+lines extended to at least 80. A range across several chunks returns those lines, also extended
+to at least 80, and a range past the file end is clamped. Use `--limit 1` for just that excerpt. Missing files and
+locations starting past the file end fail explicitly; refresh a stale index before reusing line numbers. Exact indexed filenames take precedence,
 including filenames with numeric colon suffixes. Plain paths still start at the file header.
 
 For name targets, exact non-heading symbols take precedence over partial filenames;
