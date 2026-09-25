@@ -7,7 +7,8 @@ Aktueller Nutzenstand: [abgeschlossener Agentenvergleich](docs/developer/todo-ag
 **Wartungsmodus seit 2026-09-25.** Der [Skill-Vergleich auf Django](docs/developer/large-repo-skill-result.md)
 zeigte kaum Nutzung: Agenten riefen CodeMap trotz Skill in 2/12 und 0/12 Aufgaben auf.
 Fehler werden behoben, neue Funktionen nicht gebaut. Der [Span-Replay-Kandidat A](docs/developer/span-replay-result.md)
-wird nicht übertragen. Neuer Ausbau braucht einen neuen Befund, etwa Aufgaben ohne benannte API, und ein eigenes Protokoll.
+wird nicht übertragen. Auch [Aufgaben ohne Code-Namen](docs/developer/nameless-task-result.md) zeigten keinen Nutzen:
+Agenten lösten sie ohne CodeMap mit rund fünf Befehlen; Aufrufer- und Testsuche werden nicht gebaut.
 
 Suchalternativen: [lokaler Vergleich abgeschlossen](docs/developer/search-tool-comparison-result.md);
 PGR und BM25 verfehlen die Fortsetzungsbedingungen. Keine Umstellung.

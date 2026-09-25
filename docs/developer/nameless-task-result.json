@@ -1,0 +1,2519 @@
+{
+  "agent": {
+    "codexVersion": "codex-cli 0.157.0",
+    "effort": "medium",
+    "isolationConfigSha256": "29708f60a4dff0cdf534a6ac5f0f1669eed1057248df22412bd5209102911c00",
+    "maxBudgetUsdPerRun": null,
+    "modelEvidence": "requested-only; CLI does not report response model",
+    "navigationWorkflow": "optional",
+    "provider": "codex-cli",
+    "requestedModel": "gpt-6-luna"
+  },
+  "claimBoundary": "Directional development evidence only; it cannot support a generalization claim.",
+  "codemapProfile": {
+    "expectedVersion": "0.10.1",
+    "gitCommit": "5b486170fcd56c23e145e3b79d1bf83fbecbc3a1"
+  },
+  "comparison": {
+    "durationMetric": "agent-index-verifier",
+    "kind": "skill-three-arm",
+    "search": {
+      "efficiencyGate": {
+        "issues": [
+          {
+            "actual": 1.1485439116401825,
+            "expected": "<= 0.85",
+            "metric": "totalDurationRatio"
+          },
+          {
+            "actual": 1,
+            "expected": "<= 0",
+            "metric": "pairedLosses"
+          },
+          {
+            "actual": 4,
+            "expected": ">= 8",
+            "metric": "fasterPairs"
+          }
+        ],
+        "passed": false
+      },
+      "gate": {
+        "issues": [
+          {
+            "actual": 0,
+            "expected": ">= 0.66",
+            "metric": "treatmentAdoptionRate"
+          }
+        ],
+        "passed": false
+      },
+      "summary": {
+        "agentDurationRatio": 1.0442,
+        "baselineSuccessRate": 1,
+        "budgetExhaustedRuns": 0,
+        "crossArmContamination": 0,
+        "exactTwoSidedP": 1,
+        "losingTasks": [
+          "large-repo-04"
+        ],
+        "losses": 1,
+        "tasks": 12,
+        "ties": 11,
+        "tokenRatio": 0.9236,
+        "totalCostUsd": null,
+        "treatmentAdoptionRate": 0,
+        "treatmentSuccessRate": 0.9167,
+        "validPairs": 12,
+        "wins": 0
+      }
+    },
+    "timing": {
+      "baseline": {
+        "agentMs": 523967,
+        "indexMs": 0,
+        "runs": 12,
+        "verifierMs": 74314
+      },
+      "codemap": {
+        "agentMs": 680818,
+        "indexMs": 65710,
+        "runs": 12,
+        "verifierMs": 71843
+      },
+      "search": {
+        "agentMs": 547117,
+        "indexMs": 65668,
+        "runs": 12,
+        "verifierMs": 74367
+      }
+    }
+  },
+  "corpus": {
+    "frozenAt": "2026-09-25",
+    "id": "agent-impact-large-repo-nameless-v1",
+    "orderSeed": 0,
+    "purpose": "development-pilot",
+    "selectionProtocol": "The twelve validated Django tasks of agent-impact-large-repo-skill-v1 with prompts rewritten to describe observable behaviour without code identifiers or file paths; the focused test command is replaced by a generic runner hint. Arms: no CodeMap, current skill text, CodeMap-first skill text. See docs/developer/nameless-task-protocol.md.",
+    "version": 1
+  },
+  "efficiencyGate": {
+    "issues": [
+      {
+        "actual": 1.2811876132907924,
+        "expected": "<= 1.1",
+        "metric": "tokenRatio"
+      },
+      {
+        "actual": 1.3678706159814535,
+        "expected": "<= 0.85",
+        "metric": "totalDurationRatio"
+      },
+      {
+        "actual": 1,
+        "expected": "<= 0",
+        "metric": "pairedLosses"
+      },
+      {
+        "actual": 0,
+        "expected": ">= 8",
+        "metric": "fasterPairs"
+      }
+    ],
+    "passed": false
+  },
+  "gate": {
+    "issues": [],
+    "passed": true
+  },
+  "manifestSha256": "e1d01bbe7ba0f98b02415d920cb46bbba3c72a497e21c0be732b78de013bb1e0",
+  "oracles": [
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-01",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-02",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-03",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-04",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-05",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-06",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-07",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-08",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-09",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-10",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-11",
+      "valid": true
+    },
+    {
+      "baseFails": true,
+      "baseFailureKind": "assertion",
+      "baseHiddenTestExitCodes": [
+        1,
+        1
+      ],
+      "publicSandboxPassed": true,
+      "publicTestExitCodes": {
+        "base": [
+          0,
+          0
+        ],
+        "reference": [
+          0,
+          0
+        ]
+      },
+      "quality": {
+        "base": [
+          [],
+          []
+        ],
+        "reference": [
+          [],
+          []
+        ]
+      },
+      "referenceFixExitCodes": [
+        0,
+        0
+      ],
+      "referencePasses": true,
+      "sandboxQuality": [
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "base"
+        },
+        {
+          "checks": [],
+          "mode": "baseline",
+          "phase": "reference"
+        },
+        {
+          "checks": [],
+          "mode": "codemap",
+          "phase": "reference"
+        }
+      ],
+      "taskId": "large-repo-12",
+      "valid": true
+    }
+  ],
+  "plannedRuns": 36,
+  "results": [
+    {
+      "addedLines": 6,
+      "agentDurationMs": 37173,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/cache/backends/filebased.py",
+        "tests/cache/tests.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "a1ec61b169b31ee81c65e5f517510ee72f472c1857beef57c4b1616d314dd710",
+      "preflightDurationMs": 7848,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 1,
+      "setupDurationMs": 2297,
+      "success": true,
+      "taskId": "large-repo-01",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 116736,
+        "costUsd": null,
+        "inputTokens": 14258,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1052,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 6561,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 7,
+      "agentDurationMs": 31146,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/cache/backends/filebased.py",
+        "tests/cache/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5443,
+      "mode": "search",
+      "originalPatchSha256": "51f28e7cbd9430f88649e5425268026cdaf7bcce48a6ef20aa404b09f179765e",
+      "preflightDurationMs": 7534,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 2,
+      "setupDurationMs": 2168,
+      "success": true,
+      "taskId": "large-repo-01",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 106752,
+        "costUsd": null,
+        "inputTokens": 14834,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 886,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 6559,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 6,
+      "agentDurationMs": 49076,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/cache/backends/filebased.py",
+        "tests/cache/tests.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5586,
+      "mode": "codemap",
+      "originalPatchSha256": "6a9af043efb197cf9d0ad84779bff2507aac094eeba1dc6ecffa52b64b755f64",
+      "preflightDurationMs": 7504,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 3,
+      "setupDurationMs": 2191,
+      "success": true,
+      "taskId": "large-repo-01",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 118528,
+        "costUsd": null,
+        "inputTokens": 15966,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1448,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 7
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 6546,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 25,
+      "agentDurationMs": 37051,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/forms/widgets.py",
+        "tests/forms_tests/tests/test_media.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5471,
+      "mode": "search",
+      "originalPatchSha256": "57ae8699f3976cf123a7e34f90fc78ed83c219ee8b01ef976f206030b6e9d361",
+      "preflightDurationMs": 1316,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 4,
+      "setupDurationMs": 2104,
+      "success": true,
+      "taskId": "large-repo-02",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 115968,
+        "costUsd": null,
+        "inputTokens": 16875,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1196,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 4
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 347,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 19,
+      "agentDurationMs": 37307,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/forms/widgets.py",
+        "tests/forms_tests/tests/test_media.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5446,
+      "mode": "codemap",
+      "originalPatchSha256": "9a666dbec272ff27dfe076623c85c7dc3aa2be5e44b2cb5f983c10a9463de347",
+      "preflightDurationMs": 1338,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 5,
+      "setupDurationMs": 2127,
+      "success": true,
+      "taskId": "large-repo-02",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 130816,
+        "costUsd": null,
+        "inputTokens": 19259,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1399,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 7
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 348,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 20,
+      "agentDurationMs": 41434,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/forms/widgets.py",
+        "tests/forms_tests/tests/test_media.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "e7df86292f60642631d6f193453eb21197c05894edf1c04a1c8f848c88b43a27",
+      "preflightDurationMs": 1511,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 6,
+      "setupDurationMs": 2256,
+      "success": true,
+      "taskId": "large-repo-02",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 107776,
+        "costUsd": null,
+        "inputTokens": 16583,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1145,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 4
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 344,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 11,
+      "agentDurationMs": 28572,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/forms/fields.py",
+        "tests/forms_tests/field_tests/test_jsonfield.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5350,
+      "mode": "codemap",
+      "originalPatchSha256": "11a7df81dd220318098bbbaa5de82eb01d20836e0435a95f1ebfb180f406fcb8",
+      "preflightDurationMs": 1312,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 7,
+      "setupDurationMs": 2131,
+      "success": true,
+      "taskId": "large-repo-03",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 82176,
+        "costUsd": null,
+        "inputTokens": 12048,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1001,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 341,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 6,
+      "agentDurationMs": 26179,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/forms/fields.py",
+        "tests/forms_tests/field_tests/test_jsonfield.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "ee45bbb14787d0782e852c8456bd5ebca0ca1daba8364de58e66b7fa19de92c5",
+      "preflightDurationMs": 1490,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 8,
+      "setupDurationMs": 2218,
+      "success": true,
+      "taskId": "large-repo-03",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 102400,
+        "costUsd": null,
+        "inputTokens": 13454,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 820,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 342,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 12,
+      "agentDurationMs": 40574,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/forms/fields.py",
+        "tests/forms_tests/field_tests/test_jsonfield.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5450,
+      "mode": "search",
+      "originalPatchSha256": "6358511d3ad2cc8569ab2a277a007d9df68e2350ab4c0f07e890f0f43c54fbdf",
+      "preflightDurationMs": 1354,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 9,
+      "setupDurationMs": 2172,
+      "success": true,
+      "taskId": "large-repo-03",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 104448,
+        "costUsd": null,
+        "inputTokens": 11489,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 920,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 337,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 22,
+      "agentDurationMs": 39875,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/http/response.py",
+        "tests/responses/tests.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "6d8c72c39b5b5b81f16414bc47d9c3f5082ee9b18b42d839b3844efea0e2b415",
+      "preflightDurationMs": 1461,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 10,
+      "setupDurationMs": 2269,
+      "success": true,
+      "taskId": "large-repo-04",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 80128,
+        "costUsd": null,
+        "inputTokens": 11050,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1312,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 3
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 320,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 16,
+      "agentDurationMs": 36898,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/http/response.py",
+        "tests/responses/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5364,
+      "mode": "search",
+      "originalPatchSha256": "e2e9b5142dc776761dde4f58979eac1a0b5fcf2fbb2e3628a0dfbbfe26c3e744",
+      "preflightDurationMs": 1269,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 11,
+      "setupDurationMs": 2097,
+      "success": false,
+      "taskId": "large-repo-04",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 68096,
+        "costUsd": null,
+        "inputTokens": 9634,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 977,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 3
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 320,
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 5,
+      "agentDurationMs": 48692,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/http/response.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5346,
+      "mode": "codemap",
+      "originalPatchSha256": "b0e73feca1a88c7fb75feda365e6122da0c0756d09005d6badf8bc4112be5b36",
+      "preflightDurationMs": 1298,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 12,
+      "setupDurationMs": 2111,
+      "success": false,
+      "taskId": "large-repo-04",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 129536,
+        "costUsd": null,
+        "inputTokens": 15072,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1749,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 7
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 319,
+      "verifierExitCode": 1
+    },
+    {
+      "addedLines": 13,
+      "agentDurationMs": 43496,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/test/client.py",
+        "tests/test_client/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5359,
+      "mode": "search",
+      "originalPatchSha256": "a44db4e3eb94868fa20fea8ee763fd7999f49e8f83291f53e778a2449355fcad",
+      "preflightDurationMs": 1764,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 13,
+      "setupDurationMs": 2137,
+      "success": true,
+      "taskId": "large-repo-05",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 171264,
+        "costUsd": null,
+        "inputTokens": 22742,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1294,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 8
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 772,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 22,
+      "agentDurationMs": 63298,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/test/client.py",
+        "tests/test_client/tests.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 3,
+        "status": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5382,
+      "mode": "codemap",
+      "originalPatchSha256": "efa3a844d3c700d9e03baf9af664de547011a9a9e6a097a2cbddb929bec16bf6",
+      "preflightDurationMs": 1750,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 14,
+      "setupDurationMs": 2184,
+      "success": true,
+      "taskId": "large-repo-05",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 201216,
+        "costUsd": null,
+        "inputTokens": 19977,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1811,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 11
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 735,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 15,
+      "agentDurationMs": 50251,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/test/client.py",
+        "tests/test_client/tests.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "8ebb487f42bea080a3da66d020f47271ad174dd291710e24f67d45593354bea8",
+      "preflightDurationMs": 1960,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 15,
+      "setupDurationMs": 2123,
+      "success": true,
+      "taskId": "large-repo-05",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 198656,
+        "costUsd": null,
+        "inputTokens": 19363,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1722,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 9
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 742,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 7,
+      "agentDurationMs": 108785,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/contrib/auth/hashers.py",
+        "tests/auth_tests/test_hashers.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 1,
+        "status": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5375,
+      "mode": "codemap",
+      "originalPatchSha256": "0d7654e47ca57ba24bc2b73aaa25ebe59a6ea746708ee6a99cd7322a791e6f52",
+      "preflightDurationMs": 25316,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 16,
+      "setupDurationMs": 2108,
+      "success": true,
+      "taskId": "large-repo-06",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 225536,
+        "costUsd": null,
+        "inputTokens": 31947,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1872,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 8
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 38397,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 5,
+      "agentDurationMs": 100296,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/contrib/auth/hashers.py",
+        "tests/auth_tests/test_hashers.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "282263c190b12de363a23a65a664d426fb4ebd092c237d693c3dfc1169b77608",
+      "preflightDurationMs": 26805,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 17,
+      "setupDurationMs": 2338,
+      "success": true,
+      "taskId": "large-repo-06",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 346880,
+        "costUsd": null,
+        "inputTokens": 22320,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2144,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 8
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 40760,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 7,
+      "agentDurationMs": 60836,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/contrib/auth/hashers.py",
+        "tests/auth_tests/test_hashers.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5817,
+      "mode": "search",
+      "originalPatchSha256": "0ec9a654536d76f2daf4f0ae8d539d3d3509fa856632767bb21d492e5fe14161",
+      "preflightDurationMs": 26542,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 18,
+      "setupDurationMs": 2263,
+      "success": true,
+      "taskId": "large-repo-06",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 186368,
+        "costUsd": null,
+        "inputTokens": 18009,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1352,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 40870,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 9,
+      "agentDurationMs": 28391,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/serializers/jsonl.py",
+        "tests/serializers/test_jsonl.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "0fde2fccfda32e9449f9c981f095c5d069de8edffe9dc38fb702e366c022a4da",
+      "preflightDurationMs": 2104,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 19,
+      "setupDurationMs": 2285,
+      "success": true,
+      "taskId": "large-repo-07",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 99840,
+        "costUsd": null,
+        "inputTokens": 18795,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 802,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 3
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 728,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 16,
+      "agentDurationMs": 34155,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/serializers/jsonl.py",
+        "tests/serializers/test_deserialization.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5813,
+      "mode": "search",
+      "originalPatchSha256": "cc5a5d18a5ce8a594f738179ae163ef3edd09b53a8fc4ab94410a91fcd4a4576",
+      "preflightDurationMs": 1798,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 20,
+      "setupDurationMs": 2211,
+      "success": true,
+      "taskId": "large-repo-07",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 76288,
+        "costUsd": null,
+        "inputTokens": 12688,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1095,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 3
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 709,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 9,
+      "agentDurationMs": 34214,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/serializers/jsonl.py",
+        "tests/serializers/test_jsonl.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5625,
+      "mode": "codemap",
+      "originalPatchSha256": "83d757d31156305fcb08d7e6263ef8698036538fe68c03505b4f4d7d100b181d",
+      "preflightDurationMs": 1775,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 21,
+      "setupDurationMs": 2240,
+      "success": true,
+      "taskId": "large-repo-07",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 95232,
+        "costUsd": null,
+        "inputTokens": 12809,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1025,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 714,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 15,
+      "agentDurationMs": 47626,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/db/models/lookups.py",
+        "tests/lookup/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5525,
+      "mode": "search",
+      "originalPatchSha256": "359029ee540fad205d0244e338f71c85d22baad91b33694dd66948c3410a58a6",
+      "preflightDurationMs": 1696,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 22,
+      "setupDurationMs": 2149,
+      "success": true,
+      "taskId": "large-repo-08",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 150272,
+        "costUsd": null,
+        "inputTokens": 42274,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1747,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 613,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 19,
+      "agentDurationMs": 74302,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/db/models/lookups.py",
+        "tests/lookup/tests.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 3,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5429,
+      "mode": "codemap",
+      "originalPatchSha256": "ad9b97e7be398a424b672c37b3511e4388249a086fb1382a3f8b785cdf610291",
+      "preflightDurationMs": 1606,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 23,
+      "setupDurationMs": 2104,
+      "success": true,
+      "taskId": "large-repo-08",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 262912,
+        "costUsd": null,
+        "inputTokens": 26078,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2505,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 13
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 607,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 13,
+      "agentDurationMs": 48568,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/db/models/lookups.py",
+        "tests/lookup/tests.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "c83d990015b6010cb9e52e1654fca21d957767a0a0ca713f4ad64931ac5e9431",
+      "preflightDurationMs": 1792,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 24,
+      "setupDurationMs": 2164,
+      "success": true,
+      "taskId": "large-repo-08",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 204544,
+        "costUsd": null,
+        "inputTokens": 20751,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1778,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 9
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 613,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 10,
+      "agentDurationMs": 30734,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/http/request.py",
+        "tests/asgi/tests.py"
+      ],
+      "codemapCommands": {
+        "context": 3,
+        "index": 1,
+        "search": 1,
+        "status": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5432,
+      "mode": "codemap",
+      "originalPatchSha256": "e355a6f179603276fd3bbffaab68f69bf0129285f50105a7dd4ac367f995a6f7",
+      "preflightDurationMs": 10208,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 25,
+      "setupDurationMs": 2446,
+      "success": true,
+      "taskId": "large-repo-09",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 101376,
+        "costUsd": null,
+        "inputTokens": 13091,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 901,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 7
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 9206,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 9,
+      "agentDurationMs": 23830,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/http/request.py",
+        "tests/requests_tests/test_data_upload_settings.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "401e7114ae1493c208595dd943b5b816bc3ca2fcd066e0d6490cdffabe1a7514",
+      "preflightDurationMs": 10364,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 26,
+      "setupDurationMs": 2233,
+      "success": true,
+      "taskId": "large-repo-09",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 70144,
+        "costUsd": null,
+        "inputTokens": 9354,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 690,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 3
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 9208,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 11,
+      "agentDurationMs": 78722,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/http/request.py",
+        "tests/asgi/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 1,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5367,
+      "mode": "search",
+      "originalPatchSha256": "288bf8fe8b570131f062b79221b58422ae731e7179d3e1696ef8947890715146",
+      "preflightDurationMs": 10177,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 27,
+      "setupDurationMs": 2199,
+      "success": true,
+      "taskId": "large-repo-09",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 89344,
+        "costUsd": null,
+        "inputTokens": 12271,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 943,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 4
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 9202,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 16,
+      "agentDurationMs": 35831,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/mail/message.py",
+        "tests/mail/tests.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "503af087625aa8223774c774ae3f3eccf4f2766f5677deb53fef7b205dcfa348",
+      "preflightDurationMs": 1738,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 28,
+      "setupDurationMs": 2163,
+      "success": true,
+      "taskId": "large-repo-10",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 124672,
+        "costUsd": null,
+        "inputTokens": 14645,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1157,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 611,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 16,
+      "agentDurationMs": 33878,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/mail/message.py",
+        "tests/mail/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 0,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5249,
+      "mode": "search",
+      "originalPatchSha256": "86b16d5caaa32e0ef709b9b940fb14ad1fb67fae8c06e52c523ea6db3d2f7c4a",
+      "preflightDurationMs": 1583,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 29,
+      "setupDurationMs": 2092,
+      "success": true,
+      "taskId": "large-repo-10",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 121856,
+        "costUsd": null,
+        "inputTokens": 15494,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1251,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 4
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 611,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 16,
+      "agentDurationMs": 65309,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/mail/message.py",
+        "tests/mail/tests.py"
+      ],
+      "codemapCommands": {
+        "context": 2,
+        "index": 1,
+        "search": 3,
+        "status": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5520,
+      "mode": "codemap",
+      "originalPatchSha256": "a458eb87118f43ec84ea8dc773e020f315a6717ee337c6c0647543a829a17de3",
+      "preflightDurationMs": 1653,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 30,
+      "setupDurationMs": 2125,
+      "success": true,
+      "taskId": "large-repo-10",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 294912,
+        "costUsd": null,
+        "inputTokens": 35976,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 2235,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 13
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 606,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 7,
+      "agentDurationMs": 51345,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/utils/deprecation.py",
+        "tests/deprecation/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5299,
+      "mode": "search",
+      "originalPatchSha256": "ff0b2fe72ebeb9e8588d9c22f825494d6d93d67f17878b5f269829226cc91f84",
+      "preflightDurationMs": 1241,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 31,
+      "setupDurationMs": 2182,
+      "success": true,
+      "taskId": "large-repo-11",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 156160,
+        "costUsd": null,
+        "inputTokens": 17873,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1423,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 7
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 309,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 4,
+      "agentDurationMs": 48970,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/utils/deprecation.py",
+        "tests/deprecation/tests.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5142,
+      "mode": "codemap",
+      "originalPatchSha256": "b35a21ce9a9ca018198cd0d03df4baae4804aa37b279c7318075ea9e90eebcce",
+      "preflightDurationMs": 1261,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 32,
+      "setupDurationMs": 2231,
+      "success": true,
+      "taskId": "large-repo-11",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 173056,
+        "costUsd": null,
+        "inputTokens": 19700,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 972,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 10
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 316,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 7,
+      "agentDurationMs": 26477,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/utils/deprecation.py",
+        "tests/deprecation/tests.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 2,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "bce2fc93e1942d4cf142066c5b72d5ff9a224d140bd3d8a301a3418009aa2858",
+      "preflightDurationMs": 1440,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 33,
+      "setupDurationMs": 2196,
+      "success": true,
+      "taskId": "large-repo-11",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 88320,
+        "costUsd": null,
+        "inputTokens": 12165,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 925,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 368,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 30,
+      "agentDurationMs": 91559,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/cache/backends/db.py",
+        "tests/cache/tests.py"
+      ],
+      "codemapCommands": {
+        "context": 1,
+        "index": 1,
+        "search": 2,
+        "status": 1
+      },
+      "deletedLines": 11,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 6077,
+      "mode": "codemap",
+      "originalPatchSha256": "fd7b49420967196663d965d6f21173ec2bb2dd295d907f6c06032b04ea1a7e3f",
+      "preflightDurationMs": 14741,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 34,
+      "setupDurationMs": 2375,
+      "success": true,
+      "taskId": "large-repo-12",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 316416,
+        "costUsd": null,
+        "inputTokens": 25216,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 3119,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 13
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 13708,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 33,
+      "agentDurationMs": 65662,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/cache/backends/db.py",
+        "tests/cache/tests.py"
+      ],
+      "codemapCommands": {},
+      "deletedLines": 11,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 0,
+      "mode": "baseline",
+      "originalPatchSha256": "eda09b412b3a5fa560a2188a60835839451806f53861e6325c768e934b0fe6fd",
+      "preflightDurationMs": 14859,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 35,
+      "setupDurationMs": 2285,
+      "success": true,
+      "taskId": "large-repo-12",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 119552,
+        "costUsd": null,
+        "inputTokens": 24569,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1892,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 5
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 13717,
+      "verifierExitCode": 0
+    },
+    {
+      "addedLines": 31,
+      "agentDurationMs": 51390,
+      "agentExitCode": 0,
+      "agentStarted": true,
+      "authentication": "codex-login",
+      "changedPaths": [
+        "django/core/cache/backends/db.py",
+        "tests/cache/tests.py"
+      ],
+      "codemapCommands": {
+        "index": 1
+      },
+      "deletedLines": 11,
+      "expectedPathRecall": 1,
+      "forbiddenChanges": [],
+      "indexDurationMs": 5511,
+      "mode": "search",
+      "originalPatchSha256": "15bbc3e83cc726a3145376db8b699f38c6dc91e49133be923d8a6cc1a2d5d03a",
+      "preflightDurationMs": 14726,
+      "quality": [],
+      "repo": "django",
+      "runOrder": 36,
+      "setupDurationMs": 2198,
+      "success": true,
+      "taskId": "large-repo-12",
+      "timedOut": false,
+      "usage": {
+        "actualModel": "unknown",
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 156928,
+        "costUsd": null,
+        "inputTokens": 16814,
+        "isError": false,
+        "modelEvidence": "requested-only",
+        "outputTokens": 1522,
+        "requestedModel": "gpt-6-luna",
+        "terminalReason": "completed",
+        "toolCalls": {
+          "command_execution": 6
+        },
+        "turns": 1
+      },
+      "verifierDurationMs": 13718,
+      "verifierExitCode": 0
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "agentDurationRatio": 1.2994,
+    "baselineSuccessRate": 1,
+    "budgetExhaustedRuns": 0,
+    "crossArmContamination": 0,
+    "exactTwoSidedP": 1,
+    "losingTasks": [
+      "large-repo-04"
+    ],
+    "losses": 1,
+    "tasks": 12,
+    "ties": 11,
+    "tokenRatio": 1.2812,
+    "totalCostUsd": null,
+    "treatmentAdoptionRate": 1,
+    "treatmentSuccessRate": 0.9167,
+    "validPairs": 12,
+    "wins": 0
+  },
+  "worstCaseBudgetUsd": null
+}

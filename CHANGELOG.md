@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Measure the 12 Django tasks with prompts that describe behaviour instead of code identifiers (two required error messages still name one): agents solved all of them without CodeMap in about five commands each; a CodeMap-first skill found the file first in 9/11 counted tasks but cost 37% more time and 27% more tokens, so CodeMap stays in maintenance. The harness gains a `testHint` task field, and `scripts/analyze-first-surface.py` counts which tool named the target file first.
+
 - Compare no CodeMap, the current skill and a streamlined skill on 12 Django tasks with `gpt-6-luna`: agents used CodeMap in 2/12 and 0/12 tasks, so the skill stays unchanged and CodeMap moves to maintenance. The agent-impact harness gains a `skill-three-arm` comparison that gives each treatment arm its full skill text.
 
 - Split Python classes over 150 lines into method and text chunks, keep single-line decorators with their function, and never read a Python declaration inside a triple-quoted string. Search no longer ranks a whole Flask application class as one chunk; context returns the matched method. All quality gates unchanged; run `codemap index` to rechunk.
