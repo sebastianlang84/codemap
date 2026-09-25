@@ -36,6 +36,9 @@ Gezählt sind nur Aufrufe der Agenten. Die Indexierung durch den Harness ist in 
   und 8 % weniger Agentenzeit als K. Diese Unterschiede entstanden ohne CodeMap-Aufruf. Sie können vom
   anderen Prompttext oder aus der Streuung einzelner Läufe stammen; ein Lauf pro Arm trennt das nicht.
 - **Fehlschläge:** Aufgaben 04 und 10 scheiterten in allen drei Armen, Aufgabe 06 nur in S0.
+  Nachträglich festgestellt: Die versteckten Tests von 04 und 10 prüfen einen genauen Fehlertext, den
+  der Prompt nicht nannte. Alle Arme änderten dort die richtige Datei. Die beiden Fehlschläge sagen also
+  nichts über die Navigation; im [Folgevergleich](nameless-task-protocol.md) nennen die Prompts den Text.
 - **Indexkosten:** Die Indexierung kostete je Lauf etwa 5,6 s. Sie macht die CodeMap-Arme in der
   Gesamtzeit langsamer als K, obwohl die Agenten dort schneller fertig waren.
 

@@ -29,6 +29,8 @@ export interface AgentImpactTask {
   sourceUrl: string;
   prompt: string;
   publicTestCommand?: string[];
+  // Shown instead of publicTestCommand, whose test label would reveal the target location.
+  testHint?: string;
   qualityChecks?: AgentImpactQualityCheck[];
   baseCommit: string;
   fixCommit: string;
@@ -468,6 +470,8 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     string(task.publicTestCommand[0], `tasks[${index}].publicTestCommand[0]`);
     publicTestCommand = [...task.publicTestCommand] as string[];
   }
+  const testHint = task.testHint === undefined ? undefined : string(task.testHint, `tasks[${index}].testHint`);
+  if (testHint !== undefined && publicTestCommand === undefined) throw new Error(`tasks[${index}].testHint requires publicTestCommand`);
   const baseCommit = sha(task.baseCommit, `tasks[${index}].baseCommit`);
   const fixCommit = sha(task.fixCommit, `tasks[${index}].fixCommit`);
   if (baseCommit === fixCommit) throw new Error(`tasks[${index}] baseCommit and fixCommit must differ`);
@@ -517,6 +521,7 @@ function parseTask(value: unknown, index: number, repoIds: Set<string>): AgentIm
     sourceUrl,
     prompt,
     ...(publicTestCommand ? { publicTestCommand } : {}),
+    ...(testHint !== undefined ? { testHint } : {}),
     ...(qualityChecks ? { qualityChecks } : {}),
     baseCommit,
     fixCommit,
@@ -724,7 +729,7 @@ export function evaluateAgentImpactEfficiencyGate(
 export function agentImpactPublicTestInstruction(task: AgentImpactTask): string[] {
   const render = (argv: string[]) => argv.map(arg => `'${arg.replaceAll("'", "'\\''")}'`).join(" ");
   return [
-    ...(task.publicTestCommand ? [`Focused test command (verified on the prepared repository): ${render(task.publicTestCommand)}`] : []),
+    ...(task.testHint !== undefined ? [task.testHint] : task.publicTestCommand ? [`Focused test command (verified on the prepared repository): ${render(task.publicTestCommand)}`] : []),
     ...(task.qualityChecks ?? []).map(check => `Required quality check ${check.id}: ${render([check.command.file, ...check.command.args])}`),
   ];
 }

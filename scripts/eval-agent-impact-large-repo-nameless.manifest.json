@@ -1,0 +1,607 @@
+{
+  "schemaVersion": 1,
+  "comparison": "skill-three-arm",
+  "skillArms": {
+    "current": "---\nname: navigating-with-codemap\ndescription: Optionally preselect files and line ranges with the CodeMap CLI, a local ranked index of the repository, when the target file or symbol is unknown and a first rg search gives too many or no useful hits. Not for log searches, exhaustive literal/regex matches, or reading an already-known file.\n---\n\n# Navigating with CodeMap\n\nCodeMap is a local index of a repository. `search` ranks files, symbols, and code chunks for a\nquery; `context` returns a read-first plan for a target — its imports, callers, tests, config, and\ndocs. It is deterministic and lexical: no embeddings, no network, nothing leaves the machine.\n\n## Workflow\n\n1. Check `codemap status --json` unless readiness is already known. If stale, refresh the approved index with `codemap index`.\n2. When ready, run `codemap search \"<task terms>\" --json`.\n3. Pass a trusted hit location to `codemap context \"<path>:<start>-<end>\" --json --limit 1` for its source. Symbols or the original query also work; plain paths start at the file header. Increase the limit only for related context.\n4. Re-query once with concrete terms, then fall back if results remain weak.\n\nQuery with real tokens — symbol names, path fragments, endpoint strings, config keys — not with a\ndescriptive phrase; ranking is lexical.\n\n## When it does not fit\n\nUse exhaustive search for every literal/regex match, logs, or non-code config. Read known files\ndirectly; use `ast-grep` for code-shape queries. Fall back when CodeMap is unavailable or not ready.\nNever run `codemap index --approve` without user approval.\n\nSearch and context return ranked, bounded results, not an exhaustive list of references or callers.\nSymbols come from cheap parsing and relations from import text, so dynamic dispatch,\ngenerated code, and exotic path aliases are missed.\n",
+    "candidate": "---\nname: navigating-with-codemap\ndescription: Start code navigation in this repository with the CodeMap CLI, a local ranked index of the repository, before rg, grep, or find, to locate the files and line ranges to read. Not for log searches, exhaustive literal/regex matches, or reading an already-known file.\n---\n\n# Navigating with CodeMap\n\nCodeMap is a local index of a repository. `search` ranks files, symbols, and code chunks for a\nquery; `context` returns a read-first plan for a target — its imports, callers, tests, config, and\ndocs. It is deterministic and lexical: no embeddings, no network, nothing leaves the machine.\n\n## Workflow\n\nBegin navigation with these steps before any rg, grep, or find.\n\n1. Check `codemap status --json` unless readiness is already known. If stale, refresh the approved index with `codemap index`.\n2. When ready, run `codemap search \"<task terms>\" --json`.\n3. Pass a trusted hit location to `codemap context \"<path>:<start>-<end>\" --json --limit 1` for its source. Symbols or the original query also work; plain paths start at the file header. Increase the limit only for related context.\n4. Re-query once with concrete terms, then fall back if results remain weak.\n\nQuery with the task's most specific words — symbol names, path fragments, domain terms, error or\nheader names — not with a full sentence; ranking is lexical.\n\n## When it does not fit\n\nUse exhaustive search for every literal/regex match, logs, or non-code config. Read known files\ndirectly; use `ast-grep` for code-shape queries. Fall back when CodeMap is unavailable or not ready.\nNever run `codemap index --approve` without user approval.\n\nSearch and context return ranked, bounded results, not an exhaustive list of references or callers.\nSymbols come from cheap parsing and relations from import text, so dynamic dispatch,\ngenerated code, and exotic path aliases are missed.\n"
+  },
+  "corpus": {
+    "id": "agent-impact-large-repo-nameless-v1",
+    "version": 1,
+    "frozenAt": "2026-09-25",
+    "purpose": "development-pilot",
+    "selectionProtocol": "The twelve validated Django tasks of agent-impact-large-repo-skill-v1 with prompts rewritten to describe observable behaviour without code identifiers or file paths; the focused test command is replaced by a generic runner hint. Arms: no CodeMap, current skill text, CodeMap-first skill text. See docs/developer/nameless-task-protocol.md.",
+    "orderSeed": 0
+  },
+  "agent": {
+    "provider": "codex-cli",
+    "model": "gpt-6-luna",
+    "effort": "medium",
+    "navigationWorkflow": "optional",
+    "maxBudgetUsdPerRun": null,
+    "timeoutMs": 900000,
+    "maxInfrastructureRetries": 2
+  },
+  "codemapProfile": {
+    "gitCommit": "5b486170fcd56c23e145e3b79d1bf83fbecbc3a1",
+    "expectedVersion": "0.10.1"
+  },
+  "repositories": [
+    {
+      "id": "django",
+      "remote": "https://github.com/django/django.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "large-repo-01",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/d058058976496cedf3f36fa303a0327af38cdeaa",
+      "prompt": "When cache entries are stored as files on disk, extending the expiry of an entry that has already expired crashes with ValueError. It should report that the key was not found, like any other cache miss.",
+      "baseCommit": "99672c672a1537aeb0d1fd5911ca6f04154cc091",
+      "fixCommit": "d058058976496cedf3f36fa303a0327af38cdeaa",
+      "expectedPaths": [
+        "django/core/cache/backends/filebased.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/cache/tests.py"
+      ],
+      "expectedBaseFailure": "test_touch_expired_key_does_not_crash",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "cache.tests.FileBasedCacheTests"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "cache.tests.FileBasedCacheTests"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-02",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/99d56e5cf15839995f62f24294584f1e2976b1ea",
+      "prompt": "Asset declarations on forms and widgets no longer accept ready-made markup: when a script or stylesheet entry is a string already marked as safe HTML, such as a complete <script defer src=\"...\"></script> tag, it is treated as a file path, prefixed with the static URL and percent-encoded. Render such entries unchanged again for scripts and stylesheets, also when asset declarations are combined and duplicates are removed.",
+      "baseCommit": "c6be0bf3bb744d234947cefd6def9f31d9655800",
+      "fixCommit": "99d56e5cf15839995f62f24294584f1e2976b1ea",
+      "expectedPaths": [
+        "django/forms/widgets.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/forms_tests/tests/test_media.py"
+      ],
+      "expectedBaseFailure": "test_html_safe_string_js",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "forms_tests.tests.test_media.FormsMediaTestCase"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "forms_tests.tests.test_media.FormsMediaTestCase"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-03",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/e26cdc556eabd8ea443401c38e8b2f9c7f7f046c",
+      "prompt": "In a form, a disabled field holding JSON data is reported as changed whenever the submitted data differs from the initial value. A disabled field must never count as changed, as already holds for other field types.",
+      "baseCommit": "c087b7e8c169f009ff6113647685df4ea9fefe88",
+      "fixCommit": "e26cdc556eabd8ea443401c38e8b2f9c7f7f046c",
+      "expectedPaths": [
+        "django/forms/fields.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/forms_tests/field_tests/test_jsonfield.py"
+      ],
+      "expectedBaseFailure": "test_disabled_has_changed",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "forms_tests.field_tests.test_jsonfield.JSONFieldTest"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "forms_tests.field_tests.test_jsonfield.JSONFieldTest"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-04",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/53645750412efa1e9013004040db328bd515e0f1",
+      "prompt": "Creating an HTTP response with a custom status reason text that contains control characters, such as carriage return or line feed, is accepted. Reject such values with the framework's error for invalid headers and the message: reason_phrase can't contain control characters.",
+      "baseCommit": "bc9bed573ce39c3b739a4a3b7848816d464b6bdc",
+      "fixCommit": "53645750412efa1e9013004040db328bd515e0f1",
+      "expectedPaths": [
+        "django/http/response.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/responses/tests.py"
+      ],
+      "expectedBaseFailure": "test_invalid_reason_phrase",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "responses.tests.HttpResponseTests"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "responses.tests.HttpResponseTests"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-05",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/7ab2d803533dd3ffe310055414ad584cfbbf0bea",
+      "prompt": "When a test simulates a multipart request in which one form key holds both a plain value and an uploaded file, only the last value for that key is sent. Every value of every key must be encoded.",
+      "baseCommit": "f8fc89d79c8850f3a1f29413de8277f8752f922d",
+      "fixCommit": "7ab2d803533dd3ffe310055414ad584cfbbf0bea",
+      "expectedPaths": [
+        "django/test/client.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/test_client/tests.py"
+      ],
+      "expectedBaseFailure": "test_uploading_file_and_field_with_same_name",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "test_client.tests.AsyncClientTest",
+        "test_client.tests.ClientTest"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "test_client.tests.AsyncClientTest",
+          "test_client.tests.ClientTest"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-06",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/356e5b0f5ddb473eec3ed96d8ad9a37f3f8585eb",
+      "prompt": "Hashing a password given as bytes that are not valid UTF-8 crashes with UnicodeDecodeError, both with the default PBKDF2-based password hasher and with the MD5-based one. Both must accept such byte passwords and keep producing the same hashes for text passwords.",
+      "baseCommit": "d058058976496cedf3f36fa303a0327af38cdeaa",
+      "fixCommit": "356e5b0f5ddb473eec3ed96d8ad9a37f3f8585eb",
+      "expectedPaths": [
+        "django/contrib/auth/hashers.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/auth_tests/test_hashers.py"
+      ],
+      "expectedBaseFailure": "test_password_and_salt_in_str_and_bytes",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "auth_tests.test_hashers.TestUtilsHashPass"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "auth_tests.test_hashers.TestUtilsHashPass"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-07",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/189c2d2ce58482db5c09d8b1e1464d1456dc9bab",
+      "prompt": "When a subclass of the line-delimited JSON deserializer overrides the hook that splits the input into lines, the override is ignored and the base behaviour is always used. Respect the subclass's override.",
+      "baseCommit": "77d0c9d549a8d95156c833eceb6275d9b7317d4e",
+      "fixCommit": "189c2d2ce58482db5c09d8b1e1464d1456dc9bab",
+      "expectedPaths": [
+        "django/core/serializers/jsonl.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/serializers/test_jsonl.py"
+      ],
+      "expectedBaseFailure": "test_subclass_can_override_get_lines",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "serializers.test_jsonl"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "serializers.test_jsonl"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-08",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/0751d5fed159fd9ff7edba522ece13c8c9d2a0d0",
+      "prompt": "Filtering query results on an annotated or aliased value with a one-shot iterator as the comparison value, for example membership in iter(ids) or a range given as iter([lo, hi]), consumes the iterator while the filter is prepared and returns wrong results. Such filters must not consume the iterator before using its values.",
+      "baseCommit": "6126f5d2fe0f22c0d2d4888de8c94b91a9795bb6",
+      "fixCommit": "0751d5fed159fd9ff7edba522ece13c8c9d2a0d0",
+      "expectedPaths": [
+        "django/db/models/lookups.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/lookup/tests.py"
+      ],
+      "expectedBaseFailure": "test_in_iterator_rhs",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "lookup.tests.LookupTests"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "lookup.tests.LookupTests"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-09",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/ba70e1bcdd8dc879c7d5fc7a3d12b5831eb08540",
+      "prompt": "Reading the raw body of an incoming request crashes with ValueError when its content length header is malformed, for example when an ASGI server joins duplicate Content-Length headers with a comma. Treat a malformed content length as 0 for the request size limit check instead of crashing.",
+      "baseCommit": "9383fae0d55a553be3bda620db87fa9ee8a81478",
+      "fixCommit": "ba70e1bcdd8dc879c7d5fc7a3d12b5831eb08540",
+      "expectedPaths": [
+        "django/http/request.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/asgi/tests.py"
+      ],
+      "expectedBaseFailure": "test_malformed_content_length",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "asgi.tests.ASGITest",
+        "asgi.tests.MaxMemorySizeASGITests"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "asgi.tests.ASGITest",
+          "asgi.tests.MaxMemorySizeASGITests"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-10",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/09434486302078c3649e034dfa74cf3f102db20b",
+      "prompt": "Passing a blind-copy recipient as a custom header named Bcc when building an e-mail message leaks the hidden addresses into the generated message as a visible header. Generating the message must raise ValueError with the message: Bcc is not a valid email header. Use the \"bcc\" argument to specify blind carbon copy recipients.",
+      "baseCommit": "b5b53afa29c53a79ae92ed5298144db0cab0ea3b",
+      "fixCommit": "09434486302078c3649e034dfa74cf3f102db20b",
+      "expectedPaths": [
+        "django/core/mail/message.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/mail/tests.py"
+      ],
+      "expectedBaseFailure": "test_bcc_in_headers_raises_error",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "mail.tests.EmailMessageTests"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "mail.tests.EmailMessageTests"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-11",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/60a9c70496e5d7b971928ce3da5b47c8836a4def",
+      "prompt": "The helper that tells Python's warnings which file paths belong to the framework, so that warnings skip the framework's own stack frames, returns the package directory without a trailing path separator. It therefore also matches sibling packages whose names start with the same word, such as 'django_extensions'. Make it match only the framework's own directory.",
+      "baseCommit": "61941b6fc172933f425e8ba76bab444ab9b313e4",
+      "fixCommit": "60a9c70496e5d7b971928ce3da5b47c8836a4def",
+      "expectedPaths": [
+        "django/utils/deprecation.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/deprecation/tests.py"
+      ],
+      "expectedBaseFailure": "test_does_not_match_packages_prefixed_with_django",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "deprecation.tests.DjangoFilePrefixesTests"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "deprecation.tests.DjangoFilePrefixesTests"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    },
+    {
+      "id": "large-repo-12",
+      "repo": "django",
+      "sourceUrl": "https://github.com/django/django/commit/867c7c0451f2e67e715da5b55b5bf6696747fdc3",
+      "prompt": "When the cache stored in a database table culls old entries and the number of entries divided by the configured cull frequency is zero, for example with a very high cull frequency, it still runs the culling delete query. Skip the delete when there is nothing to cull.",
+      "baseCommit": "bfb8679bd95e9387b848ef856e8eb6f1a4a4bac5",
+      "fixCommit": "867c7c0451f2e67e715da5b55b5bf6696747fdc3",
+      "expectedPaths": [
+        "django/core/cache/backends/db.py"
+      ],
+      "hiddenTestPaths": [
+        "tests/cache/tests.py"
+      ],
+      "expectedBaseFailure": "test_delete_query_skipped_on_high_cull_frequency",
+      "forbiddenChangePaths": [
+        "pyproject.toml",
+        "tox.ini"
+      ],
+      "publicTestCommand": [
+        ".venv/bin/python",
+        "tests/runtests.py",
+        "--parallel",
+        "1",
+        "cache.tests.DBCacheTests"
+      ],
+      "setup": {
+        "file": "python3",
+        "args": [
+          "-c",
+          "import os,subprocess,sysconfig; subprocess.run(['uv','venv','--python','3.13','--allow-existing','.venv'],check=True); subprocess.run(['uv','pip','install','--python','.venv/bin/python','asgiref==3.12.1','sqlparse==0.6.0'],check=True); site=subprocess.run(['.venv/bin/python','-c','import sysconfig;print(sysconfig.get_paths()[\"purelib\"])'],capture_output=True,text=True,check=True).stdout.strip(); open(os.path.join(site,'django-workspace.pth'),'w').write(os.getcwd()+'\\n')"
+        ],
+        "timeoutMs": 300000
+      },
+      "verify": {
+        "file": ".venv/bin/python",
+        "args": [
+          "tests/runtests.py",
+          "--parallel",
+          "1",
+          "cache.tests.DBCacheTests"
+        ],
+        "timeoutMs": 600000
+      },
+      "qualityChecks": [],
+      "testHint": "Django's test runner, run from the repository root: .venv/bin/python tests/runtests.py --parallel 1 <test label>"
+    }
+  ],
+  "pilotGate": {
+    "minValidPairs": 12,
+    "minTreatmentAdoptionRate": 0.66,
+    "maxCrossArmContamination": 0,
+    "maxBudgetExhaustedRuns": 0
+  },
+  "efficiencyGate": {
+    "maxCostRatio": null,
+    "maxTokenRatio": 1.1,
+    "maxAgentDurationRatio": 0.85,
+    "maxPairedLosses": 0,
+    "minFasterPairs": 8,
+    "durationMetric": "agent-index-verifier"
+  }
+}

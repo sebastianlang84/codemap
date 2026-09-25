@@ -107,6 +107,16 @@ test("resume keeps failed outcomes and archives infrastructure replacements with
   assert.equal(resumeAgentImpactResults([unpriced], [], 2).supersededInfrastructure.length, 1);
 });
 
+test("a test hint replaces the public test command in the prompt", () => {
+  const raw = JSON.parse(manifestRaw);
+  raw.tasks[0].testHint = "Run the test suite.";
+  assert.throws(() => parseAgentImpactManifest(JSON.stringify(raw)), /testHint requires publicTestCommand/);
+  raw.tasks[0].publicTestCommand = ["node", "--test", "secret/location.test.ts"];
+  const parsed = parseAgentImpactManifest(JSON.stringify(raw));
+  assert.deepEqual(parsed.tasks[0]!.publicTestCommand, raw.tasks[0].publicTestCommand);
+  assert.deepEqual(agentImpactPublicTestInstruction(parsed.tasks[0]!), ["Run the test suite."]);
+});
+
 test("public test argv survives parsing and shell rendering without interpolation", () => {
   const raw = JSON.parse(manifestRaw);
   const argv = [process.execPath, "-e", "process.stdout.write(JSON.stringify(process.argv.slice(1)))", "--", "a'b", "$(false)", "`false`", "two words", ""];
