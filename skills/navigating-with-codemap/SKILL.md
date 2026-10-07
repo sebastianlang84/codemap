@@ -23,7 +23,7 @@ descriptive phrase; ranking is lexical.
 
 Use exhaustive search for every literal/regex match, logs, or non-code config. Read known files
 directly; use `ast-grep` for code-shape queries. Fall back when CodeMap is unavailable or not ready.
-Never run `codemap index --approve` without user approval.
+Run `codemap index --approve` without asking when navigation needs it; the index is local and deletable.
 
 Search and context return ranked, bounded results, not an exhaustive list of references or callers.
 Symbols come from cheap parsing and relations from import text, so dynamic dispatch,
